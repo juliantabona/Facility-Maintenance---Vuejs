@@ -34,13 +34,17 @@
 
         <Row v-if="showDescriptionSection">
             <Col span="24">
-                <span>Repair of six (6) air conditioners. Two have broken fan blades, while the remaining have damaged power cables.</span>
-                <br />
-                <span class="d-block mt-2"><strong>Deadline: </strong>Deadline passed 1 day ago</span>
+
+                <p class="mb-2"><strong>Title:</strong> Repair Of Air Conditioners</p>
+                <p>
+                    <span><strong>Description: </strong></span>
+                    <span>Repair of six (6) air conditioners. Two have broken fan blades, while the remaining have damaged power cables.</span>
+                </p>
+                <p class="mb-2"><span class="d-block mt-2"><strong>Deadline: </strong>Deadline passed 1 day ago</span></p>
             </Col>
         </Row>
 
-        <Divider v-if="showDescriptionSection" dashed class="mt-3 mb-3" />
+        <Divider v-if="showDescriptionSection" dashed class="mt-2 mb-3" />
 
         <Row v-if="showStatusSection">
             <Col span="12">
@@ -140,7 +144,15 @@
                 <div class="float-left mt-2 mr-4">
                     <Poptip word-wrap width="200" trigger="hover" 
                             content="Advertise jobcard to the general public by pushing to websites and social media. This will allow third-party contractors to see and respond to your jobcard. You will be alerted on the platform and via email.">
-                        <span><Icon type="md-globe mr-1" :size="18" /><strong>Make Public:</strong><i-switch class="ml-1" /></span>
+                        <span>
+                            <Icon type="md-globe mr-1" :size="18" />
+                            <strong>Make Public:</strong>
+                            <i-switch class="ml-1" size="large">
+                                <span slot="open">Yes</span>
+                                <span slot="close">No</span>
+
+                            </i-switch>
+                        </span>
                     </Poptip>
                 </div>
             </Col>

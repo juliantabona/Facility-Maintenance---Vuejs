@@ -1,4 +1,38 @@
-<style>
+<style scoped>
+
+    /*  Field Toolbox */
+
+    .section-field >>> .field-toolbox{
+        opacity:0;
+        position: absolute;
+        top: -20px;
+        right: 0px;
+        background: #f3f3f3;
+        border-radius: 20px 0 0 20px;
+        z-index: 1;
+    }
+
+    .section-field:hover >>> .field-toolbox{
+        opacity:1;
+    }
+
+    /*  Field el-badge  */
+    .el-badge >>> sup{
+        top:0;
+        left: 3px;
+    }
+
+    .section-field >>> .field-toolbox .field-icon{
+        padding: 2px;
+        border-radius: 100%;
+        color: black;
+        cursor: pointer;
+    }
+
+    .section-field >>> .field-toolbox .field-icon:hover{
+        color: #ffffff;
+        background: gold;
+    }
 
 </style>
 
@@ -6,7 +40,7 @@
 
     <Col v-if="field" :span="field.width" class="section-field pb-2 pt-1 pr-2 pl-2 mb-1 mt-1">
         
-        <div class="field-toolbox float-right d-block">
+        <div v-if="showToolBar" class="field-toolbox float-right d-block">
             <span class="mr-5">
                 <el-badge :value="field.width+'/24'" class="item" type="primary"></el-badge>
             </span>
@@ -40,10 +74,16 @@
     export default {
         props:{
             field: {
+                type: Object,
                 default:() => {}
             },
             section: {
+                type: Object,
                 default:() => {}
+            },
+            showToolBar: {
+                type: Boolean,
+                default: true
             }
         },
         components: {

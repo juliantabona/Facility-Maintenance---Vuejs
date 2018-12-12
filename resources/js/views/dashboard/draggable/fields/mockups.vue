@@ -1,5 +1,20 @@
 <style>
 
+    /*  Upload Field */
+
+    .el-upload{
+        width:100% !important;
+    }
+
+    .el-upload .el-upload-dragger{
+        width:100% !important;
+        height: 100px !important;
+    }
+
+    .el-upload .el-upload-dragger .el-icon-upload{
+        margin: 10px 0 10px !important;
+    }
+
 </style>
 
 <template>
@@ -8,7 +23,7 @@
 
         <div v-if="fieldInstance.type == 'input-text'">
             <div class="field-box">
-                <span v-if="fieldInstance.label" class="field-label">{{ fieldInstance.label }}</span>
+                <span v-if="fieldInstance.label" class="field-label"><strong>{{ fieldInstance.label }}</strong></span>
                 <el-input type="text" 
                         :id="fieldInstance.id" 
                         :placeholder="fieldInstance.placeholder" 
@@ -88,7 +103,7 @@
 
         <div v-if="fieldInstance.type == 'input-textarea'">
             <div class="field-box">
-                <span v-if="fieldInstance.label" class="field-label">{{ fieldInstance.label }}</span>
+                <span v-if="fieldInstance.label" class="field-label"><strong>{{ fieldInstance.label }}</strong></span>
                 <el-input type="textarea" 
                         :id="fieldInstance.id" 
                         :placeholder="fieldInstance.placeholder" 
@@ -147,7 +162,7 @@
 
         <div v-if="fieldInstance.type == 'input-number'">
             <div class="field-box">
-                <span v-if="fieldInstance.label" class="field-label">{{ fieldInstance.label }}</span>
+                <span v-if="fieldInstance.label" class="field-label d-inline-block mb-1"><strong>{{ fieldInstance.label }}</strong></span>
                 <el-input-number 
                     :id="fieldInstance.id" 
                     :placeholder="fieldInstance.placeholder" 
@@ -219,7 +234,7 @@
 
         <div v-if="fieldInstance.type == 'select'" >
             <div class="field-box">
-                <span v-if="fieldInstance.label" class="field-label">{{ fieldInstance.label }}</span>
+                <span v-if="fieldInstance.label" class="field-label"><strong>{{ fieldInstance.label }}</strong></span>
                 <el-select 
                     :key="refreshKey"
                     v-model="fieldInstance.value" 
@@ -319,7 +334,7 @@
 
         <div v-if="fieldInstance.type == 'slider'">
             <div class="field-box">
-                <span v-if="fieldInstance.label" class="field-label">{{ fieldInstance.label }}</span>
+                <span v-if="fieldInstance.label" class="field-label"><strong>{{ fieldInstance.label }}</strong></span>
                 <el-slider 
                         v-model="fieldInstance.value"
                         :min="fieldInstance.min"
@@ -384,7 +399,7 @@
 
         <div v-if="fieldInstance.type == 'file-upload'">
             <div class="field-box">
-                <span v-if="fieldInstance.label" class="field-label">{{ fieldInstance.label }}</span>
+                <span v-if="fieldInstance.label" class="field-label"><strong>{{ fieldInstance.label }}</strong></span>
                 <el-upload
                     v-model="fieldInstance.value"
                     :drag="fieldInstance.drag"
@@ -430,7 +445,7 @@
 
         <div v-if="fieldInstance.type == 'radio'" >
             <div class="field-box">
-                <span v-if="fieldInstance.label" class="field-label">{{ fieldInstance.label }}</span>
+                <span v-if="fieldInstance.label" class="field-label"><strong>{{ fieldInstance.label }}</strong></span>
 
                 <el-radio-group
                     v-model="fieldInstance.value" 
@@ -494,7 +509,7 @@
 
         <div v-if="fieldInstance.type == 'checkbox'" >
             <div class="field-box">
-                <span v-if="fieldInstance.label" class="field-label">{{ fieldInstance.label }}</span>
+                <span v-if="fieldInstance.label" class="field-label"><strong>{{ fieldInstance.label }}</strong></span>
                 
                 <el-checkbox-group
                     v-model="fieldInstance.value" 
@@ -569,7 +584,7 @@
 
         <div v-if="fieldInstance.type == 'switch'">
             <div class="field-box">
-                <span v-if="fieldInstance.label" class="field-label">{{ fieldInstance.label }}</span>
+                <span v-if="fieldInstance.label" class="field-label"><strong>{{ fieldInstance.label }}</strong></span>
                 <el-switch
                     v-model="fieldInstance.value"
                     :active-color="fieldInstance.activeColor"
@@ -612,7 +627,7 @@
 
         <div v-if="fieldInstance.type == 'rating'">
             <div class="field-box">
-            <span v-if="fieldInstance.label" class="field-label">{{ fieldInstance.label }}</span>
+            <span v-if="fieldInstance.label" class="field-label"><strong>{{ fieldInstance.label }}</strong></span>
                 <el-rate 
                     v-model="fieldInstance.value"
                     :colors="fieldInstance.colors"
@@ -671,7 +686,7 @@
 
         <div v-if="fieldInstance.type == 'alert'">
             <div class="field-box">
-                <span v-if="fieldInstance.label" class="field-label">{{ fieldInstance.label }}</span>
+                <span v-if="fieldInstance.label" class="field-label"><strong>{{ fieldInstance.label }}</strong></span>
                 <el-alert
                     :title="fieldInstance.title"
                     :description="fieldInstance.description"
@@ -716,7 +731,7 @@
 
         <div v-if="fieldInstance.type == 'select-time-picker'">
             <div class="field-box">
-                <span v-if="fieldInstance.label" class="field-label">{{ fieldInstance.label }}</span>
+                <span v-if="fieldInstance.label" class="field-label"><strong>{{ fieldInstance.label }}</strong></span>
                 <el-time-select 
                         v-model="fieldInstance.value"
                         :placeholder="fieldInstance.placeholder" 
@@ -785,7 +800,7 @@
 
         <div v-if="fieldInstance.type == 'arbitrary-time-picker'">
             <div class="field-box">
-                <span v-if="fieldInstance.label" class="field-label">{{ fieldInstance.label }}</span>
+                <span v-if="fieldInstance.label" class="field-label"><strong>{{ fieldInstance.label }}</strong></span>
                 <el-time-picker
                         :key="refreshKey"
                         v-model="fieldInstance.value"
@@ -823,7 +838,7 @@
 
         <div v-if="fieldInstance.type == 'arbitrary-time-range'">
             <div class="field-box">
-                <span v-if="fieldInstance.label" class="field-label">{{ fieldInstance.label }}</span>
+                <span v-if="fieldInstance.label" class="field-label"><strong>{{ fieldInstance.label }}</strong></span>
                 <el-time-picker
                         :key="refreshKey"
                         v-model="fieldInstance.value"
@@ -871,7 +886,7 @@
 
         <div v-if="fieldInstance.type == 'date-picker'">
             <div class="field-box">
-                <span v-if="fieldInstance.label" class="field-label">{{ fieldInstance.label }}</span>
+                <span v-if="fieldInstance.label" class="field-label"><strong>{{ fieldInstance.label }}</strong></span>
                 <el-date-picker
                         v-model="fieldInstance.value"
                         :placeholder="fieldInstance.placeholder"
@@ -998,7 +1013,7 @@
 
         <div v-if="fieldInstance.type == 'date-range'">
             <div class="field-box">
-                <span v-if="fieldInstance.label" class="field-label">{{ fieldInstance.label }}</span>
+                <span v-if="fieldInstance.label" class="field-label"><strong>{{ fieldInstance.label }}</strong></span>
                 <el-date-picker
                         v-model="fieldInstance.value"
                         type="daterange"
@@ -1038,7 +1053,7 @@
 
         <div v-if="fieldInstance.type == 'datetime-picker'">
             <div class="field-box">
-                <span v-if="fieldInstance.label" class="field-label">{{ fieldInstance.label }}</span>
+                <span v-if="fieldInstance.label" class="field-label"><strong>{{ fieldInstance.label }}</strong></span>
                 <el-date-picker
                         type="datetime"
                         v-model="fieldInstance.value"
@@ -1068,7 +1083,7 @@
 
         <div v-if="fieldInstance.type == 'datetime-range'">
             <div class="field-box">
-                <span v-if="fieldInstance.label" class="field-label">{{ fieldInstance.label }}</span>
+                <span v-if="fieldInstance.label" class="field-label"><strong>{{ fieldInstance.label }}</strong></span>
                 <el-date-picker
                     v-model="fieldInstance.value"
                     type="datetimerange"

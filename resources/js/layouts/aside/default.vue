@@ -96,6 +96,10 @@
                 <MenuItem name="jobcards">Recent Jobcards</MenuItem>
               </router-link>
 
+              <router-link :to="{name:'jobcards'}">
+                <MenuItem name="jobcards">Jobcard Settings</MenuItem>
+              </router-link>
+
           </Submenu>
 
           <Submenu name="6" style="color:#2d8cf0;">

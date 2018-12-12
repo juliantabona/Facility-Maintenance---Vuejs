@@ -59,5 +59,8 @@ Route::post('/process-forms', 'Api\ProcessFormController@store');
      -  Get, Show, Update, Trash, Delete
 */
 Route::get('jobcards', 'Api\JobcardController@index');
+Route::get('jobcards/stages', 'Api\JobcardController@getStages');
 Route::get('jobcards/{jobcard_id}', 'Api\JobcardController@show');
 Route::get('jobcards/{jobcard_id}/contractors', 'Api\JobcardController@contractors');
+Route::get('jobcards/{jobcard_id}/lifecycle', 'Api\JobcardController@getLifecycle');
+Route::post('jobcards/{jobcard_id}/lifecycle', 'Api\JobcardController@updateLifecycle');

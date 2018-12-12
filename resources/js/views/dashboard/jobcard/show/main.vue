@@ -44,14 +44,14 @@
                   
                     <Col span="24">
 
-                      <Alert show-icon>
+                      <Alert show-icon closable>
 
                           <Icon type="ios-bulb-outline" slot="icon"></Icon>
                           Manage Payments
                           <template slot="desc">
                             Create, update and send quotations, invoices and receipts linked to this jobcard. Every payment has its own lifecycle from 
                             quotation to invoice to receipt. You can have more than one Payment Lifecycle e.g) You can have Payment 1 as a lifecycle 
-                            for the intial deposit payment, and Payment 2 as a lifecycle for final payment. Watch <a href="#">Short Video</a>.
+                            for the initial deposit payment, and Payment 2 as a lifecycle for final payment. Watch <a href="#">Short Video</a>.
                           </template>
                       </Alert>
                     </Col>
@@ -106,11 +106,78 @@
                 </Row>
               </TabPane>
               <TabPane :label="subContractorLabel">
-                <contractorListWidget></contractorListWidget>
+                <Row :gutter="20" class="m-2">
+                    <Col span="24">
+
+                        <Alert show-icon closable>
+
+                            <Icon type="ios-bulb-outline" slot="icon"></Icon>
+                            Manage Sub-Contractors
+                            <template slot="desc">
+                            Invite contractors to submit their quotations linked to this jobcard. All quotations will be stored safely for future reference.
+                            You can also approve contractors that are fit for the job and start tracking communication from start to finish. Everything is kept 
+                            safe and convinent for future reconciliation. Watch <a href="#">Short Video</a>.
+                            </template>
+                        </Alert>
+                    </Col>
+
+                    <contractorListWidget></contractorListWidget>
+                
+                </Row>
+                
               </TabPane>
-              <TabPane :label="contractsLabel">Contracts</TabPane>
-              <TabPane :label="labourLabel">Labour</TabPane>
-              <TabPane :label="assetsLabel">Assets</TabPane>
+              <TabPane :label="labourLabel">
+                <Row :gutter="20" class="m-2">
+                    <Col span="24">
+
+                        <Alert show-icon closable>
+
+                            <Icon type="ios-bulb-outline" slot="icon"></Icon>
+                            Manage Labour
+                            <template slot="desc">
+                            Add members from your team to handle the work linked to this jobcard. Adding members will automatically send notifications via the platform
+                            and email to inform assigned members on their new job/task. This is also used for measuring performance and delivery. You can always add additional 
+                            notes/details where necessary, its really flexible! Watch <a href="#">Short Video</a>.
+                            </template>
+                        </Alert>
+                    </Col>
+                
+                </Row>
+              </TabPane>
+              <TabPane :label="contractsLabel">
+                <Row :gutter="20" class="m-2">
+                    <Col span="24">
+
+                        <Alert show-icon closable>
+
+                            <Icon type="ios-bulb-outline" slot="icon"></Icon>
+                            Manage Contracts
+                            <template slot="desc">
+                            Make your professional work even more official with legitimate legal documentation. Create and manage contracts with your staff, clients, contractors, 
+                            shareholders and partners. Save signed copies safely for future reconciliation. Watch <a href="#">Short Video</a>.
+                            </template>
+                        </Alert>
+
+                    </Col>
+                </Row>
+              </TabPane>
+              <TabPane :label="assetsLabel">
+                <Row :gutter="20" class="m-2">
+                    <Col span="24">
+                      <Alert show-icon closable>
+
+                          <Icon type="ios-bulb-outline" slot="icon"></Icon>
+                          Manage Assets
+                          <template slot="desc">
+                            Assign assets to this linked jobcard to track where your assets are being used. This helps generate useful reports to 
+                            understand your asset allocations. This can better knowledge on which assets are crucial to your business
+                            as well as their frequency of use. Watch <a href="#">Short Video</a>.
+                          </template>
+                      </Alert>
+                    </Col>
+                </Row>
+
+              </TabPane>
           </Tabs>
         </Col>
 

@@ -1,7 +1,7 @@
 <template>
     <Row :gutter="20" :style="{ margin: '0' }">
 
-        <Col :span="24" :style="{ marginTop: '20px' }">
+        <Col :span="24" :style="{ marginTop: '0px' }">
             <filterable v-bind="filterable">
 
               <Table border size="small" 

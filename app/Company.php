@@ -32,6 +32,36 @@ class Company extends Model
         'profile_doc_url', 'phone_ext', 'phone_num', 'email', 'created_at',
     ];
 
+    /*  Get the jobcards created by this company, get them in relation to the company branches that created them
+     *  A jobcard is a documentation of work to be done for a client. This documentation is made up of details
+     *  describing the job, the client, the contractor, the contacts of both the client and contractor, as well
+     *  as the history (Recent Activities) describing the series of events building the jobcard
+     */
+
+    public function jobcards()
+    {
+        return $this->hasManyThrough('App\Jobcard', 'App\CompanyBranch', 'company_id', 'company_branch_id', 'id')
+                //  Select everything and make the jobcard id the primary id
+               ->select('*', 'jobcards.id as id');
+    }
+
+    /*  Get the process forms related to this company.  A process form in basically a staged process in which
+     *  a company can follow to achieve a set of tasks. These processes involve collecting and monitoring data.
+     *  When we ask for a process form, we are asking the database to get the main tree that holds all the steps
+     *  of how data is going to be stored for that company
+    */
+
+    public function formTemplate()
+    {
+        return $this->hasMany('App\FormTemplate');
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////
+    //                                                                              //
+    //  EVERTHING BELOW THIS CAUTION IS NOT YET BEING USED BY THE SYSTEM            //
+    //                                                                              //
+    //////////////////////////////////////////////////////////////////////////////////
+
     public function creator()
     {
         return $this->morphMany('App\Creator', 'creatable');
@@ -95,17 +125,6 @@ class Company extends Model
     public function branches()
     {
         return $this->hasMany('App\CompanyBranch');
-    }
-
-    /*  Get the process forms related to this company.  A process form in basically a staged process in which
-     *  a company can follow to achieve a set of tasks. These processes involve collecting and monitoring data.
-     *  When we ask for a process form, we are asking the database to get the main tree that holds all the steps
-     *  of how data is going to be stored for that company
-    */
-
-    public function processForms()
-    {
-        return $this->hasMany('App\ProcessForm');
     }
 
     /*  Get all the recent activities relating to this company, Get them in relation to the company branches that
@@ -186,19 +205,6 @@ class Company extends Model
     /*  Get the contacts for this company. A contact is basically users that this company is linked to. This link may
      *  be that the contact is a staff member, a client contact, a contractor contact, or just an individual on their own
      */
-
-    /*  Get the jobcards created by this company, get them in relation to the company branches that created them
-     *  A jobcard is a documentation of work to be done for a client. This documentation is made up of details
-     *  describing the job, the client, the contractor, the contacts of both the client and contractor, as well
-     *  as the history (Recent Activities) describing the series of events building the jobcard
-     */
-
-    public function jobcards()
-    {
-        return $this->hasManyThrough('App\Jobcard', 'App\CompanyBranch', 'company_id', 'company_branch_id', 'id')
-                //  Select everything and make the jobcard id the primary id
-               ->select('*', 'jobcards.id as id');
-    }
 
     /*  Get the jobcards assigned to this contractor company, in this case this company is the one that has been
      *  sub-contracted for the works and we would like to get access to all the jobcards that it has been listed

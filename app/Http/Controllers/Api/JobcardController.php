@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use DB;
 use Auth;
 use App\Jobcard;
 use Illuminate\Http\Request;
@@ -18,39 +19,72 @@ class JobcardController extends Controller
 
         //  Which jobcards do we want to retrieve ???
 
+        if (!empty(request('stage'))) {
+            try {
+                //return 'stage 1';
+                $jobcardTemplate = $user->companyBranch->company->formTemplate
+                                    ->where('type', 'jobcard')
+                                    ->where('selected', 1)
+                                    ->first();
+
+                // Run query
+                $jobcards = $jobcardTemplate
+                            ->formAllocations()
+                            ->where('step', request('stage'))
+                            ->first()
+                            ->jobcards;
+                /*
+                ->formAllocations()
+                ->where('step', request('stage'))
+                ->first()
+                ->trackable()
+                ->paginate();
+                */
+
+                return $jobcards;
+            } catch (\Exception $e) {
+                return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+            }
+        } else {
+            return 'stage 2';
+            /*  COMPANY JOBCARDS
+            *  Get the company related jobcards if the user indicated
+            *  This is normaly used by authenticated managers to access all
+            *  jobcard resources in their respective company
+            */
+            if (!empty(request('company')) && request('company') == 1) {
+                $order_join = 'jobcards';
+                $jobcards = $user->companyBranch->company->jobcards();
+
+            /*  BRANCH JOBCARDS
+            *  Get the branch related jobcards by default
+            *  This is normaly used by authenticated staff to access all
+            *  jobcard resources in their respective company branch
+            */
+            } else {
+                $jobcards = $user->companyBranch->jobcards();
+            }
+        }
+
         /*  ALL JOBCARDS
          *  We need to check if the user is authorized to view all jobcards
          *  This is normaly used by authorized superadmins to access all
          *  jobcard resources in the system.
          */
         if (!empty(request('all')) && request('all') == 1) {
+            return 'stage 3';
             /***********************************************************
             *  CHECK IF THE USER IS AUTHORIZED TO VIEW ALL JOBCARDS    *
             /**********************************************************/
 
             //  New jobcard instance so that we can get all jobcards
             $jobcards = new Jobcard();
-
-        /*  COMPANY JOBCARDS
-         *  Get the company related jobcards if the user indicated
-         *  This is normaly used by authenticated managers to access all
-         *  jobcard resources in their respective company
-         */
-        } elseif (!empty(request('company')) && request('company') == 1) {
-            $order_join = 'jobcards';
-            $jobcards = $user->companyBranch->company->jobcards();
-
-        /*  BRANCH JOBCARDS
-         *  Get the branch related jobcards by default
-         *  This is normaly used by authenticated staff to access all
-         *  jobcard resources in their respective company branch
-         */
-        } else {
-            $jobcards = $user->companyBranch->jobcards();
         }
 
         //  If we don't have any special order_joins, lets default it to nothing
         $order_join = isset($order_join) ? $order_join : '';
+
+        return $jobcards->get();
 
         try {
             //  Get all and trashed
@@ -80,6 +114,46 @@ class JobcardController extends Controller
 
         //  Action was executed successfully
         return oq_api_notify($jobcards, 200);
+    }
+
+    public function getStages(Request $request)
+    {
+        $user = auth('api')->user();
+
+        //  We start with no allocations
+        $allocations = [];
+
+        /*  We need to check if the user is authorized to retrieve jobcard allocations
+        */
+
+        //  if () {
+        /***********************************************************
+        *  CHECK IF THE USER IS AUTHORIZED TO GET ALLOCATIONS      *
+        /**********************************************************/
+        //  }
+
+        /*  COMPANY JOBCARD ALLOCATIONS
+         *  Get the company form template currently in use
+         */
+        $formTemplate = $user->companyBranch->company->formTemplate->where('selected', 1)->first();
+
+        try {
+            // Run query
+            $allocations = $formTemplate->formAllocations()
+                ->select(DB::raw('COUNT(step) count, step'))
+                ->groupBy('step')
+                ->get();
+
+            $allocations = [
+                'template' => $formTemplate->form_template,
+                'allocations' => $allocations,
+            ];
+        } catch (\Exception $e) {
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+
+        //  Action was executed successfully
+        return oq_api_notify($allocations, 200);
     }
 
     public function show($jobcard_id)
@@ -163,6 +237,131 @@ class JobcardController extends Controller
 
         //  Action was executed successfully
         return oq_api_notify($contractors, 200);
+    }
+
+    public function getLifecycle(Request $request, $jobcard_id)
+    {
+        $user = auth('api')->user();
+
+        //  Check if the jobcard exists
+        $jobcard = Jobcard::find($jobcard_id);
+
+        if (!count($jobcard)) {
+            //  API Response
+            if (oq_viaAPI($request)) {
+                //  No resource found
+                oq_api_notify_no_resource();
+            }
+        }
+
+        /*  We need to check if the user is authorized to view the jobcard lifecycle
+         */
+
+        //  if () {
+        /***********************************************************
+        *  CHECK IF THE USER IS AUTHORIZED TO VIEW LIFECYCLE       *
+        /**********************************************************/
+        //  }
+
+        try {
+            //  Run query
+            $lifecycle = $jobcard->statusLifecycle->first();
+
+            //  If we have any lifecycle so far
+            if (count($lifecycle)) {
+                //  Eager load other relationships wanted if specified
+                if (request('connections')) {
+                    $lifecycle->load(oq_url_to_array(request('connections')));
+                }
+            }
+        } catch (\Exception $e) {
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+
+        //  Action was executed successfully
+        return oq_api_notify($lifecycle, 200);
+
+        if (count($lifecycle)) {
+            //  return lifecycle
+            return oq_api_notify($lifecycle, 200);
+        } else {
+            //  No resource found
+            oq_api_notify_no_resource();
+        }
+    }
+
+    public function updateLifecycle(Request $request, $jobcard_id)
+    {
+        $user = auth('api')->user();
+
+        //  Check if the jobcard exists
+        $jobcard = Jobcard::find($jobcard_id);
+
+        //  Check if the updated lifecycle template was provided
+        if (empty(request('template'))) {
+            //  API Response
+            if (oq_viaAPI($request)) {
+                return oq_api_notify([
+                    'message' => 'Include the updated lifecycle',
+                ], 422);
+            }
+        }
+
+        //  Check if the next step was provided
+        if (empty(request('nextStep'))) {
+            //  API Response
+            if (oq_viaAPI($request)) {
+                return oq_api_notify([
+                    'message' => 'Include the next lifecycle step',
+                ], 422);
+            }
+        }
+
+        if (!count($jobcard)) {
+            //  API Response
+            if (oq_viaAPI($request)) {
+                //  No resource found
+                oq_api_notify_no_resource();
+            }
+        }
+
+        /*  We need to check if the user is authorized to update the jobcard lifecycle
+         */
+
+        //  if () {
+        /***********************************************************
+        *  CHECK IF THE USER IS AUTHORIZED TO UPDATE LIFECYCLE     *
+        /**********************************************************/
+        //  }
+
+        try {
+            //  Run query
+            $lifecycle = $jobcard->statusLifecycle()->update([
+                'template' => json_encode(request('template')),
+                'step' => request('nextStep'),
+            ]);
+
+            //  If the lifecycle was updated successfully
+            if ($lifecycle) {
+                $updatedLifecycle = $jobcard->statusLifecycle;
+
+                //  Action was executed successfully
+                return oq_api_notify($updatedLifecycle, 200);
+            }
+        } catch (\Exception $e) {
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+
+        //  Action was executed successfully
+        return oq_api_notify($lifecycle, 200);
+
+        if (count($lifecycle)) {
+            //  return lifecycle
+            return oq_api_notify($lifecycle, 200);
+        } else {
+            //  No resource found
+            oq_api_notify_no_resource();
+        }
     }
 
     public function store(Request $request)

@@ -1,7 +1,3 @@
-<style>
-
-</style>
-
 <template>
 
     <Row :gutter="20">

@@ -38,6 +38,24 @@ class Jobcard extends Model
         'id', 'title', 'description', 'start_date', 'end_date', 'created_at',
     ];
 
+    public function contractorsList()
+    {
+        return $this->belongsToMany('App\Company', 'jobcard_contractors', 'jobcard_id', 'contractor_id')
+                    ->withPivot('id', 'jobcard_id', 'contractor_id', 'amount', 'quotation_doc_id', 'selected')
+                    ->withTimestamps();
+    }
+
+    public function statusLifecycle()
+    {
+        return $this->morphMany('App\FormTemplateAllocation', 'trackable');
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////
+    //                                                                              //
+    //  EVERTHING BELOW THIS CAUTION IS NOT YET BEING USED BY THE SYSTEM            //
+    //                                                                              //
+    //////////////////////////////////////////////////////////////////////////////////
+
     public function createdBy()
     {
         return $this->belongsTo('App\User', 'created_by');
@@ -64,11 +82,6 @@ class Jobcard extends Model
         return $this->belongsTo('App\Priority', 'priority_id');
     }
 
-    public function processInstructions()
-    {
-        return $this->morphMany('App\ProcessFormAllocation', 'processable');
-    }
-
     public function owningBranch()
     {
         return $this->belongsTo('App\CompanyBranch', 'company_branch_id');
@@ -82,13 +95,6 @@ class Jobcard extends Model
     public function client()
     {
         return $this->belongsTo('App\Company', 'client_id');
-    }
-
-    public function contractorsList()
-    {
-        return $this->belongsToMany('App\Company', 'jobcard_contractors', 'jobcard_id', 'contractor_id')
-                    ->withPivot('id', 'jobcard_id', 'contractor_id', 'amount', 'quotation_doc_id', 'selected')
-                    ->withTimestamps();
     }
 
     public function selectedContractors()
