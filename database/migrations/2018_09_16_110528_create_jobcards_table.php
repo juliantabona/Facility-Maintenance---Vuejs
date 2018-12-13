@@ -17,13 +17,12 @@ class CreateJobcardsTable extends Migration
             $table->json('description')->nullable();
             $table->timestampTz('start_date')->nullable();
             $table->timestampTz('end_date')->nullable();
-            $table->unsignedInteger('step_id')->nullable();
             $table->unsignedInteger('priority_id')->nullable();
             $table->unsignedInteger('cost_center_id')->nullable();
             $table->unsignedInteger('company_branch_id')->nullable();
             $table->unsignedInteger('category_id')->nullable();
             $table->unsignedInteger('client_id')->nullable();
-            $table->unsignedInteger('created_by')->nullable();
+            $table->boolean('is_public')->default(0);
             $table->softDeletes();
             $table->timestamps();
         });

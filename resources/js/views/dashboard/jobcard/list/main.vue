@@ -35,7 +35,7 @@
                         }
                     },
                     {
-                        width: 50,
+                        width: 80,
                         title: 'ID',
                         key: 'id',
                         sortable: true,
@@ -48,7 +48,7 @@
                     },
                     {
                         title: 'Due',
-                        key: 'created_by',
+                        key: 'deadline',
                         sortable: true
                     },
                     {

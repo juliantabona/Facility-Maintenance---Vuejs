@@ -70,10 +70,10 @@
             </MenuItem>
           </router-link>
 
-          <router-link :to="{name:'contractors'}">
-            <MenuItem name="contractors">
+          <router-link :to="{name:'suppliers'}">
+            <MenuItem name="suppliers">
               <Icon type="ios-briefcase-outline" :size="20"/>
-              <span>Contractors</span>
+              <span>Suppliers</span>
             </MenuItem>
           </router-link>
 

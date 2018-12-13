@@ -110,10 +110,10 @@
                         <Alert show-icon closable>
 
                             <Icon type="ios-bulb-outline" slot="icon"></Icon>
-                            Manage Sub-Contractors
+                            Manage Suppliers
                             <template slot="desc">
-                            Invite contractors to submit their quotations linked to this jobcard. All quotations will be stored safely for future reference.
-                            You can also approve contractors that are fit for the job and start tracking communication from start to finish. Everything is kept 
+                            Invite suppliers to submit their quotations linked to this jobcard. All quotations will be stored safely for future reference.
+                            You can also approve suppliers that are fit for the job and start tracking communication from start to finish. Everything is kept 
                             safe and convinent for future reconciliation. Watch <a href="#">Short Video</a>.
                             </template>
                         </Alert>
@@ -151,7 +151,7 @@
                             <Icon type="ios-bulb-outline" slot="icon"></Icon>
                             Manage Contracts
                             <template slot="desc">
-                            Make your professional work even more official with legitimate legal documentation. Create and manage contracts with your staff, clients, contractors, 
+                            Make your professional work even more official with legitimate legal documentation. Create and manage contracts with your staff, clients, suppliers, 
                             shareholders and partners. Save signed copies safely for future reconciliation. Watch <a href="#">Short Video</a>.
                             </template>
                         </Alert>
@@ -199,10 +199,6 @@
           receiptSummaryWidget, contractorListWidget 
         },
         props: {
-            jobcard: {
-                type: Object,
-                default: () => {}
-            },
             receipt: {
                 type: Object,
                 default: () => {}
@@ -210,6 +206,7 @@
         },
         data(){
             return {
+                jobcard: {},
                 detailLabel: (h) => {
                     return h('span', [
                         h('Icon', { style: { display: 'inline-block', 'marginTop': '-10px' },
@@ -231,7 +228,7 @@
                         h('Icon', { style: { display: 'inline-block', 'marginTop': '-10px', 'marginRight': '12px'  },
                             props: { type: 'ios-briefcase-outline', size: 20 }
                         }),
-                        h('span', { style: { display: 'inline-block' } }, 'Sub-Contractors')
+                        h('span', { style: { display: 'inline-block' } }, 'Suppliers')
                     ])
                 },
                 contractsLabel: (h) => {
@@ -245,7 +242,7 @@
                 labourLabel: (h) => {
                     return h('span', [
                         h('Icon', { style: { display: 'inline-block', 'marginTop': '-10px', 'marginRight': '12px'  },
-                            props: { type: 'ios-people-outline', size: 20 }
+                            props: { type: 'ios-people-outline', size: 22 }
                         }),
                         h('span', { style: { display: 'inline-block' } }, 'Labour')
                     ])
@@ -253,7 +250,7 @@
                 assetsLabel: (h) => {
                     return h('span', [
                         h('Icon', { style: { display: 'inline-block', 'marginTop': '-10px', 'marginRight': '12px'  },
-                            props: { type: 'logo-tux', size: 20 }
+                            props: { type: 'ios-cube-outline', size: 20 }
                         }),
                         h('span', { style: { display: 'inline-block' } }, 'Asset')
                     ])
@@ -267,6 +264,42 @@
                     phone_num: '3909083',
                     email: 'info@optimumqbw.com'
                 }
+            }
+        },
+        created () {
+            this.fetch();
+        },
+        methods: {
+            fetch() {
+                const self = this;
+
+                //  Start loader
+                self.isLoading = true;
+
+                console.log('Start getting jobcard...');
+
+                //  Use the api call() function located in resources/js/api.js
+                api.call('get', '/api/jobcards/'+this.$route.params.id)
+                    .then(({data}) => {
+
+                        //  Stop loader
+                        self.isLoading = false;
+
+                        //  Get jobcard lifecycle data
+                        self.jobcard = data;
+
+                        console.log('jobcard');
+                        console.log(self.jobcard);
+                    })         
+                    .catch(response => { 
+                        console.log('jobcard/show/main.vue - Error getting jobcard...');
+                        console.log(response);
+
+                        //  Stop loader
+                        self.isLoading = false;     
+                    });
+
+
             }
         }
     };

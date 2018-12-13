@@ -18,7 +18,7 @@ class Jobcard extends Model
      */
     protected $fillable = [
         'title', 'description', 'start_date', 'end_date', 'step_id', 'priority_id', 'cost_center_id', 'company_branch_id',
-        'category_id', 'client_id', 'select_contractor_id', 'img_url',
+        'category_id', 'client_id', 'is_public', 'select_contractor_id', 'img_url',
     ];
 
     protected $allowedFilters = [
@@ -50,22 +50,17 @@ class Jobcard extends Model
         return $this->morphMany('App\FormTemplateAllocation', 'trackable');
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////
-    //                                                                              //
-    //  EVERTHING BELOW THIS CAUTION IS NOT YET BEING USED BY THE SYSTEM            //
-    //                                                                              //
-    //////////////////////////////////////////////////////////////////////////////////
-
-    public function createdBy()
-    {
-        return $this->belongsTo('App\User', 'created_by');
-    }
-
     public function recentActivities()
     {
         return $this->morphMany('App\RecentActivity', 'trackable')
                     ->orderBy('created_at', 'desc');
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////
+    //                                                                              //
+    //  EVERTHING BELOW THIS CAUTION IS NOT YET BEING USED BY THE SYSTEM            //
+    //                                                                              //
+    //////////////////////////////////////////////////////////////////////////////////
 
     public function category()
     {
@@ -141,10 +136,37 @@ class Jobcard extends Model
     }
     */
 
-    protected $appends = ['deadline', 'deadlineInWords'];
+    protected $appends = ['createdBy', 'authourizedBy', 'deadline', 'deadlineArray', 'deadlineInWords', 'statusSummary'];
+
+    //  Getter for calculating the deadline returned as array
+    public function getCreatedByAttribute()
+    {
+        $publishingUser = $this->recentActivities->where('activity.type', 'created')->first();
+
+        if (count($publishingUser)) {
+            return $publishingUser->createdBy;
+        }
+    }
+
+    //  Getter for calculating the deadline returned as array
+    public function getAuthourizedByAttribute()
+    {
+        $authourizingUser = $this->recentActivities->where('activity.type', 'authourized')->first();
+
+        if (count($authourizingUser)) {
+            return $authourizingUser->createdBy;
+        }
+    }
 
     //  Getter for calculating the deadline returned as array
     public function getDeadlineAttribute()
+    {
+        return oq_jobcardDeadlineArray($this)[0].' '.oq_jobcardDeadlineArray($this)[1]
+              .' '.(oq_jobcardDeadlineArray($this)[2] ? '' : 'ago');
+    }
+
+    //  Getter for calculating the deadline returned as array
+    public function getDeadlineArrayAttribute()
     {
         return oq_jobcardDeadlineArray($this);
     }
@@ -153,5 +175,25 @@ class Jobcard extends Model
     public function getDeadlineInWordsAttribute()
     {
         return oq_jobcardDeadlineWords(oq_jobcardDeadlineArray($this));
+    }
+
+    //  Getter for getting the jobcard lifecycle status name
+    public function getStatusSummaryAttribute()
+    {
+        //  What we want the summary to contain
+        $lookfor = array('name', 'description');
+
+        //  Get the jobcard lifecycle details
+        $jobcardStatusLifecycle = $this->statusLifecycle->first();
+
+        //  Get only the details of the current jobcard status
+        $status = $jobcardStatusLifecycle->template['sections'][$jobcardStatusLifecycle->step - 1];
+
+        //  Filter the jobcard status and get only the status details we want to look for
+        $filteredStatusDetails = array_filter($status, function ($key) use ($lookfor) {
+            return in_array($key, $lookfor);
+        }, ARRAY_FILTER_USE_KEY);
+
+        return $filteredStatusDetails;
     }
 }

@@ -32,10 +32,10 @@ let routes = [
         component: require('./views/dashboard/client/main.vue')
     },
     {
-        //  Contractors
-        path: '/contractors', name: 'contractors',
+        //  Suppliers
+        path: '/suppliers', name: 'suppliers',
         meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/contractor/main.vue')
+        component: require('./views/dashboard/supplier/main.vue')
     },
     {
         //  Jobcards

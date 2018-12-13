@@ -13,8 +13,8 @@
         <div slot="extra">
             <span><strong>Status: </strong></span>
             <span class="mr-2">
-                <Poptip word-wrap width="200" trigger="hover" title="Current Status" content="In this state the job is being inspected to ensure good work as per given specifications.">
-                    <Tag color="success">Closed</Tag>
+                <Poptip word-wrap width="200" trigger="hover" title="Current Status" :content="statusSummary.description">
+                    <Tag color="success">{{ statusSummary.name }}</Tag>
                 </Poptip>
             </span>
             <Dropdown trigger="click" v-if="showMenuBtn">
@@ -35,26 +35,26 @@
         <Row v-if="showDescriptionSection">
             <Col span="24">
 
-                <p class="mb-2"><strong>Title:</strong> Repair Of Air Conditioners</p>
+                <p class="mb-2"><strong>Title:</strong> {{ jobcard.title }}</p>
                 <p>
                     <span><strong>Description: </strong></span>
-                    <span>Repair of six (6) air conditioners. Two have broken fan blades, while the remaining have damaged power cables.</span>
+                    <span>{{ jobcard.description }}</span>
                 </p>
-                <p class="mb-2"><span class="d-block mt-2"><strong>Deadline: </strong>Deadline passed 1 day ago</span></p>
+                <p class="mb-2"><span class="d-block mt-2"><strong>Deadline: </strong>{{ jobcard.deadlineInWords }}</span></p>
             </Col>
             <Col span="12 mt-1">
                 <span>
-                    <Poptip word-wrap width="200" trigger="hover" content="18 May 2018 - 09:30AM">
+                    <Poptip word-wrap width="200" trigger="hover" :content="jobcard.start_date | moment('DD MMM YYYY, H:mmA')">
                         <span><strong>Start Date: </strong></span>
-                        18 May 2018
+                        {{ jobcard.start_date | moment("DD MMM YYYY") }}
                     </Poptip>
                 </span>
             </Col>
             <Col span="12">
                 <span>
-                    <Poptip word-wrap width="200" trigger="hover" content="20 May 2018 - 10:30AM">
+                    <Poptip word-wrap width="200" trigger="hover" :content="jobcard.end_date | moment('DD MMM YYYY, H:mmA')">
                         <span><strong>End Date: </strong></span>
-                        20 May 2018
+                        {{ jobcard.end_date | moment("DD MMM YYYY") }}
                     </Poptip>
                 </span>
             </Col>
@@ -86,31 +86,31 @@
         <Divider v-if ="showStatusSection" dashed class="mt-3 mb-3" />
 
         <Row v-if ="showPublishSection">
-            <Col span="12">
+            <Col span="12" v-if="jobcard.createdBy">
                 <span><strong>Created By: </strong></span>
-                <Poptip word-wrap width="200" trigger="hover" content="Staff Member">
-                    <span><a href="#">Julian Tabona</a></span>
+                <Poptip word-wrap width="200" trigger="hover" :content="getPostion(jobcard.createdBy)">
+                    <span><a href="#">{{ getFullName(jobcard.createdBy) }}</a></span>
                 </Poptip>
             </Col>
-            <Col span="12">
+            <Col span="12" v-if="jobcard.createdBy">
                 <span>
-                    <Poptip word-wrap width="200" trigger="hover" content="23 May 2018 - 08:15AM">
+                    <Poptip word-wrap width="200" trigger="hover" :content="jobcard.created_at | moment('DD MMM YYYY, H:mmA')">
                         <span><strong>Created Date: </strong></span>
-                        23 May 2018
+                        {{ jobcard.created_at | moment("DD MMM YYYY") }}
                     </Poptip>
                 </span>
             </Col>
-            <Col span="12">
+            <Col span="12" v-if="jobcard.authourizedBy">
                 <span><strong>Authorized By:</strong></span>
-                <Poptip word-wrap width="200" trigger="hover" content="Project Manager">
-                    <span><a href="#">Kgosi Tabona</a></span>
+                <Poptip word-wrap width="200" trigger="hover" :content="getPostion(jobcard.authourizedBy)">
+                    <span><a href="#">{{ getFullName(jobcard.authourizedBy) }}</a></span>
                 </Poptip>
             </Col>
-            <Col span="12">
+            <Col span="12" v-if="jobcard.authourizedBy">
                 <span>
-                    <Poptip word-wrap width="200" trigger="hover" content="24 May 2018 - 09:25AM">
+                    <Poptip word-wrap width="200" trigger="hover" :content="getAuthourizedDate() | moment('DD MMM YYYY, H:mmA')">
                         <span><strong>Authorized Date:</strong></span>
-                        24 May 2018
+                        {{ getAuthourizedDate() | moment("DD MMM YYYY") }}
                     </Poptip>
                 </span>
             </Col>
@@ -163,10 +163,9 @@
                         <span>
                             <Icon type="md-globe mr-1" :size="18" />
                             <strong>Make Public:</strong>
-                            <i-switch class="ml-1" size="large">
+                            <i-switch :value="jobcard.is_public ? true: false" class="ml-1" size="large">
                                 <span slot="open">Yes</span>
                                 <span slot="close">No</span>
-
                             </i-switch>
                         </span>
                     </Poptip>
@@ -241,7 +240,31 @@
            isLoading: false,
       }
     },
+    computed:{
+        statusSummary: function(){
+            return (this.jobcard.statusSummary || {});
+        }
+    },
     methods: {
+        getFullName: function(user){
+            let first_name = (user || {}).first_name|| '';
+            let last_name = (user || {}).last_name|| '';
+
+            return first_name+' '+last_name;
+        },
+        getPostion(user){
+            return (user || {}).position || '';
+        },
+        getAuthourizedDate(){
+            
+            var x, recentActivity = this.jobcard.recent_activities || {};
+
+            for(x=0; x < _.size(recentActivity); x++){
+                if(recentActivity[x].activity.type == 'authourized'){
+                    return recentActivity[x].created_at; 
+                }
+            }
+        },
         viewJobcard: function(){
             this.$router.push({ name: 'show-jobcard', params: { id: this.jobcard.id } });
         }

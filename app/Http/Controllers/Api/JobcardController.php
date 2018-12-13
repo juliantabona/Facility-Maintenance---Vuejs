@@ -143,89 +143,6 @@ class JobcardController extends Controller
         return oq_api_notify($allocations, 200);
     }
 
-    public function show($jobcard_id)
-    {
-        //  Get one, even if trashed
-        if (request('withtrashed') == 1) {
-            try {
-                //  Run query
-                $jobcard = Jobcard::withTrashed()->where('id', $jobcard_id)->first();
-            } catch (\Exception $e) {
-                return oq_api_notify_error('Query Error', $e->getMessage(), 404);
-            }
-            //  Get only if not trashed
-        } else {
-            try {
-                //  Run query
-                $jobcard = Jobcard::where('id', $jobcard_id)->first();
-            } catch (\Exception $e) {
-                return oq_api_notify_error('Query Error', $e->getMessage(), 404);
-            }
-        }
-
-        if (count($jobcard)) {
-            //  Eager load other relationships wanted if specified
-            if (request('connections')) {
-                $jobcard->load(oq_url_to_array(request('connections')));
-            }
-
-            //  Action was executed successfully
-            return oq_api_notify($jobcard, 200);
-        }
-
-        //  No resource found
-        return oq_api_notify_no_resource();
-    }
-
-    public function contractors($jobcard_id)
-    {
-        $user = auth('api')->user();
-
-        //  We start with no contractors
-        $contractors = [];
-
-        //  Check if the jobcard exists
-        $jobcard = Jobcard::find($jobcard_id);
-
-        if (!count($jobcard)) {
-            //  API Response
-            if (oq_viaAPI($request)) {
-                //  No resource found
-                oq_api_notify_no_resource();
-            }
-        }
-
-        /*  We need to check if the user is authorized to view the jobcard contractors
-         */
-
-        //  if () {
-        /***********************************************************
-        *  CHECK IF THE USER IS AUTHORIZED TO VIEW CONTRACTORS     *
-        /**********************************************************/
-        //  }
-
-        //  If we don't have any special order_joins, lets default it to nothing
-        $order_join = 'jobcard_contractors';
-
-        try {
-            //  Run query, dont paginate to return relationship instance
-            $contractors = $jobcard->contractorsList()->advancedFilter(['order_join' => $order_join]);
-
-            //  If we have any jobcards so far
-            if (count($contractors)) {
-                //  Eager load other relationships wanted if specified
-                if (request('connections')) {
-                    $contractors->load(oq_url_to_array(request('connections')));
-                }
-            }
-        } catch (\Exception $e) {
-            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
-        }
-
-        //  Action was executed successfully
-        return oq_api_notify($contractors, 200);
-    }
-
     public function getLifecycle(Request $request, $jobcard_id)
     {
         $user = auth('api')->user();
@@ -349,6 +266,89 @@ class JobcardController extends Controller
             //  No resource found
             oq_api_notify_no_resource();
         }
+    }
+
+    public function show($jobcard_id)
+    {
+        //  Get one, even if trashed
+        if (request('withtrashed') == 1) {
+            try {
+                //  Run query
+                $jobcard = Jobcard::withTrashed()->where('id', $jobcard_id)->first();
+            } catch (\Exception $e) {
+                return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+            }
+            //  Get only if not trashed
+        } else {
+            try {
+                //  Run query
+                $jobcard = Jobcard::where('id', $jobcard_id)->first();
+            } catch (\Exception $e) {
+                return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+            }
+        }
+
+        if (count($jobcard)) {
+            //  Eager load other relationships wanted if specified
+            if (request('connections')) {
+                $jobcard->load(oq_url_to_array(request('connections')));
+            }
+
+            //  Action was executed successfully
+            return oq_api_notify($jobcard, 200);
+        }
+
+        //  No resource found
+        return oq_api_notify_no_resource();
+    }
+
+    public function contractors($jobcard_id)
+    {
+        $user = auth('api')->user();
+
+        //  We start with no contractors
+        $contractors = [];
+
+        //  Check if the jobcard exists
+        $jobcard = Jobcard::find($jobcard_id);
+
+        if (!count($jobcard)) {
+            //  API Response
+            if (oq_viaAPI($request)) {
+                //  No resource found
+                oq_api_notify_no_resource();
+            }
+        }
+
+        /*  We need to check if the user is authorized to view the jobcard contractors
+         */
+
+        //  if () {
+        /***********************************************************
+        *  CHECK IF THE USER IS AUTHORIZED TO VIEW CONTRACTORS     *
+        /**********************************************************/
+        //  }
+
+        //  If we don't have any special order_joins, lets default it to nothing
+        $order_join = 'jobcard_contractors';
+
+        try {
+            //  Run query, dont paginate to return relationship instance
+            $contractors = $jobcard->contractorsList()->advancedFilter(['order_join' => $order_join]);
+
+            //  If we have any jobcards so far
+            if (count($contractors)) {
+                //  Eager load other relationships wanted if specified
+                if (request('connections')) {
+                    $contractors->load(oq_url_to_array(request('connections')));
+                }
+            }
+        } catch (\Exception $e) {
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+
+        //  Action was executed successfully
+        return oq_api_notify($contractors, 200);
     }
 
     public function store(Request $request)

@@ -13,8 +13,8 @@
                 </oq-Template-Field>
             </Row>
             <span slot="footer" class="dialog-footer">
-                <el-button @click="abortChanges">Cancel</el-button>
-                <el-button type="primary" @click="saveChanges" :loading="isSaving">Save</el-button>
+                <el-button size="small" @click="abortChanges">Cancel</el-button>
+                <el-button size="small" type="primary" @click="saveChanges" :loading="isSaving">Update Status</el-button>
             </span>
         </Modal>    
     </div>
@@ -82,8 +82,10 @@
 
                         //  Stop loader
                         self.isSaving = false;
-
-                        this.template
+                        
+                        self.$Notice.success({
+                            title: 'Jobcard status updated'
+                        });
 
                         //  Close modal
                         this.$emit('updated');

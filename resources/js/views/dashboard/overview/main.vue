@@ -23,12 +23,12 @@
 
           <Row :gutter="20" class="pl-3 pr-3">
 
-            <Col :span="6" v-for="stage in lifecycleStages" :key="stage.name" class="mb-2">
+            <Col :span="6" v-for="(stage, index) in lifecycleStages" :key="index" class="mb-2">
 
                 <Card  @click.native="viewJobcards(stage.step)" :style="{ padding:0, minHeight:'100px' }">
                   
                     <div style="padding: 0px 15px;">
-                      <Badge :count="getCount(stage)" type="primary" style="width:100%;">
+                      <Badge :show-zero="onFirstAndLast(index)" :count="getCount(stage)" type="primary" style="width:100%;">
                           <Icon :type="stage.icon" size="45" class="text-center" style="display: block;"/>
                           <p class="text-center" style="padding-top:5px;">{{ stage.name }}</p>
                         </Badge>
@@ -67,6 +67,13 @@
         methods: {
             viewJobcards(step){
               this.$router.push({ name: 'jobcards', query: { step: step } });
+            },
+            onFirstAndLast(index){
+                if(index == 0 || index == ( (this.lifecycleStages || {}).length - 1) ){
+                    return true;
+                }
+
+                return false;
             },
             getCount(stage){
               
