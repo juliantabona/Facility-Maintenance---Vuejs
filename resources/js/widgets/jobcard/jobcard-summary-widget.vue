@@ -42,6 +42,22 @@
                 </p>
                 <p class="mb-2"><span class="d-block mt-2"><strong>Deadline: </strong>Deadline passed 1 day ago</span></p>
             </Col>
+            <Col span="12 mt-1">
+                <span>
+                    <Poptip word-wrap width="200" trigger="hover" content="18 May 2018 - 09:30AM">
+                        <span><strong>Start Date: </strong></span>
+                        18 May 2018
+                    </Poptip>
+                </span>
+            </Col>
+            <Col span="12">
+                <span>
+                    <Poptip word-wrap width="200" trigger="hover" content="20 May 2018 - 10:30AM">
+                        <span><strong>End Date: </strong></span>
+                        20 May 2018
+                    </Poptip>
+                </span>
+            </Col>
         </Row>
 
         <Divider v-if="showDescriptionSection" dashed class="mt-2 mb-3" />

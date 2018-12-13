@@ -1,8 +1,7 @@
 <template>
     <Row :gutter="20" :style="{ margin: '0' }">
-
         <Col :span="24" :style="{ marginTop: '20px' }">
-            <filterable v-bind="filterable">
+            <filterable v-bind="filterable" :key="renderKey">
 
               <Table border size="small" 
                 slot-scope="{collection, loading}" :columns="tableColumns" :data="collection"
@@ -21,6 +20,8 @@
         components: { Filterable, jobcardListExpandWidget },
         data() {
             return {
+                renderKey: 0,
+                lifecycleStep: null,
                 tableColumns: [
                     {
                         type: 'expand',
@@ -34,27 +35,24 @@
                         }
                     },
                     {
+                        width: 50,
                         title: 'ID',
                         key: 'id',
-                        sortable: true
+                        sortable: true,
                     },
                     {
+                        width: 450,
                         title: 'Title',
                         key: 'title',
                         sortable: true
                     },
                     {
-                        title: 'Start Date',
-                        key: 'created_by',
-                        sortable: true
-                    },
-                    {
-                        title: 'End Date',
-                        key: 'created_by',
-                        sortable: true
-                    },
-                    {
                         title: 'Due',
+                        key: 'created_by',
+                        sortable: true
+                    },
+                    {
+                        title: 'Status',
                         key: 'created_by',
                         sortable: true
                     },
@@ -90,7 +88,7 @@
                     }
                 ],
                 filterable: {
-                    url: '/api/jobcards?connections',
+                    url: this.jobcardURL,
                     orderables: [
                         {title: 'Id', name: 'id'},
                         {title: 'Title', name: 'title'},
@@ -162,10 +160,33 @@
                 }
             }
         },
+        computed: {
+            jobcardURL: function () {
+                var lifecycleStep = this.lifecycleStep ? 'step='+this.lifecycleStep : ''; 
+                var connections = 'connections=';
+                return '/api/jobcards?'+lifecycleStep+'&&'+connections;
+            }
+        },
         methods: {
             navigateTo(id) {
                 this.$router.push({ name: 'show-jobcard', params: { id: id } });
             }
+        },
+        watch: {
+            '$route.query.step'() {
+                this.lifecycleStep = this.$route.query.step;
+                this.renderKey++;
+            }
+        },
+        created () {
+            console.log('CREATED THE LIST...................');
+            
+            if(this.$route.query.step){
+                this.lifecycleStep = this.$route.query.step;
+                this.filterable.url = this.jobcardURL;
+            }
+
+            console.log(this.lifecycleStep);
         }
     }
 </script>

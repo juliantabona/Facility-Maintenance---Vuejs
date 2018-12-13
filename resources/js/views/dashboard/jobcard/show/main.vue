@@ -87,16 +87,14 @@
                                   <Input value="Invoice 1" placeholder="Enter tab title..." style="width: auto" />
                               </div>
 
-                              <receiptSummaryWidget 
-
-                                  :receipt="receipt"
+                              <invoiceSummaryWidget 
                                   
                                   :showMenuBtn="true" :showMenuEditBtn="true" :showMenuTrashBtn="true" :showMenuAddClientBtn="true"
                                   :showMenuAddContractorBtn="true" :showMenuAddLabourBtn="true" :showMenuAddAssetBtn="true"
                                   :showDescriptionSection="true" :showStatusSection="true" :showPublishSection="true" 
                                   :showResourceSection="true" :showActionToolbalSection="true">
 
-                              </receiptSummaryWidget>
+                              </invoiceSummaryWidget>
                             </TabPane>
                           </Tabs>
 

@@ -19,34 +19,24 @@ class JobcardController extends Controller
 
         //  Which jobcards do we want to retrieve ???
 
-        if (!empty(request('stage'))) {
+        if (!empty(request('step'))) {
             try {
-                //return 'stage 1';
-                $jobcardTemplate = $user->companyBranch->company->formTemplate
-                                    ->where('type', 'jobcard')
-                                    ->where('selected', 1)
-                                    ->first();
+                $jobcardTemplateId = $user->companyBranch->company->formTemplate
+                                          ->where('type', 'jobcard')
+                                          ->where('selected', 1)
+                                          ->first()
+                                          ->id;
 
-                // Run query
-                $jobcards = $jobcardTemplate
-                            ->formAllocations()
-                            ->where('step', request('stage'))
-                            ->first()
-                            ->jobcards;
-                /*
-                ->formAllocations()
-                ->where('step', request('stage'))
-                ->first()
-                ->trackable()
-                ->paginate();
-                */
+                $jobcards = new Jobcard();
 
-                return $jobcards;
+                $jobcards = $jobcards->whereHas('statusLifecycle', function ($query) use ($jobcardTemplateId) {
+                    $query->where('step', request('step'))
+                          ->where('form_template_id', $jobcardTemplateId);
+                });
             } catch (\Exception $e) {
                 return oq_api_notify_error('Query Error', $e->getMessage(), 404);
             }
         } else {
-            return 'stage 2';
             /*  COMPANY JOBCARDS
             *  Get the company related jobcards if the user indicated
             *  This is normaly used by authenticated managers to access all
@@ -72,7 +62,6 @@ class JobcardController extends Controller
          *  jobcard resources in the system.
          */
         if (!empty(request('all')) && request('all') == 1) {
-            return 'stage 3';
             /***********************************************************
             *  CHECK IF THE USER IS AUTHORIZED TO VIEW ALL JOBCARDS    *
             /**********************************************************/
@@ -83,8 +72,6 @@ class JobcardController extends Controller
 
         //  If we don't have any special order_joins, lets default it to nothing
         $order_join = isset($order_join) ? $order_join : '';
-
-        return $jobcards->get();
 
         try {
             //  Get all and trashed
@@ -116,7 +103,7 @@ class JobcardController extends Controller
         return oq_api_notify($jobcards, 200);
     }
 
-    public function getStages(Request $request)
+    public function getLifecycleStages(Request $request)
     {
         $user = auth('api')->user();
 

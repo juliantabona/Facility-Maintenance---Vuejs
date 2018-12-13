@@ -2,29 +2,47 @@
   .ivu-card:hover{
     cursor: pointer;
   }
+  
+  .ivu-badge >>> .ivu-badge-count {
+    font-family: inherit !important;
+    font-weight: 600 !important;
+    min-width: 35px !important;
+    height: 20px !important;
+    z-index: 1 !important;
+  }
+
 </style>
 <template>
 
     <Row :gutter="20" class="pt-3 pl-2 pr-2">
         <Col :span="24">
-          <Card padding="5px" class="mt-2 mb-4">
-            <h6 class="ml-2"><strong>Jobcard Lifecycle</strong></h6>
-          </Card>
+          <Divider orientation="left"><Badge><h5>Jobcard Status</h5></Badge></Divider>
         </Col>
-        <Col :span="6" v-for="stage in lifecycleStages" :key="stage.name" class="mb-2">
-    
-            <Card  @click.native="viewJobcards(stage)" :style="{ padding:0, minHeight:'135px' }">
-                
-                <div style="padding: 0px 15px;">
-                    <Icon :type="stage.icon" size="45" class="text-center" style="display: block;"/>
-                    <p class="text-center" style="padding-top:5px;">{{ stage.name }}</p>
-                    <h6 class="text-center" style="padding-top:10px;"><strong>{{ getCount(stage) }}</strong></h6>
-                </div>
+        
+        <Col :span="24">
 
-            </Card>
+          <Row :gutter="20" class="pl-3 pr-3">
+
+            <Col :span="6" v-for="stage in lifecycleStages" :key="stage.name" class="mb-2">
+
+                <Card  @click.native="viewJobcards(stage.step)" :style="{ padding:0, minHeight:'100px' }">
+                  
+                    <div style="padding: 0px 15px;">
+                      <Badge :count="getCount(stage)" type="primary" style="width:100%;">
+                          <Icon :type="stage.icon" size="45" class="text-center" style="display: block;"/>
+                          <p class="text-center" style="padding-top:5px;">{{ stage.name }}</p>
+                        </Badge>
+                    </div>
+                    
+
+                </Card>
+
+            </Col>
+
+          </Row>   
 
         </Col>
-
+        
     </Row>
 
 </template>
@@ -47,8 +65,8 @@
           }
         },
         methods: {
-            viewJobcards(){
-
+            viewJobcards(step){
+              this.$router.push({ name: 'jobcards', query: { step: step } });
             },
             getCount(stage){
               
@@ -72,7 +90,7 @@
                 console.log('Start getting jobcard lifecycle stages...');
 
                 //  Use the api call() function located in resources/js/api.js
-                api.call('get', '/api/jobcards/allocations')
+                api.call('get', '/api/jobcards/lifecycle/stages')
                     .then(({data}) => {
 
                         //  Stop loader
