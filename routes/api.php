@@ -64,3 +64,11 @@ Route::get('jobcards/{jobcard_id}/contractors', 'Api\JobcardController@contracto
 Route::get('jobcards/lifecycle/stages', 'Api\JobcardController@getLifecycleStages');
 Route::get('jobcards/{jobcard_id}/lifecycle', 'Api\JobcardController@getLifecycle');
 Route::post('jobcards/{jobcard_id}/lifecycle', 'Api\JobcardController@updateLifecycle');
+
+/*   JOBCARD RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::get('clients', 'Api\ClientController@index');
+Route::get('clients/{client_id}/jobcards', 'Api\ClientController@clientJobcards');
+
+Route::get('downloadFile', 'Api\DownloadController@download');

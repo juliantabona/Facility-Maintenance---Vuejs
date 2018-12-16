@@ -38,6 +38,21 @@ class Jobcard extends Model
         'id', 'title', 'description', 'start_date', 'end_date', 'created_at',
     ];
 
+    public function categories()
+    {
+        return $this->morphMany('App\Category', 'category');
+    }
+
+    public function costCenters()
+    {
+        return $this->morphMany('App\CostCenter', 'costcenter');
+    }
+
+    public function priorities()
+    {
+        return $this->morphMany('App\Priority', 'priority');
+    }
+
     public function contractorsList()
     {
         return $this->belongsToMany('App\Company', 'jobcard_contractors', 'jobcard_id', 'contractor_id')
@@ -61,21 +76,6 @@ class Jobcard extends Model
     //  EVERTHING BELOW THIS CAUTION IS NOT YET BEING USED BY THE SYSTEM            //
     //                                                                              //
     //////////////////////////////////////////////////////////////////////////////////
-
-    public function category()
-    {
-        return $this->belongsTo('App\Category', 'category_id');
-    }
-
-    public function costCenter()
-    {
-        return $this->belongsTo('App\CostCenter', 'cost_center_id');
-    }
-
-    public function priority()
-    {
-        return $this->belongsTo('App\Priority', 'priority_id');
-    }
 
     public function owningBranch()
     {

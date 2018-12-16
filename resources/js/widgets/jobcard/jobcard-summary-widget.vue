@@ -1,22 +1,23 @@
-<style scoped>
-
-</style>
-
 <template>
 
-    <Card class="company-summary-widget" :style="{ width: '100%' }">
+    <Card class="jobcard-summary-widget" :style="{ width: '100%' }">
 
-        <div slot="title">
+        <div v-if ="showHeaderSection" slot="title">
             <h5><Icon type="ios-copy-outline" :size="18" class="mr-2"></Icon> Jobcard Summary</h5>
         </div>
-
-        <div slot="extra">
-            <span><strong>Status: </strong></span>
-            <span class="mr-2">
-                <Poptip word-wrap width="200" trigger="hover" title="Current Status" :content="statusSummary.description">
-                    <Tag color="success">{{ statusSummary.name }}</Tag>
-                </Poptip>
+    
+        <div v-if ="showHeaderSection" slot="extra">
+            <span v-if="showAuthourizedStatus"><strong>Authourized: </strong>
+                <span class="mr-2">
+                    <Poptip word-wrap width="200" trigger="hover" title="Jobcard is authourized for processing" :content="statusSummary.description">
+                        <span><Icon type="md-checkmark-circle-outline" :size="20" color="#19be6b"/></span>
+                    </Poptip>
+                </span>
             </span>
+            <span v-if="showProcessStatus"><strong>Status: </strong>
+                <statusSummaryTag :statusSummary="jobcard.statusSummary"></statusSummaryTag>
+            </span>
+
             <Dropdown trigger="click" v-if="showMenuBtn">
                 <a href="javascript:void(0)">
                     <Icon type="md-more" :size="16"></Icon>
@@ -33,16 +34,21 @@
         </div>
 
         <Row v-if="showDescriptionSection">
-            <Col span="24">
-
+            <Col v-if="showTitle" span="24">
                 <p class="mb-2"><strong>Title:</strong> {{ jobcard.title }}</p>
+            </Col>
+            <Col v-if="showDescription" span="24">
                 <p>
                     <span><strong>Description: </strong></span>
                     <span>{{ jobcard.description }}</span>
                 </p>
-                <p class="mb-2"><span class="d-block mt-2"><strong>Deadline: </strong>{{ jobcard.deadlineInWords }}</span></p>
             </Col>
-            <Col span="12 mt-1">
+            <Col v-if="showDeadline" span="24">
+                <p class="mb-2">
+                    <span class="d-block mt-2"><strong>Deadline: </strong>{{ jobcard.deadlineInWords }}</span>
+                </p>
+            </Col>
+            <Col v-if="showStartDate" span="12">
                 <span>
                     <Poptip word-wrap width="200" trigger="hover" :content="jobcard.start_date | moment('DD MMM YYYY, H:mmA')">
                         <span><strong>Start Date: </strong></span>
@@ -50,7 +56,7 @@
                     </Poptip>
                 </span>
             </Col>
-            <Col span="12">
+            <Col v-if="showEndDate" span="12">
                 <span>
                     <Poptip word-wrap width="200" trigger="hover" :content="jobcard.end_date | moment('DD MMM YYYY, H:mmA')">
                         <span><strong>End Date: </strong></span>
@@ -63,36 +69,30 @@
         <Divider v-if="showDescriptionSection" dashed class="mt-2 mb-3" />
 
         <Row v-if="showStatusSection">
-            <Col span="12">
-                <span><strong>Category: </strong></span>
-                <span>
-                    <Poptip word-wrap width="200" trigger="hover" content="Any heating or cooling device or utility">
-                        <Tag type="border" color="primary">Air-Conditioning</Tag>
-                    </Poptip>
-                    <Button type="dashed" size="small"><Icon type="ios-create-outline" :size="18" class="mr-2"></Icon></Button>
-                </span>
+            <Col v-if="showPriority" span="12">
+                <span><strong>Priority: </strong></span>
+                <priorityTag :priorities="jobcard.priorities" :showEditBtn="true"></priorityTag>
             </Col>
-            <Col span="12">
+            <Col v-if="showCategory" span="12">
+                <span><strong>Category: </strong></span>
+                <categoryTag :categories="jobcard.categories" :showEditBtn="true"></categoryTag>
+            </Col>
+            <Col v-if="showCostCenters" span="24" class="mt-2">
                 <span><strong>Cost Centers: </strong></span>
-                <span>
-                    <Poptip word-wrap width="200" trigger="hover" content="Costs by maintenance work">
-                        <Tag type="border" color="primary">Maintenance</Tag>
-                    </Poptip>
-                    <Button icon="ios-add" type="dashed" size="small">Add</Button>
-                </span>
+                <costcenterTag :costcenters="jobcard.costcenters" :showAddBtn="true"></costcenterTag>
             </Col>
         </Row>
 
         <Divider v-if ="showStatusSection" dashed class="mt-3 mb-3" />
 
         <Row v-if ="showPublishSection">
-            <Col span="12" v-if="jobcard.createdBy">
+            <Col v-if="jobcard.createdBy && showCreatedBy" span="12">
                 <span><strong>Created By: </strong></span>
                 <Poptip word-wrap width="200" trigger="hover" :content="getPostion(jobcard.createdBy)">
                     <span><a href="#">{{ getFullName(jobcard.createdBy) }}</a></span>
                 </Poptip>
             </Col>
-            <Col span="12" v-if="jobcard.createdBy">
+            <Col v-if="jobcard.createdBy && showCreatedByDate" span="12">
                 <span>
                     <Poptip word-wrap width="200" trigger="hover" :content="jobcard.created_at | moment('DD MMM YYYY, H:mmA')">
                         <span><strong>Created Date: </strong></span>
@@ -100,13 +100,13 @@
                     </Poptip>
                 </span>
             </Col>
-            <Col span="12" v-if="jobcard.authourizedBy">
+            <Col v-if="jobcard.authourizedBy && showAuthourizedBy" span="12">
                 <span><strong>Authorized By:</strong></span>
                 <Poptip word-wrap width="200" trigger="hover" :content="getPostion(jobcard.authourizedBy)">
                     <span><a href="#">{{ getFullName(jobcard.authourizedBy) }}</a></span>
                 </Poptip>
             </Col>
-            <Col span="12" v-if="jobcard.authourizedBy">
+            <Col v-if="jobcard.authourizedBy && showAuthourizedByDate" span="12">
                 <span>
                     <Poptip word-wrap width="200" trigger="hover" :content="getAuthourizedDate() | moment('DD MMM YYYY, H:mmA')">
                         <span><strong>Authorized Date:</strong></span>
@@ -121,8 +121,8 @@
         <Row v-if ="showResourceSection" class="expand-row mb-1">
             <Col span="24">
                 <span class="d-block float-right">
-                    <Poptip word-wrap width="200" trigger="hover" content="Click to view Contractors">
-                        <Tag type="border" color="green">+2 Contractors</Tag>
+                    <Poptip word-wrap width="200" trigger="hover" content="Click to view Suppliers">
+                        <Tag type="border" color="green">+2 Suppliers</Tag>
                     </Poptip>
                     <Poptip word-wrap width="200" trigger="hover" content="Click to view Assets">
                         <Tag type="border" color="green">+3 Assets</Tag>
@@ -145,19 +145,16 @@
 
         <Row v-if ="showActionToolbalSection">
             <Col span="24">
-                <Button type="primary" class="float-right" @click.native="viewJobcard">
+                <Button v-if ="showViewBtn" type="primary" class="float-right" @click.native="viewJobcard">
                     View
                     <Icon type="md-arrow-forward" />
                 </Button>
-                <Button type="default" class="float-right mr-1">
-                    <Icon type="ios-download-outline" :size="18" :style="{ marginTop:'-3px' }"/>
-                    Download
-                </Button>
-                <Button type="default" class="float-right mr-1">
+                <downloadJobcardBtn v-if ="showDownloadBtn" :jobcardId="jobcard.id" class="float-right mr-1"></downloadJobcardBtn>
+                <Button v-if ="showSendBtn" type="default" class="float-right mr-1">
                     <Icon type="ios-send-outline" :size="18" :style="{ marginTop:'-3px' }"/>
                     Send
                 </Button>
-                <div class="float-left mt-2 mr-4">
+                <div v-if ="showPublicBtn" class="float-left mt-2 mr-4">
                     <Poptip word-wrap width="200" trigger="hover" 
                             content="Advertise jobcard to the general public by pushing to websites and social media. This will allow third-party contractors to see and respond to your jobcard. You will be alerted on the platform and via email.">
                         <span>
@@ -172,103 +169,192 @@
                 </div>
             </Col>
         </Row>
-
+        
     </Card>
 
 </template>
 
 <script>
 
-  export default {
-    props: {
-        jobcard: {
-            type: Object,
-            default: () => {}
+    import priorityTag from './../../components/priority/priority-tag.vue';
+    import categoryTag from './../../components/category/category-tag.vue';
+    import costcenterTag from './../../components/costcenter/costcenter-tag.vue';
+    import statusSummaryTag from './../../components/jobcard/status-summary-tag.vue';
+    import downloadJobcardBtn from './../../components/jobcard/download-button.vue';    
+
+    export default {
+        components: { priorityTag, categoryTag, costcenterTag, statusSummaryTag, downloadJobcardBtn },
+        props: {
+            jobcard: {
+                type: Object,
+                default: () => {}
+            },
+            /*  Menu related Options  */
+            showMenuBtn: {
+                type: Boolean,
+                default: true
+            },
+            showMenuEditBtn: {
+                type: Boolean,
+                default: true
+            },
+            showMenuTrashBtn: {
+                type: Boolean,
+                default: true
+            },
+            showMenuAddClientBtn: {
+                type: Boolean,
+                default: true
+            },
+            showMenuAddContractorBtn: {
+                type: Boolean,
+                default: true
+            },
+            showMenuAddLabourBtn: {
+                type: Boolean,
+                default: true
+            },
+            showMenuAddAssetBtn: {
+                type: Boolean,
+                default: true
+            },
+            /*  Section Options  */
+            showHeaderSection: {
+                type: Boolean,
+                default: true
+            },
+            showDescriptionSection: {
+                type: Boolean,
+                default: true
+            },
+            showStatusSection: {
+                type: Boolean,
+                default: true
+            },
+            showPublishSection: {
+                type: Boolean,
+                default: true
+            },
+            showResourceSection: {
+                type: Boolean,
+                default: true
+            },
+            showActionToolbalSection: {
+                type: Boolean,
+                default: true
+            },
+            /*  Single Options    */
+
+            /*  Header Options    */
+            showAuthourizedStatus: {
+                type: Boolean,
+                default: true
+            },  
+            showProcessStatus: {
+                type: Boolean,
+                default: true
+            }, 
+            /*  Body Options    */
+            showTitle: {
+                type: Boolean,
+                default: true
+            }, 
+            showDescription: {
+                type: Boolean,
+                default: true
+            }, 
+            showDeadline: {
+                type: Boolean,
+                default: true
+            }, 
+            showStartDate: {
+                type: Boolean,
+                default: true
+            }, 
+            showEndDate: {
+                type: Boolean,
+                default: true
+            }, 
+            showPriority: {
+                type: Boolean,
+                default: true
+            }, 
+            showCategory: {
+                type: Boolean,
+                default: true
+            }, 
+            showCostCenters: {
+                type: Boolean,
+                default: true
+            },
+            showCreatedBy: {
+                type: Boolean,
+                default: true
+            }, 
+            showCreatedByDate: {
+                type: Boolean,
+                default: true
+            }, 
+            showAuthourizedBy: {
+                type: Boolean,
+                default: true
+            }, 
+            showAuthourizedByDate: {
+                type: Boolean,
+                default: true
+            },
+            /*  Footer Options    */
+            showViewBtn: {
+                type: Boolean,
+                default: true
+            }, 
+            showDownloadBtn: {
+                type: Boolean,
+                default: true
+            }, 
+            showSendBtn: {
+                type: Boolean,
+                default: true
+            }, 
+            showPublicBtn: {
+                type: Boolean,
+                default: true
+            },
         },
-        showMenuBtn: {
-            type: Boolean,
-            default: true
-        },
-        showMenuEditBtn: {
-            type: Boolean,
-            default: true
-        },
-        showMenuTrashBtn: {
-            type: Boolean,
-            default: true
-        },
-        showMenuAddClientBtn: {
-            type: Boolean,
-            default: true
-        },
-        showMenuAddContractorBtn: {
-            type: Boolean,
-            default: true
-        },
-        showMenuAddLabourBtn: {
-            type: Boolean,
-            default: true
-        },
-        showMenuAddAssetBtn: {
-            type: Boolean,
-            default: true
-        },
-        showDescriptionSection: {
-            type: Boolean,
-            default: true
-        },
-        showStatusSection: {
-            type: Boolean,
-            default: true
-        },
-        showPublishSection: {
-            type: Boolean,
-            default: true
-        },
-        showResourceSection: {
-            type: Boolean,
-            default: true
-        },
-        showActionToolbalSection: {
-            type: Boolean,
-            default: true
+        data() {
+        return {
+            isLoading: false,
         }
-
-    },
-    data() {
-      return {
-           isLoading: false,
-      }
-    },
-    computed:{
-        statusSummary: function(){
-            return (this.jobcard.statusSummary || {});
-        }
-    },
-    methods: {
-        getFullName: function(user){
-            let first_name = (user || {}).first_name|| '';
-            let last_name = (user || {}).last_name|| '';
-
-            return first_name+' '+last_name;
         },
-        getPostion(user){
-            return (user || {}).position || '';
-        },
-        getAuthourizedDate(){
-            
-            var x, recentActivity = this.jobcard.recent_activities || {};
-
-            for(x=0; x < _.size(recentActivity); x++){
-                if(recentActivity[x].activity.type == 'authourized'){
-                    return recentActivity[x].created_at; 
-                }
+        computed:{
+            statusSummary: function(){
+                return (this.jobcard.statusSummary || {});
             }
         },
-        viewJobcard: function(){
-            this.$router.push({ name: 'show-jobcard', params: { id: this.jobcard.id } });
-        }
-    } 
-  };
+        methods: {
+            getFullName: function(user){
+                let first_name = (user || {}).first_name|| '';
+                let last_name = (user || {}).last_name|| '';
+
+                return first_name+' '+last_name;
+            },
+            getPostion(user){
+                return (user || {}).position || '';
+            },
+            getAuthourizedDate(){
+                
+                var x, recentActivity = this.jobcard.recent_activities || {};
+
+                for(x=0; x < _.size(recentActivity); x++){
+                    if(recentActivity[x].activity.type == 'authourized'){
+                        return recentActivity[x].created_at; 
+                    }
+                }
+            },
+            viewJobcard: function(){
+                this.$router.push({ name: 'show-jobcard', params: { id: this.jobcard.id } });
+            }
+        } 
+    };
   
 </script>

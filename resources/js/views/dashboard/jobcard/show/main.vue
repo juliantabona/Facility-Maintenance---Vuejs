@@ -28,7 +28,7 @@
                     <Col span="8">
                         <companySummaryWidget 
                         
-                            :company="company" type="client"
+                            :company="client" type="client"
 
                             :showMenuBtn="true"
                             :showViewBtn="true" :showEditBtn="true" :showRemoveBtn="true" :showAddContactBtn="true"
@@ -190,7 +190,7 @@
     import quotationSummaryWidget from './../../../../widgets/quotation/quotation-preview-widget.vue';
     import invoiceSummaryWidget from './../../../../widgets/invoice/invoice-preview-widget.vue';
     import receiptSummaryWidget from './../../../../widgets/receipt/receipt-preview-widget.vue';
-    import contractorListWidget from './../../../../widgets/contractor/contractor-list-widget.vue';
+    import contractorListWidget from './../../../../widgets/supplier/supplier-list-widget.vue';
 
 
     export default {
@@ -255,15 +255,7 @@
                         h('span', { style: { display: 'inline-block' } }, 'Asset')
                     ])
                 },
-                company: {
-                    logo_url: 'http://acmelogos.com/images/logo-8.svg',
-                    name: 'Optimum Quality (Pty) Ltd',
-                    city: 'Gaborone',
-                    address: 'Plot 2356, Fairgrounds',
-                    phone_ext: '267',
-                    phone_num: '3909083',
-                    email: 'info@optimumqbw.com'
-                }
+                client: {}
             }
         },
         created () {
@@ -278,8 +270,10 @@
 
                 console.log('Start getting jobcard...');
 
+                var connections = 'connections=categories,priorities,costcenters,client';
+
                 //  Use the api call() function located in resources/js/api.js
-                api.call('get', '/api/jobcards/'+this.$route.params.id)
+                api.call('get', '/api/jobcards/'+this.$route.params.id+'?'+connections)
                     .then(({data}) => {
 
                         //  Stop loader
@@ -287,6 +281,7 @@
 
                         //  Get jobcard lifecycle data
                         self.jobcard = data;
+                        self.client = data.client;
 
                         console.log('jobcard');
                         console.log(self.jobcard);

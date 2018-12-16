@@ -14,10 +14,12 @@
 
 </template>
 <script type="text/javascript">
+    import Filterable from './../../../../components/Filterable.vue';
+    import priorityTag from './../../../../components/priority/priority-tag.vue';
+    import statusSummaryTag from './../../../../components/jobcard/status-summary-tag.vue';
     import jobcardListExpandWidget from './../../../../widgets/jobcard/jobcard-list-expand.vue';
-    import Filterable from './../../../../components/Filterable.vue'
     export default {
-        components: { Filterable, jobcardListExpandWidget },
+        components: { Filterable, priorityTag, statusSummaryTag, jobcardListExpandWidget },
         data() {
             return {
                 renderKey: 0,
@@ -41,25 +43,40 @@
                         sortable: true,
                     },
                     {
-                        width: 450,
+                        width: 400,
                         title: 'Title',
                         key: 'title',
                         sortable: true
                     },
                     {
+                        width: 120,
                         title: 'Due',
                         key: 'deadline',
                         sortable: true
                     },
                     {
-                        title: 'Status',
-                        key: 'created_by',
-                        sortable: true
+                        width: 120,
+                        title: 'Priority',
+                        sortable: true,
+                        render: (h, params) => {
+                            return h(priorityTag, {
+                                props: {
+                                    priorities: params.row.priorities,
+                                    showEditBtn: false
+                                }
+                            })
+                        }
                     },
                     {
-                        title: 'Priority',
-                        key: 'created_by',
-                        sortable: true
+                        title: 'Status',
+                        sortable: true,
+                        render: (h, params) => {
+                            return h(statusSummaryTag, {
+                                props: {
+                                    statusSummary: params.row.statusSummary
+                                }
+                            })
+                        }
                     },
                     {
                         title: 'Action',
@@ -161,9 +178,9 @@
             }
         },
         computed: {
-            jobcardURL: function () {
+            URL: function () {
                 var lifecycleStep = this.lifecycleStep ? 'step='+this.lifecycleStep : ''; 
-                var connections = 'connections=';
+                var connections = 'connections=categories,priorities,costcenters';
                 return '/api/jobcards?'+lifecycleStep+'&&'+connections;
             }
         },
@@ -183,8 +200,9 @@
             
             if(this.$route.query.step){
                 this.lifecycleStep = this.$route.query.step;
-                this.filterable.url = this.jobcardURL;
             }
+
+            this.filterable.url = this.URL;
 
             console.log(this.lifecycleStep);
         }

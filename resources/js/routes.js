@@ -29,8 +29,9 @@ let routes = [
         //  Clients
         path: '/clients', name: 'clients',
         meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/client/main.vue')
+        component: require('./views/dashboard/client/list/main.vue')
     },
+    
     {
         //  Suppliers
         path: '/suppliers', name: 'suppliers',

@@ -14,10 +14,34 @@ class JobcardController extends Controller
     {
         $user = auth('api')->user();
 
+        /***********************************************************
+        *  CHECK IF THE USER IS AUTHORIZED TO VIEW JOBCARDS        *
+        /**********************************************************/
+
         //  We start with no jobcards
         $jobcards = [];
 
-        //  Which jobcards do we want to retrieve ???
+        /*  First thing is first, we need to understand one of four scenerios, Either we want:
+         *
+         *  1) Only jobcards in their respective steps e.g) Open, Pending, Closed, e.t.c...
+         *  2) Only jobcards for a related company of the authenticated user
+         *  3) Only jobcards for a related company branch of the authenticated user
+         *  4) All jobcards in the system e.g) If SuperAdmin needs access to all data
+         *
+         */
+
+        /*  In that case we will get the data depending on what the user specifies.
+         *  However we will check if the user is allowed to the resources before
+         *  dishing them out to the user.
+         *
+         *  First lets see if the user indicated if they want the data according to the
+         *  jobcards according to they step allocations. We will check if we have a step
+         *  indicated in the query. If so, then lets get the users company template for
+         *  specifically for defining the process steps for jobcards. Once we have the
+         *  template, we need to create a new Jobcard instance so that we can use it to
+         *  query jobcards in the specified step that belong to that exact template.
+         *
+         */
 
         if (!empty(request('step'))) {
             try {
@@ -36,55 +60,82 @@ class JobcardController extends Controller
             } catch (\Exception $e) {
                 return oq_api_notify_error('Query Error', $e->getMessage(), 404);
             }
+
+            /*  If the user did not specify the step, then the assumption is that the user
+             *  wants to retrieve the data of all jobcards related to their company or branch.
+             *  Another assumption is that they want to retrieve all jobcards in the entire system
+             *
+             */
         } else {
             /*  COMPANY JOBCARDS
-            *  Get the company related jobcards if the user indicated
-            *  This is normaly used by authenticated managers to access all
-            *  jobcard resources in their respective company
-            */
-            if (!empty(request('company')) && request('company') == 1) {
+             *  If the user indicated that they want jobcards related to their company,
+             *  then get the jobcards related to the authenticated users company.
+             *  They must indicate using the query "model" set to "company".
+             */
+            if (!empty(request('model')) && request('model') == 'company') {
                 $order_join = 'jobcards';
                 $jobcards = $user->companyBranch->company->jobcards();
 
-            /*  BRANCH JOBCARDS
-            *  Get the branch related jobcards by default
-            *  This is normaly used by authenticated staff to access all
-            *  jobcard resources in their respective company branch
-            */
+            /*  BRANCH JOBCARDS - Always Default
+             *  If the user indicated that they want jobcards related to their company
+             *  branch, then get the jobcards related to the authenticated users company.
+             *
+             *  This is always default if the user does not specify that they want company
+             *  related jobcards
+             */
             } else {
                 $jobcards = $user->companyBranch->jobcards();
             }
         }
 
         /*  ALL JOBCARDS
-         *  We need to check if the user is authorized to view all jobcards
-         *  This is normaly used by authorized superadmins to access all
-         *  jobcard resources in the system.
+         *  If the user wants all the jobcards in the system, they must indicate
+         *  using the query "all" set to "1". This is normaly used by authorized
+         *  superadmins to access all jobcard resources in the system.
          */
         if (!empty(request('all')) && request('all') == 1) {
             /***********************************************************
             *  CHECK IF THE USER IS AUTHORIZED TO VIEW ALL JOBCARDS    *
             /**********************************************************/
 
-            //  New jobcard instance so that we can get all jobcards
+            /*  ALL JOBCARDS
+            *  If the user wants all the jobcards in the system, they must indicate
+            *  using the query "all" set to "1". This is normaly used by authorized
+            *  superadmins to access all jobcard resources in the system.
+            */
+
+            /*   Create a new jobcard instance that can be used to retrieve all jobcards
+             */
             $jobcards = new Jobcard();
         }
 
-        //  If we don't have any special order_joins, lets default it to nothing
+        /*  To avoid sql order_by error for ambigious fields e.g) created_at
+         *  we must specify the order_join.
+         *
+         *  Order joins help us when using the "advancedFilter()" method. Usually
+         *  we need to specify the joining table so that the system is not confused
+         *  by similar column names that exist on joining tables. E.g) the column
+         *  "created_at" can exist in multiple table and the system might not know
+         *  whether the "order_by" is for table_1 created_at or table 2 created_at.
+         *  By specifying this we end up with "table_1.created_at"
+         *
+         *  If we don't have any special order_joins, lets default it to nothing
+         */
+
         $order_join = isset($order_join) ? $order_join : '';
 
         try {
             //  Get all and trashed
             if (request('withtrashed') == 1) {
-                //  Run query, dont paginate to return relationship instance
+                //  Run query
                 $jobcards = $jobcards->withTrashed()->advancedFilter(['order_join' => $order_join]);
             //  Get only trashed
             } elseif (request('onlytrashed') == 1) {
-                //  Run query, dont paginate to return relationship instance
+                //  Run query
                 $jobcards = $jobcards->onlyTrashed()->advancedFilter(['order_join' => $order_join]);
             //  Get all except trashed
             } else {
-                //  Run query, dont paginate to return relationship instance
+                //  Run query
                 $jobcards = $jobcards->advancedFilter(['order_join' => $order_join]);
             }
 

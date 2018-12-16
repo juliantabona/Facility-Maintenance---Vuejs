@@ -1,24 +1,10 @@
 <style scoped>
 
     * {
-    margin: 0;
-    padding: 0;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
     box-sizing: border-box;
     font-size: 12px;
-    }
-
-    body {
-    text-align: center;
-    background-color: #34495e;
-    }
-
-    h1 {
-    font-weight: 100;
-    font-size: 32px;
-    padding: 40px;
-    color: #fff;
     }
 
     #breadcrumb {
@@ -131,6 +117,9 @@
 <template>
 
     <Card :style="{ width: '100%' }">
+        
+        <Loader v-if="isLoading" :loading="isLoading" type="text" :style="{ padding: '6px 15px 6px 15px', fontSize: '14px' }">Getting Lifecycle...</Loader>
+
         <Poptip word-wrap width="200" trigger="hover" :content="popTipTitle">
             <ul id="breadcrumb">
                 <li v-for="(stage, i) in stages" :class="i < activeStep ? 'active': ''"
@@ -160,10 +149,12 @@
 </template>
 
 <script>
-    import UpdateStatusLifecycleWidget from './update-status-lifecycle-widget.vue';
+
+    import Loader from './../../components/Loader.vue';
+    import UpdateStatusLifecycleWidget from './update-status-lifecycle-modal.vue';
 
     export default {
-        components: { UpdateStatusLifecycleWidget },
+        components: { Loader, UpdateStatusLifecycleWidget },
         data(){
             return {
                 isLoading: false,
@@ -221,9 +212,6 @@
 
                         //  Get jobcard lifecycle data
                         self.lifecycle = data;
-
-                        console.log('Lifecycle');
-                        console.log(self.lifecycle);
                     })         
                     .catch(response => { 
                         console.log('status-lifecycle-widget.vue - Error getting lifecycle...');
@@ -232,8 +220,6 @@
                         //  Stop loader
                         self.isLoading = false;     
                     });
-
-
             }
         },
     };
