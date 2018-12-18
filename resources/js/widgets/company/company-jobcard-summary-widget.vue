@@ -11,13 +11,17 @@
 
         <Loader v-if="isLoading" :loading="isLoading"></Loader>
         
+        <Alert v-if="!isLoading && !jobcards.length" type="warning">
+            No information found
+        </Alert>
+
         <Row v-if="jobcards.length">
             <Col v-for="jobcard in jobcards" :key="jobcard.id">
                 <jobcardSummaryWidget :style="{ marginBottom: '10px' }"
                     :jobcard="jobcard"
 
                     :showMenuBtn="false" :showMenuEditBtn="true" :showRemoveBtn="true" :showMenuAddClientBtn="true"
-                    :showMenuAddContractorBtn="true" :showMenuAddLabourBtn="true" :showMenuAddAssetBtn="true"
+                    :showMenuAddSupplierBtn="true" :showMenuAddLabourBtn="true" :showMenuAddAssetBtn="true"
                     
                     :showHeaderSection="false" :showDescriptionSection="true" :showStatusSection="false" 
                     :showPublishSection="false" :showResourceSection="false" :showActionToolbalSection="true"
@@ -45,11 +49,11 @@
     export default {
         components: { Loader, jobcardSummaryWidget },
         props: {
-            modelId: {              //  id of client or contractor
+            modelId: {              //  id of client or supplier
                 type: Number,
                 default: null
             },
-            modelType: {            //  client, contractor
+            modelType: {            //  client, supplier
                 type: String,
                 default: ''
             },

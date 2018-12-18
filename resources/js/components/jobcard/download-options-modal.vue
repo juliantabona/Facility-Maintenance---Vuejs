@@ -135,7 +135,7 @@
                         ]
                     },
                     {
-                        title: 'Contractor',
+                        title: 'Supplier',
                         expand: false,
                         checked: true,
                         children: [

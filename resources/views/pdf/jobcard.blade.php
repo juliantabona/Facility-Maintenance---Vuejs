@@ -324,81 +324,81 @@
             </table>
         @endif
 
-        <!--   Contractor Details   -->
-        @if($options['showContractor'] && COUNT($jobcard->contractorslist))
+        <!--   Supplier Details   -->
+        @if($options['showSupplier'] && COUNT($jobcard->supplierslist))
 
             <table class="print-friendly">
                 <tr>
                     <td>
-                        <h1 class="text-highlight">Contractor Details</h1>
-                        @foreach($jobcard->contractorslist as $contractor)
+                        <h1 class="text-highlight">Supplier Details</h1>
+                        @foreach($jobcard->supplierslist as $supplier)
                         
                             <table class="print-friendly" style="width:100%;margin-bottom:30px;">
-                                @if($options['ContractorOptions']['Logo'])
+                                @if($options['SupplierOptions']['Logo'])
                                     <tr>
                                         <td colspan="3">
-                                            <img src="{{ $contractor->logo_url }}" style="max-height: 100px;">
+                                            <img src="{{ $supplier->logo_url }}" style="max-height: 100px;">
                                         </td>
                                     </tr>
                                 @endif
-                                @if($options['ContractorOptions']['Name'])
+                                @if($options['SupplierOptions']['Name'])
                                     <tr>
                                         <td colspan="3">
-                                            <span><strong>Name:</strong> {{ $contractor->name }}</span>
+                                            <span><strong>Name:</strong> {{ $supplier->name }}</span>
                                         </td>
                                     </tr>
                                 @endif
-                                @if($options['ContractorOptions']['Address'] || $options['ContractorOptions']['City'] || $options['ContractorOptions']['State_Region'])
+                                @if($options['SupplierOptions']['Address'] || $options['SupplierOptions']['City'] || $options['SupplierOptions']['State_Region'])
                                     <tr>
-                                        @if($options['ContractorOptions']['Address'])
+                                        @if($options['SupplierOptions']['Address'])
                                             <td>
-                                                <span><strong>Address:</strong> {{ $contractor->address }}</span>
+                                                <span><strong>Address:</strong> {{ $supplier->address }}</span>
                                             </td>
                                         @endif
-                                        @if($options['ContractorOptions']['City'])
+                                        @if($options['SupplierOptions']['City'])
                                             <td>
-                                                <span><strong>City:</strong> {{ $contractor->city }}</span>
+                                                <span><strong>City:</strong> {{ $supplier->city }}</span>
                                             </td>
                                         @endif
-                                        @if($options['ContractorOptions']['State_Region'])
+                                        @if($options['SupplierOptions']['State_Region'])
                                             <td>
-                                                <span><strong>State/Region:</strong> {{ $contractor->state_or_region }}</span>
+                                                <span><strong>State/Region:</strong> {{ $supplier->state_or_region }}</span>
                                             </td>
                                         @endif
                                     </tr>
                                 @endif
-                                @if($options['ContractorOptions']['Industry'] || $options['ContractorOptions']['Type'])
+                                @if($options['SupplierOptions']['Industry'] || $options['SupplierOptions']['Type'])
                                 <tr>
-                                    @if($options['ContractorOptions']['Industry'])
+                                    @if($options['SupplierOptions']['Industry'])
                                         <td colspan="1">
-                                            <span><strong>Industry:</strong> {{ $contractor->industry }}</span>
+                                            <span><strong>Industry:</strong> {{ $supplier->industry }}</span>
                                         </td>
                                     @endif
-                                    @if($options['ContractorOptions']['Type'])
+                                    @if($options['SupplierOptions']['Type'])
                                         <td colspan="1">
-                                            <span><strong>Type:</strong> {{ $contractor->type }}</span>
+                                            <span><strong>Type:</strong> {{ $supplier->type }}</span>
                                         </td>
                                     @endif
                                 </tr>
                                 @endif
-                                @if($options['ContractorOptions']['Email'] || $options['ContractorOptions']['Phone'] || $options['ContractorOptions']['Fax'])
+                                @if($options['SupplierOptions']['Email'] || $options['SupplierOptions']['Phone'] || $options['SupplierOptions']['Fax'])
                                 <tr>
                                     <td colspan="3">
                                         <table class="bg-highlight print-friendly" style="margin-bottom:30px;">
                                             <tr>
-                                                @if($options['ContractorOptions']['Email'])
+                                                @if($options['SupplierOptions']['Email'])
                                                     <td class="border">
-                                                        <span><strong>Email:</strong> {{ $contractor->email }}</span>
+                                                        <span><strong>Email:</strong> {{ $supplier->email }}</span>
                                                     </td>
                                                 @endif
-                                                @if($options['ContractorOptions']['Phone'])
+                                                @if($options['SupplierOptions']['Phone'])
                                                     <td class="border">
-                                                        <span><strong>Phone:</strong> {{ $contractor->phone }}</span>
+                                                        <span><strong>Phone:</strong> {{ $supplier->phone }}</span>
                                                     </td>
                                                 @endif
-                                                @if($options['ContractorOptions']['Fax'])
+                                                @if($options['SupplierOptions']['Fax'])
                                                     <td class="border">
-                                                        <span><strong>Fax:</strong> {{ $contractor->fax }}</span>
+                                                        <span><strong>Fax:</strong> {{ $supplier->fax }}</span>
                                                     </td>
                                                 @endif
                                             </tr>

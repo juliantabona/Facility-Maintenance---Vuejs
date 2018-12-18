@@ -77,7 +77,7 @@
                     <DropdownMenu slot="list">
                         <DropdownItem>Staff</DropdownItem>
                         <DropdownItem divided>Client</DropdownItem>
-                        <DropdownItem>Contractor</DropdownItem>
+                        <DropdownItem>Supplier</DropdownItem>
                         <DropdownItem divided>Asset</DropdownItem>
                         <DropdownItem>Jobcard</DropdownItem>
                     </DropdownMenu>
@@ -156,8 +156,8 @@
             label: 'Client'
           }, 
           {
-            value: 'contractor',
-            label: 'Contractor'
+            value: 'supplier',
+            label: 'supplier'
           }, {
             value: 'staff',
             label: 'Staff Member'

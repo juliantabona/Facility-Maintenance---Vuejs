@@ -25,7 +25,7 @@
             },
             type: {
                 type: String,
-                default: 'client'   //  client, contractor
+                default: 'client'   //  client, supplier
             }
         },
         data() {
@@ -138,21 +138,21 @@
                             ]
                         },
                         {
-                            name: '- With Contractors',
+                            name: '- With Suppliers',
                             filters: [
-                                {title: 'Count', name: 'contractorsList.count', type: 'counter'},
-                                {title: 'Id', name: 'contractorsList.id', type: 'numeric'},
-                                {title: 'Name', name: 'contractorsList.name', type: 'string'},
-                                {title: 'City', name: 'contractorsList.city', type: 'string'},
-                                {title: 'State Or Region', name: 'contractorsList.state_or_region', type: 'string'},
-                                {title: 'Address', name: 'contractorsList.address', type: 'string'},
-                                {title: 'Industry', name: 'contractorsList.industry', type: 'string'},
-                                {title: 'Type', name: 'contractorsList.type', type: 'string'},
-                                {title: 'Website Link', name: 'contractorsList.website_link', type: 'string'},
-                                {title: 'Phone ext', name: 'contractorsList.phone_ext', type: 'numeric'},
-                                {title: 'Phone Number', name: 'contractorsList.phone_num', type: 'numeric'},
-                                {title: 'Email', name: 'contractorsList.email', type: 'string'},
-                                {title: 'Created At', name: 'contractorsList.created_at', type: 'datetime'},
+                                {title: 'Count', name: 'suppliersList.count', type: 'counter'},
+                                {title: 'Id', name: 'suppliersList.id', type: 'numeric'},
+                                {title: 'Name', name: 'suppliersList.name', type: 'string'},
+                                {title: 'City', name: 'suppliersList.city', type: 'string'},
+                                {title: 'State Or Region', name: 'suppliersList.state_or_region', type: 'string'},
+                                {title: 'Address', name: 'suppliersList.address', type: 'string'},
+                                {title: 'Industry', name: 'suppliersList.industry', type: 'string'},
+                                {title: 'Type', name: 'suppliersList.type', type: 'string'},
+                                {title: 'Website Link', name: 'suppliersList.website_link', type: 'string'},
+                                {title: 'Phone ext', name: 'suppliersList.phone_ext', type: 'numeric'},
+                                {title: 'Phone Number', name: 'suppliersList.phone_num', type: 'numeric'},
+                                {title: 'Email', name: 'suppliersList.email', type: 'string'},
+                                {title: 'Created At', name: 'suppliersList.created_at', type: 'datetime'},
                             ]
                         },
                         {

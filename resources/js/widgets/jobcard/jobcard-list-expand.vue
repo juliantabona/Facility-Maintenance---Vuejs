@@ -25,7 +25,7 @@
                 :jobcard="row"
                 
                 :showMenuBtn="true" :showMenuEditBtn="true" :showRemoveBtn="true" :showMenuAddClientBtn="true"
-                :showMenuAddContractorBtn="true" :showMenuAddLabourBtn="true" :showMenuAddAssetBtn="true"
+                :showMenuAddSupplierBtn="true" :showMenuAddLabourBtn="true" :showMenuAddAssetBtn="true"
                 :showDescriptionSection="true" :showStatusSection="true" :showPublishSection="true" 
                 :showResourceSection="true" :showActionToolbalSection="true">
             </jobcardSummaryWidget>

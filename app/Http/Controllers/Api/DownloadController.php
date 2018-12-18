@@ -13,7 +13,7 @@ class DownloadController extends Controller
     {
         $user = auth('api')->user();
 
-        $jobcard = Jobcard::with('categories', 'priorities', 'costcenters', 'contractorslist', 'client')->where('id', request('id'))->first();
+        $jobcard = Jobcard::with('categories', 'priorities', 'costcenters', 'supplierslist', 'client')->where('id', request('id'))->first();
         $options = json_decode(urldecode(request('options')));
 
         $optionsFormatted = collect($options)->map(function ($option) {
@@ -66,8 +66,8 @@ class DownloadController extends Controller
                 "Phone": true,
                 "Fax": true
             },
-            "showContractor": true,
-            "ContractorOptions":
+            "showSupplier": true,
+            "SupplierOptions":
             {
                 "Logo": true,
                 "Name": true,

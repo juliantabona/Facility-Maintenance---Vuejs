@@ -10,7 +10,7 @@
         props:{
             statusSummary: {
                 type: Object,
-                default: () => {}
+                default: null
             }
         }
     }

@@ -34,7 +34,7 @@ class Company extends Model
 
     /*  Get the jobcards created by this company, get them in relation to the company branches that created them
      *  A jobcard is a documentation of work to be done for a client. This documentation is made up of details
-     *  describing the job, the client, the contractor, the contacts of both the client and contractor, as well
+     *  describing the job, the client, the supplier, the contacts of both the client and supplier, as well
      *  as the history (Recent Activities) describing the series of events building the jobcard
      */
 
@@ -73,10 +73,10 @@ class Company extends Model
                     ->where('company_directory.type', 'client');
     }
 
-    public function contractors()
+    public function suppliers()
     {
         return $this->companyDirectory()
-                    ->where('company_directory.type', 'contractor');
+                    ->where('company_directory.type', 'supplier');
     }
 
     ///////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +102,7 @@ class Company extends Model
 
     /*  Get the profiles of users related to this company  Get them in relation to the company branches
      *  that created them. These profiles can be admins, staff members, company client contacts or company
-     *  contractor contracts. Any user in the database is a profile
+     *  supplier contracts. Any user in the database is a profile
      */
 
     public function profiles()
@@ -153,7 +153,7 @@ class Company extends Model
     /*  Get all the recent activities relating to this company, Get them in relation to the company branches that
      *  created them Recent activities are anything that happens that needs to be recorded mainly for accountability
      *  purposes. Examples are activities such as creating, updating, trashing, deleting reources that the company
-     *  has a resource can be a user, client, contractor, jobcard, document, e.t.c
+     *  has a resource can be a user, client, supplier, jobcard, document, e.t.c
      */
     public function recentActivities()
     {
@@ -193,33 +193,33 @@ class Company extends Model
     }
     */
 
-    /*  Get the contractors for this company. A contractor is basically another company that this company is
-     *  subcontracting work. A contractor can be stored without necessary having work to be done by them, but stored
-     *  for profilling purposes. This could be useful in the case of prospective contractors.
+    /*  Get the suppliers for this company. A supplier is basically another company that this company is
+     *  subcontracting work. A supplier can be stored without necessary having work to be done by them, but stored
+     *  for profilling purposes. This could be useful in the case of prospective suppliers.
 
 
-    public function contractors()
+    public function suppliers()
     {
-        return $this->belongsToMany('App\Company', 'company_contractors', 'company_id', 'contractor_id')
-                    ->withPivot('contractor_id', 'company_id', 'who_created_id')
+        return $this->belongsToMany('App\Company', 'company_suppliers', 'company_id', 'supplier_id')
+                    ->withPivot('supplier_id', 'company_id', 'who_created_id')
                     ->withTimestamps();
     }
     */
 
     /*  Get the contacts for this company. A contact is basically users that this company is linked to. This link may
-     *  be that the contact is a staff member, a client contact, a contractor contact, or just an individual on their own
+     *  be that the contact is a staff member, a client contact, a supplier contact, or just an individual on their own
      */
 
-    /*  Get the jobcards assigned to this contractor company, in this case this company is the one that has been
+    /*  Get the jobcards assigned to this supplier company, in this case this company is the one that has been
      *  sub-contracted for the works and we would like to get access to all the jobcards that it has been listed
-     *  for. These assigned jobcards DO NOT mean that the contractor was eventually SELECTED for the job but
-     *  means that they were atleast meantioned on the list of POTENTIAL contractors
+     *  for. These assigned jobcards DO NOT mean that the supplier was eventually SELECTED for the job but
+     *  means that they were atleast meantioned on the list of POTENTIAL suppliers
      */
 
     public function assignedJobcards()
     {
-        return $this->belongsToMany('App\Jobcard', 'jobcard_contractors', 'contractor_id', 'jobcard_id')
-                    ->withPivot('id', 'jobcard_id', 'contractor_id', 'amount', 'quotation_doc_url')
+        return $this->belongsToMany('App\Jobcard', 'jobcard_suppliers', 'supplier_id', 'jobcard_id')
+                    ->withPivot('id', 'jobcard_id', 'supplier_id', 'amount', 'quotation_doc_url')
                     ->withTimestamps();
     }
 

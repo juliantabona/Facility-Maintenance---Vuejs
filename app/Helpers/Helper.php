@@ -30,7 +30,7 @@ function oq_checkClientExists($user, $company_name_or_id)
     return (!empty($result)) ? true : false;
 }
 
-/*  Checks if the contractor already exists in the company directory
+/*  Checks if the supplier already exists in the company directory
  *  by matching existing ID or Name. If exists, return true,
  *  otherwise false.
  *
@@ -40,9 +40,9 @@ function oq_checkClientExists($user, $company_name_or_id)
  * @return true  for company exists!
  * @return false for company does not exist
  */
-function oq_checkContractorExists($user, $company_name_or_id)
+function oq_checkSupplierExists($user, $company_name_or_id)
 {
-    $result = $user->companyBranch->company->contractors()
+    $result = $user->companyBranch->company->suppliers()
                     ->where('companies.id', $company_name_or_id)
                     ->orWhere('name', $company_name_or_id)->first();
 
@@ -501,7 +501,7 @@ function oq_createOrUpdateCompany($request, $currCompany, $user)
  * @param $owningCompany_id - The ID of the owning company
  * @param $company - The company we want to add to the directory
  * @param $user - The user we will use to extract the owning company's directory to add the listing company
- * @param $type - The type of company being added e.g) client, contractor, e.t.c
+ * @param $type - The type of company being added e.g) client, supplier, e.t.c
  *
  * @return true  for complete success, everything worked!
  * @return false for complete/partial fail during execution
@@ -511,7 +511,7 @@ function oq_addCompanyToDirectory($company, $type, $user)
     $owningBranch_id = $user->companyBranch->id;
     $owningCompany_id = $user->companyBranch->company->id;
 
-    //  Let us add the company to the owning company as type of client/contractor
+    //  Let us add the company to the owning company as type of client/supplier
     $addedToDirectory = $company->companyDirectory()->attach($owningCompany_id, ['type' => $type, 'owning_branch_id' => $owningBranch_id]);
 
     if ($addedToDirectory) {
@@ -554,19 +554,19 @@ function oq_addClientToJobcard($jobcard_id, $company, $user)
 }
 
 /**
- *  Add the company to the a jobcard as a potential contractor for that jobcard.
+ *  Add the company to the a jobcard as a potential supplier for that jobcard.
  *  Also save the quotation file and amount for the jobcard.
  *
  * @param $jobcard_id - The jobcard id
  * @param $company - The company we want to add
  * @param $user - The user running this activity
- * @param $request - The request with all the details about the contractor, quotation and amount
+ * @param $request - The request with all the details about the supplier, quotation and amount
  * @param $type - a string to indicate whether to create or update
  *
  * @return true  for complete success, everything worked!
  * @return false for complete/partial fail during execution
  */
-function oq_addOrUpdateContractorToJobcard($jobcard_id, $company, $user, $request, $type)
+function oq_addOrUpdateSupplierToJobcard($jobcard_id, $company, $user, $request, $type)
 {
     //  Lets get the file if it exists
     if (!empty($request->only('company_quote'))) {
@@ -613,8 +613,8 @@ function oq_addOrUpdateContractorToJobcard($jobcard_id, $company, $user, $reques
 
         if ($type == 'create') {
             try {
-                //  Add the company as part of the jobcards list of potential contractors
-                $addedToContractors = $jobcard->contractorsList()->attach([$company->id => [
+                //  Add the company as part of the jobcards list of potential suppliers
+                $addedToSuppliers = $jobcard->suppliersList()->attach([$company->id => [
                     'amount' => $amount,
                     'quotation_doc_id' => $doc_id,
                 ]]);
@@ -623,8 +623,8 @@ function oq_addOrUpdateContractorToJobcard($jobcard_id, $company, $user, $reques
             }
         } else {
             try {
-                //  Add the company as part of the jobcards list of potential contractors
-                $addedToContractors = $jobcard->contractorsList()->updateExistingPivot($company->id, [
+                //  Add the company as part of the jobcards list of potential suppliers
+                $addedToSuppliers = $jobcard->suppliersList()->updateExistingPivot($company->id, [
                     'amount' => $amount,
                     'quotation_doc_id' => $doc_id,
                 ]);
@@ -633,9 +633,9 @@ function oq_addOrUpdateContractorToJobcard($jobcard_id, $company, $user, $reques
             }
         }
 
-        if ($addedToContractors) {
-            //  Record activity of success client client/contractor added
-            $jobcardActivity = oq_saveActivity([$jobcard, $company], 'contractor added', $user);
+        if ($addedToSuppliers) {
+            //  Record activity of success client client/supplier added
+            $jobcardActivity = oq_saveActivity([$jobcard, $company], 'supplier added', $user);
         }
 
         return true;

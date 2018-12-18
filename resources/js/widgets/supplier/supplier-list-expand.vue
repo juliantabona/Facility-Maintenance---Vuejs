@@ -10,7 +10,7 @@
         <Col span="8">
             <companySummaryWidget 
                 
-                :company="row" :companyId="null" :companyBranchId="row.client_id" type="contractor"
+                :company="row" :companyId="null" :companyBranchId="row.client_id" type="supplier"
 
                 :showMenuBtn="true"
                 :showViewBtn="true" :showEditBtn="true" :showTrashBtn="true" :showAddContactBtn="true"
@@ -25,7 +25,7 @@
                 :jobcard="row"
                 
                 :showMenuBtn="true" :showMenuEditBtn="true" :showRemoveBtn="true" :showMenuAddClientBtn="true"
-                :showMenuAddContractorBtn="true" :showMenuAddLabourBtn="true" :showMenuAddAssetBtn="true"
+                :showMenuAddSupplierBtn="true" :showMenuAddLabourBtn="true" :showMenuAddAssetBtn="true"
                 :showDescriptionSection="true" :showStatusSection="true" :showPublishSection="true" 
                 :showResourceSection="true" :showActionToolbalSection="true">
             </jobcardSummaryWidget>

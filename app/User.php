@@ -18,6 +18,15 @@ class User extends Authenticatable
     ];
 
     /**
+     * The attributes that should be mutated to dates.
+     *
+     * @var array
+     */
+    protected $dates = [
+        'date_of_birth',
+    ];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array
@@ -59,7 +68,7 @@ class User extends Authenticatable
     /**
      *   Get the users company branch. This is the branch that the user belongs to.
      *   A user must belong to a company branch to access more information for that
-     *   specific branch. This can be jobcards, staff, contractors, clients,
+     *   specific branch. This can be jobcards, staff, suppliers, clients,
      *   quotations, invoices, receipts, documents, e.t.c related to the branch.
      */
     public function companyBranch()

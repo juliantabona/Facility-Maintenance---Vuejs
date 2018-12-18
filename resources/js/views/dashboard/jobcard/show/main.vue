@@ -18,7 +18,7 @@
                             :jobcard="jobcard"
                             
                             :showMenuBtn="true" :showMenuEditBtn="true" :showMenuTrashBtn="true" :showMenuAddClientBtn="true"
-                            :showMenuAddContractorBtn="true" :showMenuAddLabourBtn="true" :showMenuAddAssetBtn="true"
+                            :showMenuAddSupplierBtn="true" :showMenuAddLabourBtn="true" :showMenuAddAssetBtn="true"
                             :showDescriptionSection="true" :showStatusSection="true" :showPublishSection="true" 
                             :showResourceSection="false" :showActionToolbalSection="true">
                         </jobcardSummaryWidget>
@@ -90,7 +90,7 @@
                               <invoiceSummaryWidget 
                                   
                                   :showMenuBtn="true" :showMenuEditBtn="true" :showMenuTrashBtn="true" :showMenuAddClientBtn="true"
-                                  :showMenuAddContractorBtn="true" :showMenuAddLabourBtn="true" :showMenuAddAssetBtn="true"
+                                  :showMenuAddSupplierBtn="true" :showMenuAddLabourBtn="true" :showMenuAddAssetBtn="true"
                                   :showDescriptionSection="true" :showStatusSection="true" :showPublishSection="true" 
                                   :showResourceSection="true" :showActionToolbalSection="true">
 
@@ -103,7 +103,7 @@
                     </Col>
                 </Row>
               </TabPane>
-              <TabPane :label="subContractorLabel">
+              <TabPane :label="subSupplierLabel">
                 <Row :gutter="20" class="m-2">
                     <Col span="24">
 
@@ -119,7 +119,7 @@
                         </Alert>
                     </Col>
 
-                    <contractorListWidget></contractorListWidget>
+                    <supplierListWidget></supplierListWidget>
                 
                 </Row>
                 
@@ -190,13 +190,13 @@
     import quotationSummaryWidget from './../../../../widgets/quotation/quotation-preview-widget.vue';
     import invoiceSummaryWidget from './../../../../widgets/invoice/invoice-preview-widget.vue';
     import receiptSummaryWidget from './../../../../widgets/receipt/receipt-preview-widget.vue';
-    import contractorListWidget from './../../../../widgets/supplier/supplier-list-widget.vue';
+    import supplierListWidget from './../../../../widgets/supplier/supplier-list-widget.vue';
 
 
     export default {
         components: { 
           companySummaryWidget , statusLifecycleWidget, jobcardSummaryWidget, quotationSummaryWidget, invoiceSummaryWidget, 
-          receiptSummaryWidget, contractorListWidget 
+          receiptSummaryWidget, supplierListWidget 
         },
         props: {
             receipt: {
@@ -223,7 +223,7 @@
                         h('span', { style: { display: 'inline-block' } }, 'Accounts')
                     ])
                 },
-                subContractorLabel: (h) => {
+                subSupplierLabel: (h) => {
                     return h('span', [
                         h('Icon', { style: { display: 'inline-block', 'marginTop': '-10px', 'marginRight': '12px'  },
                             props: { type: 'ios-briefcase-outline', size: 20 }

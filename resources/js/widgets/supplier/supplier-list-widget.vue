@@ -15,10 +15,10 @@
 
 </template>
 <script type="text/javascript">
-    import contractorListExpandWidget from './../../widgets/supplier/supplier-list-expand.vue';
+    import supplierListExpandWidget from './../../widgets/supplier/supplier-list-expand.vue';
     import Filterable from './../../components/Filterable.vue'
     export default {
-        components: { Filterable, contractorListExpandWidget },
+        components: { Filterable, supplierListExpandWidget },
         data() {
             return {
                 tableColumns: [
@@ -26,7 +26,7 @@
                         type: 'expand',
                         width: 50,
                         render: (h, params) => {
-                            return h(contractorListExpandWidget, {
+                            return h(supplierListExpandWidget, {
                                 props: {
                                     row: params.row
                                 }
@@ -97,7 +97,7 @@
                                     on: {
                                         click: () => {
                                             console.log(params);
-                                            this.$router.push({ name: 'show-contractor', params: { id: params.row.id } });
+                                            this.$router.push({ name: 'show-supplier', params: { id: params.row.id } });
                                         }
                                     }
                                 }, 'View')
@@ -106,7 +106,7 @@
                     }
                 ],
                 filterable: {
-                    url: '/api/jobcards/'+this.$route.params.id+'/contractors'
+                    url: '/api/jobcards/'+this.$route.params.id+'/suppliers'
                 }
             }
         },

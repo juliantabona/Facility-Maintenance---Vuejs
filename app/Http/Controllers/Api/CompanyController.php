@@ -17,7 +17,7 @@ class CompanyController extends Controller
 
         //  Query data
         $modelType = request('model', 'branch');      //  e.g) company, branch
-        $type = request('type');                      //  e.g) client or contractor
+        $type = request('type');                      //  e.g) client or supplier
 
         /*  First thing is first, we need to understand one of 3 scenerios, Either we want:
          *
@@ -80,10 +80,10 @@ class CompanyController extends Controller
             if ($type == 'client') {
                 $companies = $model->clients();
 
-            /*  If user indicated to only return contractor dierctories
+            /*  If user indicated to only return supplier dierctories
             */
-            } elseif ($type == 'contractor') {
-                $companies = $model->contractors();
+            } elseif ($type == 'supplier') {
+                $companies = $model->suppliers();
 
             /*  If user did not indicate any specific group
             */

@@ -120,6 +120,10 @@
         
         <Loader v-if="isLoading" :loading="isLoading" type="text" :style="{ padding: '6px 15px 6px 15px', fontSize: '14px' }">Getting Lifecycle...</Loader>
 
+        <Alert v-if="!isLoading && !(stages || {}).length" type="warning">
+            No Lifecycle Found - <span class="btn btn-link btn-sm p-0" @click="$emit('showAddLifecycleModal')">Add Lifecycle</span>
+        </Alert>
+
         <Poptip word-wrap width="200" trigger="hover" :content="popTipTitle">
             <ul id="breadcrumb">
                 <li v-for="(stage, i) in stages" :class="i < activeStep ? 'active': ''"

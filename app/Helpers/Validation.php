@@ -9,7 +9,7 @@
 **************************************************************/
 
 /*  Validation for when creating a company.This could
- *  be the users company, client, or contractor.
+ *  be the users company, client, or supplier.
  */
 function oq_user_create_v_rules()
 {
@@ -66,7 +66,7 @@ function oq_user_create_v_msgs()
 **************************************************************/
 
 /*  Validation for when creating a company.This could
- *  be the users company, client, or contractor.
+ *  be the users company, client, or supplier.
  */
 function oq_company_create_v_rules()
 {
@@ -141,7 +141,7 @@ function oq_document_create_v_msgs()
 **************************************************************/
 
 /*  Validation for when creating a company.This could
- *  be the users company, client, or contractor.
+ *  be the users company, client, or supplier.
  */
 function oq_jobcard_create_v_rules($user = null)
 {

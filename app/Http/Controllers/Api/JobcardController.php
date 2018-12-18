@@ -18,8 +18,8 @@ class JobcardController extends Controller
         $jobcards = [];
 
         //  Query data
-        $type = request('model', 'branch');      //  e.g) company, branch, client or contractor
-        $model_id = request('modelId');          //  The id of the client/contractor for getting related jobcards
+        $type = request('model', 'branch');      //  e.g) company, branch, client or supplier
+        $model_id = request('modelId');          //  The id of the client/supplier for getting related jobcards
 
         /*  First thing is first, we need to understand one of 9 scenerios, Either we want:
          *
@@ -89,12 +89,12 @@ class JobcardController extends Controller
 
             $jobcards = Jobcard::where('client_id', $model_id);
 
-        /*  Contractor specific jobcards
-         *  If the user indicated that they want jobcards related to a specific contractor,
-         *  then get the jobcards related to that contractor. They must indicate using the
-         *  query "model" set to "contractor" and "model_id" to the company unique id.
+        /*  Supplier specific jobcards
+         *  If the user indicated that they want jobcards related to a specific supplier,
+         *  then get the jobcards related to that supplier. They must indicate using the
+         *  query "model" set to "supplier" and "model_id" to the company unique id.
          */
-        } elseif ($type == 'contractor') {
+        } elseif ($type == 'supplier') {
             /***************************************************************
             *  CHECK IF THE USER IS AUTHORIZED TO VIEW CONTRACTOR JOBCARDS *
             /***************************************************************/
@@ -102,11 +102,11 @@ class JobcardController extends Controller
             //  Check if the user specified the model_id
             if (empty($model_id)) {
                 //  No model_id specified error
-                return oq_api_notify_error('include contractor id', null, 404);
+                return oq_api_notify_error('include supplier id', null, 404);
             }
 
-            $jobcards = Jobcard::whereHas('contractorsList', function ($query) use ($model_id) {
-                $query->where('contractor_id', $model_id);
+            $jobcards = Jobcard::whereHas('suppliersList', function ($query) use ($model_id) {
+                $query->where('supplier_id', $model_id);
             });
 
         /*  ALL JOBCARDS
@@ -408,12 +408,12 @@ class JobcardController extends Controller
         return oq_api_notify_no_resource();
     }
 
-    public function contractors($jobcard_id)
+    public function suppliers($jobcard_id)
     {
         $user = auth('api')->user();
 
-        //  We start with no contractors
-        $contractors = [];
+        //  We start with no suppliers
+        $suppliers = [];
 
         //  Check if the jobcard exists
         $jobcard = Jobcard::find($jobcard_id);
@@ -426,7 +426,7 @@ class JobcardController extends Controller
             }
         }
 
-        /*  We need to check if the user is authorized to view the jobcard contractors
+        /*  We need to check if the user is authorized to view the jobcard suppliers
          */
 
         //  if () {
@@ -436,17 +436,17 @@ class JobcardController extends Controller
         //  }
 
         //  If we don't have any special order_joins, lets default it to nothing
-        $order_join = 'jobcard_contractors';
+        $order_join = 'jobcard_suppliers';
 
         try {
             //  Run query, dont paginate to return relationship instance
-            $contractors = $jobcard->contractorsList()->advancedFilter(['order_join' => $order_join]);
+            $suppliers = $jobcard->suppliersList()->advancedFilter(['order_join' => $order_join]);
 
             //  If we have any jobcards so far
-            if (count($contractors)) {
+            if (count($suppliers)) {
                 //  Eager load other relationships wanted if specified
                 if (request('connections')) {
-                    $contractors->load(oq_url_to_array(request('connections')));
+                    $suppliers->load(oq_url_to_array(request('connections')));
                 }
             }
         } catch (\Exception $e) {
@@ -454,7 +454,7 @@ class JobcardController extends Controller
         }
 
         //  Action was executed successfully
-        return oq_api_notify($contractors, 200);
+        return oq_api_notify($suppliers, 200);
     }
 
     public function store(Request $request)
@@ -539,12 +539,12 @@ class JobcardController extends Controller
         return oq_api_notify_no_resource();
     }
 
-    public function removeContractor($jobcard_id, $contractor_id)
+    public function removeSupplier($jobcard_id, $supplier_id)
     {
         try {
             //  Run query
             $jobcard = Jobcard::find($jobcard_id);
-            $jobcard->contractorsList()->detach($contractor_id);
+            $jobcard->suppliersList()->detach($supplier_id);
         } catch (\Exception $e) {
             return oq_api_notify_error('Query Error', $e->getMessage(), 404);
         }

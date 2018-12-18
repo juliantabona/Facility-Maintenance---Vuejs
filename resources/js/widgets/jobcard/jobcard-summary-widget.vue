@@ -7,14 +7,14 @@
         </div>
     
         <div v-if ="showHeaderSection" slot="extra">
-            <span v-if="showAuthourizedStatus"><strong>Authourized: </strong>
+            <span v-if="showAuthourizedStatus && jobcard.authourizedBy"><strong>Authourized: </strong>
                 <span class="mr-2">
-                    <Poptip word-wrap width="200" trigger="hover" title="Jobcard is authourized for processing" :content="statusSummary.description">
+                    <Poptip word-wrap width="200" trigger="hover" content="Jobcard is authourized for processing">
                         <span><Icon type="md-checkmark-circle-outline" :size="20" color="#19be6b"/></span>
                     </Poptip>
                 </span>
             </span>
-            <span v-if="showProcessStatus"><strong>Status: </strong>
+            <span v-if="showProcessStatus && jobcard.statusSummary"><strong>Status: </strong>
                 <statusSummaryTag :statusSummary="jobcard.statusSummary"></statusSummaryTag>
             </span>
 
@@ -26,7 +26,7 @@
                     <DropdownItem v-if="showMenuEditBtn">Edit</DropdownItem>
                     <DropdownItem v-if="showMenuTrashBtn">Trash</DropdownItem>
                     <DropdownItem v-if="showMenuAddClientBtn">Add Client</DropdownItem>
-                    <DropdownItem v-if="showMenuAddContractorBtn">Add Contractor</DropdownItem>
+                    <DropdownItem v-if="showMenuAddSupplierBtn">Add Supplier</DropdownItem>
                     <DropdownItem v-if="showMenuAddLabourBtn">Add Labour</DropdownItem>
                     <DropdownItem v-if="showMenuAddAssetBtn">Add Asset</DropdownItem>
                 </DropdownMenu>
@@ -52,7 +52,7 @@
                 <span>
                     <Poptip word-wrap width="200" trigger="hover" :content="jobcard.start_date | moment('DD MMM YYYY, H:mmA')">
                         <span><strong>Start Date: </strong></span>
-                        {{ jobcard.start_date | moment("DD MMM YYYY") }}
+                        <span v-if="jobcard.start_date">{{ jobcard.start_date | moment("DD MMM YYYY") }}</span>
                     </Poptip>
                 </span>
             </Col>
@@ -60,13 +60,16 @@
                 <span>
                     <Poptip word-wrap width="200" trigger="hover" :content="jobcard.end_date | moment('DD MMM YYYY, H:mmA')">
                         <span><strong>End Date: </strong></span>
-                        {{ jobcard.end_date | moment("DD MMM YYYY") }}
+                        <span v-if="jobcard.end_date">{{ jobcard.end_date | moment("DD MMM YYYY") }}</span>
                     </Poptip>
                 </span>
             </Col>
-        </Row>
 
-        <Divider v-if="showDescriptionSection" dashed class="mt-2 mb-3" />
+            <Col span="24">
+                <Divider dashed class="mt-3 mb-3" />
+            </Col>
+
+        </Row>
 
         <Row v-if="showStatusSection">
             <Col v-if="showPriority" span="12">
@@ -81,9 +84,12 @@
                 <span><strong>Cost Centers: </strong></span>
                 <costcenterTag :costcenters="jobcard.costcenters" :showAddBtn="true"></costcenterTag>
             </Col>
-        </Row>
 
-        <Divider v-if ="showStatusSection" dashed class="mt-3 mb-3" />
+            <Col span="24">
+                <Divider dashed class="mt-3 mb-3" />
+            </Col>
+
+        </Row>
 
         <Row v-if ="showPublishSection">
             <Col v-if="jobcard.createdBy && showCreatedBy" span="12">
@@ -96,7 +102,7 @@
                 <span>
                     <Poptip word-wrap width="200" trigger="hover" :content="jobcard.created_at | moment('DD MMM YYYY, H:mmA')">
                         <span><strong>Created Date: </strong></span>
-                        {{ jobcard.created_at | moment("DD MMM YYYY") }}
+                        <span v-if="jobcard.created_at">{{ jobcard.created_at | moment("DD MMM YYYY") }}</span>
                     </Poptip>
                 </span>
             </Col>
@@ -110,13 +116,17 @@
                 <span>
                     <Poptip word-wrap width="200" trigger="hover" :content="getAuthourizedDate() | moment('DD MMM YYYY, H:mmA')">
                         <span><strong>Authorized Date:</strong></span>
+                         <span v-if="getAuthourizedDate()">{{ getAuthourizedDate() | moment("DD MMM YYYY") }}</span>
                         {{ getAuthourizedDate() | moment("DD MMM YYYY") }}
                     </Poptip>
                 </span>
             </Col>
-        </Row>
+            
+            <Col span="24">
+                <Divider v-if ="jobcard.createdBy || jobcard.authourizedBy" dashed class="mt-3 mb-3" />
+            </Col>
 
-        <Divider v-if ="showPublishSection" dashed class="mt-2 mb-2" />
+        </Row>
 
         <Row v-if ="showResourceSection" class="expand-row mb-1">
             <Col span="24">
@@ -139,9 +149,12 @@
                     </Poptip>
                 </span>
             </Col>
-        </Row>
 
-        <Divider v-if ="showResourceSection" dashed class="mt-2 mb-4" />
+            <Col span="24">
+                <Divider dashed class="mt-2 mb-4" />
+            </Col>
+
+        </Row>
 
         <Row v-if ="showActionToolbalSection">
             <Col span="24">
@@ -156,7 +169,7 @@
                 </Button>
                 <div v-if ="showPublicBtn" class="float-left mt-2 mr-4">
                     <Poptip word-wrap width="200" trigger="hover" 
-                            content="Advertise jobcard to the general public by pushing to websites and social media. This will allow third-party contractors to see and respond to your jobcard. You will be alerted on the platform and via email.">
+                            content="Advertise jobcard to the general public by pushing to websites and social media. This will allow third-party suppliers to see and respond to your jobcard. You will be alerted on the platform and via email.">
                         <span>
                             <Icon type="md-globe mr-1" :size="18" />
                             <strong>Make Public:</strong>
@@ -206,7 +219,7 @@
                 type: Boolean,
                 default: true
             },
-            showMenuAddContractorBtn: {
+            showMenuAddSupplierBtn: {
                 type: Boolean,
                 default: true
             },
@@ -322,9 +335,14 @@
             },
         },
         data() {
-        return {
-            isLoading: false,
-        }
+            return {
+                isLoading: false,
+                /*  We need to pull moment.js to prevent the "Property or method "moment" is not defined on the instance but referenced during render."
+                 *  This error only occurs when we use moment in a conditional statement. Refer to the jobcard start_date and end_date for example.
+                 *  To avoid this we must pull moment using our global Vue instance.
+                 */
+                moment: Vue.moment,
+            }
         },
         computed:{
             statusSummary: function(){

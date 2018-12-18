@@ -18,7 +18,7 @@
         
         <div slot="title">
             <h5 v-if="type == 'client'"><Icon type="ios-happy-outline" :size="18" class="mr-2"></Icon> Client Details</h5>
-            <h5 v-if="type == 'contractor'"><Icon type="ios-briefcase-outline" :size="18" class="mr-2"></Icon> Contractor Details</h5>
+            <h5 v-if="type == 'supplier'"><Icon type="ios-briefcase-outline" :size="18" class="mr-2"></Icon> Supplier Details</h5>
         </div>
         <div slot="extra" v-if="showMenuBtn">
             <Dropdown trigger="click">
@@ -36,6 +36,10 @@
         </div>
 
         <Loader v-if="isLoading" :loading="isLoading"></Loader>
+
+        <Alert v-if="!isLoading && !localCompany" type="warning">
+            No {{ type }} - <span class="btn btn-link btn-sm p-0" @click="$emit('showAddCompanyModal')">Add {{ type }}</span>
+        </Alert>
 
         <Row :gutter="20" v-if="localCompany">
             <Col :span="24">

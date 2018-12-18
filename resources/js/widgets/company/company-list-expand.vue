@@ -36,7 +36,7 @@
             },
             type: {
                 type: String,
-                default: 'client'   //  client, contractor
+                default: 'client'   //  client, supplier
             }
         },
     };

@@ -40,10 +40,10 @@ class CompanyBranch extends Model
                     ->where('company_directory.type', 'client');
     }
 
-    public function contractors()
+    public function suppliers()
     {
         return $this->companyDirectory()
-                    ->where('company_directory.type', 'contractor');
+                    ->where('company_directory.type', 'supplier');
     }
 
     ///////////////////////////////////////////////////////////////////////////////////
@@ -55,7 +55,7 @@ class CompanyBranch extends Model
     /**
      *   Get the company the branch belongs to. A branch must belong to a company
      *   to access more information. This can be company details, settings, permissions,
-     *   global jobcards, staff, contractors, clients, quotations, invoices, receipts, documents,
+     *   global jobcards, staff, suppliers, clients, quotations, invoices, receipts, documents,
      *   e.t.c related to the company.
      */
     public function company()

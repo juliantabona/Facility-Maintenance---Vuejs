@@ -92,7 +92,7 @@
                         name: 'Jobcard Summary'
                     },
                     {
-                        name: 'Contractor Jobcard'
+                        name: 'Supplier Jobcard'
                     },
                     {
                         name: 'Client Signoff'
