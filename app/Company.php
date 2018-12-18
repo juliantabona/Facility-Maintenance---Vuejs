@@ -56,6 +56,29 @@ class Company extends Model
         return $this->hasMany('App\FormTemplate');
     }
 
+    public function companyDirectory()
+    {
+        return $this->belongsToMany('App\Company', 'company_directory', 'owning_company_id', 'company_id')
+                    ->withPivot('id', 'type', 'owning_branch_id', 'owning_company_id')
+                    //  Select everything and make the jobcard id the primary id
+                    ->select('*', 'companies.id as id',  'companies.type as type',
+                             'companies.deleted_at as deleted_at', 'companies.created_at as created_at',
+                             'companies.updated_at as updated_at')
+                    ->withTimestamps();
+    }
+
+    public function clients()
+    {
+        return $this->companyDirectory()
+                    ->where('company_directory.type', 'client');
+    }
+
+    public function contractors()
+    {
+        return $this->companyDirectory()
+                    ->where('company_directory.type', 'contractor');
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////
     //                                                                              //
     //  EVERTHING BELOW THIS CAUTION IS NOT YET BEING USED BY THE SYSTEM            //
@@ -136,25 +159,6 @@ class Company extends Model
     {
         return $this->morphMany('App\RecentActivity', 'trackable')
                     ->orderBy('created_at', 'desc');
-    }
-
-    public function companyDirectory()
-    {
-        return $this->belongsToMany('App\Company', 'company_directory', 'owning_company_id', 'company_id')
-                    ->withPivot('id', 'type', 'owning_branch_id', 'owning_company_id')
-                    ->withTimestamps();
-    }
-
-    public function clients()
-    {
-        return $this->companyDirectory()
-                    ->where('company_directory.type', 'client');
-    }
-
-    public function contractors()
-    {
-        return $this->companyDirectory()
-                    ->where('company_directory.type', 'contractor');
     }
 
     public function userDirectory()

@@ -11,17 +11,17 @@
       height: 40px;
   }
 
-.slide-enter,
-.slide-leave-to { opacity: 0; z-index:100; }
+  .slide-enter,
+  .slide-leave-to { opacity: 0; z-index:100; }
 
-.slide-enter-to,
-.slide-leave { opacity: 1; z-index:200; }
+  .slide-enter-to,
+  .slide-leave { opacity: 1; z-index:200; }
 
-.slide-enter-active,
-.slide-leave-active { position: absolute; width:100%; } 
+  .slide-enter-active,
+  .slide-leave-active { position: absolute; width:100%; } 
 
-.slide-enter-active,
-.slide-leave-active { transition: all 750ms ease }
+  .slide-enter-active,
+  .slide-leave-active { transition: all 750ms ease }
 
 </style>
 
@@ -82,11 +82,6 @@
     data(){
       return {
         isCollapsed: false
-      }
-    },
-    methods: {
-      goTo: function(routeName){
-        this.$router.push(routeName);
       }
     }
   }

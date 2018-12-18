@@ -1,10 +1,6 @@
-<style scoped>
-
-</style>
-
 <template>
 
-    <Card class="quotation-summary-widget" :style="{ width: '100%' }">
+    <Card class="receipt-summary-widget" :style="{ width: '100%' }">
 
         <div slot="title">
             <h5>Receipt Summary</h5>
@@ -22,13 +18,13 @@
                     <Icon type="ios-send-outline" :size="20" style="margin-top: -4px;"/>
                 </Button>
                 <DropdownMenu slot="list">
-                    <DropdownItem v-if="showMenuEditBtn">Send With Email</DropdownItem>
+                    <DropdownItem>Send With Email</DropdownItem>
                     <DropdownItem>
                         <p>Share Link</p>
                         <Input value="https://optimumqbw.com/receipts/GUYSD54983IIOWIW728UUIH2344IUH2I332D" style="width: 100%" :readonly="true" />
                     </DropdownItem>
-                    <DropdownItem v-if="showMenuAddClientBtn">Export As PDF</DropdownItem>
-                    <DropdownItem v-if="showMenuAddAssetBtn">Print Receipt</DropdownItem>
+                    <DropdownItem>Export As PDF</DropdownItem>
+                    <DropdownItem>Print Receipt</DropdownItem>
                 </DropdownMenu>
             </Dropdown>
 
@@ -37,11 +33,11 @@
                     <Icon type="md-more" :size="16"></Icon>
                 </a>
                 <DropdownMenu slot="list">
-                    <DropdownItem v-if="showMenuEditBtn">Edit</DropdownItem>
-                    <DropdownItem v-if="showMenuTrashBtn">Trash</DropdownItem>
-                    <DropdownItem v-if="showMenuTrashBtn">Edit Business Information</DropdownItem>
-                    <DropdownItem v-if="showMenuAddClientBtn">Export As PDF</DropdownItem>
-                    <DropdownItem v-if="showMenuAddAssetBtn">Print Receipt</DropdownItem>
+                    <DropdownItem>Edit</DropdownItem>
+                    <DropdownItem>Trash</DropdownItem>
+                    <DropdownItem>Edit Business Information</DropdownItem>
+                    <DropdownItem>Export As PDF</DropdownItem>
+                    <DropdownItem>Print Receipt</DropdownItem>
                 </DropdownMenu>
             </Dropdown>
         </div>
@@ -169,63 +165,9 @@
         showMenuBtn: {
             type: Boolean,
             default: true
-        },
-        showMenuEditBtn: {
-            type: Boolean,
-            default: true
-        },
-        showMenuTrashBtn: {
-            type: Boolean,
-            default: true
-        },
-        showMenuAddClientBtn: {
-            type: Boolean,
-            default: true
-        },
-        showMenuAddContractorBtn: {
-            type: Boolean,
-            default: true
-        },
-        showMenuAddLabourBtn: {
-            type: Boolean,
-            default: true
-        },
-        showMenuAddAssetBtn: {
-            type: Boolean,
-            default: true
-        },
-        showDescriptionSection: {
-            type: Boolean,
-            default: true
-        },
-        showStatusSection: {
-            type: Boolean,
-            default: true
-        },
-        showPublishSection: {
-            type: Boolean,
-            default: true
-        },
-        showResourceSection: {
-            type: Boolean,
-            default: true
-        },
-        showActionToolbalSection: {
-            type: Boolean,
-            default: true
         }
 
-    },
-    data() {
-      return {
-           isLoading: false,
-      }
-    },
-    methods: {
-        viewJobcard: function(){
-            this.$router.push({ name: 'show-jobcard', params: { id: this.jobcard.id } });
-        }
-    } 
+    }
   };
   
 </script>

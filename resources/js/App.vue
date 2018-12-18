@@ -8,6 +8,7 @@
 
   body{
     font-family: 'Helvetica', 'Arial', 'sans-serif' !important;
+    overflow: inherit !important;
   }
 
   .main-content-fade-enter-active, .main-content-fade-leave-active {

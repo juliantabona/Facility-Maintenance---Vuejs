@@ -7,7 +7,13 @@
 
 <template>
     <div class="filterable">
-        <div class="panel" style=" background: #f8f8f9; padding: 20px 35px 20px 15px;">
+        <Button v-if="!filterCandidates.length" type="primary" @click.native="addFilter" class="mb-2">
+            <Poptip word-wrap width="200" trigger="hover" content="Add filters">
+                <Icon type="md-add" :size="16"></Icon> <span>Filter</span>
+            </Poptip>
+        </Button>
+
+        <div v-if="filterCandidates.length" class="panel" style=" background: #f8f8f9; padding: 20px 35px 20px 15px;">
             <div class="panel-heading mb-3">
                 <div class="panel-title">
                     <div class="d-inline">
@@ -178,7 +184,9 @@
         </div>
         <div class="panel">
             <div class="panel-body">
-
+                
+                <Loader v-if="loading" :loading="loading" type="text" :style="{ marginTop:'40px' }">Loading...</Loader>
+                
                 <slot v-if="collection.data && collection.data.length"
                       :collection="collection.data"
                       :loading="loading">
@@ -202,7 +210,7 @@
                         placeholder="Limit">
 
                         <Option 
-                            v-for="(column,index) in [1,5,10,20,50,100,200,500]"
+                            v-for="(column,index) in [5,10,20,50,100,200,500]"
                             :value="column"
                             :selected="column == query.order_column"
                             :key="index">
@@ -232,13 +240,19 @@
 <script type="text/javascript">
     import Vue from 'vue'
     import axios from 'axios'
+    import Loader from './Loader.vue';
 
     export default {
         props: {
             url: String,
             filterGroups: Array,
-            orderables: Array
+            orderables: Array,
+            autoShowFilter: {
+                type: Boolean,
+                deafult: false
+            }
         },
+        components: { Loader },
         data() {
             return {
                 loading: true,
@@ -272,7 +286,9 @@
         },
         mounted() {
             this.fetch()
-            this.addFilter()
+            if(this.autoShowFilter){
+                this.addFilter();
+            }
         },
         methods: {
             forceRerender() {
@@ -330,6 +346,7 @@
             },
             resetFilter() {
                 this.appliedFilters = []
+
                 this.filterCandidates = []
 
                 this.forceRerender()

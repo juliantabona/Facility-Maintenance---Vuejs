@@ -27,11 +27,11 @@
 
                     <Col span="8">
                         <companySummaryWidget 
-                        
-                            :company="client" type="client"
+                            
+                            :company="null" :companyId="null" :companyBranchId="jobcard.client_id" type="client"
 
                             :showMenuBtn="true"
-                            :showViewBtn="true" :showEditBtn="true" :showRemoveBtn="true" :showAddContactBtn="true"
+                            :showViewBtn="true" :showEditBtn="true" :showTrashBtn="true" :showAddContactBtn="true"
                             :showDownloadProfileBtn="true" :showDownloadLogoBtn="true"
                             :showContactsTagBtn="true">
                         </companySummaryWidget>
@@ -270,7 +270,7 @@
 
                 console.log('Start getting jobcard...');
 
-                var connections = 'connections=categories,priorities,costcenters,client';
+                var connections = 'connections=categories,priorities,costcenters';
 
                 //  Use the api call() function located in resources/js/api.js
                 api.call('get', '/api/jobcards/'+this.$route.params.id+'?'+connections)
@@ -281,10 +281,6 @@
 
                         //  Get jobcard lifecycle data
                         self.jobcard = data;
-                        self.client = data.client;
-
-                        console.log('jobcard');
-                        console.log(self.jobcard);
                     })         
                     .catch(response => { 
                         console.log('jobcard/show/main.vue - Error getting jobcard...');

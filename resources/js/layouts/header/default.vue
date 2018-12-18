@@ -32,8 +32,6 @@
     display: flex !important;
   }
 
-      
-
   /*  Style profile image */
   .main-header >>> .profile-image {
     margin-top:-5px;
@@ -181,14 +179,11 @@
     },
     methods: {
       loadCreate(){
-        console.log('Go to '+this.createVal+' creation page');
-        console.log(this.createVal);
         this.createVal = '';
       }, 
       handleProfileCommand(command) {
-        console.log('Start Logout...');
         if(command == 'logout'){
-          //  clear the local storage token and user
+          //  Logout the user
           auth.logout();
         }
       }

@@ -166,8 +166,7 @@
     },
     data() {
       return {
-        activeLink: null,
-        isCollapse:false
+        activeLink: null
       }
     },
     methods: {

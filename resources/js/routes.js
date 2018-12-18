@@ -31,12 +31,18 @@ let routes = [
         meta: { layout: 'Dashboard', middlewareAuth: true },
         component: require('./views/dashboard/client/list/main.vue')
     },
-    
+    {
+        //  Show one client
+        path: '/clients/:id', name: 'show-client',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/client/show/main.vue'),
+        props: true
+    },
     {
         //  Suppliers
         path: '/suppliers', name: 'suppliers',
         meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/supplier/main.vue')
+        component: require('./views/dashboard/supplier/list/main.vue')
     },
     {
         //  Jobcards

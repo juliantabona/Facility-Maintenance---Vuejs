@@ -4,7 +4,6 @@
         border-bottom: 3px solid #fff;
         position: relative;
         min-height: 120vh;
-        
         background-size: cover;
     }
 
@@ -32,7 +31,6 @@
         max-height: 200px;
         display: block;
     }
-
 
 </style>
 <template>
@@ -189,7 +187,7 @@ export default {
                     })         
                     .catch(response => { 
                         if(response){
-                            console.error(response.data);
+                            console.error(response);
                             //  Stop loader
                             self.isSendingEmail = false;     
                             //  Grab errors              

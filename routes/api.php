@@ -68,7 +68,11 @@ Route::post('jobcards/{jobcard_id}/lifecycle', 'Api\JobcardController@updateLife
 /*   JOBCARD RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
 */
-Route::get('clients', 'Api\ClientController@index');
-Route::get('clients/{client_id}/jobcards', 'Api\ClientController@clientJobcards');
+Route::get('companies', 'Api\CompanyController@index');
+
+/*  *** NOTE *** model_id means that this could be a company/branch associated id since
+ *  we could be trying to retrieve the company using either its branch/company id.
+ */
+Route::get('companies/{model_id}', 'Api\ClientController@show');
 
 Route::get('downloadFile', 'Api\DownloadController@download');

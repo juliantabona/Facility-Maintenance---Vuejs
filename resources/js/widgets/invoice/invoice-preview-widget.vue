@@ -1,10 +1,6 @@
-<style scoped>
-
-</style>
-
 <template>
 
-    <Card class="quotation-summary-widget" :style="{ width: '100%' }">
+    <Card class="invoice-summary-widget" :style="{ width: '100%' }">
 
         <div slot="title">
             <h5>Invoice Summary</h5>
@@ -28,13 +24,13 @@
                     <Icon type="ios-send-outline" :size="20" style="margin-top: -4px;"/>
                 </Button>
                 <DropdownMenu slot="list">
-                    <DropdownItem v-if="showMenuEditBtn">Send With Email</DropdownItem>
+                    <DropdownItem>Send With Email</DropdownItem>
                     <DropdownItem>
                         <p>Share Link</p>
                         <Input value="https://optimumqbw.com/invoices/GUYSD54983IIOWIW728UUIH2344IUH2I332D" style="width: 100%" :readonly="true" />
                     </DropdownItem>
-                    <DropdownItem v-if="showMenuAddClientBtn">Export As PDF</DropdownItem>
-                    <DropdownItem v-if="showMenuAddAssetBtn">Print Invoice</DropdownItem>
+                    <DropdownItem>Export As PDF</DropdownItem>
+                    <DropdownItem>Print Invoice</DropdownItem>
                 </DropdownMenu>
             </Dropdown>
 
@@ -43,11 +39,11 @@
                     <Icon type="md-more" :size="16"></Icon>
                 </a>
                 <DropdownMenu slot="list">
-                    <DropdownItem v-if="showMenuEditBtn">Edit</DropdownItem>
-                    <DropdownItem v-if="showMenuTrashBtn">Trash</DropdownItem>
-                    <DropdownItem v-if="showMenuTrashBtn">Edit Business Information</DropdownItem>
-                    <DropdownItem v-if="showMenuAddClientBtn">Export As PDF</DropdownItem>
-                    <DropdownItem v-if="showMenuAddAssetBtn">Print Invoice</DropdownItem>
+                    <DropdownItem>Edit</DropdownItem>
+                    <DropdownItem>Trash</DropdownItem>
+                    <DropdownItem>Edit Business Information</DropdownItem>
+                    <DropdownItem>Export As PDF</DropdownItem>
+                    <DropdownItem>Print Invoice</DropdownItem>
                 </DropdownMenu>
             </Dropdown>
         </div>
@@ -113,7 +109,7 @@
                             <td colspan="4" class="p-2">
                                 <p class="text-dark mr-5"><strong>Basic Website</strong></p>
                                 <p class="mr-5">
-                                    This quotation includes the design and development of a basic website which includes a home page, about page, services page, contact page.
+                                    This invoice includes the design and development of a basic website which includes a home page, about page, services page, contact page.
                                 </p>
                             </td>
                             <td colspan="1" class="p-2">
@@ -186,70 +182,16 @@
 
   export default {
     props: {
-        quotation: {
+        invoice: {
             type: Object,
             default: () => {}
         },
         showMenuBtn: {
             type: Boolean,
             default: true
-        },
-        showMenuEditBtn: {
-            type: Boolean,
-            default: true
-        },
-        showMenuTrashBtn: {
-            type: Boolean,
-            default: true
-        },
-        showMenuAddClientBtn: {
-            type: Boolean,
-            default: true
-        },
-        showMenuAddContractorBtn: {
-            type: Boolean,
-            default: true
-        },
-        showMenuAddLabourBtn: {
-            type: Boolean,
-            default: true
-        },
-        showMenuAddAssetBtn: {
-            type: Boolean,
-            default: true
-        },
-        showDescriptionSection: {
-            type: Boolean,
-            default: true
-        },
-        showStatusSection: {
-            type: Boolean,
-            default: true
-        },
-        showPublishSection: {
-            type: Boolean,
-            default: true
-        },
-        showResourceSection: {
-            type: Boolean,
-            default: true
-        },
-        showActionToolbalSection: {
-            type: Boolean,
-            default: true
         }
 
-    },
-    data() {
-      return {
-           isLoading: false,
-      }
-    },
-    methods: {
-        viewJobcard: function(){
-            this.$router.push({ name: 'show-jobcard', params: { id: this.jobcard.id } });
-        }
-    } 
+    }
   };
   
 </script>

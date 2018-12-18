@@ -8,7 +8,10 @@
     <Row :gutter="20">
 
         <Col span="8">
-            <companySummaryWidget :company="company" type="client"
+            <companySummaryWidget 
+                
+                :company="null" :companyId="null" :companyBranchId="row.client_id" type="client"
+
                 :showMenuBtn="true"
                 :showViewBtn="true" :showEditBtn="true" :showTrashBtn="true" :showAddContactBtn="true"
                 :showDownloadProfileBtn="true" :showDownloadLogoBtn="true"
@@ -38,24 +41,10 @@
     export default {
         components: { companySummaryWidget , jobcardSummaryWidget },
         props: {
-            row: Object,
-            jobcard: {
+            row: {
                 type: Object,
                 default: () => {}
             },
-        },
-        data(){
-            return {
-                company: {
-                    logo_url: 'http://acmelogos.com/images/logo-8.svg',
-                    name: 'Optimum Quality (Pty) Ltd',
-                    city: 'Gaborone',
-                    address: 'Plot 2356, Fairgrounds',
-                    phone_ext: '267',
-                    phone_num: '3909083',
-                    email: 'info@optimumqbw.com'
-                }
-            }
         }
     };
 </script>
