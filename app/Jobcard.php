@@ -152,7 +152,7 @@ class Jobcard extends Model
     {
         $publishingUser = $this->recentActivities->where('activity.type', 'created')->first();
 
-        if (!empty($publishingUser)) {
+        if ($publishingUser) {
             return $publishingUser->createdBy;
         }
     }
@@ -162,7 +162,7 @@ class Jobcard extends Model
     {
         $authourizingUser = $this->recentActivities->where('activity.type', 'authourized')->first();
 
-        if (!empty($authourizingUser)) {
+        if ($authourizingUser) {
             return $authourizingUser->createdBy;
         }
     }
@@ -170,7 +170,7 @@ class Jobcard extends Model
     //  Getter for calculating the deadline returned as array
     public function getDeadlineAttribute()
     {
-        if (!empty($this->deadline)) {
+        if ($this->end_date) {
             return oq_jobcardDeadlineArray($this)[0].' '.oq_jobcardDeadlineArray($this)[1]
                 .' '.(oq_jobcardDeadlineArray($this)[2] ? '' : 'ago');
         }
@@ -201,7 +201,7 @@ class Jobcard extends Model
         //  Get the jobcard lifecycle details
         $jobcardStatusLifecycle = $this->statusLifecycle->first();
 
-        if (!empty($jobcardStatusLifecycle)) {
+        if ($jobcardStatusLifecycle) {
             //  Get only the details of the current jobcard status
             $status = $jobcardStatusLifecycle->template['sections'][$jobcardStatusLifecycle->step - 1];
 

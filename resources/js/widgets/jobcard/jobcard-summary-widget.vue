@@ -17,7 +17,6 @@
             <span v-if="showProcessStatus && jobcard.statusSummary"><strong>Status: </strong>
                 <statusSummaryTag :statusSummary="jobcard.statusSummary"></statusSummaryTag>
             </span>
-
             <Dropdown trigger="click" v-if="showMenuBtn">
                 <a href="javascript:void(0)">
                     <Icon type="md-more" :size="16"></Icon>
@@ -31,6 +30,7 @@
                     <DropdownItem v-if="showMenuAddAssetBtn">Add Asset</DropdownItem>
                 </DropdownMenu>
             </Dropdown>
+    
         </div>
 
         <Row v-if="showDescriptionSection">
