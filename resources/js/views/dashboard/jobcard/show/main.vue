@@ -9,10 +9,6 @@
 
                     <Col span="16">
 
-                        <statusLifecycleWidget class="mb-1">
-                          
-                        </statusLifecycleWidget>
-
                         <jobcardSummaryWidget 
 
                             :jobcard="jobcard"
@@ -185,7 +181,6 @@
 <script>
 
     import companySummaryWidget from './../../../../widgets/company/company-summary-widget.vue';
-    import statusLifecycleWidget from './../../../../widgets/jobcard/status-lifecycle-widget.vue';
     import jobcardSummaryWidget from './../../../../widgets/jobcard/jobcardSummaryWidget.vue';
     import quotationSummaryWidget from './../../../../widgets/quotation/quotation-preview-widget.vue';
     import invoiceSummaryWidget from './../../../../widgets/invoice/invoice-preview-widget.vue';
@@ -195,7 +190,7 @@
 
     export default {
         components: { 
-          companySummaryWidget , statusLifecycleWidget, jobcardSummaryWidget, quotationSummaryWidget, invoiceSummaryWidget, 
+          companySummaryWidget, jobcardSummaryWidget, quotationSummaryWidget, invoiceSummaryWidget, 
           receiptSummaryWidget, supplierListWidget 
         },
         props: {

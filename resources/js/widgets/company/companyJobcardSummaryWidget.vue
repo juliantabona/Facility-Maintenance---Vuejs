@@ -14,7 +14,7 @@
         <Alert v-if="!isLoading && !jobcards.length" type="warning">
             No information found
         </Alert>
-
+        
         <Row v-if="jobcards.length">
             <Col v-for="jobcard in jobcards" :key="jobcard.id">
                 <jobcardSummaryWidget :style="{ marginBottom: '10px' }"

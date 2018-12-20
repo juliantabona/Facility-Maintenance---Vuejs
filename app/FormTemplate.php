@@ -22,7 +22,7 @@ class FormTemplate extends Model
      * @var array
      */
     protected $fillable = [
-        'form_template', 'type', 'selected', 'deletable', 'company_id',
+        'name', 'description', 'form_template', 'type', 'selected', 'deletable', 'company_id',
     ];
 
     public function formAllocations()

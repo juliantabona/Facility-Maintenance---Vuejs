@@ -15,11 +15,11 @@
 
     import Filterable from './../../components/Filterable.vue';
     import priorityTag from './../../components/priority/priorityTag.vue';
-    import statusSummaryTag from './../../components/jobcard/status-summary-tag.vue';
+    import lifecycleStatusTag from './../../components/jobcard/status/lifecycleStatusTag.vue';
     import jobcardListExpandWidget from './../../widgets/jobcard/jobcardListExpandWidget.vue';
 
     export default {
-        components: { Filterable, priorityTag, statusSummaryTag, jobcardListExpandWidget },
+        components: { Filterable, priorityTag, lifecycleStatusTag, jobcardListExpandWidget },
         data() {
             return {
                 // Used to re-render the filterable table
@@ -80,10 +80,11 @@
                         title: 'Status',
                         sortable: true,
                         render: (h, params) => {
-                            return h(statusSummaryTag, {
+                            return h(lifecycleStatusTag, {
                                 props: {
                                     //  Make sure we have a status summary otherwise just send an empty object
-                                    statusSummary: (params.row.statusSummary)
+                                    jobcard: (params.row),
+                                    showText: false
                                 }
                             })
                         }

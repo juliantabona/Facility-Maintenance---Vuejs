@@ -61,9 +61,11 @@ Route::post('/process-forms', 'Api\ProcessFormController@store');
 Route::get('jobcards', 'Api\JobcardController@index');
 Route::get('jobcards/{jobcard_id}', 'Api\JobcardController@show');
 Route::get('jobcards/{jobcard_id}/suppliers', 'Api\JobcardController@suppliers');
+Route::get('jobcards/lifecycle/templates', 'Api\JobcardController@getLifecycleTemplates');
 Route::get('jobcards/lifecycle/stages', 'Api\JobcardController@getLifecycleStages');
 Route::get('jobcards/{jobcard_id}/lifecycle', 'Api\JobcardController@getLifecycle');
 Route::post('jobcards/{jobcard_id}/lifecycle', 'Api\JobcardController@updateLifecycle');
+Route::post('jobcards/{jobcard_id}/addLifecycle', 'Api\JobcardController@addLifecycle');
 
 /*   JOBCARD RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
@@ -73,6 +75,6 @@ Route::get('companies', 'Api\CompanyController@index');
 /*  *** NOTE *** model_id means that this could be a company/branch associated id since
  *  we could be trying to retrieve the company using either its branch/company id.
  */
-Route::get('companies/{model_id}', 'Api\ClientController@show');
+Route::get('companies/{model_id}', 'Api\CompanyController@show');
 
 Route::get('downloadFile', 'Api\DownloadController@download');

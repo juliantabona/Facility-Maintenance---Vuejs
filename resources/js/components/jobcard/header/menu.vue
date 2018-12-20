@@ -5,7 +5,7 @@
         
         <!-- Jobcard authourized badge -->
         
-        <authourizedBadge v-if="showAuthourizedStatus && jobcard.authourizedBy" v-bind="$props"></authourizedBadge>
+        <authourizedBadge v-if="showAuthourizedStatus" v-bind="$props"></authourizedBadge>
 
         <!-- Jobcard status -->
 
@@ -21,7 +21,7 @@
 <script>
 
     import authourizedBadge from './authourizedBadge.vue';
-    import lifecycleStatusTag from './lifecycleStatusTag.vue';
+    import lifecycleStatusTag from './../status/lifecycleStatusTag.vue';
     import menuToggle from './menuToggle.vue';
 
     export default {

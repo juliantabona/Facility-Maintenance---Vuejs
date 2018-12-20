@@ -49,15 +49,7 @@
                     
                         <Col span="24">
 
-                            <Card class="box-card mb-2">
-
-                                <div slot="title">
-                                    <h5><Icon type="ios-time-outline" :size="18" class="mr-2"></Icon> Client Jobcards</h5>
-                                </div>
-
-                                <jobcardListWidget modelType="client" :modelId="companyId"></jobcardListWidget>
-
-                            </Card>  
+                            <jobcardListWidget modelType="client" :modelId="companyId"></jobcardListWidget> 
 
                         </Col>
                     </Row>

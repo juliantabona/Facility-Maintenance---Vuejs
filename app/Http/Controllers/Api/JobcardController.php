@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use DB;
 use Auth;
 use App\Jobcard;
+use App\FormTemplate;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -205,6 +206,69 @@ class JobcardController extends Controller
         return oq_api_notify($jobcards, 200);
     }
 
+    public function getLifecycleTemplates(Request $request)
+    {
+        $user = auth('api')->user();
+
+        /***********************************************************
+        *  CHECK IF THE USER IS AUTHORIZED TO VIEW LIFECYCLE       *
+        /**********************************************************/
+
+        $companyId = auth('api')->user()->companyBranch->company->id;
+
+        try {
+            //  Run query
+            $lifecycleTemplates = FormTemplate::where('company_id', $companyId)->get();
+        } catch (\Exception $e) {
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+
+        if (count($lifecycleTemplates)) {
+            //  return lifecycle
+            return oq_api_notify($lifecycleTemplates, 200);
+        } else {
+            //  No resource found
+            oq_api_notify_no_resource();
+        }
+    }
+
+    public function addLifecycle(Request $request, $jobcard_id)
+    {
+        $user = auth('api')->user();
+
+        /***********************************************************
+        *  CHECK IF THE USER IS AUTHORIZED TO VIEW LIFECYCLE       *
+        /**********************************************************/
+
+        $selectedTemplateId = request('selectedTemplateId');
+
+        $jobcardTemplate = FormTemplate::where('id', $selectedTemplateId)->first();
+
+        //  Check if the jobcard exists
+        $jobcard = Jobcard::find($jobcard_id);
+
+        if ($jobcard) {
+            try {
+                //  Run query
+                $statusLifecycle = $jobcard->statusLifecycle()->create([
+                    'template' => $jobcardTemplate->form_template,
+                    'form_template_id' => $jobcardTemplate->id,
+                ]);
+
+                if (count($statusLifecycle)) {
+                    //  return lifecycle
+                    return oq_api_notify($statusLifecycle, 203);
+                }
+            } catch (\Exception $e) {
+                return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+            }
+        } else {
+            return oq_api_notify_error('include resourceType', null, 404);
+        }
+
+        return oq_api_notify_error('Update Error', null, 404);
+    }
+
     public function getLifecycleStages(Request $request)
     {
         $user = auth('api')->user();
@@ -272,20 +336,9 @@ class JobcardController extends Controller
         try {
             //  Run query
             $lifecycle = $jobcard->statusLifecycle->first();
-
-            //  If we have any lifecycle so far
-            if (count($lifecycle)) {
-                //  Eager load other relationships wanted if specified
-                if (request('connections')) {
-                    $lifecycle->load(oq_url_to_array(request('connections')));
-                }
-            }
         } catch (\Exception $e) {
             return oq_api_notify_error('Query Error', $e->getMessage(), 404);
         }
-
-        //  Action was executed successfully
-        return oq_api_notify($lifecycle, 200);
 
         if (count($lifecycle)) {
             //  return lifecycle

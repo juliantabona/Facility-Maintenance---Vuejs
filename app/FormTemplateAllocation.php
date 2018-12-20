@@ -27,7 +27,7 @@ class FormTemplateAllocation extends Model
      * @var array
      */
     protected $fillable = [
-         'template', 'step',
+         'template', 'step', 'form_template_id',
     ];
 
     public function trackable()

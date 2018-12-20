@@ -62,16 +62,10 @@
         <Col v-if="showResourceTags" span="24" class="d-block mb-2">
             <!-- Jobcard resources -->
             <jobcardBodyAttachmentsTag v-bind="$props" class="float-right"></jobcardBodyAttachmentsTag>
-            -
-            
-            
-            
             <jobcardBodyQuotationTag v-bind="$props" class="float-right"></jobcardBodyQuotationTag>
-            
             <jobcardBodyAssetsTag v-bind="$props" class="float-right"></jobcardBodyAssetsTag>
             <jobcardBodyLabourTag v-bind="$props" class="float-right"></jobcardBodyLabourTag>
             <jobcardBodySuppliersTag v-bind="$props" class="float-right"></jobcardBodySuppliersTag>
-            
         </Col>
 
         <Col span="24">

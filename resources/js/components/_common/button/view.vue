@@ -1,7 +1,7 @@
 <template>
     
     <!-- View Button -->
-    <Button type="primary" class="float-right" @click.native="viewJobcard">
+    <Button type="primary" @click.native="viewJobcard">
         View
         <Icon type="md-arrow-forward" />
     </Button>

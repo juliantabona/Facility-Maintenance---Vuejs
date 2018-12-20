@@ -1,7 +1,7 @@
 <template>
     
     <!-- Send Button -->
-    <Button type="default" class="float-right mr-1">
+    <Button type="default">
         <Icon type="ios-send-outline" :size="18" :style="{ marginTop:'-3px' }"/>
         Send
     </Button>

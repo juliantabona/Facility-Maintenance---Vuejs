@@ -13,6 +13,8 @@ class CreateFormTemplatesTable extends Migration
     {
         Schema::create('form_templates', function (Blueprint $table) {
             $table->increments('id');
+            $table->string('name');
+            $table->string('description');
             $table->json('form_template')->nullable();
             $table->string('type')->nullable();
             $table->boolean('selected')->default(0);

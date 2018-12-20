@@ -1,36 +1,46 @@
 <template>
-
-    <Card :style="{ width: '100%' }">
-
-        <!-- Jobcard Header -->
-
-            <!-- Jobcard Title -->
-            <jobcardHeaderTitle slot="title"></jobcardHeaderTitle>
-
-            <!-- Jobcard Menu -->
-            <jobcardHeaderMenu slot="extra" v-bind="$props"></jobcardHeaderMenu>
-
-        <!-- Jobcard Body -->
+    <div>
         
-        <jobcardSummaryBody v-bind="$props"></jobcardSummaryBody>
+        <!-- Jobcard Lifecycle - Only show if jobcard is authourized -->
+        <statusLifecycle v-if="JobcardExists && jobcard.authourizedBy" v-bind="$props" class="mb-1"></statusLifecycle>
 
-        <!-- Jobcard Footer -->
-        
-        <jobcardSummaryFooter v-bind="$props"></jobcardSummaryFooter>
-        
-    </Card>
+        <!-- Jobcard Not Authourized Alert -->
+        <notAuthourizedAlert v-if="JobcardExists && !jobcard.authourizedBy" v-bind="$props"></notAuthourizedAlert>
+
+        <Card :style="{ width: '100%' }">
+
+            <!-- Jobcard Header -->
+
+                <!-- Jobcard Title -->
+                <jobcardHeaderTitle slot="title"></jobcardHeaderTitle>
+
+                <!-- Jobcard Menu -->
+                <jobcardHeaderMenu slot="extra" v-bind="$props"></jobcardHeaderMenu>
+
+            <!-- Jobcard Body -->
+            
+            <jobcardSummaryBody v-bind="$props"></jobcardSummaryBody>
+
+            <!-- Jobcard Footer -->
+            
+            <jobcardSummaryFooter v-bind="$props"></jobcardSummaryFooter>
+            
+        </Card>
+    </div>
 
 </template>
 
 <script>
 
+    import statusLifecycle from './../../components/jobcard/status/lifecycle.vue';
+    import notAuthourizedAlert from './../../components/jobcard/status/notAuthourizedAlert.vue';
     import jobcardHeaderTitle from './../../components/jobcard/header/title.vue';
     import jobcardHeaderMenu from './../../components/jobcard/header/menu.vue';
     import jobcardSummaryBody from './../../components/jobcard/body/main.vue';
     import jobcardSummaryFooter from './../../components/jobcard/footer/main.vue';
 
     export default {
-        components: { jobcardHeaderTitle, jobcardHeaderMenu, jobcardSummaryBody, jobcardSummaryFooter },
+        components: { statusLifecycle, notAuthourizedAlert, jobcardHeaderTitle, jobcardHeaderMenu, jobcardSummaryBody, jobcardSummaryFooter },
         props: {
             jobcard: {
                 type: Object,
@@ -119,6 +129,11 @@
                 type: Boolean,
                 default: true
             },
+        },
+        computed: {
+            JobcardExists: function(){
+                return Object.keys(this.jobcard).length;
+            }
         }
     };
   

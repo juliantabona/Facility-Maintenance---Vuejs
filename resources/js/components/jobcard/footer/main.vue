@@ -6,15 +6,15 @@
 
             <!-- Jobcard view button -->
 
-            <jobcardViewButton v-if="showViewBtn" :route="{ name: 'show-jobcard', params: { id: jobcard.id } }"></jobcardViewButton>
+            <jobcardViewButton v-if="showViewBtn" :route="{ name: 'show-jobcard', params: { id: jobcard.id } }" class="float-right mr-1"></jobcardViewButton>
 
             <!-- Jobcard download button -->
 
-            <jobcardDownloadButton v-if="showDownloadBtn" :jobcardId="jobcard.id"></jobcardDownloadButton>
+            <jobcardDownloadButton v-if="showDownloadBtn" :jobcardId="jobcard.id" class="float-right mr-1"></jobcardDownloadButton>
 
             <!-- Jobcard send button -->
             
-             <jobcardSendButton v-if="showSendBtn"></jobcardSendButton>
+             <jobcardSendButton v-if="showSendBtn" class="float-right mr-1"></jobcardSendButton>
 
             <!-- Jobcard make public switch -->
 
