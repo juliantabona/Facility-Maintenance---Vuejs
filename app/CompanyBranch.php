@@ -81,7 +81,7 @@ class CompanyBranch extends Model
      */
     public function jobcards()
     {
-        return $this->hasMany('App\Jobcard', 'company_branch_id', 'company_id');
+        return $this->hasMany('App\Jobcard', 'company_branch_id');
     }
 
     /**

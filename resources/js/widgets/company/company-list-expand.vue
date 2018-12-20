@@ -25,7 +25,7 @@
 </template>
 <script>
     import companySummaryWidget from './../company/company-summary-widget.vue';
-    import companyJobcardSummaryWidget from './company-jobcard-summary-widget.vue';
+    import companyJobcardSummaryWidget from './companyJobcardSummaryWidget.vue';
     export default {
         components: { companySummaryWidget , companyJobcardSummaryWidget },
         props: {

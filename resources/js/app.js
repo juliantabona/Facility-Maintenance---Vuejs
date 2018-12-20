@@ -75,6 +75,11 @@ import Auth from './auth.js';
 
 window.auth = new Auth();
 
+//  Import Store For storage handling of global variables [A custom js file we created]
+import Store from './store.js';
+
+window.store = new Store();
+
 //  Global event manager, to emit changes/updates
 //  such as when user has logged in e.g) auth.js
 window.Event = new Vue;

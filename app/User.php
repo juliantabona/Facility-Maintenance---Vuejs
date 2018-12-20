@@ -127,4 +127,12 @@ class User extends Authenticatable
                     'user' => $this->toArray(),      //  NEW REGISTERED USER
                 ], 201);
     }
+
+    protected $appends = ['fullName'];
+
+    //  Getter for calculating the deadline returned as array
+    public function getFullNameAttribute()
+    {
+        return $this->first_name.' '.$this->last_name;
+    }
 }

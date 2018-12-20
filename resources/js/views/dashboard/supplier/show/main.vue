@@ -55,7 +55,7 @@
                                     <h5><Icon type="ios-time-outline" :size="18" class="mr-2"></Icon> Client Jobcards</h5>
                                 </div>
 
-                                <jobcardList modelType="client" :modelId="companyId"></jobcardList>
+                                <jobcardListWidget modelType="client" :modelId="companyId"></jobcardListWidget>
 
                             </Card>  
 
@@ -126,12 +126,12 @@
 </template>
 <script>
 
-    import jobcardList from './../../../../components/jobcard/jobcard-list.vue';
+    import jobcardListWidget from './../../../../widgets/jobcard/jobcardListWidget.vue';
     import companySummaryWidget from './../../../../widgets/company/company-summary-widget.vue';
 
 
     export default {
-        components: { jobcardList, companySummaryWidget },
+        components: { jobcardListWidget, companySummaryWidget },
         data(){
             return {
                 jobcards: [],

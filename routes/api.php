@@ -46,9 +46,9 @@ Route::post('/register', 'Auth\RegisterController@register');
 Route::post('/activate-account', 'Auth\AccountActivation@activate');
 Route::post('/resend-activation', 'Auth\AccountActivation@resend');
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return auth()->user();
-});
+Route::middleware('auth:api')->get('/user', 'Api\UserController@getUser');
+Route::middleware('auth:api')->get('/user/settings', 'Api\UserController@getUserSettings');
+Route::middleware('auth:api')->post('/user/settings', 'Api\UserController@updateUserSettings');
 
 /*   PROCESS FORM RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete

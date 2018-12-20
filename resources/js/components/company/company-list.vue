@@ -14,7 +14,7 @@
 
 </template>
 <script type="text/javascript">
-    import Filterable from './../Filterable.vue';
+    import Filterable from './../../components/Filterable.vue';
     import companyListExpandWidget from './../../widgets/company/company-list-expand.vue';
     export default {
         components: { Filterable, companyListExpandWidget },

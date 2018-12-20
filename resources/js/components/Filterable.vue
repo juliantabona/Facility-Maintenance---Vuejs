@@ -6,236 +6,268 @@
 </style>
 
 <template>
-    <div class="filterable">
-        <Button v-if="!filterCandidates.length" type="primary" @click.native="addFilter" class="mb-2">
-            <Poptip word-wrap width="200" trigger="hover" content="Add filters">
-                <Icon type="md-add" :size="16"></Icon> <span>Filter</span>
-            </Poptip>
-        </Button>
+    <Row :gutter="20" :style="{ margin: '0' }">
+        <Col :span="24" :style="{ marginTop: '20px' }">
+            <Card :style="{ width: '100%' }">
 
-        <div v-if="filterCandidates.length" class="panel" style=" background: #f8f8f9; padding: 20px 35px 20px 15px;">
-            <div class="panel-heading mb-3">
-                <div class="panel-title">
-                    <div class="d-inline">
-                        <span>Order by:</span>
-                        <strong @click="updateOrderDirection">
-                            <span v-if="query.order_direction === 'asc'">
-                                <Button size="small" type="primary"><Icon type="ios-arrow-round-down" /></Button>
-                            </span>
-                            <span v-else>
-                                <Button size="small" type="primary"><Icon type="ios-arrow-round-up" /></Button>
-                            </span>
-                        </strong>
-                        <Select 
-                            size="small"
-                            style="width:100px"
-                            :disabled="loading"
-                            @on-change="updateOrderColumn"
-                            placeholder="Select">
+                <!-- Card header name slot -->
+                <div slot="card-title"></div>
 
-                            <Option 
-                                v-for="(column,index) in orderables"
-                                :value="column.name"
-                                :selected="column && column.name == query.order_column"
-                                :key="index">
+                <!-- Card header options -->
+                <div slot="extra">
 
-                                {{ column.title }}
-                            
-                            </Option>
+                    <Button type="primary" size="small" class="d-inline-block mr-1">
+                        <span>Send</span>
+                        <Icon type="ios-send-outline" :size="20" style="margin-top: -4px;"/>
+                    </Button>
 
-                        </Select>
-                    </div>
-                    <span>Customers match</span>
-                    <Select size="small"
-                            style="width:60px"
-                            v-model="query.filter_match"
-                            placeholder="Select Method">
-                        <Option value="and">All</Option>
-                        <Option value="or">Any</Option>
-                    </Select>
-                    <span>of the following:</span>
-                </div>
-            </div>
-            <div class="panel-body">
-                <div class="filter">
-                    <Row :gutter="10" class="filter-item" v-for="(f, index1) in filterCandidates" :key="index1">
-                        <Col span="8" class="filter-column">
-                            <div class="form-group">
+                    <Dropdown trigger="click" class="d-inline-block mt-1 mr-2">
+                        <Button type="primary" size="small">
+                            <Icon type="ios-print-outline" :size="16" style="margin-top: -4px;"/>
+                            <span>Print / Download</span>
+                        </Button>
+                        <DropdownMenu slot="list">
+                            <DropdownItem>Export As PDF</DropdownItem>
+                            <DropdownItem>Export As XML</DropdownItem>
+                        </DropdownMenu>
+                    </Dropdown>
 
-                                <Cascader :data="formatDataForCascader(filterGroups)" 
-                                          placeholder="Select Filter"
-                                          @on-change="selectColumn(f, index1, $event)" 
-                                          :clearable="false"
-                                          class="filterableCascader"
-                                          >
-                                </Cascader>
+                </div> 
 
-                            </div>
-                        </Col>
-                        
-                        <Col span="8" class="filter-operator" v-if="f.column">
-                            <Select placeholder="Select Method"
-                                    @on-change="selectOperator(f, index1, $event)" 
-                                    :value="JSON.stringify(filterCandidates[index1].operator)"
-                                    :key="'operator_'+index1">
-                                <Option 
-                                    v-for="(y, index2) in fetchOperators(f)" :key="index1+'_'+index2" 
-                                    :value="JSON.stringify(y)"
-                                    :selected="f.operator && y.name === f.operator.name">
-                                    
-                                    {{y.title}}
+                <div class="filterable">
+                    <Button v-if="!filterCandidates.length" type="primary" @click.native="addFilter" class="mb-2">
+                        <Poptip word-wrap width="200" trigger="hover" content="Add filters">
+                            <Icon type="md-add" :size="16"></Icon> <span>Filter</span>
+                        </Poptip>
+                    </Button>
+
+                    <div v-if="filterCandidates.length" class="panel" style=" background: #f8f8f9; padding: 20px 35px 20px 15px;">
+                        <div class="panel-heading mb-3">
+                            <div class="panel-title">
+                                <div class="d-inline">
+                                    <span>Order by:</span>
+                                    <strong @click="updateOrderDirection">
+                                        <span v-if="query.order_direction === 'asc'">
+                                            <Button size="small" type="primary"><Icon type="ios-arrow-round-down" /></Button>
+                                        </span>
+                                        <span v-else>
+                                            <Button size="small" type="primary"><Icon type="ios-arrow-round-up" /></Button>
+                                        </span>
+                                    </strong>
+                                    <Select 
+                                        size="small"
+                                        style="width:100px"
+                                        :disabled="loading"
+                                        @on-change="updateOrderColumn"
+                                        placeholder="Select">
+
+                                        <Option 
+                                            v-for="(column,index) in orderables"
+                                            :value="column.name"
+                                            :selected="column && column.name == query.order_column"
+                                            :key="index">
+
+                                            {{ column.title }}
                                         
-                                </Option>
-                            </Select>
-                        </Col>
-                        <Col span="8">
-                            <Row :gutter="10">
-                                <template v-if="f.column && f.operator">
-                                    <Col span="22" class="filter-full" v-if="f.operator.component === 'single'">
-                                        <Input v-model="f.query_1"/>
+                                        </Option>
+
+                                    </Select>
+                                </div>
+                                <span>Customers match</span>
+                                <Select size="small"
+                                        style="width:60px"
+                                        v-model="query.filter_match"
+                                        placeholder="Select Method">
+                                    <Option value="and">All</Option>
+                                    <Option value="or">Any</Option>
+                                </Select>
+                                <span>of the following:</span>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="filter">
+                                <Row :gutter="10" class="filter-item" v-for="(f, index1) in filterCandidates" :key="index1">
+                                    <Col span="8" class="filter-column">
+                                        <div class="form-group">
+
+                                            <Cascader :data="formatDataForCascader(filterGroups)" 
+                                                    placeholder="Select Filter"
+                                                    @on-change="selectColumn(f, index1, $event)" 
+                                                    :clearable="false"
+                                                    class="filterableCascader"
+                                                    >
+                                            </Cascader>
+
+                                        </div>
                                     </Col>
-                                    <template v-if="f.operator.component === 'double'">
-                                        <Col span="11" class="filter-query_1">
-                                            <Input v-model="f.query_1"/>
-                                        </Col>
-                                        <Col span="11" class="filter-query_2">
-                                            <Input v-model="f.query_2"/>
-                                        </Col>
-                                    </template>
-                                    <template v-if="f.operator.component === 'datetime_1'">
-                                        <Col span="11" class="filter-query_1">
-                                            <Input v-model="f.query_1"/>
-                                        </Col>
-                                        <Col span="11" class="filter-query_2">
+                                    
+                                    <Col span="8" class="filter-operator" v-if="f.column">
+                                        <Select placeholder="Select Method"
+                                                @on-change="selectOperator(f, index1, $event)" 
+                                                :value="JSON.stringify(filterCandidates[index1].operator)"
+                                                :key="'operator_'+index1">
+                                            <Option 
+                                                v-for="(y, index2) in fetchOperators(f)" :key="index1+'_'+index2" 
+                                                :value="JSON.stringify(y)"
+                                                :selected="f.operator && y.name === f.operator.name">
+                                                
+                                                {{y.title}}
+                                                    
+                                            </Option>
+                                        </Select>
+                                    </Col>
+                                    <Col span="8">
+                                        <Row :gutter="10">
+                                            <template v-if="f.column && f.operator">
+                                                <Col span="22" class="filter-full" v-if="f.operator.component === 'single'">
+                                                    <Input v-model="f.query_1"/>
+                                                </Col>
+                                                <template v-if="f.operator.component === 'double'">
+                                                    <Col span="11" class="filter-query_1">
+                                                        <Input v-model="f.query_1"/>
+                                                    </Col>
+                                                    <Col span="11" class="filter-query_2">
+                                                        <Input v-model="f.query_2"/>
+                                                    </Col>
+                                                </template>
+                                                <template v-if="f.operator.component === 'datetime_1'">
+                                                    <Col span="11" class="filter-query_1">
+                                                        <Input v-model="f.query_1"/>
+                                                    </Col>
+                                                    <Col span="11" class="filter-query_2">
 
-                                            <Dropdown v-model="f.query_2">
-                                                <Button type="primary">
-                                                    Filter Type
-                                                    <Icon type="ios-arrow-down"></Icon>
+                                                        <Dropdown v-model="f.query_2">
+                                                            <Button type="primary">
+                                                                Filter Type
+                                                                <Icon type="ios-arrow-down"></Icon>
+                                                            </Button>
+                                                            <DropdownMenu slot="list">
+                                                                <DropdownItem>hours</DropdownItem>
+                                                                <DropdownItem>days</DropdownItem>
+                                                                <DropdownItem>months</DropdownItem>
+                                                                <DropdownItem>years</DropdownItem>
+                                                            </DropdownMenu>
+                                                        </Dropdown>
+
+                                                    </Col>
+                                                </template>
+                                                <template v-if="f.operator.component === 'datetime_2'">
+                                                    <Col span="22" class="filter-query_2">
+
+                                                        <Dropdown v-model="f.query_1">
+                                                            <Button type="primary">
+                                                                Filter Type
+                                                                <Icon type="ios-arrow-down"></Icon>
+                                                            </Button>
+                                                            <DropdownMenu slot="list">
+                                                                <DropdownItem value="yesterday">yesterday</DropdownItem>
+                                                                <DropdownItem value="today">today</DropdownItem>
+                                                                <DropdownItem value="tomorrow">tomorrow</DropdownItem>
+                                                                <DropdownItem value="last_month">last month</DropdownItem>
+                                                                <DropdownItem value="this_month">this month</DropdownItem>
+                                                                <DropdownItem value="next_month">next month</DropdownItem>
+                                                                <DropdownItem value="last_year">last year</DropdownItem>
+                                                                <DropdownItem value="this_year">this year</DropdownItem>
+                                                                <DropdownItem value="next_year">next year</DropdownItem>
+                                                            </DropdownMenu>
+                                                        </Dropdown>
+
+                                                    </Col>
+                                                </template>
+                                            </template>
+                                            
+                                            <Col span="2" class="filter-remove" v-if="f">
+                                                <Button type="error" size="small" @click.native="removeFilter(f, index1)" class="pt-1 pb-1">
+                                                    <Icon type="ios-trash-outline" :size="18" />
                                                 </Button>
-                                                <DropdownMenu slot="list">
-                                                    <DropdownItem>hours</DropdownItem>
-                                                    <DropdownItem>days</DropdownItem>
-                                                    <DropdownItem>months</DropdownItem>
-                                                    <DropdownItem>years</DropdownItem>
-                                                </DropdownMenu>
-                                            </Dropdown>
+                                            </Col>
+                                        </Row>
+                                    </Col>
+                                </Row>
+                                <div class="filter-controls">
+                                    <ButtonGroup shape="circle">
+                                        
+                                        <Button type="primary" @click.native="addFilter">
+                                            <Poptip word-wrap width="200" trigger="hover" content="Add a new filter">
+                                                <Icon type="md-add" :size="16"></Icon>
+                                            </Poptip>
+                                        </Button>
 
-                                        </Col>
-                                    </template>
-                                    <template v-if="f.operator.component === 'datetime_2'">
-                                        <Col span="22" class="filter-query_2">
+                                        <Button type="primary" @click.native="resetFilter" v-if="this.appliedFilters.length > 0">
+                                            <Poptip word-wrap width="200" trigger="hover" content="Remove all filters">
+                                                <Icon type="md-refresh" :size="16"></Icon>
+                                            </Poptip>
+                                        </Button>
+                                        
+                                        <Button type="primary" @click.native="applyFilter">
+                                            <Poptip word-wrap width="200" trigger="hover" content="Apply filters and get results">
+                                                <Icon type="ios-funnel" :size="16"></Icon>
+                                            </Poptip>
+                                        </Button>          
+                                        
+                                    </ButtonGroup>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-body">
+                            
+                            <Loader v-if="loading" :loading="loading" type="text" :style="{ marginTop:'40px' }">Loading...</Loader>
+                            
+                            <slot v-if="collection.data && collection.data.length"
+                                :collection="collection.data"
+                                :loading="loading">
+                            </slot>
+                        
+                            <Alert v-if="!collection.data.length && !loading" type="warning" show-icon class="mt-4 mb-4">
+                                No Results - We didn't find any records. - <span class="btn btn-link btn-sm p-0" @click="resetFilter">Remove Filters</span>
+                            </Alert>
 
-                                            <Dropdown v-model="f.query_1">
-                                                <Button type="primary">
-                                                    Filter Type
-                                                    <Icon type="ios-arrow-down"></Icon>
-                                                </Button>
-                                                <DropdownMenu slot="list">
-                                                    <DropdownItem value="yesterday">yesterday</DropdownItem>
-                                                    <DropdownItem value="today">today</DropdownItem>
-                                                    <DropdownItem value="tomorrow">tomorrow</DropdownItem>
-                                                    <DropdownItem value="last_month">last month</DropdownItem>
-                                                    <DropdownItem value="this_month">this month</DropdownItem>
-                                                    <DropdownItem value="next_month">next month</DropdownItem>
-                                                    <DropdownItem value="last_year">last year</DropdownItem>
-                                                    <DropdownItem value="this_year">this year</DropdownItem>
-                                                    <DropdownItem value="next_year">next year</DropdownItem>
-                                                </DropdownMenu>
-                                            </Dropdown>
+                        </div>
+                        <Row :gutter="20" v-if="collection.data && collection.data.length"
+                            class="panel-footer mt-3">
+                            <Col span="12" class="mb-3">
+                                <span>Limit:</span> 
+                                <Select 
+                                    size="small"
+                                    style="width:70px"
+                                    v-model="query.limit" 
+                                    :disabled="loading" 
+                                    @on-change="updateLimit"
+                                    placeholder="Limit">
 
-                                        </Col>
-                                    </template>
-                                </template>
-                                
-                                <Col span="2" class="filter-remove" v-if="f">
-                                    <Button type="error" size="small" @click.native="removeFilter(f, index1)" class="pt-1 pb-1">
-                                        <Icon type="ios-trash-outline" :size="18" />
+                                    <Option 
+                                        v-for="(column,index) in [5,10,20,50,100,200,500]"
+                                        :value="column"
+                                        :selected="column == query.order_column"
+                                        :key="index">
+
+                                        {{ column }}
+                                    </Option>
+
+                                </Select>
+                                <span> Showing {{ collection.from }} - {{ collection.to }} of {{ collection.total }} entries.</span>
+                            </Col>
+                            <Col span="12">
+                                <ButtonGroup class="float-right">
+                                    <Button type="primary" :disabled="!collection.prev_page_url || loading" @click.native="prevPage">
+                                            <Icon type="ios-arrow-back"></Icon>
+                                            Prev
                                     </Button>
-                                </Col>
-                            </Row>
-                        </Col>
-                    </Row>
-                    <div class="filter-controls">
-                        <ButtonGroup shape="circle">
-                            
-                            <Button type="primary" @click.native="addFilter">
-                                <Poptip word-wrap width="200" trigger="hover" content="Add a new filter">
-                                    <Icon type="md-add" :size="16"></Icon>
-                                </Poptip>
-                            </Button>
-
-                            <Button type="primary" @click.native="resetFilter" v-if="this.appliedFilters.length > 0">
-                                <Poptip word-wrap width="200" trigger="hover" content="Remove all filters">
-                                    <Icon type="md-refresh" :size="16"></Icon>
-                                </Poptip>
-                            </Button>
-                            
-                            <Button type="primary" @click.native="applyFilter">
-                                <Poptip word-wrap width="200" trigger="hover" content="Apply filters and get results">
-                                    <Icon type="ios-funnel" :size="16"></Icon>
-                                </Poptip>
-                            </Button>          
-                            
-                        </ButtonGroup>
+                                    <Button type="primary" :disabled="!collection.next_page_url || loading" @click="nextPage">
+                                            Next
+                                            <Icon type="ios-arrow-forward"></Icon>
+                                    </Button>
+                                </ButtonGroup>
+                            </Col>
+                        </Row>
                     </div>
                 </div>
-            </div>
-        </div>
-        <div class="panel">
-            <div class="panel-body">
-                
-                <Loader v-if="loading" :loading="loading" type="text" :style="{ marginTop:'40px' }">Loading...</Loader>
-                
-                <slot v-if="collection.data && collection.data.length"
-                      :collection="collection.data"
-                      :loading="loading">
-                </slot>
-            
-                <Alert v-if="!collection.data.length && !loading" type="warning" show-icon class="mt-4 mb-4">
-                    No Results - We didn't find any records. - <span class="btn btn-link btn-sm p-0" @click="resetFilter">Remove Filters</span>
-                </Alert>
 
-            </div>
-            <Row :gutter="20" v-if="collection.data && collection.data.length"
-                class="panel-footer mt-3">
-                <Col span="12" class="mb-3">
-                    <span>Limit:</span> 
-                    <Select 
-                        size="small"
-                        style="width:70px"
-                        v-model="query.limit" 
-                        :disabled="loading" 
-                        @on-change="updateLimit"
-                        placeholder="Limit">
-
-                        <Option 
-                            v-for="(column,index) in [5,10,20,50,100,200,500]"
-                            :value="column"
-                            :selected="column == query.order_column"
-                            :key="index">
-
-                            {{ column }}
-                        </Option>
-
-                    </Select>
-                    <span> Showing {{ collection.from }} - {{ collection.to }} of {{ collection.total }} entries.</span>
-                </Col>
-                <Col span="12">
-                    <ButtonGroup class="float-right">
-                        <Button type="primary" :disabled="!collection.prev_page_url || loading" @click.native="prevPage">
-                                <Icon type="ios-arrow-back"></Icon>
-                                Prev
-                        </Button>
-                        <Button type="primary" :disabled="!collection.next_page_url || loading" @click="nextPage">
-                                Next
-                                <Icon type="ios-arrow-forward"></Icon>
-                        </Button>
-                    </ButtonGroup>
-                </Col>
-            </Row>
-        </div>
-    </div>
+            </Card>
+        </Col>
+    </Row>
 </template>
 <script type="text/javascript">
     import Vue from 'vue'
@@ -250,6 +282,9 @@
             autoShowFilter: {
                 type: Boolean,
                 deafult: false
+            },
+            modelType: {
+                type: String
             }
         },
         components: { Loader },
@@ -270,7 +305,6 @@
                 },
 
                 refreshKey: 0,
-                refreshFilterOperatorKey: 0
             }
         },
         computed: {
@@ -285,7 +319,10 @@
             },
         },
         mounted() {
-            this.fetch()
+            //  Get the data
+            this.fetch();
+
+            //  Show filter if indicated
             if(this.autoShowFilter){
                 this.addFilter();
             }
@@ -293,9 +330,6 @@
         methods: {
             forceRerender() {
                 this.refreshKey += 1;  
-            },
-            forceRerenderFilterOperator(){
-                this.refreshFilterOperatorKey += 1;  
             },
             formatDataForCascader(currentFilterGroups){
                 
@@ -440,9 +474,6 @@
                         this.filterCandidates[i].query_2 = null
                         break;
                 }
-                
-
-                //this.forceRerenderFilterOperator();
                 
             },
             addFilter() {

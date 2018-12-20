@@ -186,7 +186,7 @@
 
     import companySummaryWidget from './../../../../widgets/company/company-summary-widget.vue';
     import statusLifecycleWidget from './../../../../widgets/jobcard/status-lifecycle-widget.vue';
-    import jobcardSummaryWidget from './../../../../widgets/jobcard/jobcard-summary-widget.vue';
+    import jobcardSummaryWidget from './../../../../widgets/jobcard/jobcardSummaryWidget.vue';
     import quotationSummaryWidget from './../../../../widgets/quotation/quotation-preview-widget.vue';
     import invoiceSummaryWidget from './../../../../widgets/invoice/invoice-preview-widget.vue';
     import receiptSummaryWidget from './../../../../widgets/receipt/receipt-preview-widget.vue';

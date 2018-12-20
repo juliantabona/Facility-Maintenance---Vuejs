@@ -149,12 +149,6 @@ class JobcardController extends Controller
                                           ->first()
                                           ->id;
 
-                //  Check if we have jobcards
-                if (count($jobcards)) {
-                    //  We create a new jobcard instance
-                    $jobcards = new Jobcard();
-                }
-
                 /*  Filter only to the jobcards beloging to the specified step.
                  */
                 $jobcards = $jobcards->whereHas('statusLifecycle', function ($query) use ($jobcardTemplateId) {
