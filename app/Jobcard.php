@@ -47,19 +47,36 @@ class Jobcard extends Model
         'id', 'title', 'description', 'start_date', 'end_date', 'created_at',
     ];
 
+    /**
+     * Get all of the categories for the jobcard.
+     */
     public function categories()
     {
-        return $this->morphMany('App\Category', 'category');
+        return $this->morphToMany('App\Category', 'trackable', 'category_allocations');
     }
 
+    /**
+     * Get all of the cost centers for the jobcard.
+     */
     public function costCenters()
     {
-        return $this->morphMany('App\CostCenter', 'costcenter');
+        return $this->morphToMany('App\CostCenter', 'trackable', 'costcenter_allocations');
     }
 
-    public function priorities()
+    /**
+     * Get the priority for the jobcard.
+     */
+    public function priority()
     {
-        return $this->morphMany('App\Priority', 'priority');
+        return $this->morphToMany('App\Priority', 'trackable', 'priority_allocations');
+    }
+
+    /**
+     * Get all of the jobcard's quotations.
+     */
+    public function quotations()
+    {
+        return $this->morphMany('App\Quotation', 'trackable');
     }
 
     public function suppliersList()

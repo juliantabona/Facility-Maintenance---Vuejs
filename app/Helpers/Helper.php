@@ -197,17 +197,17 @@ function oq_saveActivity($model, $type, $user, $customDetails = null)
         }
 
         $update = $model_1->recentActivities()->create([
-            'type' => $type,
-            'detail' => $details,
-            'who_created_id' => !empty($user) ? $user->id : null,
+            'activity' => $details,
+            'created_by' => !empty($user) ? $user->id : null,
             'company_branch_id' => !empty($user) ? $user->company_branch_id : null,
+            'company_id' => !empty($user) ? $user->companyBranch->company->id : null,
         ]);
     } else {
         $update = \App\RecentActivity::create([
-            'type' => $type,
-            'detail' => '',
-            'who_created_id' => !empty($user) ? $user->id : null,
+            'activity' => '',
+            'created_by' => !empty($user) ? $user->id : null,
             'company_branch_id' => !empty($user) ? $user->company_branch_id : null,
+            'company_id' => !empty($user) ? $user->companyBranch->company->id : null,
         ]);
     }
 

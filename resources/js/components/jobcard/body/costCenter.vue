@@ -8,7 +8,7 @@
 
 </template>
 <script>
-    import costcenterTag from './../../costcenter/costcenterTag.vue';
+    import costcenterTag from './../../_common/costcenter/costcenterTag.vue';
 
     export default {
         components: { costcenterTag },

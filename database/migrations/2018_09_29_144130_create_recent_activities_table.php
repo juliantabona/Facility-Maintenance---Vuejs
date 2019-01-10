@@ -17,6 +17,7 @@ class CreateRecentActivitiesTable extends Migration
             $table->integer('trackable_id')->unsigned();
             $table->string('trackable_type');
             $table->integer('created_by')->unsigned()->nullable();
+            $table->integer('company_branch_id')->unsigned();
             $table->integer('company_id')->unsigned();
             $table->timestamps();
         });

@@ -118,7 +118,7 @@ class Company extends Model
 
     public function costCenters()
     {
-        return $this->morphMany('App\CostCenter', 'costcenter');
+        return $this->hasMany('App\CostCenter');
     }
 
     /*  Get the priorities related to this company Priorities are response time commitments to completing a task.
@@ -127,7 +127,7 @@ class Company extends Model
 
     public function priorities()
     {
-        return $this->morphMany('App\Priority', 'priority');
+        return $this->hasMany('App\Priority');
     }
 
     /*  Get the categories related to this company. Categories are job sorting classes that help organise
@@ -138,7 +138,7 @@ class Company extends Model
 
     public function categories()
     {
-        return $this->morphMany('App\Category', 'category');
+        return $this->hasMany('App\Category');
     }
 
     /*  Get the company branches related to this company

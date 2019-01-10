@@ -8,7 +8,7 @@
 
 </template>
 <script>
-    import categoryTag from './../../category/categoryTag.vue';
+    import categoryTag from './../../_common/category/categoryTag.vue';
 
     export default {
         components: { categoryTag },

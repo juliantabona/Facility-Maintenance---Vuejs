@@ -84,7 +84,7 @@
                   <span>Jobcards</span>
               </template>
 
-              <router-link to="/jobcard/create">
+              <router-link :to="{ name:'create-jobcard' }">
                 <MenuItem name="5-1">
                     <Button type="primary" size="small">
                         + Create Jobcard

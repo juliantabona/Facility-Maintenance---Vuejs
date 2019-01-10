@@ -59,6 +59,7 @@ Route::post('/process-forms', 'Api\ProcessFormController@store');
      -  Get, Show, Update, Trash, Delete
 */
 Route::get('jobcards', 'Api\JobcardController@index');
+Route::post('jobcards', 'Api\JobcardController@store');
 Route::get('jobcards/{jobcard_id}', 'Api\JobcardController@show');
 Route::get('jobcards/{jobcard_id}/suppliers', 'Api\JobcardController@suppliers');
 Route::get('jobcards/lifecycle/templates', 'Api\JobcardController@getLifecycleTemplates');
@@ -76,5 +77,20 @@ Route::get('companies', 'Api\CompanyController@index');
  *  we could be trying to retrieve the company using either its branch/company id.
  */
 Route::get('companies/{model_id}', 'Api\CompanyController@show');
+
+/*   CATEGORY RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::get('categories', 'Api\CategoryController@index');
+
+/*   COSTCENTERS RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::get('costcenters', 'Api\CostCenterController@index');
+
+/*   PRIORITIES RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::get('priorities', 'Api\PriorityController@index');
 
 Route::get('downloadFile', 'Api\DownloadController@download');

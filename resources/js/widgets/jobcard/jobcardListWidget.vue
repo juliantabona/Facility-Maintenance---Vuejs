@@ -1,33 +1,26 @@
 <template>
 
-    <filterable v-bind="filterable" :key="renderKey">
+    <filterableList :tableColumnsData="tableColumns" :filterableData="filterable">
         
-        <!-- Insert the card title as follows -->
-        <slot name="card-title"><h5><Icon type="ios-copy-outline" :size="24" class="mr-2"/><span>Jobcards</span></h5></slot>
+        <!-- Heading -->
+        <slot name="heading">
+            <h5><Icon type="ios-copy-outline" :size="24" class="mr-2"/><span>Jobcards</span></h5>
+        </slot>
 
-        <!-- Get the collection data and loading state, then render the filterable table -->
-        <Table v-if="!loading" border size="small" slot-scope="{ collection, loading }" :columns="tableColumns" :data="collection"></Table>
-        
-    </filterable>
+    </filterableList>
 
 </template>
 <script type="text/javascript">
 
-    import Filterable from './../../components/Filterable.vue';
-    import priorityTag from './../../components/priority/priorityTag.vue';
-    import lifecycleStatusTag from './../../components/jobcard/status/lifecycleStatusTag.vue';
-    import jobcardListExpandWidget from './../../widgets/jobcard/jobcardListExpandWidget.vue';
+    import filterableList from './../../components/_common/list/filterableList.vue';
+    import priorityTag from './../../components/_common/priority/priorityTag.vue';
+    import lifecycleStatusTag from './../../components/jobcard/lifecycle/lifecycleStatusTag.vue';
+    import jobcardListExpandWidget from './jobcardListExpandWidget.vue';
 
     export default {
-        components: { Filterable, priorityTag, lifecycleStatusTag, jobcardListExpandWidget },
+        components: { filterableList, priorityTag, lifecycleStatusTag, jobcardListExpandWidget },
         data() {
             return {
-                // Used to re-render the filterable table
-                renderKey: 0,
-
-                // Used to determine whether to get company/branch jobcards. 
-                // We get the result from the global store in auth.js
-                modelType: auth.modelType,
 
                 // Used get jobcards in stages e.g) Open, Pending, closed, e.t.c
                 lifecycleStep: this.$route.query.step,
@@ -191,27 +184,18 @@
         },
         methods: {
             generateURL: function () {
-                //  The modelType: Whether to get company/branch specific data
-                var modelType = this.modelType ? 'model='+this.modelType : ''; 
                 
                 //  The lifecycleStep: Filter and retrieve jobcards currently at this stage 
                 var lifecycleStep = this.lifecycleStep ? '&&step='+this.lifecycleStep : '';
                 
                 //  Additional data to eager load along with each jobcard found
-                var connections = '&&connections=categories,priorities,costcenters';
+                var connections = 'connections=priority,categories,costcenters';
                 
                 //  Url generated for the filterable Api call  
-                var url = '/api/jobcards?'+modelType + lifecycleStep + connections;
+                var url = '/api/jobcards?'+ connections + lifecycleStep;
 
                 //  Assign url to the filterable object
                 this.filterable.url = url;
-            },
-            renderFilterableComponent: function(){
-                //  Generate a new url
-                this.generateURL();
-
-                //  Re-render the filterable component
-                this.renderKey++;
             }
         },
         watch: {
@@ -219,31 +203,10 @@
             '$route.query.step'() {
                 //  Update the local lifecycleStep
                 this.lifecycleStep = this.$route.query.step;
-
-                //  Re-render the filterable component to re-run the Api call
-                this.renderFilterableComponent();
             }
         },
         created () {
             this.generateURL();
-
-            //  Listen for global changes on the resource type. 
-            //  The reource is used to reflect which data we want to get.
-            //  It may be the users company/branch specific data.
-
-            var self = this;
-
-            Event.$on('updatedResourceType', function(updatedResourceType){
-                //  Get the updated resourceType e.g) company/branch
-                self.modelType = updatedResourceType;
-
-                //  Re-render the filterable component to re-run the Api call
-                self.renderFilterableComponent();
-            });
-        },
-        beforeDestroy() {
-            //  Stop listening for global changes on the resource type.
-            Event.$off('updatedResourceType');
-        },
+        }
     }
 </script>

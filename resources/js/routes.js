@@ -51,6 +51,13 @@ let routes = [
         component: require('./views/dashboard/jobcard/list/main.vue')
     },
     {
+        //  Create jobcard
+        path: '/jobcards/create', name: 'create-jobcard',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/jobcard/create/main.vue'),
+        props: true
+    },
+    {
         //  Show one jobcard
         path: '/jobcards/:id', name: 'show-jobcard',
         meta: { layout: 'Dashboard', middlewareAuth: true },

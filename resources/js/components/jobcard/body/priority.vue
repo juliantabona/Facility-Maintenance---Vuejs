@@ -3,12 +3,12 @@
     <!-- Jobcard Priority -->
     <span>
         <strong>Priority: </strong>
-        <priorityTag :priorities="jobcard.priorities" :showEditBtn="true"></priorityTag>
+        <priorityTag :priority="jobcard.priority[0]" :showEditBtn="true"></priorityTag>
     </span>
 
 </template>
 <script>
-    import priorityTag from './../../priority/priorityTag.vue';
+    import priorityTag from './../../_common/priority/priorityTag.vue';
 
     export default {
         components: { priorityTag },

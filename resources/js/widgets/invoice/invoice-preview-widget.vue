@@ -184,7 +184,7 @@
     props: {
         invoice: {
             type: Object,
-            default: () => {}
+            default: null
         },
         showMenuBtn: {
             type: Boolean,

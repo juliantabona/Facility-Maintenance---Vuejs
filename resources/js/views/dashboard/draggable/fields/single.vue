@@ -75,11 +75,11 @@
         props:{
             field: {
                 type: Object,
-                default:() => {}
+                default: null
             },
             section: {
                 type: Object,
-                default:() => {}
+                default: null
             },
             showToolBar: {
                 type: Boolean,

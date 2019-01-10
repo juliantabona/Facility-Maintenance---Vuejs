@@ -1,13 +1,26 @@
 <template>
     <Row :gutter="20">
         <Col :span="24">
-            <supplierList modelType="company" type="supplier"></supplierList>
+
+            <!-- Get the resource type button to allow user to toggle between getting company/branch specific data -->
+            <resourceTypeButton></resourceTypeButton>
+
+        </Col>
+        <Col :span="24">
+
+            <!-- Get the filterable jobcard list -->
+            <companyListWidget relationType="supplier"></companyListWidget>
+
         </Col>
     </Row>
 </template>
 <script type="text/javascript">
-    import supplierList from './../../../../components/company/company-list.vue';
+
+    import resourceTypeButton from './../../../../components/resourceTypeButton.vue';
+    import companyListWidget from './../../../../widgets/company/companyListWidget.vue';
+
     export default {
-        components: { supplierList }
+        components: { resourceTypeButton, companyListWidget }
     }
 </script>
+

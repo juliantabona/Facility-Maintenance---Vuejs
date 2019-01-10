@@ -3,6 +3,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
@@ -11,20 +12,22 @@ Relation::morphMap([
 
 class Category extends Model
 {
+    use Dataviewer;
+
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
-        'name', 'description',
+        'name', 'description', 'company_id', 'type',
     ];
 
     /**
-     * Get all of the owning category models.
+     * Get all of the jobcards that are assigned this category.
      */
-    public function category()
+    public function jobcards()
     {
-        return $this->morphTo();
+        return $this->morphedByMany('App\Jobcard', 'trackable', 'category_allocations');
     }
 }

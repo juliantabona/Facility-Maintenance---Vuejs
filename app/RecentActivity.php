@@ -33,7 +33,7 @@ class RecentActivity extends Model
      * @var array
      */
     protected $fillable = [
-        'activity', 'company_branch_id', 'created_by',
+        'activity', 'company_branch_id', 'company_id', 'created_by',
     ];
 
     public function creator()

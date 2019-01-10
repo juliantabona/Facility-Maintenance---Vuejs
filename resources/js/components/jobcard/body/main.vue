@@ -20,7 +20,7 @@
             <jobcardBodyEndDate v-bind="$props"></jobcardBodyEndDate>
         </Col>
 
-        <Col span="24">
+        <Col span="24" v-if="showTitle || showDescription || showDeadline  || showStartDate || showEndDate">
             <Divider dashed class="mt-3 mb-3" />
         </Col>
 
@@ -35,7 +35,7 @@
             <jobcardBodyCostCenter v-bind="$props"></jobcardBodyCostCenter>
         </Col>
 
-        <Col span="24">
+        <Col span="24" v-if="showPriority || showCategory || showCostCenters">
             <Divider dashed class="mt-3 mb-3" />
         </Col>
 
@@ -55,7 +55,7 @@
             <jobcardBodyAuthorizedDate v-bind="$props"></jobcardBodyAuthorizedDate>
         </Col>
 
-        <Col span="24">
+        <Col span="24" v-if="showCreatedBy || showCreatedByDate || showAuthourizedBy || showAuthourizedByDate">
             <Divider dashed class="mt-3 mb-3" />
         </Col>
 
@@ -68,7 +68,7 @@
             <jobcardBodySuppliersTag v-bind="$props" class="float-right"></jobcardBodySuppliersTag>
         </Col>
 
-        <Col span="24">
+        <Col span="24" v-if="showResourceTags">
             <Divider dashed class="mt-3 mb-3" />
         </Col>
         

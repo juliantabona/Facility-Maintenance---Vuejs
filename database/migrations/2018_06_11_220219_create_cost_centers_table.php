@@ -14,9 +14,9 @@ class CreateCostCentersTable extends Migration
         Schema::create('cost_centers', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name');
-            $table->text('description')->nullable();
-            $table->integer('costcenter_id')->unsigned();
-            $table->string('costcenter_type');
+            $table->string('description')->nullable();
+            $table->unsignedInteger('company_id');
+            $table->string('type');
             $table->timestamps();
         });
     }

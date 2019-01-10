@@ -2,37 +2,47 @@
 
     <Card class="client-work-summary-widget" :style="{ width: '100%' }">
 
+        <!-- Heading -->
+
         <div slot="title">
             <h5>
                 <Icon type="ios-time-outline" :size="18" class="mr-2"></Icon> 
-                {{ modelType == 'client' ? 'Recent Work' : 'Contracted Jobs' }}
+                {{ relationType == 'client' ? 'Recent Work' : 'Contracted Jobs' }}
             </h5>
         </div>
 
+        <!-- Loader -->
+
         <Loader v-if="isLoading" :loading="isLoading"></Loader>
         
+
+        <!-- No Jobcards Alert -->
+
         <Alert v-if="!isLoading && !jobcards.length" type="warning">
             No information found
         </Alert>
         
-        <Row v-if="jobcards.length">
-            <Col v-for="jobcard in jobcards" :key="jobcard.id">
-                <jobcardSummaryWidget :style="{ marginBottom: '10px' }"
-                    :jobcard="jobcard"
+        <!-- Jobcards summarized -->
 
-                    :showMenuBtn="false" :showMenuEditBtn="true" :showRemoveBtn="true" :showMenuAddClientBtn="true"
-                    :showMenuAddSupplierBtn="true" :showMenuAddLabourBtn="true" :showMenuAddAssetBtn="true"
+        <Row v-if="jobcards.length">
+            <Col v-for="(jobcard, i) in jobcards" :key="jobcard.id">
+            
+                <!-- Get the jobcard summary details -->
+
+                <jobcardSummaryWidget 
+
+                    v-model="jobcards[i]" :jobcardId="null"
                     
-                    :showHeaderSection="false" :showDescriptionSection="true" :showStatusSection="false" 
-                    :showPublishSection="false" :showResourceSection="false" :showActionToolbalSection="true"
-                    
-                    :showAuthourizedStatus="true" :showProcessStatus="true"
-                    :showTitle="true" :showDescription="true" :showDeadline="false" :showStartDate="false" 
-                    :showEndDate="false" :showPriority="false" :showCategory="false" :showCostCenters="false"
-                    :showCreatedBy="false" :showCreatedByDate="false" :showAuthourizedBy="false" 
-                    :showAuthourizedByDate="false">
+                    :showMenuBtn="false" :showAuthourizedStatus="true" :showProcessStatus="true"
+                    :showTitle="true" :showDescription="true" :showDeadline="false" :showStartDate="false" :showEndDate="false"
+                    :showPriority="false" :showCategory="false" :showCostCenters="false" :showCreatedBy="false" :showCreatedByDate="false"
+                    :showAuthourizedBy="false" :showAuthourizedByDate="false" :showResourceTags="false" 
+                    :showViewBtn="true" :showDownloadBtn="true" :showSendBtn="true" :showPublicBtn="true">
                 </jobcardSummaryWidget>
+
+
                 <Divider />
+
             </Col>
 
         </Row> 
@@ -43,7 +53,7 @@
 
 <script>
 
-    import Loader from './../../components/Loader.vue';
+    import Loader from './../../components/_common/loader/Loader.vue';
     import jobcardSummaryWidget from './../jobcard/jobcardSummaryWidget.vue';
 
     export default {
@@ -53,7 +63,7 @@
                 type: Number,
                 default: null
             },
-            modelType: {            //  client, supplier
+            relationType: {         //  client, supplier
                 type: String,
                 default: ''
             },
@@ -70,7 +80,7 @@
         },
         methods: {
             fetch(){
-                if(this.modelId != null && this.modelType != ''){
+                if(this.modelId != null && this.relationType != ''){
 
                     const self = this;
 
@@ -78,7 +88,7 @@
                     self.isLoading = true;
 
                     //  Use the api call() function located in resources/js/api.js
-                    api.call('get', '/api/jobcards?model='+this.modelType+'&&modelId='+this.modelId+'&&limit='+this.limit)
+                    api.call('get', '/api/jobcards?model='+this.relationType+'&&modelId='+this.modelId+'&&limit='+this.limit)
                         .then(({data}) => {
 
                             //  Stop loader

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use DB;
 use Auth;
+use Validator;
 use App\Jobcard;
 use App\FormTemplate;
 use Illuminate\Http\Request;
@@ -236,9 +237,14 @@ class JobcardController extends Controller
     {
         $user = auth('api')->user();
 
-        /***********************************************************
-        *  CHECK IF THE USER IS AUTHORIZED TO VIEW LIFECYCLE       *
-        /**********************************************************/
+        /*********************************************************************
+        *  CHECK IF THE USER IS AUTHORIZED TO ADD LIFECYCLE TO JOBCARD       *
+        /********************************************************************/
+
+        if (!$user->can(['add-jobcard-lifecycle'])) {
+            //  Not authourized
+            return oq_api_notify('You don\'t have permission to add a jobcard lifecycle', 403);
+        }
 
         $selectedTemplateId = request('selectedTemplateId');
 
@@ -352,6 +358,15 @@ class JobcardController extends Controller
     public function updateLifecycle(Request $request, $jobcard_id)
     {
         $user = auth('api')->user();
+
+        /****************************************************************
+        *  CHECK IF THE USER IS AUTHORIZED TO UPDATE JOBCARD LIFECYCLE  *
+        /***************************************************************/
+
+        if (!$user->can(['update-jobcard-lifecycle'])) {
+            //  Not authourized
+            return oq_api_notify('You don\'t have permission to update the jobcard status', 403);
+        }
 
         //  Check if the jobcard exists
         $jobcard = Jobcard::find($jobcard_id);
@@ -518,16 +533,103 @@ class JobcardController extends Controller
          *  @return Validator - If validation failed
          *  @return jobcard - If successful
          */
-        $response = oq_createOrUpdateJobcard($request, null, $user);
 
-        //  If the validation did not pass
-        if (oq_failed_validation($response)) {
-            //  Return validation errors with an alert or json response if API request
-            return oq_failed_validation_return($request, $response);
+        //  Get the rules for validating a jobcard on creation
+        $rules = oq_jobcard_create_v_rules($user);
+
+        //  Customized error messages for validating a jobcard on creation
+        $messages = oq_jobcard_create_v_msgs($request);
+
+        // Now pass the input and rules into the validator
+        $validator = Validator::make($request->all(), $rules, $messages);
+
+        // Check to see if validation fails or passes
+        if ($validator->fails()) {
+            //  Notify the user that validation failed
+            oq_notify('Couldn\'t update jobcard, check your information!', 'danger');
+            //  Return back with errors and old inputs
+            return  ['failed_validation' => true, 'validator' => $validator->errors()];
+        }
+
+        foreach ($request->all() as $key => $value) {
+            $request[str_replace('jobcard_', '', $key)] = $value;
+            unset($request[$key]);
+        }
+
+        //  Create the jobcard
+        $jobcard = \App\Jobcard::create(
+            array_merge($request->all(), ['company_branch_id' => $user->company_branch_id])
+        );
+
+        //  Add the priority to the jobcard
+        if (!empty(request('priority'))) {
+            $jobcard->priority()->sync(request('priority'));
+        }
+
+        //  Add the categories to the jobcard
+        if (!empty(request('categories'))) {
+            $jobcard->categories()->sync(request('categories'));
+        }
+
+        //  Add the costcenters to the jobcard
+        if (!empty(request('costcenters'))) {
+            $jobcard->costCenters()->sync(request('costcenters'));
+        }
+
+        $status = 'created';
+
+        //  If the jobcard was created/updated successfully
+        if ($jobcard) {
+            //  re-retrieve the instance to get all of the fields in the table.
+            $jobcard = $jobcard->fresh();
+
+            //  Record activity of a jobcard created
+            $jobcardCreatedActivity = oq_saveActivity($jobcard, $status, $user, ['type' => 'created']);
+
+            //  Record activity of a jobcard authourized
+            $jobcardAuthourizedActivity = oq_saveActivity($jobcard, $status, $user, ['type' => 'authourized']);
+
+            //  Allocate the process form for tracking status
+            $companyId = $user->companyBranch->company->id;
+            if ($companyId) {
+                //  Get the Jobcard Form Template
+                $jobcardTemplate = FormTemplate::where('type', 'jobcard')->where('selected', '1')->where('company_id', $companyId)->first();
+
+                //  If we have a Form Template
+                if (count($jobcardTemplate)) {
+                    //  Allocate it to the jobcard to serve as the jobcard lifecycle
+                    $statusLifecycle = $jobcard->statusLifecycle()->create([
+                        'template' => $jobcardTemplate->form_template,
+                        'form_template_id' => $jobcardTemplate->id,
+                    ]);
+                }
+            }
+
+            /*  Allocate the process form for tracking status
+             *
+                $process = $jobcard->processInstructions()->create([
+                    'process_form' => Auth::user()->companyBranch->company->processForms()->where('selected', 1)->first()->instructions,
+                ]);
+             */
+
+            //  If we have the jobcard image and has been approved, then save it to Amazon S3 bucket
+            if ($request->hasFile('new_jobcard_image')) {
+                $document = oq_saveDocument($request, $jobcard, Input::file('new_jobcard_image'), 'jobcard_images', 'jobcard', $user);
+            }
+
+            //  Notify the user that the jobcard creation was successful
+            oq_notify('Jobcard '.$status.' successfully!', 'success');
+        } else {
+            //  Record activity of a failed jobcard during creation
+            $failType = ($status == 'created') ? 'create' : 'update';
+            $jobcardCreatedActivity = oq_saveActivity(null, 'jobcard '.$failType.' failed', $user);
+
+            //  Notify the user that the jobcard creation was unsuccessful
+            oq_notify('Something went wrong '.$status.' the jobcard. Please try again', 'warning');
         }
 
         //  return created jobcard
-        return oq_api_notify($response, 201);
+        return oq_api_notify($jobcard, 201);
     }
 
     public function update(Request $request, $jobcard_id)

@@ -5,13 +5,20 @@ namespace App;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Zizaco\Entrust\Traits\EntrustUserTrait;
 use Illuminate\Support\Facades\URL;
 use App\AdvancedFilter\Dataviewer;
 
 class User extends Authenticatable
 {
+    use EntrustUserTrait { restore as private restoreA; }
     use HasApiTokens, Notifiable;
     use Dataviewer;
+
+    public function restore()
+    {
+        $this->restoreA();
+    }
 
     protected $casts = [
         'settings' => 'array',

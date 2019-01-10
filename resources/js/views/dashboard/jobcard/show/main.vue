@@ -9,29 +9,36 @@
 
                     <Col span="16">
 
+                        <!-- Get the jobcard summary details -->
+
                         <jobcardSummaryWidget 
 
-                            :jobcard="jobcard"
+                            v-model="jobcard" :jobcardId="parseInt($route.params.id)"
                             
-                            :showMenuBtn="true" :showMenuEditBtn="true" :showMenuTrashBtn="true" :showMenuAddClientBtn="true"
-                            :showMenuAddSupplierBtn="true" :showMenuAddLabourBtn="true" :showMenuAddAssetBtn="true"
-                            :showDescriptionSection="true" :showStatusSection="true" :showPublishSection="true" 
-                            :showResourceSection="false" :showActionToolbalSection="true">
+                            :showMenuBtn="true" :showAuthourizedStatus="true" :showProcessStatus="true"
+                            :showTitle="true" :showDescription="true" :showDeadline="true" :showStartDate="true" :showEndDate="true"
+                            :showPriority="true" :showCategory="true" :showCostCenters="true" :showCreatedBy="true" :showCreatedByDate="true"
+                            :showAuthourizedBy="true" :showAuthourizedByDate="true" :showResourceTags="false" 
+                            :showViewBtn="true" :showDownloadBtn="true" :showSendBtn="true" :showPublicBtn="true">
                         </jobcardSummaryWidget>
 
                     </Col>
 
                     <Col span="8">
+
+                        <!-- Get the company summary details -->
+
                         <companySummaryWidget 
                             
-                            :company="null" :companyId="null" :companyBranchId="jobcard.client_id" type="client"
+                            v-model="company" :companyId="null" :companyBranchId="jobcard.client_id" relationType="client"
 
-                            :showMenuBtn="true"
-                            :showViewBtn="true" :showEditBtn="true" :showTrashBtn="true" :showAddContactBtn="true"
-                            :showDownloadProfileBtn="true" :showDownloadLogoBtn="true"
-                            :showContactsTagBtn="true">
+                            :showMenuBtn="true" :showAuthourizedStatus="true" 
+                            :showLogo="true" :showName="true" :showAddress="true" :showCityOrTown="true"
+                            :showPhone="true" :showEmail="true" :showContacts="true"
+                            :showViewBtn="true">
                         </companySummaryWidget>
                     </Col>
+                    
                 </Row>
 
               </TabPane>
@@ -83,14 +90,14 @@
                                   <Input value="Invoice 1" placeholder="Enter tab title..." style="width: auto" />
                               </div>
 
-                              <invoiceSummaryWidget 
-                                  
+                              <quotationCardListWidget 
+                                  :quotations="jobcard.quotations"
                                   :showMenuBtn="true" :showMenuEditBtn="true" :showMenuTrashBtn="true" :showMenuAddClientBtn="true"
                                   :showMenuAddSupplierBtn="true" :showMenuAddLabourBtn="true" :showMenuAddAssetBtn="true"
                                   :showDescriptionSection="true" :showStatusSection="true" :showPublishSection="true" 
                                   :showResourceSection="true" :showActionToolbalSection="true">
 
-                              </invoiceSummaryWidget>
+                              </quotationCardListWidget>
                             </TabPane>
                           </Tabs>
 
@@ -180,9 +187,9 @@
 </template>
 <script>
 
-    import companySummaryWidget from './../../../../widgets/company/company-summary-widget.vue';
+    import companySummaryWidget from './../../../../widgets/company/companySummaryWidget.vue';
     import jobcardSummaryWidget from './../../../../widgets/jobcard/jobcardSummaryWidget.vue';
-    import quotationSummaryWidget from './../../../../widgets/quotation/quotation-preview-widget.vue';
+    import quotationCardListWidget from './../../../../widgets/quotation/quotationCardListWidget.vue';
     import invoiceSummaryWidget from './../../../../widgets/invoice/invoice-preview-widget.vue';
     import receiptSummaryWidget from './../../../../widgets/receipt/receipt-preview-widget.vue';
     import supplierListWidget from './../../../../widgets/supplier/supplier-list-widget.vue';
@@ -190,18 +197,19 @@
 
     export default {
         components: { 
-          companySummaryWidget, jobcardSummaryWidget, quotationSummaryWidget, invoiceSummaryWidget, 
+          companySummaryWidget, jobcardSummaryWidget, quotationCardListWidget, invoiceSummaryWidget, 
           receiptSummaryWidget, supplierListWidget 
         },
         props: {
             receipt: {
                 type: Object,
-                default: () => {}
+                default: null
             },
         },
         data(){
             return {
                 jobcard: {},
+                company: {},
                 detailLabel: (h) => {
                     return h('span', [
                         h('Icon', { style: { display: 'inline-block', 'marginTop': '-10px' },
@@ -249,43 +257,7 @@
                         }),
                         h('span', { style: { display: 'inline-block' } }, 'Asset')
                     ])
-                },
-                client: {}
-            }
-        },
-        created () {
-            this.fetch();
-        },
-        methods: {
-            fetch() {
-                const self = this;
-
-                //  Start loader
-                self.isLoading = true;
-
-                console.log('Start getting jobcard...');
-
-                var connections = 'connections=categories,priorities,costcenters';
-
-                //  Use the api call() function located in resources/js/api.js
-                api.call('get', '/api/jobcards/'+this.$route.params.id+'?'+connections)
-                    .then(({data}) => {
-
-                        //  Stop loader
-                        self.isLoading = false;
-
-                        //  Get jobcard lifecycle data
-                        self.jobcard = data;
-                    })         
-                    .catch(response => { 
-                        console.log('jobcard/show/main.vue - Error getting jobcard...');
-                        console.log(response);
-
-                        //  Stop loader
-                        self.isLoading = false;     
-                    });
-
-
+                }
             }
         }
     };

@@ -8,27 +8,36 @@
     <Row :gutter="20">
 
         <Col span="8">
+
+            <!-- Company summary information -->
+
             <companySummaryWidget 
                 
-                :company="row" :companyId="null" :companyBranchId="row.client_id" type="supplier"
+                v-model="row" :companyId="null" :companyBranchId="null" relationType="supplier"
 
-                :showMenuBtn="true"
-                :showViewBtn="true" :showEditBtn="true" :showTrashBtn="true" :showAddContactBtn="true"
-                :showDownloadProfileBtn="true" :showDownloadLogoBtn="true"
-                :showContactsTagBtn="true">
+                :showMenuBtn="true" :showAuthourizedStatus="true" 
+                :showLogo="true" :showName="true" :showAddress="true" :showCityOrTown="true"
+                :showPhone="true" :showEmail="true" :showContacts="true"
+                :showViewBtn="true">
             </companySummaryWidget>
+
         </Col>
 
         <Col span="16">
+
+            <!-- Get the jobcard summary details -->
+
             <jobcardSummaryWidget 
 
-                :jobcard="row"
+                v-model="row" :jobcardId="null"
                 
-                :showMenuBtn="true" :showMenuEditBtn="true" :showRemoveBtn="true" :showMenuAddClientBtn="true"
-                :showMenuAddSupplierBtn="true" :showMenuAddLabourBtn="true" :showMenuAddAssetBtn="true"
-                :showDescriptionSection="true" :showStatusSection="true" :showPublishSection="true" 
-                :showResourceSection="true" :showActionToolbalSection="true">
+                :showMenuBtn="true" :showAuthourizedStatus="true" :showProcessStatus="true"
+                :showTitle="true" :showDescription="true" :showDeadline="true" :showStartDate="true" :showEndDate="true"
+                :showPriority="true" :showCategory="true" :showCostCenters="true" :showCreatedBy="true" :showCreatedByDate="true"
+                :showAuthourizedBy="true" :showAuthourizedByDate="true" :showResourceTags="false" 
+                :showViewBtn="true" :showDownloadBtn="true" :showSendBtn="true" :showPublicBtn="true">
             </jobcardSummaryWidget>
+
 
         </Col>
 
@@ -36,7 +45,7 @@
 
 </template>
 <script>
-    import companySummaryWidget from './../company/company-summary-widget.vue';
+    import companySummaryWidget from './../company/companySummaryWidget.vue';
     import jobcardSummaryWidget from './../jobcard/jobcardSummaryWidget.vue';
     export default {
         components: { companySummaryWidget , jobcardSummaryWidget },
@@ -44,7 +53,7 @@
             row: Object,
             jobcard: {
                 type: Object,
-                default: () => {}
+                default: null
             },
         }
     };

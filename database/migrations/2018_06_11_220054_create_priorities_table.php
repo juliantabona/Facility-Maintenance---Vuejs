@@ -14,10 +14,10 @@ class CreatePrioritiesTable extends Migration
         Schema::create('priorities', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name');
-            $table->text('description')->nullable();
+            $table->string('description')->nullable();
             $table->string('color_code')->nullable();
-            $table->integer('priority_id')->unsigned();
-            $table->string('priority_type');
+            $table->unsignedInteger('company_id');
+            $table->string('type');
             $table->timestamps();
         });
     }

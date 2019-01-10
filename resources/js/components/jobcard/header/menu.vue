@@ -21,7 +21,7 @@
 <script>
 
     import authourizedBadge from './authourizedBadge.vue';
-    import lifecycleStatusTag from './../status/lifecycleStatusTag.vue';
+    import lifecycleStatusTag from './../lifecycle/lifecycleStatusTag.vue';
     import menuToggle from './menuToggle.vue';
 
     export default {

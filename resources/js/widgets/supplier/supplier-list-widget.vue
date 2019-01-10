@@ -16,7 +16,7 @@
 </template>
 <script type="text/javascript">
     import supplierListExpandWidget from './../../widgets/supplier/supplier-list-expand.vue';
-    import Filterable from './../../components/Filterable.vue'
+    import Filterable from './../../components/_common/list/Filterable.vue'
     export default {
         components: { Filterable, supplierListExpandWidget },
         data() {

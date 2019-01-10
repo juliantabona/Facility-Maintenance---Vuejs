@@ -79,7 +79,7 @@
                         <DropdownItem divided>Client</DropdownItem>
                         <DropdownItem>Supplier</DropdownItem>
                         <DropdownItem divided>Asset</DropdownItem>
-                        <DropdownItem>Jobcard</DropdownItem>
+                        <DropdownItem><router-link :to="{ name:'create-jobcard' }">Jobcard</router-link></DropdownItem>
                     </DropdownMenu>
                 </Dropdown>
 
@@ -157,7 +157,7 @@
           }, 
           {
             value: 'supplier',
-            label: 'supplier'
+            label: 'Supplier'
           }, {
             value: 'staff',
             label: 'Staff Member'

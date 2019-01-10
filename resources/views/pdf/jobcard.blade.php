@@ -151,7 +151,7 @@
                             <td>
                                 <span><strong>Priority:</strong></span>
                                 <span>
-                                    @foreach($jobcard->priorities as $priority)
+                                    @foreach($jobcard->priority as $priority)
                                         {{ $priority->name }}
                                     @endforeach
                                 </span>
@@ -161,8 +161,8 @@
                             <td>
                                 <span><strong>Category:</strong></span>
                                 <span>
-                                    @foreach($jobcard->categories as $category)
-                                        {{ $category->name }}
+                                    @foreach($jobcard->categories as $key => $category)
+                                        {{ $category->name }}@if(!$loop->last),@endif
                                     @endforeach
                                 </span>
                             </td>
@@ -174,8 +174,8 @@
                         <td colspan="2">
                             <span><strong>Cost Centers:</strong></span>
                             <span>
-                                @foreach($jobcard->costcenters as $costcenter)
-                                    {{ $costcenter->name }}
+                                @foreach($jobcard->costcenters as $key => $costcenter)
+                                    {{ $costcenter->name }}@if(!$loop->last),@endif
                                 @endforeach
                             </span>
                         </td>

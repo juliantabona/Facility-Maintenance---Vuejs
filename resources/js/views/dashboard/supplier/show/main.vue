@@ -15,15 +15,19 @@
                         </Col>
 
                         <Col span="8">
+
+                            <!-- Company summary information -->
+
                             <companySummaryWidget 
                                 
-                                :company="null" :companyId="companyId" :companyBranchId="null" type="client"
+                                v-model="company" :companyId="companyId" :companyBranchId="null" relationType="supplier"
 
-                                :showMenuBtn="true"
-                                :showViewBtn="true" :showEditBtn="true" :showTrashBtn="true" :showAddContactBtn="true"
-                                :showDownloadProfileBtn="true" :showDownloadLogoBtn="true"
-                                :showContactsTagBtn="true">
+                                :showMenuBtn="true" :showAuthourizedStatus="true" 
+                                :showLogo="true" :showName="true" :showAddress="true" :showCityOrTown="true"
+                                :showPhone="true" :showEmail="true" :showContacts="true"
+                                :showViewBtn="true">
                             </companySummaryWidget>
+                            
                         </Col>
 
                     </Row>
@@ -127,7 +131,7 @@
 <script>
 
     import jobcardListWidget from './../../../../widgets/jobcard/jobcardListWidget.vue';
-    import companySummaryWidget from './../../../../widgets/company/company-summary-widget.vue';
+    import companySummaryWidget from './../../../../widgets/company/companySummaryWidget.vue';
 
 
     export default {
@@ -135,6 +139,7 @@
         data(){
             return {
                 jobcards: [],
+                company: {},
                 companyId: parseInt(this.$route.params.id),
                 detailLabel: (h) => {
                     return h('span', [

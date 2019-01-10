@@ -21,7 +21,7 @@
     display: none;
   }
 
-  /*  Fix the Element UI checkbox alignment*/
+  /*  Fix the Element UI checkbox alignment */
   .el-checkbox.el-checkbox {
     margin-left: 0px !important;
     margin-right: 30px !important;
@@ -29,6 +29,14 @@
   
   body {
     margin:0
+  }
+
+  /*  Cut text exceeding the width limit below */
+  .cut-text { 
+    text-overflow: ellipsis !important;
+    overflow: hidden !important; 
+    width: 235px !important; 
+    white-space: nowrap !important;
   }
 
 </style>

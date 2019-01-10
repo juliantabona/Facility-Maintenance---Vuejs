@@ -20,6 +20,15 @@ class Api {
                         console.log('Api.js - User not authenticated, preparing to logout. url: '+url);
                         auth.logout();
                     }
+
+                    if( response.status == 403 ){
+
+                        Event.$Notice.error({
+                            title: 'UnAuthourized',
+                            desc: response.data || 'You do not have permission to make this action.'
+                        });
+
+                    }
     
                     reject(response);
                 });

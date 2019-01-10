@@ -1,7 +1,7 @@
 <template>
     
     <!-- View Button -->
-    <Button type="primary" @click.native="viewJobcard">
+    <Button type="primary" @click.native="viewJobcard" :size="size">
         View
         <Icon type="md-arrow-forward" />
     </Button>
@@ -13,6 +13,10 @@
             route: {
                 type: Object,
                 default: null
+            },
+            size: {
+                type: String,
+                default: 'default'      //  default means "medium size"
             }
         },
         methods: {
