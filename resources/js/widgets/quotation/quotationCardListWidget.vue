@@ -16,21 +16,21 @@
 
     import quotationSummaryWidget from './quotationSummaryWidget.vue';
 
-  export default {
-    components: { 
-        quotationSummaryWidget
-    },
-    props: {
-        quotations: {
-            type: Array,
-            default: null
+    export default {
+        components: { 
+            quotationSummaryWidget
         },
-        showMenuBtn: {
-            type: Boolean,
-            default: true
-        }
+        props: {
+            quotations: {
+                type: Array,
+                default: null
+            },
+            showMenuBtn: {
+                type: Boolean,
+                default: true
+            }
 
-    }
-  };
+        }
+    };
   
 </script>

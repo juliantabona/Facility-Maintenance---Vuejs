@@ -70,7 +70,7 @@
                                       ok-text="Yes"
                                       cancel-text="No"
                                       @on-ok="$emit('removePaymentStream')">
-                                      <Icon type="ios-trash-outline" class="section-icon hidable mr-2" size="20"/>
+                                      <Icon type="ios-trash-outline" class="mr-2" size="20"/>
                                   </Poptip>
                               </div>
                           </div>

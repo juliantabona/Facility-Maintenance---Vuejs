@@ -1,7 +1,7 @@
 <template>
 
     <div class="d-inline-block float-right mr-2 mt-2">
-        <Select v-model="modelType" :style="{ width:'200px' }" placeholder="Select company/branch" @on-change="updateChanges()">
+        <Select v-model="modelType" :style="{ width:'200px' }" placeholder="Select company/branch" @on-change="updateChanges()" not-found-text="No record found">
             <Option v-for="item in modelOptions" :value="item.value" :key="item.value">{{ item.label }}</Option>
         </Select>
     </div>

@@ -59,7 +59,8 @@
                                         style="width:100px"
                                         :disabled="loading"
                                         @on-change="updateOrderColumn"
-                                        placeholder="Select">
+                                        placeholder="Select"
+                                        not-found-text="No record found">
 
                                         <Option 
                                             v-for="(column,index) in orderables"

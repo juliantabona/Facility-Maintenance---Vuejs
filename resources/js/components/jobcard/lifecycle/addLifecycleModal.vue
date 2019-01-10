@@ -17,7 +17,7 @@
             
             <Loader v-if="isLoading" :loading="isLoading" type="text" :style="{ marginTop:'40px' }">Loading...</Loader>
             
-            <Select v-if="!isLoading && lifecycleTemplateOptions" v-model="lifecycleTemplateSelected" :style="{ width:'100%' }" placeholder="Select jobcard lifecycle">
+            <Select v-if="!isLoading && lifecycleTemplateOptions" v-model="lifecycleTemplateSelected" :style="{ width:'100%' }" placeholder="Select jobcard lifecycle" not-found-text="No lifecycles found">
                 <Option v-for="item in lifecycleTemplateOptions" :value="item.id" :key="item.id">{{ item.name }}</Option>
             </Select>
             <span slot="footer" class="dialog-footer">

@@ -8,7 +8,7 @@
 
             <Loader v-if="isLoading" :loading="isLoading" type="text" :style="{ marginTop:'40px' }">Loading...</Loader>
             
-            <Select v-if="!isLoading && fetchedPriorities" v-model="localPriority" :style="{ width:'100%' }" placeholder="Select priority">
+            <Select v-if="!isLoading && fetchedPriorities" v-model="localPriority" :style="{ width:'100%' }" placeholder="Select priority" not-found-text="No priorities found">
                 <Option v-for="item in fetchedPriorities" :value="JSON.stringify(item)" :key="item.id">
                     {{ item.name }}
                 </Option>

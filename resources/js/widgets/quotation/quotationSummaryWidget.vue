@@ -147,7 +147,7 @@
 
             <Row>
                 <Col span="24">
-                    <table class="mt-3 w-100">
+                    <table  class="table table-hover mt-3 w-100">
                         <thead style="background-color: #000000;">
                             <tr>
                                 <th :colspan="quotation.tableColumns[0].span" class="p-2" style="color: #FFFFFF;">
@@ -166,35 +166,58 @@
                                     <span v-if="!editMode">{{ quotation.tableColumns[3].name }}</span>
                                     <el-input v-if="editMode" placeholder="e.g) Amount" v-model="quotation.tableColumns[3].name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                 </th>
+                                <th v-if="editMode" class="p-2" style="color: #FFFFFF;">
+                                    <span class="d-block mb-2">Tax</span>
+                                </th>
+                                <th v-if="editMode" class="p-2" style="color: #FFFFFF;"></th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="(item, i) in quotation.items" :key="i">
-                                <td colspan="4" class="p-2">
-                                    <p class="text-dark mr-5">
-                                        <strong v-if="!editMode">{{ item.name }}</strong>
-                                        <el-input v-if="editMode" :placeholder="'e.g) Item '+ (i+1)" v-model="quotation.items[i].name" size="mini" class="p-1" :style="{ maxWidth:'250px' }"></el-input>
+                                <td :colspan="quotation.tableColumns[0].span" class="p-2">
+                                
+                                    <p v-if="!editMode" class="text-dark mr-5">
+                                        <strong>{{ item.name }}</strong>
                                     </p>
-                                    <p class="mr-5">
+                                    <el-input v-if="editMode" :placeholder="'e.g) Item '+ (i+1)" v-model="quotation.items[i].name" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                    
+                                    <p v-if="!editMode" class="mr-5">
                                         <span v-if="!editMode">{{ item.description }}</span>
-                                        <el-input v-if="editMode" placeholder="e.g) Item" v-model="quotation.items[i].description" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                     </p>
+                                    <el-input v-if="editMode" placeholder="e.g) Item" v-model="quotation.items[i].description" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                
                                 </td>
-                                <td colspan="1" class="p-2">
+                                <td :colspan="quotation.tableColumns[1].span" class="p-2">
                                     <span v-if="!editMode">{{ item.quantity }}</span>
                                     <el-input v-if="editMode" placeholder="e.g) 2" v-model="quotation.items[i].quantity" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                 </td>
-                                <td colspan="1" class="p-2">
+                                <td :colspan="quotation.tableColumns[2].span" class="p-2">
                                     <span v-if="!editMode">{{ item.unit_price }}</span>
                                     <el-input v-if="editMode" placeholder="e.g) 2,500.00" v-model="quotation.items[i].unit_price" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                 </td>
-                                <td colspan="1" class="p-2">
+                                <td :colspan="quotation.tableColumns[3].span" class="p-2">
                                     <span v-if="!editMode">{{ item.total_price }}</span>
                                     <el-input v-if="editMode" placeholder="e.g) 5,000.00" v-model="quotation.items[i].total_price" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                 </td>
+                                <td v-if="editMode" class="p-2">
+                                    <taxSelector v-if="!isLoadingTaxes" 
+                                        :fetchedTaxes="fetchedTaxes" :selectedTaxes="quotation.items[i].taxes"
+                                        @updated="quotation.items[i].taxes = $event">
+                                    </taxSelector>
+                                </td>
+                                <td v-if="editMode" class="p-2">
+                                    <Poptip
+                                      confirm
+                                      title="Are you sure you want to remove this item?"
+                                      ok-text="Yes"
+                                      cancel-text="No"
+                                      @on-ok="$emit('removeItem')">
+                                      <Icon type="ios-trash-outline" class="mr-2" size="20"/>
+                                  </Poptip>
+                                </td>
                             </tr>
                             <tr>
-                                <td colspan="7" class="p-2">
+                                <td colspan="10" class="p-2">
                                     <el-tooltip class="ml-auto mr-auto mb-3 d-block item" effect="dark" content="Add Service/Product" placement="top-start">
                                         <el-button type="primary" icon="el-icon-plus" circle></el-button>
                                         <span>Add an item</span>
@@ -252,22 +275,45 @@
 
 <script>
 
-  export default {
-    props: {
-        quotation: {
-            type: Object,
-            default: null
+    import taxSelector from './taxSelector.vue';
+
+    export default {
+        components: { 
+            taxSelector
         },
-        showMenuBtn: {
-            type: Boolean,
-            default: true
+        props: {
+            quotation: {
+                type: Object,
+                default: null
+            },
+            showMenuBtn: {
+                type: Boolean,
+                default: true
+            }
+        },
+        data(){
+            return {
+                editMode: false,
+                isLoadingTaxes: false,
+                fetchedTaxes: [
+                    {
+                        name:'VAT',
+                        description:'Default Tax',
+                        rate:'0.12'
+                    },
+                    {
+                        name:'VAT',
+                        description:'Default Tax',
+                        rate:'0.25'
+                    },
+                    {
+                        name:'VAT',
+                        description:'Default Tax',
+                        rate:'0.50'
+                    }
+                ]
+            }
         }
-    },
-    data(){
-        return {
-            editMode: false
-        }
-    }
-  };
+    };
   
 </script>

@@ -89,7 +89,7 @@
               
                 <!-- Main Search Bar -->
                 <Input v-model="searchQuery" placeholder="Search..." search enter-button class="main-search-input">
-                    <Select v-model="searchType" slot="prepend" style="width: 80px">
+                    <Select v-model="searchType" slot="prepend" style="width: 80px" not-found-text="No resources found">
                         <Option v-for="item in ResourceOptions" :key="item.value" :value="item.value">{{ item.label }}</Option>
                     </Select>
                 </Input>
