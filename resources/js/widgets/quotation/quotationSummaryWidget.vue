@@ -1,6 +1,14 @@
+<style scoped>
+    .doubleUnderline{
+        padding: 8px 0px;
+        border-bottom: 3px solid #dee1e2;
+        border-top: 1px solid #dee1e2;
+    }
+</style>
+
 <template>
-    <div>
-        <Card class="quotation-summary-widget" :style="{ width: '100%' }">
+    <div id="testcase">
+        <Card :style="{ width: '100%' }">
 
             <div slot="title">
                 <h5>Quotation Summary</h5>
@@ -39,10 +47,11 @@
                         <Icon type="md-more" :size="16"></Icon>
                     </a>
                     <DropdownMenu slot="list">
-                        <DropdownItem>Edit</DropdownItem>
+                        <DropdownItem v-if="!editMode" @click.native="editMode = true">Edit</DropdownItem>
+                        <DropdownItem v-if="editMode" @click.native="editMode = false">View</DropdownItem>
                         <DropdownItem>Trash</DropdownItem>
                         <DropdownItem>Edit Business Information</DropdownItem>
-                        <DropdownItem>Export As PDF</DropdownItem>
+                        <DropdownItem @click.native="createPDF()">Export As PDF</DropdownItem>
                         <DropdownItem>Print Quotation</DropdownItem>
                     </DropdownMenu>
                 </Dropdown>
@@ -56,11 +65,11 @@
                     <span class="float-right mb-2">
                         <Poptip word-wrap width="200" trigger="hover" content="Edit this quotation">
                             <span>
-                                <Icon type="md-globe mr-1" :size="18" />
+                                <Icon type="ios-create-outline mr-1" :size="24" />
                                 <strong>Edit Mode: </strong>
                                 <i-switch v-model="editMode" class="ml-1" size="large">
-                                    <span slot="open">Yes</span>
-                                    <span slot="close">No</span>
+                                    <span slot="open">On</span>
+                                    <span slot="close">Off</span>
                                 </i-switch>
                             </span>
                         </Poptip>
@@ -71,8 +80,17 @@
                 </Col>
 
                 <Col span="12">
-                    <img src="https://wave-prod-accounting.s3.amazonaws.com/uploads/invoices/business_logos/7cac2c58-4cc1-471b-a7ff-7055296fffbc.png"
-                        style="width: 200px; margin-top: -15px;">
+                    <imageUploader 
+                        uploadMsg="Upload or change logo"
+                        :thumbnailStyle="{ width:'200px', height:'auto' }"
+                        :allowUpload="editMode"
+                        :multiple="false"
+                        :imageList="
+                            [{
+                                'name': 'Company Logo',
+                                'url': 'https://wave-prod-accounting.s3.amazonaws.com/uploads/invoices/business_logos/7cac2c58-4cc1-471b-a7ff-7055296fffbc.png'
+                            }]">
+                    </imageUploader>
                 </Col>
 
                 <Col span="12" class="pr-4">
@@ -120,7 +138,7 @@
                             
                             <p v-if="!editMode" class="text-dark text-right"><strong>{{ quotation.created_date.name }}:</strong></p>
                             <el-input v-if="editMode" placeholder="e.g) Created Date" v-model="quotation.created_date.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
-                            
+
                             <p v-if="!editMode" class="text-dark text-right"><strong>{{ quotation.payment_date.name }}:</strong></p>
                             <el-input v-if="editMode" placeholder="e.g) Expiry Date" v-model="quotation.payment_date.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
 
@@ -130,16 +148,22 @@
                         </Col>
                         <Col span="8">
                             <p v-if="!editMode" class="text-dark">{{ quotation.ref_number.value }}</p>
-                            <el-input v-if="editMode" placeholder="e.g) 001" v-model="quotation.ref_number.value" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+                            <el-input v-if="editMode" placeholder="e.g) 001" v-model="quotation.ref_number.value" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }"></el-input>
 
-                            <p v-if="!editMode" class="text-dark">{{ quotation.created_date.value }}</p>
-                            <el-input v-if="editMode" placeholder="e.g) January 1, 2018" v-model="quotation.created_date.value" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+                            <p v-if="!editMode" class="text-dark">{{ quotation.created_date.value | moment('MMM DD YYYY') }}</p>
+                            <!-- Edit Created date -->
+                            <el-date-picker v-if="editMode" v-model="quotation.created_date.value" type="datetime" placeholder="e.g) January 1, 2018" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }"
+                                format="MMM dd yyyy" value-format="yyyy-MM-dd">
+                            </el-date-picker>
 
-                            <p v-if="!editMode" class="text-dark">{{ quotation.payment_date.value }}</p>
-                            <el-input v-if="editMode" placeholder="e.g) January 7, 2018" v-model="quotation.payment_date.value" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+                            <p v-if="!editMode" class="text-dark">{{ quotation.payment_date.value | moment('MMM DD YYYY') }}</p>
+                            <!-- Edit Created date -->
+                            <el-date-picker v-if="editMode" v-model="quotation.payment_date.value" type="datetime" placeholder="e.g) January 7, 2018" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }"
+                                format="MMM dd yyyy" value-format="yyyy-MM-dd">
+                            </el-date-picker>
 
-                            <p v-if="!editMode" class="text-dark">{{ quotation.grand_total.value }}</p>
-                            <el-input v-if="editMode" :placeholder="'e.g) '+quotation.currency_symbol+'2,000.00'" v-model="quotation.grand_total.value" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+                            <p v-if="!editMode" class="text-dark">{{ quoteGrandTotal | currency }}</p>
+                            <el-input v-if="editMode" :placeholder="'e.g) '+quotation.currency_symbol+'5,000.00'" :value="quoteGrandTotal | currency" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }" disabled></el-input>
                         </Col>
                     </Row>
                 </Col>
@@ -147,8 +171,8 @@
 
             <Row>
                 <Col span="24">
-                    <table  class="table table-hover mt-3 w-100">
-                        <thead style="background-color: #000000;">
+                    <table  class="table table-hover mt-3 mb-0 w-100">
+                        <thead style="background-color: #2d8cf0;">
                             <tr>
                                 <th :colspan="quotation.tableColumns[0].span" class="p-2" style="color: #FFFFFF;">
                                     <span v-if="!editMode">{{ quotation.tableColumns[0].name }}</span>
@@ -196,8 +220,8 @@
                                     <el-input v-if="editMode" placeholder="e.g) 2,500.00" v-model="quotation.items[i].unit_price" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                 </td>
                                 <td :colspan="quotation.tableColumns[3].span" class="p-2">
-                                    <span v-if="!editMode">{{ item.total_price }}</span>
-                                    <el-input v-if="editMode" placeholder="e.g) 5,000.00" v-model="quotation.items[i].total_price" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                    <span v-if="!editMode">{{ item.total_price | currency }}</span>
+                                    <el-input v-if="editMode" placeholder="e.g) 5,000.00" :value="getItemTotal(quotation.items[i])" size="mini" class="p-1" :style="{ maxWidth:'100%' }" disabled></el-input>
                                 </td>
                                 <td v-if="editMode" class="p-2">
                                     <taxSelector v-if="!isLoadingTaxes" 
@@ -211,7 +235,7 @@
                                       title="Are you sure you want to remove this item?"
                                       ok-text="Yes"
                                       cancel-text="No"
-                                      @on-ok="$emit('removeItem')">
+                                      @on-ok="removeItem(i)">
                                       <Icon type="ios-trash-outline" class="mr-2" size="20"/>
                                   </Poptip>
                                 </td>
@@ -228,25 +252,55 @@
                     </table>
                 </Col>
             </Row>
-
-            <Divider dashed class="mt-2 mb-4" />
+            
+            <Divider dashed class="mt-0 mb-4" />
 
             <Row>
                 <Col span="12" offset="12" class="pr-4">
                     <Row :gutter="20">
-                        <Col span="20">
-                            <p class="text-dark text-right"><strong>Total:</strong></p>
-                            <p class="text-dark text-right"><strong>{{ quotation.grand_total.name }}:</strong></p>
+                        <Col :span="editMode ? '16':'20'">
+                            <p v-if="!editMode" class="text-dark text-right float-right w-100 mb-2"><strong>{{ quotation.total.name }}:</strong></p>
+                            <el-input v-if="editMode" placeholder="e.g) Total" v-model="quotation.total.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+
+                            <p v-if="!editMode" v-for="(calculatedTax , i) in calculatedTaxes" :key="i" class="text-dark text-right float-right w-100">
+                                {{ calculatedTax.name }} ({{ calculatedTax.rate*100 }}%):
+                            </p>
+                            <el-input v-if="editMode" v-for="(calculatedTax , i) in calculatedTaxes" :key="i" placeholder="e.g) VAT (12%)" :value="calculatedTax.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
+                            
                         </Col>
-                        <Col span="4">
-                            <p class="text-right">P3,500.00</p>
-                            <p class="text-dark text-right">{{ quotation.grand_total.value }}</p>
+                        <Col :span="editMode ? '8':'4'">
+
+                            <p v-if="!editMode" class="text-right float-right w-100 mb-2">{{ quoteTotal | currency }}</p>
+                            <el-input v-if="editMode" :placeholder="'e.g) '+quotation.currency_symbol+'5,000.00'" :value="quoteTotal | currency" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
+
+                            <p v-if="!editMode" v-for="(calculatedTax , i) in calculatedTaxes" :key="i" class="text-right float-right w-100">
+                                {{ calculatedTax.amount | currency }}
+                            </p>
+                            <el-input v-if="editMode" v-for="(calculatedTax , i) in calculatedTaxes" :key="i" placeholder="e.g) 1,500.00" :value="calculatedTax.amount | currency" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
+
                         </Col>
+                        
                     </Row>
+
+                    <Row :gutter="20" class="doubleUnderline mt-3">
+
+                        <Col :span="editMode ? '16':'20'">
+                        
+                            <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ quotation.grand_total.name }}:</strong></p>
+                            <el-input v-if="editMode" placeholder="e.g) Grand Total" v-model="quotation.grand_total.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+
+                        </Col>
+                        <Col :span="editMode ? '8':'4'">
+
+                            <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ quoteGrandTotal | currency }}</strong></p>
+                            <el-input v-if="editMode" :placeholder="'e.g) '+quotation.currency_symbol+'5,000.00'" :value="quoteGrandTotal | currency" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
+                        
+                        </Col>
+                        
+                    </Row>
+
                 </Col>
             </Row>
-
-            <Divider dashed class="mt-2 mb-4" />
 
             <Row>
                 <Col span="24">
@@ -260,7 +314,7 @@
                 </Col>
             </Row>
 
-            <Divider dashed class="mt-5 mb-2" />
+            <Divider dashed class="mt-3 mb-2" />
 
             <Row>
                 <Col span="24">
@@ -275,11 +329,16 @@
 
 <script>
 
+    import imageUploader from './imageUploader.vue';
     import taxSelector from './taxSelector.vue';
+
+    //  jsPDF used for HTML/CSS to PDF Conversion
+    import jsPDF from 'jspdf';
+    import html2canvas from 'html2canvas';
 
     export default {
         components: { 
-            taxSelector
+            imageUploader, taxSelector
         },
         props: {
             quotation: {
@@ -297,21 +356,182 @@
                 isLoadingTaxes: false,
                 fetchedTaxes: [
                     {
+                        id:'1',
                         name:'VAT',
                         description:'Default Tax',
                         rate:'0.12'
                     },
                     {
-                        name:'VAT',
-                        description:'Default Tax',
+                        id:'2',
+                        name:'VAT 2',
+                        description:'Second Tax',
                         rate:'0.25'
                     },
                     {
-                        name:'VAT',
-                        description:'Default Tax',
+                        id:'3',
+                        name:'VAT 3',
+                        description:'Third Tax',
                         rate:'0.50'
                     }
-                ]
+                ],
+                calculatedTaxes: this.runCalculateTaxes(this.quotation),
+                quoteTotal: this.runGetTotal(this.quotation),
+                quoteGrandTotal: this.runGetGrandTotal(this.quotation),
+            }
+        },
+        watch: {
+            //  When the quotation data changes
+            quotation: {
+                handler(updatedQuotation) {
+                    
+                    this.quoteTotal = this.runGetTotal(updatedQuotation);
+                    this.quoteGrandTotal = this.runGetGrandTotal(updatedQuotation);
+                        
+                    //  Re-calculate taxes
+                    this.calculatedTaxes = this.runCalculateTaxes(updatedQuotation);
+                    
+                },
+                deep: true
+            },
+        },
+        methods: {
+            removeItem: function(index){
+                this.quotation.items.splice(index, 1);
+
+                this.$Notice.success({
+                    title: 'Item removed sucessfully'
+                });
+            },
+            runCalculateTaxes: function(quotation){
+                
+                var itemTaxAmounts = quotation.items.map(item => {
+                        
+                        var x, collection = [];
+
+                        for(x = 0; x < item.taxes.length; x++){
+                            collection.push({
+                                id: parseInt(item.taxes[x].id),
+                                name: item.taxes[x].name,
+                                description: item.taxes[x].description,
+                                rate: item.taxes[x].rate,
+                                amount: item.taxes[x].rate * this.getItemTotal(item)
+                            })
+                        }
+   
+                        return collection;
+
+                    }).flat();
+                
+                var x, combinedTaxAmounts = [];
+
+                for(x = 0; x < itemTaxAmounts.length; x++){
+                    combinedTaxAmounts[ itemTaxAmounts[x].id ] = {
+                        id: itemTaxAmounts[x].id,
+                        name: itemTaxAmounts[x].name,
+                        description: itemTaxAmounts[x].description,
+                        rate: itemTaxAmounts[x].rate,
+                        amount: ((combinedTaxAmounts[ itemTaxAmounts[x].id ] || {}).amount || 0) + itemTaxAmounts[x].amount,
+                    };
+                }
+
+                var filtered = combinedTaxAmounts.filter(function (el) {
+                    return el != null;
+                });
+
+                return filtered;
+
+            },
+            getItemTotal: function(item){
+                return item.unit_price * item.quantity
+            },
+            runGetTotal: function(quotation){
+                var itemAmounts = (quotation.items || []).map(item => item.quantity * item.unit_price);
+                var total = itemAmounts.length ? itemAmounts.reduce(this.getSum): 0;
+
+                return total;
+            },
+            runGetGrandTotal: function(quotation){
+                var taxAmounts = (this.runCalculateTaxes(quotation) || []).map(appliedTax => appliedTax.amount);
+                var sumOfTaxAmounts = taxAmounts.length ? taxAmounts.reduce(this.getSum): 0;
+
+                return  this.runGetTotal(quotation) + sumOfTaxAmounts;
+            },
+            getSum(total, num) {
+                return total + num;
+            },
+            createPDF(quality = 3) {
+                
+                const filename  = 'ThisIsYourPDFFilename.pdf';
+
+                var specialElementHandlers = {
+                    '#bypassme': function(element, renderer) {
+                        return true;
+                    }
+                };
+
+                html2canvas(document.querySelector('#testcase'), {scale: quality}).then(canvas => {
+                    var imgData = canvas.toDataURL('image/png');
+
+                    /*
+                    Here are the numbers (paper width and height) that I found to work. 
+                    It still creates a little overlap part between the pages, but good enough for me.
+                    if you can find an official number from jsPDF, use them.
+                    */
+                    var imgWidth = 210; 
+                    var pageHeight = 295;  
+                    var imgHeight = canvas.height * imgWidth / canvas.width;
+                    var heightLeft = imgHeight;
+
+                    var doc = new jsPDF('p', 'mm');
+                    var position = 0;
+
+                    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+
+                    while (heightLeft >= 0) {
+                        position = heightLeft - imgHeight;
+                        doc.addPage();
+                        doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                    }
+                    doc.save(filename);
+                });
+                
+                
+                /*
+                var doc = new jsPDF('p', 'in', 'letter');
+                var source = $('#testcase').html();
+                console.log( source );
+                var specialElementHandlers = {
+                    '#bypassme': function(element, renderer) {
+                        return true;
+                    }
+                };
+
+                doc.fromHTML(
+                    source, // HTML string or DOM elem ref.
+                    0.5, // x coord
+                    0.5, // y coord
+                    {
+                    'width': 7.5, // max width of content on PDF
+                    'elementHandlers': specialElementHandlers
+                });
+
+                doc.save('sample.pdf');
+                */
+                
+
+                /*
+                var pdf = new jsPDF('p', 'pt', 'a4');
+                            
+                var source = $(".quotation-summary-widget").html();
+                
+                pdf.fromHTML( source, 15, 15, { 'width': 180 });
+
+                var pdfName = this.quotation.heading+' - '+ this.quotation.ref_number.value; 
+
+                pdf.save(pdfName + '.pdf');
+                */
             }
         }
     };

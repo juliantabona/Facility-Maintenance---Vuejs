@@ -99,6 +99,11 @@ import locale from 'element-ui/lib/locale/lang/en';
 //  Imports Moment.js for use by vue components in formatting dates
 Vue.use(require('vue-moment'));
 
+//  Imports Vue2Filters for use by vue components e.g) capitalize, truncate, format money, e.t.c
+import Vue2Filters from 'vue2-filters';
+
+Vue.use(Vue2Filters);
+
 Vue.use(ElementUI, { locale });
 
 const app = new Vue({
