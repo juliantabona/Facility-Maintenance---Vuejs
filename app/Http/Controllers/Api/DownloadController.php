@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use PDF;
 use App\Jobcard;
+use App\Quotation;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -96,5 +97,19 @@ class DownloadController extends Controller
 
         return view('pdf.jobcard', compact('jobcard', 'options'));
         */
+    }
+
+    public function downloadQuotation(Request $request, $quotation_id)
+    {
+        $user = auth('api')->user();
+
+        $quotation = Quotation::find($quotation_id);
+
+        //return view('pdf.quotation');
+
+        $pdf = PDF::loadView('pdf.quotation',
+                    array('quotation' => $quotation->details));
+
+        return $pdf->stream('quotation.pdf');
     }
 }

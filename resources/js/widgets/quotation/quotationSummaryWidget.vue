@@ -51,7 +51,7 @@
                         <DropdownItem v-if="editMode" @click.native="editMode = false">View</DropdownItem>
                         <DropdownItem>Trash</DropdownItem>
                         <DropdownItem>Edit Business Information</DropdownItem>
-                        <DropdownItem @click.native="createPDF()">Export As PDF</DropdownItem>
+                        <DropdownItem @click.native="downloadPDF()">Export As PDF</DropdownItem>
                         <DropdownItem>Print Quotation</DropdownItem>
                     </DropdownMenu>
                 </Dropdown>
@@ -60,6 +60,11 @@
             <Row>
 
                 <Col span="24" class="pr-4">
+
+                    <!-- Save Changes Button -->
+                    <Button type="success" size="small" class="float-right mb-2 ml-3">
+                        <span>Save Changes</span>
+                    </Button>
 
                     <!-- Edit Mode Switch -->
                     <span class="float-right mb-2">
@@ -78,7 +83,7 @@
                     <div class="clearfix"></div>
 
                 </Col>
-
+                
                 <Col span="12">
                     <imageUploader 
                         uploadMsg="Upload or change logo"
@@ -98,15 +103,21 @@
                     <h1 v-if="!editMode" class="text-dark text-right" style="font-size: 35px;">{{ quotation.heading }}</h1>
                     <el-input v-if="editMode" placeholder="Quotation heading" v-model="quotation.heading" size="large" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
 
-                    <p v-if="!editMode" class="mt-3 text-dark text-right"><strong>{{ quotation.company.name }}</strong></p>
-                    <el-input v-if="editMode" placeholder="Company name" v-model="quotation.company.name" size="mini" class="mb-1" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+                    <p v-if="!editMode" class="mt-3 text-dark text-right"><strong>{{ quotation.companyDetails.name }}</strong></p>
+                    <el-input v-if="editMode" placeholder="Company name" v-model="quotation.companyDetails.name" size="mini" class="mb-1" :style="{ maxWidth:'250px', float:'right' }"></el-input>
 
-                    <p v-if="!editMode" v-for="(field, i) in quotation.company.additionalFields" :key="i" class="text-right">
+                    <p v-if="!editMode" class="text-right">{{ quotation.companyDetails.email }}</p>
+                    <el-input v-if="editMode" placeholder="Company email" v-model="quotation.companyDetails.email" size="mini" class="mb-1" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+
+                    <p v-if="!editMode" class="text-right">{{ quotation.companyDetails.phone }}</p>
+                    <el-input v-if="editMode" placeholder="Company tel/phone" v-model="quotation.companyDetails.phone" size="mini" class="mb-1" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+                    <br />
+                    <p v-if="!editMode" v-for="(field, i) in quotation.companyDetails.additionalFields" :key="i" class="text-right">
                         {{ field.value }}
                     </p>
-                    <el-input v-if="editMode" v-for="(field, i) in quotation.company.additionalFields" :key="i" 
+                    <el-input v-if="editMode" v-for="(field, i) in quotation.companyDetails.additionalFields" :key="i" 
                               size="mini" class="mb-1" :style="{ maxWidth:'250px', float:'right' }"
-                              :placeholder="'Company details ' + i" v-model="quotation.company.additionalFields[i].value"></el-input>
+                              :placeholder="'Company details ' + i" v-model="quotation.companyDetails.additionalFields[i].value"></el-input>
                     </el-input>
                 </Col>
             </Row>
@@ -115,55 +126,63 @@
 
             <Row>
                 <Col span="12" class="pl-2">
-                    <h3 v-if="!editMode" class="text-dark mb-3">{{ quotation.quote_to }}:</h3>
-                    <el-input v-if="editMode" placeholder="Quotation heading" v-model="quotation.quote_to" size="large" class="mb-2" :style="{ maxWidth:'250px' }"></el-input>
+                    <h3 v-if="!editMode" class="text-dark mb-3">{{ quotation.quoteTo }}:</h3>
+                    <el-input v-if="editMode" placeholder="Quotation heading" v-model="quotation.quoteTo" size="large" class="mb-2" :style="{ maxWidth:'250px' }"></el-input>
+                    
 
-                    <p v-if="!editMode" v-for="(field, i) in quotation.clientFields" :key="i">
-                        <span :class="JSON.parse(field.highlight) && !JSON.parse(field.showFieldName) ? 'text-dark font-weight-bold': ''">
-                            <span v-if="JSON.parse(field.showFieldName)" :class="JSON.parse(field.highlight) && JSON.parse(field.showFieldName) ? 'text-dark font-weight-bold': ''">{{ field.name }}:</span> 
-                            {{ field.value }}
-                        </span>
+                    <p v-if="!editMode" class="mt-3 text-dark"><strong>{{ quotation.clientDetails.name }}</strong></p>
+                    <el-input v-if="editMode" placeholder="Company name" v-model="quotation.clientDetails.name" size="mini" class="mb-1" :style="{ maxWidth:'250px' }"></el-input>
+
+                    <p v-if="!editMode">{{ quotation.clientDetails.email }}</p>
+                    <el-input v-if="editMode" placeholder="Company email" v-model="quotation.clientDetails.email" size="mini" class="mb-1" :style="{ maxWidth:'250px' }"></el-input>
+
+                    <p v-if="!editMode">{{ quotation.clientDetails.phone }}</p>
+                    <el-input v-if="editMode" placeholder="Company tel/phone" v-model="quotation.clientDetails.phone" size="mini" class="mb-1" :style="{ maxWidth:'250px' }"></el-input>
+                    <br />
+                    <p v-if="!editMode" v-for="(field, i) in quotation.clientDetails.additionalFields" :key="i">
+                        {{ field.value }}
                     </p>
-                    <el-input v-if="editMode" v-for="(field, i) in quotation.clientFields" :key="i" 
+                    <el-input v-if="editMode" v-for="(field, i) in quotation.clientDetails.additionalFields" :key="i" 
                         size="mini" class="mb-1" :style="{ maxWidth:'250px' }"
-                        :placeholder="'Client details ' + i" v-model="quotation.clientFields[i].value"></el-input>
+                        :placeholder="'Client details ' + i" v-model="quotation.clientDetails.additionalFields[i].value"></el-input>
                     </el-input>
 
                 </Col>
+                
                 <Col span="12">
                     <Row :gutter="20">
                         <Col span="16">
-                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ quotation.ref_number.name }}:</strong></p>
-                            <el-input v-if="editMode" placeholder="e.g) Reference number" v-model="quotation.ref_number.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ quotation.refNumber.name }}:</strong></p>
+                            <el-input v-if="editMode" placeholder="e.g) Reference number" v-model="quotation.refNumber.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
                             
-                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ quotation.created_date.name }}:</strong></p>
-                            <el-input v-if="editMode" placeholder="e.g) Created Date" v-model="quotation.created_date.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ quotation.createdDate.name }}:</strong></p>
+                            <el-input v-if="editMode" placeholder="e.g) Created Date" v-model="quotation.createdDate.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
 
-                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ quotation.payment_date.name }}:</strong></p>
-                            <el-input v-if="editMode" placeholder="e.g) Expiry Date" v-model="quotation.payment_date.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ quotation.expiryDate.name }}:</strong></p>
+                            <el-input v-if="editMode" placeholder="e.g) Expiry Date" v-model="quotation.expiryDate.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
 
-                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ quotation.grand_total.name }}:</strong></p>
-                            <el-input v-if="editMode" placeholder="e.g) Grand Total" v-model="quotation.grand_total.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ quotation.grandTotal.name }}:</strong></p>
+                            <el-input v-if="editMode" placeholder="e.g) Grand Total" v-model="quotation.grandTotal.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
 
                         </Col>
                         <Col span="8">
-                            <p v-if="!editMode" class="text-dark">{{ quotation.ref_number.value }}</p>
-                            <el-input v-if="editMode" placeholder="e.g) 001" v-model="quotation.ref_number.value" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }"></el-input>
+                            <p v-if="!editMode" class="text-dark">{{ quotation.refNumber.value }}</p>
+                            <el-input v-if="editMode" placeholder="e.g) 001" v-model="quotation.refNumber.value" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }"></el-input>
 
-                            <p v-if="!editMode" class="text-dark">{{ quotation.created_date.value | moment('MMM DD YYYY') }}</p>
+                            <p v-if="!editMode" class="text-dark">{{ quotation.createdDate.value | moment('MMM DD YYYY') }}</p>
                             <!-- Edit Created date -->
-                            <el-date-picker v-if="editMode" v-model="quotation.created_date.value" type="datetime" placeholder="e.g) January 1, 2018" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }"
+                            <el-date-picker v-if="editMode" v-model="quotation.createdDate.value" type="datetime" placeholder="e.g) January 1, 2018" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }"
                                 format="MMM dd yyyy" value-format="yyyy-MM-dd">
                             </el-date-picker>
 
-                            <p v-if="!editMode" class="text-dark">{{ quotation.payment_date.value | moment('MMM DD YYYY') }}</p>
+                            <p v-if="!editMode" class="text-dark">{{ quotation.expiryDate.value | moment('MMM DD YYYY') }}</p>
                             <!-- Edit Created date -->
-                            <el-date-picker v-if="editMode" v-model="quotation.payment_date.value" type="datetime" placeholder="e.g) January 7, 2018" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }"
+                            <el-date-picker v-if="editMode" v-model="quotation.expiryDate.value" type="datetime" placeholder="e.g) January 7, 2018" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }"
                                 format="MMM dd yyyy" value-format="yyyy-MM-dd">
                             </el-date-picker>
 
                             <p v-if="!editMode" class="text-dark">{{ quoteGrandTotal | currency }}</p>
-                            <el-input v-if="editMode" :placeholder="'e.g) '+quotation.currency_symbol+'5,000.00'" :value="quoteGrandTotal | currency" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }" disabled></el-input>
+                            <el-input v-if="editMode" :placeholder="'e.g) '+quotation.currencySymbol+'5,000.00'" :value="quoteGrandTotal | currency" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }" disabled></el-input>
                         </Col>
                     </Row>
                 </Col>
@@ -216,11 +235,11 @@
                                     <el-input v-if="editMode" placeholder="e.g) 2" v-model="quotation.items[i].quantity" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                 </td>
                                 <td :colspan="quotation.tableColumns[2].span" class="p-2">
-                                    <span v-if="!editMode">{{ item.unit_price }}</span>
-                                    <el-input v-if="editMode" placeholder="e.g) 2,500.00" v-model="quotation.items[i].unit_price" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                    <span v-if="!editMode">{{ item.unitPrice }}</span>
+                                    <el-input v-if="editMode" placeholder="e.g) 2,500.00" v-model="quotation.items[i].unitPrice" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                 </td>
                                 <td :colspan="quotation.tableColumns[3].span" class="p-2">
-                                    <span v-if="!editMode">{{ item.total_price | currency }}</span>
+                                    <span v-if="!editMode">{{ item.totalPrice | currency }}</span>
                                     <el-input v-if="editMode" placeholder="e.g) 5,000.00" :value="getItemTotal(quotation.items[i])" size="mini" class="p-1" :style="{ maxWidth:'100%' }" disabled></el-input>
                                 </td>
                                 <td v-if="editMode" class="p-2">
@@ -259,8 +278,8 @@
                 <Col span="12" offset="12" class="pr-4">
                     <Row :gutter="20">
                         <Col :span="editMode ? '16':'20'">
-                            <p v-if="!editMode" class="text-dark text-right float-right w-100 mb-2"><strong>{{ quotation.total.name }}:</strong></p>
-                            <el-input v-if="editMode" placeholder="e.g) Total" v-model="quotation.total.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+                            <p v-if="!editMode" class="text-dark text-right float-right w-100 mb-2"><strong>{{ quotation.subTotal.name }}:</strong></p>
+                            <el-input v-if="editMode" placeholder="e.g) Total" v-model="quotation.subTotal.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
 
                             <p v-if="!editMode" v-for="(calculatedTax , i) in calculatedTaxes" :key="i" class="text-dark text-right float-right w-100">
                                 {{ calculatedTax.name }} ({{ calculatedTax.rate*100 }}%):
@@ -271,7 +290,7 @@
                         <Col :span="editMode ? '8':'4'">
 
                             <p v-if="!editMode" class="text-right float-right w-100 mb-2">{{ quoteTotal | currency }}</p>
-                            <el-input v-if="editMode" :placeholder="'e.g) '+quotation.currency_symbol+'5,000.00'" :value="quoteTotal | currency" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
+                            <el-input v-if="editMode" :placeholder="'e.g) '+quotation.currencySymbol+'5,000.00'" :value="quoteTotal | currency" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
 
                             <p v-if="!editMode" v-for="(calculatedTax , i) in calculatedTaxes" :key="i" class="text-right float-right w-100">
                                 {{ calculatedTax.amount | currency }}
@@ -286,14 +305,14 @@
 
                         <Col :span="editMode ? '16':'20'">
                         
-                            <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ quotation.grand_total.name }}:</strong></p>
-                            <el-input v-if="editMode" placeholder="e.g) Grand Total" v-model="quotation.grand_total.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+                            <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ quotation.grandTotal.name }}:</strong></p>
+                            <el-input v-if="editMode" placeholder="e.g) Grand Total" v-model="quotation.grandTotal.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
 
                         </Col>
                         <Col :span="editMode ? '8':'4'">
 
                             <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ quoteGrandTotal | currency }}</strong></p>
-                            <el-input v-if="editMode" :placeholder="'e.g) '+quotation.currency_symbol+'5,000.00'" :value="quoteGrandTotal | currency" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
+                            <el-input v-if="editMode" :placeholder="'e.g) '+quotation.currencySymbol+'5,000.00'" :value="quoteGrandTotal | currency" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
                         
                         </Col>
                         
@@ -341,6 +360,10 @@
             imageUploader, taxSelector
         },
         props: {
+            id: {
+                type: Number,
+                default: null
+            },
             quotation: {
                 type: Object,
                 default: null
@@ -376,7 +399,7 @@
                 ],
                 calculatedTaxes: this.runCalculateTaxes(this.quotation),
                 quoteTotal: this.runGetTotal(this.quotation),
-                quoteGrandTotal: this.runGetGrandTotal(this.quotation),
+                quoteGrandTotal: this.quotation.calculatedTaxes,
             }
         },
         watch: {
@@ -442,10 +465,10 @@
 
             },
             getItemTotal: function(item){
-                return item.unit_price * item.quantity
+                return item.unitPrice * item.quantity
             },
             runGetTotal: function(quotation){
-                var itemAmounts = (quotation.items || []).map(item => item.quantity * item.unit_price);
+                var itemAmounts = (quotation.items || []).map(item => item.quantity * item.unitPrice);
                 var total = itemAmounts.length ? itemAmounts.reduce(this.getSum): 0;
 
                 return total;
@@ -459,79 +482,16 @@
             getSum(total, num) {
                 return total + num;
             },
-            createPDF(quality = 3) {
-                
-                const filename  = 'ThisIsYourPDFFilename.pdf';
+            downloadPDF(){
+                if(this.id){
+                 
+                    let routeData = this.$router.resolve({
+                            path: '/api/download/quotations/'+this.id
+                        });
 
-                var specialElementHandlers = {
-                    '#bypassme': function(element, renderer) {
-                        return true;
-                    }
-                };
+                    window.open(routeData.href.replace("#", ""), '_blank');
 
-                html2canvas(document.querySelector('#testcase'), {scale: quality}).then(canvas => {
-                    var imgData = canvas.toDataURL('image/png');
-
-                    /*
-                    Here are the numbers (paper width and height) that I found to work. 
-                    It still creates a little overlap part between the pages, but good enough for me.
-                    if you can find an official number from jsPDF, use them.
-                    */
-                    var imgWidth = 210; 
-                    var pageHeight = 295;  
-                    var imgHeight = canvas.height * imgWidth / canvas.width;
-                    var heightLeft = imgHeight;
-
-                    var doc = new jsPDF('p', 'mm');
-                    var position = 0;
-
-                    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
-
-                    while (heightLeft >= 0) {
-                        position = heightLeft - imgHeight;
-                        doc.addPage();
-                        doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                        heightLeft -= pageHeight;
-                    }
-                    doc.save(filename);
-                });
-                
-                
-                /*
-                var doc = new jsPDF('p', 'in', 'letter');
-                var source = $('#testcase').html();
-                console.log( source );
-                var specialElementHandlers = {
-                    '#bypassme': function(element, renderer) {
-                        return true;
-                    }
-                };
-
-                doc.fromHTML(
-                    source, // HTML string or DOM elem ref.
-                    0.5, // x coord
-                    0.5, // y coord
-                    {
-                    'width': 7.5, // max width of content on PDF
-                    'elementHandlers': specialElementHandlers
-                });
-
-                doc.save('sample.pdf');
-                */
-                
-
-                /*
-                var pdf = new jsPDF('p', 'pt', 'a4');
-                            
-                var source = $(".quotation-summary-widget").html();
-                
-                pdf.fromHTML( source, 15, 15, { 'width': 180 });
-
-                var pdfName = this.quotation.heading+' - '+ this.quotation.ref_number.value; 
-
-                pdf.save(pdfName + '.pdf');
-                */
+                }
             }
         }
     };

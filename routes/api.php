@@ -94,3 +94,5 @@ Route::get('costcenters', 'Api\CostCenterController@index');
 Route::get('priorities', 'Api\PriorityController@index');
 
 Route::get('downloadFile', 'Api\DownloadController@download');
+
+Route::get('download/quotations/{quotation_id}', 'Api\DownloadController@downloadQuotation');
