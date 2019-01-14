@@ -93,6 +93,26 @@ Route::get('costcenters', 'Api\CostCenterController@index');
 */
 Route::get('priorities', 'Api\PriorityController@index');
 
+/*   QUOTATION RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::post('quotations', 'Api\QuotationController@store');
+Route::post('quotations/{quotation_id}', 'Api\QuotationController@update');
+
+/*   PRODUCT/SERVICE RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::get('products', 'Api\ProductOrServiceController@index');
+
+/*   TAXES RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::get('taxes', 'Api\TaxController@index');
+
+/*   DOWNLOAD RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+
 Route::get('downloadFile', 'Api\DownloadController@download');
 
 Route::get('download/quotations/{quotation_id}', 'Api\DownloadController@downloadQuotation');

@@ -46,6 +46,16 @@ class CompanyBranch extends Model
                     ->where('company_directory.type', 'supplier');
     }
 
+    public function productsOrServices()
+    {
+        return $this->hasMany('App\ProductOrService');
+    }
+
+    public function taxes()
+    {
+        return $this->hasMany('App\Tax');
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////
     //                                                                              //
     //  EVERTHING BELOW THIS CAUTION IS NOT YET BEING USED BY THE SYSTEM            //

@@ -95,14 +95,14 @@
             .td13{padding: 0px;margin: 0px;width: 31px;vertical-align: bottom;background: #f4f5f5;}
             .td14{padding: 0px;margin: 0px;width: 119px;vertical-align: bottom;background: #f4f5f5;}
             .td15{padding: 0px;margin: 0px;width: 61px;vertical-align: bottom;}
-            .td16{padding: 0px;margin: 0px;width: 383px;vertical-align: bottom;background: #000000;}
-            .td17{padding: 0px;margin: 0px;width: 121px;vertical-align: bottom;background: #000000;}
-            .td18{padding: 0px;margin: 0px;width: 31px;vertical-align: bottom;background: #000000;}
-            .td19{padding: 0px;margin: 0px;width: 119px;vertical-align: bottom;background: #000000;}
-            .td20{padding: 0px;margin: 0px;width: 74px;vertical-align: bottom;background: #000000;}
-            .td21{padding: 0px;margin: 0px;width: 88px;vertical-align: bottom;background: #000000;}
-            .td22{padding: 0px;margin: 0px;width: 61px;vertical-align: bottom;background: #000000;}
-            .td23{padding: 0px;margin: 0px;width: 27px;vertical-align: bottom;background: #000000;}
+            .td16{padding: 0px;margin: 0px;width: 383px;vertical-align: bottom;}
+            .td17{padding: 0px;margin: 0px;width: 121px;vertical-align: bottom;}
+            .td18{padding: 0px;margin: 0px;width: 31px;vertical-align: bottom;}
+            .td19{padding: 0px;margin: 0px;width: 119px;vertical-align: bottom;}
+            .td20{padding: 0px;margin: 0px;width: 74px;vertical-align: bottom;}
+            .td21{padding: 0px;margin: 0px;width: 88px;vertical-align: bottom;}
+            .td22{padding: 0px;margin: 0px;width: 61px;vertical-align: bottom;}
+            .td23{padding: 0px;margin: 0px;width: 27px;vertical-align: bottom;}
             .td24{padding: 0px;margin: 0px;width: 88px;vertical-align: bottom;}
             .td25{border-bottom: #dee1e2 1px solid;padding: 0px;margin: 0px;width: 383px;vertical-align: bottom;}
             .td26{border-bottom: #dee1e2 1px solid;padding: 0px;margin: 0px;width: 121px;vertical-align: bottom;}
@@ -232,6 +232,12 @@
     </head>
 
     <body>
+
+        @php 
+            $primaryColor = $quotation['primaryColor'];
+            $secondaryColor = $quotation['secondaryColor'] 
+        @endphp
+
         <main id="page_1">
 
             <div id="p1dimg1">
@@ -280,7 +286,7 @@
                             </td>
 
                             <td colspan="1" class="tr0 td2">
-                                <p class="p5 ft2 pdr4">{{ $quotation['createdDate']['value'] }}</p>
+                                <p class="p5 ft2 pdr4">{{ Carbon\Carbon::parse($quotation['createdDate']['value'])->format('M d Y') }}</p>
                             </td>
 
                         </tr>
@@ -300,7 +306,7 @@
                             </td>
 
                             <td colspan="1" class="tr0">
-                                <p class="p5 ft2 pdr4">{{ $quotation['expiryDate']['value'] }}</p>
+                                <p class="p5 ft2 pdr4">{{ Carbon\Carbon::parse($quotation['expiryDate']['value'])->format('M d Y') }}</p>
                             </td>
 
                         </tr>
@@ -323,7 +329,7 @@
                 <table cellpadding="0" cellspacing="0" class="pdb0 pdt0 mrt2 mrb0 t0">
                     <tbody>
 
-                        <tr>
+                        <tr style="background-color:{{ $primaryColor }} !important;">
                             <td colspan="7" class="pdb1 pdt1 td16">
                                 <p class="ft12 pdl4">{{ $quotation['tableColumns'][0]['name'] }}</p>
                             </td>
@@ -340,29 +346,28 @@
                                 <p class="ft12">{{ $quotation['tableColumns'][3]['name'] }}</p>
                             </td>
                         </tr>
-                        @foreach($quotation['items'] as $item)
-                            <tr>
+                        @foreach($quotation['items'] as $key => $item)
+                            <tr style="background-color:{{ ( ($key + 1) % 2 ) ? $secondaryColor . ' !important': '' }} ;">
                                 <td colspan="7" style="word-wrap: break-word" class="pdt1">
-                                    <p class="ft1 p4">{{ $item['name'] }}</p>
+                                    <p class="ft1 p4 mrt1" style="line-height:16px;">{{ $item['name'] }}</p>
                                 </td>
 
                                 <td colspan="1" class="pdt1">
-                                    <p class="p11 ft2">{{ $item['quantity'] }}</p>
+                                    <p class="ft2 p11 mrt1" style="line-height:16px;margin-top: 0px;margin-bottom: 0px;text-align:center;">{{ $item['quantity'] }}</p>
                                 </td>
 
                                 <td colspan="1" class="pdt1">
-                                    <p class="ft2">{{ number_format($item['unitPrice'],2,",",".") }}</p>
+                                    <p class="ft2 mrt1" style="line-height:16px;margin-top: 0px;margin-bottom: 0px;">{{ number_format($item['unitPrice'],2,",",".") }}</p>
                                 </td>
 
                                 <td colspan="1" class="pdt1">
-                                    <p class="ft2">{{ number_format($item['totalPrice'],2,",",".") }}</p>
+                                    <p class="ft2 mrt1" style="line-height:16px;margin-top: 0px;margin-bottom: 0px;">{{ number_format($item['totalPrice'],2,",",".") }}</p>
                                 </td>
                             </tr>
-                        
 
-                            <tr>
+                            <tr style="background-color:{{ ( ($key + 1) % 2 ) ? $secondaryColor . ' !important': '' }} ;">
                                 <td colspan="7" class="td30 tr0 pdb1">
-                                    <p class="ft14 p14">{{ $item['description'] }}</p>
+                                    <p class="ft14 p14" style="line-height:16px;">{{ $item['description'] }}</p>
                                 </td>
 
                                 <td colspan="3" class="td30 tr0 pdb1"></td>
@@ -397,6 +402,12 @@
                                 </td>
                             </tr>
                         @endforeach
+
+                        <tr>
+                            <td colspan="5" class="tr12 td31"></td>
+                            <td colspan="4"></td>
+                            <td colspan="1"></td>
+                        </tr>
 
                         <tr>
                             <td colspan="5" class="tr12 td31"></td>
@@ -435,8 +446,8 @@
 
         </main>
 
-        <footer>
-                {{ $quotation['footer'] }}
+        <footer style="background-color:{{ $primaryColor }} !important;">
+            <p style="margin-top:2px;">{{ $quotation['footer'] }}</p>
         </footer>
 
     </body>

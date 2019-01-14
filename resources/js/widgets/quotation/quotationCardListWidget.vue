@@ -5,7 +5,7 @@
         <quotationSummaryWidget 
             v-for="(quotation, i) in quotations" 
             :id="quotation.id"
-            :quotation="quotation.details"
+            :quotation="quotation"
             :key="i">
         </quotationSummaryWidget>
     
