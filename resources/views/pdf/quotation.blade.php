@@ -317,7 +317,7 @@
                             </td>
 
                             <td colspan="1" class="td10 td14">
-                                <p class="ft1 p5 pd2">{{ $quotation['currencySymbol'] . number_format($quotation['grandTotal']['value'],2,",",".") }}</p>
+                                <p class="ft1 p5 pd2">{{ $quotation['currencyType']['currency']['symbol'] . number_format($quotation['grandTotal']['value'],2,",",".") }}</p>
                             </td>
 
                         </tr>
@@ -387,7 +387,7 @@
                             </td>
 
                             <td colspan="1" class="tr12 td24">
-                                <p class="p10 ft2">{{ $quotation['currencySymbol'] . number_format($quotation['subTotal']['value'],2,",",".") }}</p>
+                                <p class="p10 ft2">{{ $quotation['currencyType']['currency']['symbol'] . number_format($quotation['subTotal']['value'],2,",",".") }}</p>
                             </td>
                         </tr>
                         @foreach($quotation['calculatedTaxes'] as $tax)
@@ -398,7 +398,7 @@
                                 </td>
 
                                 <td colspan="1" class="tr2 td24">
-                                    <p class="p10 ft2">{{ $quotation['currencySymbol'] . number_format($tax['amount'],2,",",".") }}</p>
+                                    <p class="p10 ft2">{{ $quotation['currencyType']['currency']['symbol'] . number_format($tax['amount'],2,",",".") }}</p>
                                 </td>
                             </tr>
                         @endforeach
@@ -412,11 +412,11 @@
                         <tr>
                             <td colspan="5" class="tr12 td31"></td>
                             <td colspan="4" class="brt brb2">
-                                <p class="ft1 p11 pdr3">{{ $quotation['grandTotal']['name'] .' '. '('.$quotation['currencySymbol'].')' }}:</p>
+                                <p class="ft1 p11 pdr3">{{ $quotation['grandTotal']['name'] .' '. '('.$quotation['currencyType']['currency']['symbol'].')' }}:</p>
                             </td>
 
                             <td colspan="1" class="brt brb2">
-                                <p class="p10 ft1">{{ $quotation['currencySymbol'] . number_format($quotation['grandTotal']['value'],2,",",".") }}</p>
+                                <p class="p10 ft1">{{ $quotation['currencyType']['currency']['symbol'] . number_format($quotation['grandTotal']['value'],2,",",".") }}</p>
                             </td>
                         </tr>
 

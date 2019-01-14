@@ -2,7 +2,7 @@
     
     <!-- Quotation Tax Selector -->
     <Poptip word-wrap width="200" trigger="hover" content="Create or Apply existing Tax" :key="renderKey">
-        <Select v-if="localFetchedTaxes.length" v-model="localSelectedTaxes" :style="{ width:'100%' }" placeholder="Apply Tax" not-found-text="No taxes found" multiple>
+        <Select v-if="localFetchedTaxes.length" v-model="localSelectedTaxes" :style="{ width:'100%' }" placeholder="Apply Tax" not-found-text="No taxes found" filterable multiple>
             <Option v-for="item in fetchedTaxes" :value="JSON.stringify(item)" :key="item.id">
                 {{ item.name }} ({{ item.rate*100 }}%)
             </Option>
@@ -32,17 +32,14 @@
         computed:{
             localSelectedTaxes:{
                 get(){
-                    console.log('spot 1');
                     return this.selectedTaxes.map(item => JSON.stringify(item));
                 },
                 set(val){
-                    console.log('spot 2');
                     var updatedTaxes = val.map(item => JSON.parse(item));
                     this.$emit('updated',  updatedTaxes);
                 }
             },
             localFetchedTaxes: function(){
-                console.log('spot 3');
                 return this.fetchedTaxes.map(item => JSON.stringify(item));
                 
             },

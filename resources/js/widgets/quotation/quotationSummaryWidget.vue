@@ -220,8 +220,8 @@
                                 format="MMM dd yyyy" value-format="yyyy-MM-dd">
                             </el-date-picker>
 
-                            <p v-if="!editMode" class="text-dark">{{ quotation.details.grandTotal.value | currency }}</p>
-                            <el-input v-if="editMode" :placeholder="'e.g) '+quoteDetails.currencySymbol+'5,000.00'" :value="quotation.details.grandTotal.value | currency" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }" disabled></el-input>
+                            <p v-if="!editMode" class="text-dark">{{ quotation.details.grandTotal.value | currency(quotation.details.currencyType.currency.symbol) }}</p>
+                            <el-input v-if="editMode" :placeholder="'e.g) '+quotation.details.currencyType.currency.symbol+'5,000.00'" :value="quotation.details.grandTotal.value | currency(quotation.details.currencyType.currency.symbol)" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }" disabled></el-input>
                         </Col>
                     </Row>
                 </Col>
@@ -230,13 +230,27 @@
             <Row>
                 <Col span="24">
                     <div v-if="editMode">
+                        
+
+
                         <div class="float-right mr-2">
                             <el-color-picker class="float-right" v-model="quoteDetails.secondaryColor"></el-color-picker>
-                            <span class="float-right d-inline-block font-weight-bold mr-2 mt-3">Secondary Color:</span>
+                            <span class="float-right d-inline-block font-weight-bold mr-2 mt-2">Secondary Color:</span>
                         </div>
+                        
                         <div class="float-right mr-2">
                             <el-color-picker class="float-right" v-model="quoteDetails.primaryColor"></el-color-picker>
-                            <span class="float-right d-inline-block font-weight-bold mr-2 mt-3">Primary Color:</span>
+                            <span class="float-right d-inline-block font-weight-bold mr-2 mt-2">Primary Color:</span>
+                        </div>
+
+                        <div class="float-right mr-3">
+                            <Loader v-if="isLoadingCurrencies" :loading="isLoadingCurrencies" type="text" :style="{ marginTop:'40px' }">Loading currencies...</Loader>
+                            
+                            <currencySelector v-if="!isLoadingCurrencies && fetchedCurrencies.length" class="float-right" :style="{maxWidth: '150px'}"
+                                :fetchedCurrencies="fetchedCurrencies" :selectedCurrency="quoteDetails.currencyType"
+                                @updated="updateCurrencyChanges($event)">
+                            </currencySelector>
+                            <span v-if="!isLoadingCurrencies && fetchedCurrencies.length" class="float-right d-inline-block font-weight-bold mr-2 mt-2">Currency:</span>
                         </div>
 
                     </div>
@@ -297,12 +311,12 @@
                                               size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                 </td>
                                 <td :colspan="quoteDetails.tableColumns[3].span" class="p-2">
-                                    <span v-if="!editMode">{{ item.totalPrice | currency }}</span>
+                                    <span v-if="!editMode">{{ item.totalPrice | currency(quotation.details.currencyType.currency.symbol) }}</span>
                                     <el-input v-if="editMode" placeholder="e.g) 5,000.00" :value="getItemTotal(quoteDetails.items[i])" size="mini" class="p-1" :style="{ maxWidth:'100%' }" disabled></el-input>
                                 </td>
                                 <td v-if="editMode" class="p-2">
                                     <Loader v-if="isLoadingTaxes" :loading="isLoadingTaxes" type="text" :style="{ marginTop:'40px' }">Loading taxes...</Loader>
-                                    <taxSelector v-if="!isLoadingTaxes" 
+                                    <taxSelector v-if="!isLoadingTaxes && fetchedTaxes.length" 
                                         :fetchedTaxes="fetchedTaxes" :selectedTaxes="quoteDetails.items[i].taxes"
                                         @updated="updateTaxChanges($event, i)">
                                     </taxSelector>
@@ -349,13 +363,13 @@
                         </Col>
                         <Col :span="editMode ? '8':'4'">
 
-                            <p v-if="!editMode" class="text-right float-right w-100 mb-2">{{ quotation.details.subTotal.value | currency }}</p>
-                            <el-input v-if="editMode" :placeholder="'e.g) '+quoteDetails.currencySymbol+'5,000.00'" :value="quotation.details.subTotal.value | currency" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
+                            <p v-if="!editMode" class="text-right float-right w-100 mb-2">{{ quotation.details.subTotal.value | currency(quotation.details.currencyType.currency.symbol) }}</p>
+                            <el-input v-if="editMode" :placeholder="'e.g) '+quotation.details.currencyType.currency.symbol+'5,000.00'" :value="quotation.details.subTotal.value | currency(quotation.details.currencyType.currency.symbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
 
                             <p v-if="!editMode" v-for="(calculatedTax , i) in quotation.details.calculatedTaxes" :key="i" class="text-right float-right w-100">
-                                {{ calculatedTax.amount | currency }}
+                                {{ calculatedTax.amount | currency(quotation.details.currencyType.currency.symbol) }}
                             </p>
-                            <el-input v-if="editMode" v-for="(calculatedTax , i) in quotation.details.calculatedTaxes" :key="i" placeholder="e.g) 1,500.00" :value="calculatedTax.amount | currency" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
+                            <el-input v-if="editMode" v-for="(calculatedTax , i) in quotation.details.calculatedTaxes" :key="i" placeholder="e.g) 1,500.00" :value="calculatedTax.amount | currency(quotation.details.currencyType.currency.symbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
 
                         </Col>
                         
@@ -371,8 +385,8 @@
                         </Col>
                         <Col :span="editMode ? '8':'4'">
 
-                            <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ quotation.details.grandTotal.value | currency }}</strong></p>
-                            <el-input v-if="editMode" :placeholder="'e.g) '+quoteDetails.currencySymbol+'5,000.00'" :value="quotation.details.grandTotal.value | currency" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
+                            <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ quotation.details.grandTotal.value | currency(quotation.details.currencyType.currency.symbol) }}</strong></p>
+                            <el-input v-if="editMode" :placeholder="'e.g) '+quotation.details.currencyType.currency.symbol+'5,000.00'" :value="quotation.details.grandTotal.value | currency(quotation.details.currencyType.currency.symbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
                         
                         </Col>
                         
@@ -417,8 +431,10 @@
 </template>
 
 <script>
+    import Loader from './../../components/_common/loader/Loader.vue';
     import getProductsAndServicesModal from './getProductsAndServicesModal.vue';
     import imageUploader from './imageUploader.vue';
+    import currencySelector from './currencySelector.vue';
     import taxSelector from './taxSelector.vue';
 
     //  jsPDF used for HTML/CSS to PDF Conversion
@@ -427,7 +443,7 @@
 
     export default {
         components: { 
-            getProductsAndServicesModal, imageUploader, taxSelector
+            Loader, getProductsAndServicesModal, imageUploader,currencySelector, taxSelector
         },
         props: {
             id: {
@@ -450,6 +466,7 @@
                 isLoadingTaxes: false,
                 isOpenProductsAndServicesModal: false,
                 fetchedTaxes: [],
+                fetchedCurrencies: [],
                 quoteDetails: this.quotation.details,
             }
         },
@@ -492,28 +509,50 @@
                         console.log(response);    
                     });
             },
-            addProductOrService(productsOrServices){
-                var result;
-                
-                for(var x = 0; x < productsOrServices.length; x++){
-                   result = this.quotation.details.items.push(productsOrServices[x]);
-                }
+            fetchCurrencies() {
+                const self = this;
 
-                //  Re-calculate the taxes
-                this.quotation.details.calculatedTaxes = this.runCalculateTaxes();
+                //  Start loader
+                self.isLoadingCurrencies = true;
 
-                //  Re-Calculate the sub and grand total amount
-                this.updateSubAndGrandTotal();
-                
-                this.$Notice.success({
-                    title: productsOrServices.length == 1 ? 'Product added successfully': 'Products added successfully'
-                });
+                console.log('Start getting currencies...');
 
-                // Close modal
-                this.closeModal();
+                //  Use the api call() function located in resources/js/api.js
+                api.call('get', '/api/currencies')
+                    .then(({data}) => {
+                        
+                        console.log(data);
+
+                        //  Stop loader
+                        self.isLoadingCurrencies = false;
+
+                        //  Get currencies
+                        self.fetchedCurrencies = data;
+
+                        console.log('New fetched currencies');
+
+                        console.log(self.fetchedCurrencies);
+                    })         
+                    .catch(response => { 
+
+                        //  Stop loader
+                        self.isLoadingCurrencies = false;
+
+                        console.log('quotationSummaryWidget.vue - Error getting currencies...');
+                        console.log(response);    
+                    });
             },
-            closeModal(){
-                this.isOpenProductsAndServicesModal = !this.isOpenProductsAndServicesModal;
+            updateTaxChanges(newTaxes, i){
+                this.quotation.details.items[i].taxes = newTaxes;
+                this.quotation.details.calculatedTaxes = this.runCalculateTaxes();
+                this.updateSubAndGrandTotal();
+            },
+            updateCurrencyChanges(newCurrency){
+                this.quotation.details.currencyType = newCurrency;
+
+                this.$Notice.success({
+                    title: 'Currency changed to ' + newCurrency.country + ' (' + newCurrency.currency.iso.code + ')'
+                });
             },
             updateSubAndGrandTotal(){
                 console.log('run updateSubAndGrandTotal()');
@@ -541,10 +580,11 @@
 
                 return  this.runGetTotal(quoteDetails) + sumOfTaxAmounts;
             },
-            updateTaxChanges(newTaxes, i){
-                this.quotation.details.items[i].taxes = newTaxes;
-                this.quotation.details.calculatedTaxes = this.runCalculateTaxes();
-                this.updateSubAndGrandTotal();
+            getItemTotal: function(item){
+                return item.unitPrice * item.quantity
+            },
+            getSum(total, num) {
+                return total + num;
             },
             runCalculateTaxes: function(){
                 var quoteDetails = this.quotation.details;
@@ -585,6 +625,26 @@
                 return filtered;
 
             },
+            addProductOrService(productsOrServices){
+                var result;
+                
+                for(var x = 0; x < productsOrServices.length; x++){
+                   result = this.quotation.details.items.push(productsOrServices[x]);
+                }
+
+                //  Re-calculate the taxes
+                this.quotation.details.calculatedTaxes = this.runCalculateTaxes();
+
+                //  Re-Calculate the sub and grand total amount
+                this.updateSubAndGrandTotal();
+                
+                this.$Notice.success({
+                    title: productsOrServices.length == 1 ? 'Product added successfully': 'Products added successfully'
+                });
+
+                // Close modal
+                this.closeModal();
+            },
             removeItem: function(index){
                 this.quoteDetails.items.splice(index, 1);
 
@@ -592,12 +652,8 @@
                     title: 'Item removed sucessfully'
                 });
             },
-            getItemTotal: function(item){
-                return item.unitPrice * item.quantity
-            },
-
-            getSum(total, num) {
-                return total + num;
+            closeModal(){
+                this.isOpenProductsAndServicesModal = !this.isOpenProductsAndServicesModal;
             },
             downloadPDF(download = { preview: false }){
                 if(this.id){
@@ -647,7 +703,11 @@
             }
         },
         created(){
+            //  Get the taxes
             this.fetchTaxes();
+
+            //  Get the currencies
+            this.fetchCurrencies();
         }
     };
   

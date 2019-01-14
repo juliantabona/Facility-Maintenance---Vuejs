@@ -109,6 +109,13 @@ Route::get('products', 'Api\ProductOrServiceController@index');
 */
 Route::get('taxes', 'Api\TaxController@index');
 
+/*   TAXES RESOURCE ROUTES
+     -  Visit: https://github.com/antonioribeiro/countries
+     -  taxes, geometry maps, topology maps, currencies, countries, timezones, borders, flags, states, cities, timezones times
+*/
+Route::get('countries', 'Api\CountryController@countries');
+Route::get('currencies', 'Api\CountryController@currencies');
+
 /*   DOWNLOAD RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
 */
