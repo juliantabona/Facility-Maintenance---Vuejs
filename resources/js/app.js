@@ -96,6 +96,8 @@ import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
 import locale from 'element-ui/lib/locale/lang/en';
 
+Vue.use(ElementUI, { locale });
+
 //  Imports Moment.js for use by vue components in formatting dates
 Vue.use(require('vue-moment'));
 
@@ -103,8 +105,6 @@ Vue.use(require('vue-moment'));
 import Vue2Filters from 'vue2-filters';
 
 Vue.use(Vue2Filters);
-
-Vue.use(ElementUI, { locale });
 
 const app = new Vue({
     el: '#app',

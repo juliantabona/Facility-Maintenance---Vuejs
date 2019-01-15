@@ -412,7 +412,7 @@
                         <tr>
                             <td colspan="5" class="tr12 td31"></td>
                             <td colspan="4" class="brt brb2">
-                                <p class="ft1 p11 pdr3">{{ $quotation['grandTotal']['name'] .' '. '('.$quotation['currencyType']['currency']['symbol'].')' }}:</p>
+                                <p class="ft1 p11 pdr3">{{ $quotation['grandTotal']['name'] }}:</p>
                             </td>
 
                             <td colspan="1" class="brt brb2">

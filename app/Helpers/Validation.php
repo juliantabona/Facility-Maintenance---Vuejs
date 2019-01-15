@@ -308,3 +308,26 @@ function oq_branch_create_v_msgs()
         'branch_name.required' => 'Enter company branch name',
     ];
 }
+
+/**************************************************************
+***************************************************************
+***************************************************************
+    QUOTATION RELATED VALIDATION
+***************************************************************
+***************************************************************
+**************************************************************/
+
+function oq_quotation_create_v_rules()
+{
+    return $rules = [
+        //  General rules
+        'details' => 'required',
+    ];
+}
+
+function oq_quotation_create_v_msgs()
+{
+    return $messages = [
+        'details.required' => 'Quotation details have not been provided',
+    ];
+}

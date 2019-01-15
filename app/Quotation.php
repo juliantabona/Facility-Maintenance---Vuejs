@@ -29,7 +29,7 @@ class Quotation extends Model
      * @var array
      */
     protected $fillable = [
-        'details', 'company_id',
+        'details', 'company_branch_id', 'company_id', 'trackable_type', 'trackable_id',
     ];
 
     /**
@@ -38,5 +38,11 @@ class Quotation extends Model
     public function trackable()
     {
         return $this->morphTo();
+    }
+
+    public function recentActivities()
+    {
+        return $this->morphMany('App\RecentActivity', 'trackable')
+                    ->orderBy('created_at', 'desc');
     }
 }

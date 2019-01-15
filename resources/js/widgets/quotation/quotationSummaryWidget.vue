@@ -24,6 +24,49 @@
         }
     }
 
+    .circle-ripple {
+        width: 1px;
+        height: 1px;
+        border-radius: 50%;
+        position:absolute;
+        top: 50%;
+        left: 50%;
+        transform: translateX(-50%);
+        transform: translateY(-50%);
+        animation: ripple 3s linear infinite;
+        z-index:1;
+    }
+
+    @-webkit-keyframes ripple {
+        0% {
+            box-shadow: 0 0 0 0 rgba(101, 255, 120, 0.3),
+                        0 0 0 0 rgba(101, 255, 120, 0.3);
+        }
+        50% {
+            box-shadow: 0 0 0 7em rgba(101, 255, 120, 0),
+                        0 0 0 3.5em rgba(101, 255, 120, 0.3);
+        }
+        100% {
+            box-shadow: 0 0 0 7em rgba(101, 255, 120, 0),
+                        0 0 0 5em rgba(101, 255, 120, 0);
+        }
+    }
+
+    @keyframes ripple {
+        0% {
+            box-shadow: 0 0 0 0 rgba(101, 255, 120, 0.3),
+                        0 0 0 0 rgba(101, 255, 120, 0.3);
+        }
+        50% {
+            box-shadow: 0 0 0 7em rgba(101, 255, 120, 0),
+                        0 0 0 3.5em rgba(101, 255, 120, 0.3);
+        }
+        100% {
+            box-shadow: 0 0 0 7em rgba(101, 255, 120, 0),
+                        0 0 0 5em rgba(101, 255, 120, 0);
+        }
+    }
+
     footer {
         position: fixed; 
         bottom: 0; 
@@ -43,12 +86,13 @@
 
 <template>
     <div id="testcase">
-
-        <div v-if="isSaving" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Saving, please wait...</div>
+        
+        <div v-if="isCreatingQuotation" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Creating, please wait...</div>
+        <div v-if="isSavingQuotation" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Saving, please wait...</div>
 
         <Card :style="{ width: '100%' }">
             
-            <Spin size="large" fix v-if="isSaving"></Spin>
+            <Spin size="large" fix v-if="isSavingQuotation || isCreatingQuotation"></Spin>
 
             <div slot="title">
                 <h5>Quotation Summary</h5>
@@ -99,9 +143,20 @@
 
                 <Col span="24" class="pr-4">
 
+                    <!-- Create Button -->
+                    <Button v-if="newQuotation" 
+                            class="float-right mb-2 ml-3" :style="{ position:'relative' }"
+                            type="success" size="small" @click="createQuotation()">
+                        <div class="circle-ripple"></div>
+                        <span :style="{ position:'relative', zIndex:'2' }">Create Changes</span>
+                    </Button>
+
                     <!-- Save Changes Button -->
-                    <Button type="success" size="small" class="float-right mb-2 ml-3" @click="saveQuotation()">
-                        <span>Save Changes</span>
+                    <Button v-if="!newQuotation && quoteHasChanged" 
+                            class="float-right mb-2 ml-3" :style="{ position:'relative' }"
+                            type="success" size="small" @click="saveQuotation()">
+                        <div class="circle-ripple"></div>
+                        <span :style="{ position:'relative', zIndex:'2' }">Save Changes</span>
                     </Button>
 
                     <!-- Edit Mode Switch -->
@@ -200,8 +255,8 @@
                             <p v-if="!editMode" class="text-dark text-right"><strong>{{ quoteDetails.expiryDate.name }}:</strong></p>
                             <el-input v-if="editMode" placeholder="e.g) Expiry Date" v-model="quoteDetails.expiryDate.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
 
-                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ quotation.details.grandTotal.name }}:</strong></p>
-                            <el-input v-if="editMode" placeholder="e.g) Grand Total" v-model="quotation.details.grandTotal.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ quoteDetails.grandTotal.name }}:</strong></p>
+                            <el-input v-if="editMode" placeholder="e.g) Grand Total" v-model="quoteDetails.grandTotal.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
 
                         </Col>
                         <Col span="8">
@@ -220,8 +275,8 @@
                                 format="MMM dd yyyy" value-format="yyyy-MM-dd">
                             </el-date-picker>
 
-                            <p v-if="!editMode" class="text-dark">{{ quotation.details.grandTotal.value | currency(quotation.details.currencyType.currency.symbol) }}</p>
-                            <el-input v-if="editMode" :placeholder="'e.g) '+quotation.details.currencyType.currency.symbol+'5,000.00'" :value="quotation.details.grandTotal.value | currency(quotation.details.currencyType.currency.symbol)" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }" disabled></el-input>
+                            <p v-if="!editMode" class="text-dark">{{ quoteDetails.grandTotal.value | currency(quoteDetails.currencyType.currency.symbol) }}</p>
+                            <el-input v-if="editMode" :placeholder="'e.g) '+quoteDetails.currencyType.currency.symbol+'5,000.00'" :value="quoteDetails.grandTotal.value | currency(quoteDetails.currencyType.currency.symbol)" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }" disabled></el-input>
                         </Col>
                     </Row>
                 </Col>
@@ -230,8 +285,6 @@
             <Row>
                 <Col span="24">
                     <div v-if="editMode">
-                        
-
 
                         <div class="float-right mr-2">
                             <el-color-picker class="float-right" v-model="quoteDetails.secondaryColor"></el-color-picker>
@@ -282,7 +335,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(item, i) in quoteDetails.items" :key="i"  :style=" ( (i + 1) % 2 ) ? 'background-color:'+quoteDetails.secondaryColor+';' : ''">
+                            <tr v-if="quoteDetails.items.length" v-for="(item, i) in quoteDetails.items" :key="i"  :style=" ( (i + 1) % 2 ) ? 'background-color:'+quoteDetails.secondaryColor+';' : ''">
                                 <td :colspan="quoteDetails.tableColumns[0].span" class="p-2">
                                 
                                     <p v-if="!editMode" class="text-dark mr-5">
@@ -304,14 +357,14 @@
                                               size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                 </td>
                                 <td :colspan="quoteDetails.tableColumns[2].span" class="p-2">
-                                    <span v-if="!editMode">{{ item.unitPrice }}</span>
+                                    <span v-if="!editMode">{{ item.unitPrice | currency(quoteDetails.currencyType.currency.symbol) }}</span>
                                     <el-input v-if="editMode" placeholder="e.g) 2,500.00" 
                                               v-model="quoteDetails.items[i].unitPrice" 
                                               @input.native="updateSubAndGrandTotal()"
                                               size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                 </td>
                                 <td :colspan="quoteDetails.tableColumns[3].span" class="p-2">
-                                    <span v-if="!editMode">{{ item.totalPrice | currency(quotation.details.currencyType.currency.symbol) }}</span>
+                                    <span v-if="!editMode">{{ item.totalPrice | currency(quoteDetails.currencyType.currency.symbol) }}</span>
                                     <el-input v-if="editMode" placeholder="e.g) 5,000.00" :value="getItemTotal(quoteDetails.items[i])" size="mini" class="p-1" :style="{ maxWidth:'100%' }" disabled></el-input>
                                 </td>
                                 <td v-if="editMode" class="p-2">
@@ -331,6 +384,15 @@
                                       placement="left-start">
                                       <Icon type="ios-trash-outline" class="mr-2" size="20"/>
                                   </Poptip>
+                                </td>
+                            </tr>
+                            <tr v-if="!quoteDetails.items.length">
+                                <td colspan="9" class="p-2">
+                                <Alert show-icon>
+                                    No items added
+                                    <Icon type="ios-bulb-outline" slot="icon"></Icon>
+                                    <template slot="desc">Start adding products/services to your quotation. You will be able to modify your item name, details, quantity, price and any applicable taxes.</template>
+                                </Alert>
                                 </td>
                             </tr>
                             <tr v-if="editMode">
@@ -355,21 +417,21 @@
                             <p v-if="!editMode" class="text-dark text-right float-right w-100 mb-2"><strong>{{ quoteDetails.subTotal.name }}:</strong></p>
                             <el-input v-if="editMode" placeholder="e.g) Total" v-model="quoteDetails.subTotal.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
 
-                            <p v-if="!editMode" v-for="(calculatedTax , i) in quotation.details.calculatedTaxes" :key="i" class="text-dark text-right float-right w-100">
+                            <p v-if="!editMode" v-for="(calculatedTax , i) in quoteDetails.calculatedTaxes" :key="i" class="text-dark text-right float-right w-100">
                                 {{ calculatedTax.name }} ({{ calculatedTax.rate*100 }}%):
                             </p>
-                            <el-input v-if="editMode" v-for="(calculatedTax , i) in quotation.details.calculatedTaxes" :key="i" placeholder="e.g) VAT (12%)" :value="calculatedTax.name + ' (' + calculatedTax.rate*100 + '%)'" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
+                            <el-input v-if="editMode" v-for="(calculatedTax , i) in quoteDetails.calculatedTaxes" :key="i" placeholder="e.g) VAT (12%)" :value="calculatedTax.name + ' (' + calculatedTax.rate*100 + '%)'" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
                             
                         </Col>
                         <Col :span="editMode ? '8':'4'">
 
-                            <p v-if="!editMode" class="text-right float-right w-100 mb-2">{{ quotation.details.subTotal.value | currency(quotation.details.currencyType.currency.symbol) }}</p>
-                            <el-input v-if="editMode" :placeholder="'e.g) '+quotation.details.currencyType.currency.symbol+'5,000.00'" :value="quotation.details.subTotal.value | currency(quotation.details.currencyType.currency.symbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
+                            <p v-if="!editMode" class="text-right float-right w-100 mb-2">{{ quoteDetails.subTotal.value | currency(quoteDetails.currencyType.currency.symbol) }}</p>
+                            <el-input v-if="editMode" :placeholder="'e.g) '+quoteDetails.currencyType.currency.symbol+'5,000.00'" :value="quoteDetails.subTotal.value | currency(quoteDetails.currencyType.currency.symbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
 
-                            <p v-if="!editMode" v-for="(calculatedTax , i) in quotation.details.calculatedTaxes" :key="i" class="text-right float-right w-100">
-                                {{ calculatedTax.amount | currency(quotation.details.currencyType.currency.symbol) }}
+                            <p v-if="!editMode" v-for="(calculatedTax , i) in quoteDetails.calculatedTaxes" :key="i" class="text-right float-right w-100">
+                                {{ calculatedTax.amount | currency(quoteDetails.currencyType.currency.symbol) }}
                             </p>
-                            <el-input v-if="editMode" v-for="(calculatedTax , i) in quotation.details.calculatedTaxes" :key="i" placeholder="e.g) 1,500.00" :value="calculatedTax.amount | currency(quotation.details.currencyType.currency.symbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
+                            <el-input v-if="editMode" v-for="(calculatedTax , i) in quoteDetails.calculatedTaxes" :key="i" placeholder="e.g) 1,500.00" :value="calculatedTax.amount | currency(quoteDetails.currencyType.currency.symbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
 
                         </Col>
                         
@@ -379,14 +441,14 @@
 
                         <Col :span="editMode ? '16':'20'">
                         
-                            <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ quotation.details.grandTotal.name }}:</strong></p>
-                            <el-input v-if="editMode" placeholder="e.g) Grand Total" v-model="quotation.details.grandTotal.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+                            <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ quoteDetails.grandTotal.name }}:</strong></p>
+                            <el-input v-if="editMode" placeholder="e.g) Grand Total" v-model="quoteDetails.grandTotal.name" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
 
                         </Col>
                         <Col :span="editMode ? '8':'4'">
 
-                            <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ quotation.details.grandTotal.value | currency(quotation.details.currencyType.currency.symbol) }}</strong></p>
-                            <el-input v-if="editMode" :placeholder="'e.g) '+quotation.details.currencyType.currency.symbol+'5,000.00'" :value="quotation.details.grandTotal.value | currency(quotation.details.currencyType.currency.symbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
+                            <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ quoteDetails.grandTotal.value | currency(quoteDetails.currencyType.currency.symbol) }}</strong></p>
+                            <el-input v-if="editMode" :placeholder="'e.g) '+quoteDetails.currencyType.currency.symbol+'5,000.00'" :value="quoteDetails.grandTotal.value | currency(quoteDetails.currencyType.currency.symbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
                         
                         </Col>
                         
@@ -397,20 +459,27 @@
 
             <Row class="mb-5">
                 <Col span="24">
-                    <h3 class="text-dark">Notes</h3>
-                    <p>Payment Information</p>
-                    <p class="mt-3 text-dark"><strong>Bank Name:</strong> First National Bank</p>
-                    <p class="text-dark"><strong>Account Name:</strong> Optimum Quality (PTY) LTD</p>
-                    <p class="text-dark"><strong>Account Number:</strong> 62688415994</p>
-                    <p class="text-dark"><strong>Branch:</strong> Gaborone Mall</p>
-                    <p class="text-dark"><strong>Branch Code:</strong> 02828</p>
+
+                    <h3 v-if="!editMode" class="text-dark mb-2">{{ quoteDetails.notes.title }}</h3>
+                    <el-input v-if="editMode" placeholder="E.g) Notes/Payment Information" v-model="quoteDetails.notes.title" size="large" class="mb-2" :style="{ maxWidth:'400px' }"></el-input>
+
+                    <p v-if="!editMode" v-for="(field, i) in quoteDetails.notes.details" :key="i">
+                        {{ field.value }}
+                    </p>
+                    <div v-if="editMode" v-for="(field, i) in quoteDetails.notes.details" :key="i">
+                        <el-input 
+                            size="mini" class="mb-1" :style="{ maxWidth:'350px' }"
+                            :placeholder="'Additional notes ' + i" v-model="quoteDetails.notes.details[i].value"></el-input>
+                        </el-input>
+                        <br>
+                    </div>
                 </Col>
             </Row>
 
             <footer :style="'background-color:'+quoteDetails.primaryColor+';'">
                 <div class="mt-1">
-                    <span v-if="!editMode">{{ quotation.details.footer }}</span>
-                    <el-input v-if="editMode" :placeholder="'e.g) Terms And Conditions Apply'" v-model="quotation.details.footer" size="mini" :style="{ width:'50%', margin:'0 auto' }"></el-input>
+                    <span v-if="!editMode">{{ quoteDetails.footer }}</span>
+                    <el-input v-if="editMode" :placeholder="'e.g) Terms And Conditions Apply'" v-model="quoteDetails.footer" size="mini" :style="{ width:'50%', margin:'0 auto' }"></el-input>
                 </div>     
             </footer>
 
@@ -437,9 +506,8 @@
     import currencySelector from './currencySelector.vue';
     import taxSelector from './taxSelector.vue';
 
-    //  jsPDF used for HTML/CSS to PDF Conversion
-    import jsPDF from 'jspdf';
-    import html2canvas from 'html2canvas';
+    import lodash from 'lodash';
+    Event.prototype._ = lodash;
 
     export default {
         components: { 
@@ -457,20 +525,62 @@
             showMenuBtn: {
                 type: Boolean,
                 default: true
-            }
+            },
+            newQuotation: {
+                type: Boolean,
+                default: false
+            },
+            modelType:{
+                type: String,
+                default: ''
+            },
+            modelId:{
+                type: Number,
+                default: null
+            },
         },
         data(){
             return {
-                isSaving: false,
+                isSavingQuotation: false,
+                isCreatingQuotation: false,
                 editMode: false,
                 isLoadingTaxes: false,
                 isOpenProductsAndServicesModal: false,
                 fetchedTaxes: [],
                 fetchedCurrencies: [],
-                quoteDetails: this.quotation.details,
+                quoteDetails: this.quotation.details || this.quotation,
+                _quoteDetailsBeforeChange: {},
+                quoteHasChanged: false
+            }
+        },
+        watch: {
+            quoteDetails: {
+                handler: function (val, oldVal) {
+                    console.log('Changes detected!!!!!');
+                    this.quoteHasChanged = this.checkIfQuoteHasChanged(val);
+                },
+                deep: true
             }
         },
         methods: {
+            checkIfQuoteHasChanged: function(updatedQuoteDetails = null){
+                
+                var currentQuoteDetails = Object.assign({}, updatedQuoteDetails || this.quoteDetails);
+                var isNotEqual = !_.isEqual(currentQuoteDetails, this._quoteDetailsBeforeChange);
+
+                console.log('currentQuoteDetails');
+                console.log(currentQuoteDetails);
+                console.log('quoteDetailsBeforeChange');
+                console.log(this._quoteDetailsBeforeChange);
+                console.log(isNotEqual);
+
+                return isNotEqual;
+            },
+            storeOriginalQuotation(){
+                console.log('storing _quoteDetailsBeforeChange');
+                //  Store the original quotation details
+                this._quoteDetailsBeforeChange = _.cloneDeep(this.quoteDetails);
+            },
             fetchTaxes() {
                 const self = this;
 
@@ -543,12 +653,12 @@
                     });
             },
             updateTaxChanges(newTaxes, i){
-                this.quotation.details.items[i].taxes = newTaxes;
-                this.quotation.details.calculatedTaxes = this.runCalculateTaxes();
+                this.quoteDetails.items[i].taxes = newTaxes;
+                this.quoteDetails.calculatedTaxes = this.runCalculateTaxes();
                 this.updateSubAndGrandTotal();
             },
             updateCurrencyChanges(newCurrency){
-                this.quotation.details.currencyType = newCurrency;
+                this.quoteDetails.currencyType = newCurrency;
 
                 this.$Notice.success({
                     title: 'Currency changed to ' + newCurrency.country + ' (' + newCurrency.currency.iso.code + ')'
@@ -558,23 +668,23 @@
                 console.log('run updateSubAndGrandTotal()');
 
                 //  Re-Calculate the sub total amount
-                this.quotation.details.subTotal.value = this.runGetTotal();
+                this.quoteDetails.subTotal.value = this.runGetTotal();
 
                 //  Re-Calculate the grand total amount
-                this.quotation.details.grandTotal.value = this.runGetGrandTotal();
+                this.quoteDetails.grandTotal.value = this.runGetGrandTotal();
 
                 //  Re-Calculate the taxes
-                this.quotation.details.calculatedTaxes = this.runCalculateTaxes();
+                this.quoteDetails.calculatedTaxes = this.runCalculateTaxes();
             },
             runGetTotal: function(){
-                var quoteDetails = this.quotation.details;
+                var quoteDetails = this.quoteDetails;
                 var itemAmounts = (quoteDetails.items || []).map(item => item.quantity * item.unitPrice);
                 var total = itemAmounts.length ? itemAmounts.reduce(this.getSum): 0;
 
                 return total;
             },
             runGetGrandTotal: function(){
-                var quoteDetails = this.quotation.details;
+                var quoteDetails = this.quoteDetails;
                 var taxAmounts = (this.runCalculateTaxes() || []).map(appliedTax => appliedTax.amount);
                 var sumOfTaxAmounts = taxAmounts.length ? taxAmounts.reduce(this.getSum): 0;
 
@@ -587,7 +697,7 @@
                 return total + num;
             },
             runCalculateTaxes: function(){
-                var quoteDetails = this.quotation.details;
+                var quoteDetails = this.quoteDetails;
                 var itemTaxAmounts = quoteDetails.items.map(item => {
                         
                         var x, collection = [];
@@ -629,11 +739,11 @@
                 var result;
                 
                 for(var x = 0; x < productsOrServices.length; x++){
-                   result = this.quotation.details.items.push(productsOrServices[x]);
+                   result = this.quoteDetails.items.push(productsOrServices[x]);
                 }
 
                 //  Re-calculate the taxes
-                this.quotation.details.calculatedTaxes = this.runCalculateTaxes();
+                this.quoteDetails.calculatedTaxes = this.runCalculateTaxes();
 
                 //  Re-Calculate the sub and grand total amount
                 this.updateSubAndGrandTotal();
@@ -671,7 +781,7 @@
                 var self = this;
 
                 //  Start loader
-                self.isSaving = true;
+                self.isSavingQuotation = true;
 
                 console.log('Attempt to save quotation...');
 
@@ -687,7 +797,12 @@
                     .then(({ data }) => {
 
                         //  Stop loader
-                        self.isSaving = false;
+                        self.isSavingQuotation = false;
+
+                        //  Store the original quotation details
+                        self.storeOriginalQuotation();
+
+                        self.quoteHasChanged = self.checkIfQuoteHasChanged(data.details);
 
                         //  Alert creation success
                         self.$Message.success('Quotation saved sucessfully!');
@@ -695,9 +810,47 @@
                     })         
                     .catch(response => { 
                         //  Stop loader
-                        self.isSaving = false;
+                        self.isSavingQuotation = false;
 
                         console.log('quotationSummaryWidget.vue - Error saving quotation...');
+                        console.log(response);
+                    });
+            },
+            createQuotation(){
+
+                var self = this;
+
+                //  Start loader
+                self.isCreatingQuotation = true;
+
+                console.log('Attempt to create quotation...');
+
+                console.log( self.quotation );
+
+                //  Form data to send
+                let quoteData = { details: self.quotation };
+
+                console.log(quoteData);
+                
+                //  Use the api call() function located in resources/js/api.js
+                api.call('post', '/api/quotations?model='+this.modelType+'&modelId='+this.modelId, quoteData)
+                    .then(({ data }) => {
+
+                        //  Stop loader
+                        self.isCreatingQuotation = false;
+
+                        //  Alert creation success
+                        self.$Message.success('Quotation created sucessfully!');
+
+                        //  Notify parent of changes
+                        self.$emit('quotationCreated', data);
+
+                    })         
+                    .catch(response => { 
+                        //  Stop loader
+                        self.isCreatingQuotation = false;
+
+                        console.log('quotationSummaryWidget.vue - Error creating quotation...');
                         console.log(response);
                     });
             }
@@ -708,6 +861,9 @@
 
             //  Get the currencies
             this.fetchCurrencies();
+
+            //  Store the original quotation details
+            this.storeOriginalQuotation();
         }
     };
   

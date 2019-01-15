@@ -15,6 +15,7 @@ Relation::morphMap([
     'priority' => 'App\Priority',
     'costcenter' => 'App\CostCenter',
     'document' => 'App\Document',
+    'quotation' => 'App\Quotation',
 ]);
 
 class RecentActivity extends Model

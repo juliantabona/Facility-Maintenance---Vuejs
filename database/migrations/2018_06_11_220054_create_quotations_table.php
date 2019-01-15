@@ -14,8 +14,8 @@ class CreateQuotationsTable extends Migration
         Schema::create('quotations', function (Blueprint $table) {
             $table->increments('id');
             $table->text('details');
-            $table->unsignedInteger('trackable_id');
-            $table->string('trackable_type');
+            $table->unsignedInteger('trackable_id')->nullable();
+            $table->string('trackable_type')->nullable();
             $table->unsignedInteger('company_branch_id');
             $table->unsignedInteger('company_id');
             $table->timestamps();

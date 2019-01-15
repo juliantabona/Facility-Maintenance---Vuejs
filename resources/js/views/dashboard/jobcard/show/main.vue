@@ -44,62 +44,21 @@
               </TabPane>
               <TabPane :label="AccountLabel">
                 <Row :gutter="20" class="m-2">
-                  
-                    <Col span="24">
-
-                      <Alert show-icon closable>
-
-                          <Icon type="ios-bulb-outline" slot="icon"></Icon>
-                          Manage Payments
-                          <template slot="desc">
-                            Create, update and send quotations, invoices and receipts linked to this jobcard. Every payment has its own lifecycle from 
-                            quotation to invoice to receipt. You can have more than one Payment Lifecycle e.g) You can have Payment 1 as a lifecycle 
-                            for the initial deposit payment, and Payment 2 as a lifecycle for final payment. Watch <a href="#">Short Video</a>.
-                          </template>
-                      </Alert>
-                    </Col>
                 
                     <Col span="24">
 
                       <Card class="box-card form-section mb-2">
-                          <div slot="extra">
-                              <div class="section-toolbox float-right d-block">
-                                  <Poptip
-                                      confirm
-                                      title="Are you sure you want to delete this payment?"
-                                      ok-text="Yes"
-                                      cancel-text="No"
-                                      @on-ok="$emit('removePaymentStream')">
-                                      <Icon type="ios-trash-outline" class="mr-2" size="20"/>
-                                  </Poptip>
-                              </div>
-                          </div>
 
-                          <Steps :current="1" class="mt-2 mb-4">
-                              <Step title="Quotation" content="Create and update jobcard quotation and generate invoices"></Step>
-                              <Step title="Invoice" content="Update jobcard invoice and generate receipts"></Step>
-                              <Step title="Receipt" content="Download, print or send receipts to your client"></Step>
-                          </Steps>
+                            <quotationCardListWidget 
+                                :quotations="jobcard.quotations"
+                                modelType="jobcard" :modelId="jobcard.id"
 
-                          <Tabs type="card">
-                            <Button size="small" slot="extra">+ Add Invoice 2</Button>
-                            <TabPane label="Invoice 1">
+                                :showMenuBtn="true" :showMenuEditBtn="true" :showMenuTrashBtn="true" :showMenuAddClientBtn="true"
+                                :showMenuAddSupplierBtn="true" :showMenuAddLabourBtn="true" :showMenuAddAssetBtn="true"
+                                :showDescriptionSection="true" :showStatusSection="true" :showPublishSection="true" 
+                                :showResourceSection="true" :showActionToolbalSection="true">
 
-                              <div class="mb-2">
-                                  Tab Title:
-                                  <Input value="Invoice 1" placeholder="Enter tab title..." style="width: auto" />
-                              </div>
-
-                              <quotationCardListWidget 
-                                  :quotations="jobcard.quotations"
-                                  :showMenuBtn="true" :showMenuEditBtn="true" :showMenuTrashBtn="true" :showMenuAddClientBtn="true"
-                                  :showMenuAddSupplierBtn="true" :showMenuAddLabourBtn="true" :showMenuAddAssetBtn="true"
-                                  :showDescriptionSection="true" :showStatusSection="true" :showPublishSection="true" 
-                                  :showResourceSection="true" :showActionToolbalSection="true">
-
-                              </quotationCardListWidget>
-                            </TabPane>
-                          </Tabs>
+                            </quotationCardListWidget>
 
                       </Card>  
 
