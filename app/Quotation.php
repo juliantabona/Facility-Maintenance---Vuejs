@@ -20,8 +20,18 @@ class Quotation extends Model
      * @var string
      */
     protected $casts = [
-        'details' => 'array',
+        'status' => 'array',
+        'currency_type' => 'array',
+        'calculated_taxes' => 'array',
+        'customized_company_details' => 'array',
+        'customized_client_details' => 'array',
+        'table_columns' => 'array',
+        'items' => 'array',
+        'notes' => 'array',
+        'colors' => 'array',
     ];
+
+    protected $dates = ['created_date_value', 'expiry_date_value'];
 
     /**
      * The attributes that are mass assignable.
@@ -29,7 +39,24 @@ class Quotation extends Model
      * @var array
      */
     protected $fillable = [
-        'details', 'company_branch_id', 'company_id', 'trackable_type', 'trackable_id',
+        'status', 'heading', 'reference_no_title', 'reference_no_value', 'created_date_title', 'created_date_value',
+        'expiry_date_title', 'expiry_date_value', 'sub_total_title', 'sub_total_value', 'grand_total_title', 'grand_total_value',
+        'currency_type', 'calculated_taxes', 'quote_to_title', 'customized_company_details', 'customized_client_details', 'client_id',
+        'table_columns', 'items', 'notes', 'colors', 'footer', 'trackable_id', 'trackable_type', 'company_branch_id', 'company_id',
+    ];
+
+    protected $allowedFilters = [
+        'id', 'reference_no_value', 'grand_total_value', 'created_date_value', 'expiry_date_value', 'created_at',
+
+        //  Nested within JSON
+        //  'notes > details',
+
+        // Nested within relationhip
+        'client.id', 'client.name', 'client.city', 'client.state_or_region', 'client.address', 'client.industry', 'client.type', 'client.website_link', 'client.phone_ext', 'client.phone_num', 'client.email', 'client.created_at',
+    ];
+
+    protected $orderable = [
+        'id', 'reference_no_value', 'grand_total_value', 'created_date_value', 'expiry_date_value', 'created_at',
     ];
 
     /**
@@ -40,9 +67,19 @@ class Quotation extends Model
         return $this->morphTo();
     }
 
+    public function invoices()
+    {
+        return $this->hasMany('App\Invoice', 'quotation_id');
+    }
+
     public function recentActivities()
     {
         return $this->morphMany('App\RecentActivity', 'trackable')
                     ->orderBy('created_at', 'desc');
+    }
+
+    public function client()
+    {
+        return $this->belongsTo('App\Company', 'client_id');
     }
 }

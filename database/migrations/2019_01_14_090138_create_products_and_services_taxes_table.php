@@ -13,8 +13,8 @@ class CreateProductsAndServicesTaxesTable extends Migration
     {
         Schema::create('products_and_services_taxes', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('product_service_id')->unsigned();
-            $table->integer('tax_id')->unsigned();
+            $table->unsignedInteger('product_service_id');
+            $table->unsignedInteger('tax_id');
             $table->timestamps();
         });
     }

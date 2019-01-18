@@ -98,7 +98,6 @@
                                     },
                                     on: {
                                         click: () => {
-                                            console.log(params);
                                             this.$router.push({ name: 'show-jobcard', params: { id: params.row.id } });
                                         }
                                     }

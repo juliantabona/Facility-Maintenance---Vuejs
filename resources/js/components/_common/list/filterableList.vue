@@ -4,7 +4,7 @@
         
         <!-- Insert the card title as follows -->
         <slot name="card-title">
-            <template slot="heading"></template>
+            <strong>Quotations</strong>
         </slot>
 
         <!-- Get the collection data and loading state, then render the filterable table -->

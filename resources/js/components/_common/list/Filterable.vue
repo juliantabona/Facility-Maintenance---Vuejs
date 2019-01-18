@@ -74,15 +74,18 @@
 
                                     </Select>
                                 </div>
-                                <span>Customers match</span>
-                                <Select size="small"
-                                        style="width:60px"
-                                        v-model="query.filter_match"
-                                        placeholder="Select Method">
-                                    <Option value="and">All</Option>
-                                    <Option value="or">Any</Option>
-                                </Select>
-                                <span>of the following:</span>
+                                <br>
+                                <div class="mt-3">
+                                    <span>Customers match</span>
+                                    <Select size="small"
+                                            style="width:60px"
+                                            v-model="query.filter_match"
+                                            placeholder="Select Method">
+                                        <Option value="and">All</Option>
+                                        <Option value="or">Any</Option>
+                                    </Select>
+                                    <span>of the following:</span>
+                                </div>
                             </div>
                         </div>
                         <div class="panel-body">

@@ -16,8 +16,8 @@ class CreateTaxesTable extends Migration
             $table->string('name')->nullable();
             $table->string('abbreviation')->nullable();
             $table->float('rate')->nullable();
-            $table->integer('company_branch_id')->unsigned();
-            $table->integer('company_id')->unsigned();
+            $table->unsignedInteger('company_branch_id');
+            $table->unsignedInteger('company_id');
             $table->softDeletes();
             $table->timestamps();
         });

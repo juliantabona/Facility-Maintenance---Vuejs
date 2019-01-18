@@ -6,9 +6,14 @@ class CustomQueryBuilder
 {
     public function apply($query, $data)
     {
+        //  Check if we have a filter applied
         if (isset($data['f'])) {
+            //  Foreach filter
             foreach ($data['f'] as $filter) {
+                //  Check if the filter match (and/or) is set. If not then default to "and"
                 $filter['match'] = isset($filter['filter_match']) ? $ $filter['filter_match'] : 'and';
+
+                //  Lets filter the query
                 $this->makeFilter($query, $filter);
             }
         }
@@ -18,30 +23,50 @@ class CustomQueryBuilder
 
     protected function makeFilter($query, $filter)
     {
-        // find the type of column
+        // Determine if this is a column or a nested relation with a column e.g)
+        //  E.g scenerio 1: name
+        //  E.g scenerio 2: company.name
 
         if (strpos($filter['column'], '.') !== false) {
             // nested column
 
+            //  Get both the relation and column
+            //  Store the relation into $relation
+            //  And the column into $filter['column']
+
             list($relation, $filter['column']) = explode('.', $filter['column']);
+
+            //  Set the filter match to "and"
             $filter['match'] = 'and';
 
+            //  If the filter column is equal to "count"
             if ($filter['column'] == 'count') {
+                //  The camel_case function converts the given string to camelCase
+                //  E.g) camel_case('foo_bar') will produce "fooBar"
+                //  E.g) Expected Output: $this.equalTo($filter, $query, $relation)
+
                 $this->{camel_case($filter['operator'])}($filter, $query, $relation);
             } else {
                 $query->whereHas($relation, function ($q) use ($filter) {
                     $this->{camel_case($filter['operator'])}($filter, $q);
                 });
             }
+        } elseif (strpos($filter['column'], '>') !== false) {
+            //  Support for JSON Based filter
+            $filter['column'] = str_replace(' ', '', $filter['column']);
+            $filter['column'] = str_replace('>', '->', $filter['column']);
+
+            //  Perform filter
+            $this->{camel_case($filter['operator'])}($filter, $query);
         } else {
-            // normal column
+            //  Perform filter
             $this->{camel_case($filter['operator'])}($filter, $query);
         }
     }
 
     public function equalTo($filter, $query)
     {
-        return $query->where($filter['column'], '=', $filter['query_1'], $filter['match']);
+        return $query->where($filter['column'], $filter['query_1']);
     }
 
     public function notEqualTo($filter, $query)

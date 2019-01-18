@@ -14,11 +14,11 @@ class CreateRecentActivitiesTable extends Migration
         Schema::create('recent_activities', function (Blueprint $table) {
             $table->increments('id');
             $table->text('activity')->nullable();
-            $table->integer('trackable_id')->unsigned();
+            $table->unsignedInteger('trackable_id');
             $table->string('trackable_type');
-            $table->integer('created_by')->unsigned()->nullable();
-            $table->integer('company_branch_id')->unsigned();
-            $table->integer('company_id')->unsigned();
+            $table->unsignedInteger('created_by')->nullable();
+            $table->unsignedInteger('company_branch_id');
+            $table->unsignedInteger('company_id');
             $table->timestamps();
         });
     }

@@ -51,6 +51,16 @@ class CompanyBranch extends Model
         return $this->hasMany('App\ProductOrService');
     }
 
+    public function quotations()
+    {
+        return $this->hasMany('App\Quotation');
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany('App\Invoice');
+    }
+
     public function taxes()
     {
         return $this->hasMany('App\Tax');

@@ -459,8 +459,10 @@ class JobcardController extends Controller
             if (count($jobcard)) {
                 //  Eager load other relationships wanted if specified
                 if (request('connections')) {
-                    return $jobcard->load(oq_url_to_array(request('connections')));
+                    $jobcard->load(oq_url_to_array(request('connections')));
                 }
+
+                return $jobcard;
             }
         } catch (\Exception $e) {
             return oq_api_notify_error('Query Error', $e->getMessage(), 404);

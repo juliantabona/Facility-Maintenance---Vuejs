@@ -70,6 +70,30 @@
             </MenuItem>
           </router-link>
 
+          <Submenu name="4" style="color:#2d8cf0;">
+
+              <template slot="title">
+                  <Icon type="ios-copy-outline" :size="20"/>
+                  <span>Accounting</span>
+              </template>
+
+              <router-link :to="{ name:'create-quotation' }">
+                <MenuItem name="4-1">
+                    <Button type="primary" size="small">
+                        + Create Quotation
+                    </Button>
+                </MenuItem>
+              </router-link>
+
+              <router-link :to="{name:'quotations'}">
+                <MenuItem name="quotations">Quotations</MenuItem>
+              </router-link>
+
+              <router-link :to="{name:'invoices'}">
+                <MenuItem name="quotations">Invoices</MenuItem>
+              </router-link>
+
+          </Submenu>
           <router-link :to="{name:'suppliers'}">
             <MenuItem name="suppliers">
               <Icon type="ios-briefcase-outline" :size="20"/>
@@ -77,7 +101,7 @@
             </MenuItem>
           </router-link>
 
-          <Submenu name="5" style="color:#2d8cf0;">
+          <Submenu name="6" style="color:#2d8cf0;">
 
               <template slot="title">
                   <Icon type="ios-copy-outline" :size="20"/>
@@ -85,7 +109,7 @@
               </template>
 
               <router-link :to="{ name:'create-jobcard' }">
-                <MenuItem name="5-1">
+                <MenuItem name="6-1">
                     <Button type="primary" size="small">
                         + Create Jobcard
                     </Button>
@@ -102,7 +126,7 @@
 
           </Submenu>
 
-          <Submenu name="6" style="color:#2d8cf0;">
+          <Submenu name="7" style="color:#2d8cf0;">
 
               <template slot="title">
                   <Icon type="ios-filing-outline" :size="20"/>
@@ -110,7 +134,7 @@
               </template>
 
               <router-link to="/jobcard/create">
-                <MenuItem name="6-1">
+                <MenuItem name="7-1">
                     <Button type="primary" size="small">
                         + Create Template
                     </Button>
@@ -139,14 +163,13 @@
               <Icon type="ios-pie-outline" :size="20"/>
               <span>Reports</span>
             </MenuItem>
-          </router-link>
-
+          </router-link>10
           <MenuItem name="9-1">
             <Icon type="ios-help-buoy-outline" :size="20"/>
             <span>Support</span></el-menu-item>
           </MenuItem>
 
-          <MenuItem name="10-1">
+          <MenuItem name="11-1">
             <Icon type="ios-key-outline" :size="20"/>
             <span>Roles/Permissions</span>
           </MenuItem>

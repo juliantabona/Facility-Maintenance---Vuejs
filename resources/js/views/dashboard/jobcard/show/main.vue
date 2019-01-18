@@ -51,6 +51,7 @@
 
                             <quotationCardListWidget 
                                 :quotations="jobcard.quotations"
+                                :clientId="jobcard.client_id"
                                 modelType="jobcard" :modelId="jobcard.id"
 
                                 :showMenuBtn="true" :showMenuEditBtn="true" :showMenuTrashBtn="true" :showMenuAddClientBtn="true"

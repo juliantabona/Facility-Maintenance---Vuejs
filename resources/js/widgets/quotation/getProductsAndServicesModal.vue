@@ -82,6 +82,7 @@
             saveChanges(){
                 //  Format the products and services
                 var productsAndServices = this.productsAndServices.map(item => [{
+                        id: JSON.parse(item).id,
                         name: JSON.parse(item).name,
                         description: JSON.parse(item).description,
                         quantity: 1,

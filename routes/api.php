@@ -77,6 +77,7 @@ Route::get('companies', 'Api\CompanyController@index');
  *  we could be trying to retrieve the company using either its branch/company id.
  */
 Route::get('companies/{model_id}', 'Api\CompanyController@show');
+Route::get('companies/{company_id}/settings', 'Api\CompanyController@settings');
 
 /*   CATEGORY RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
@@ -96,8 +97,19 @@ Route::get('priorities', 'Api\PriorityController@index');
 /*   QUOTATION RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
 */
+Route::get('quotations', 'Api\QuotationController@index');
 Route::post('quotations', 'Api\QuotationController@store');
+Route::get('quotations/{quotation_id}', 'Api\QuotationController@show');
 Route::post('quotations/{quotation_id}', 'Api\QuotationController@update');
+Route::post('quotations/{quotation_id}/convert', 'Api\QuotationController@convertToInvoice');
+
+/*   INVOICE RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::get('invoices', 'Api\InvoiceController@index');
+Route::post('invoices', 'Api\InvoiceController@store');
+Route::get('invoices/{invoice_id}', 'Api\InvoiceController@show');
+Route::post('invoices/{invoice_id}', 'Api\InvoiceController@update');
 
 /*   PRODUCT/SERVICE RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete

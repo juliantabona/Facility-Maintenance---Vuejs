@@ -15,6 +15,8 @@
                 </template>
             </Alert>
             
+            <Loader v-if="isLoadingTemplate" :loading="isLoadingTemplate" type="text" :style="{ marginTop:'40px' }">Loading template...</Loader>
+
             <Tabs v-if="localQuotations.length" type="card">
                 <Button size="small" slot="extra">+ Add Quotation {{ localQuotations.length + 1 }}</Button>
                 <TabPane :label="'Quotation ' + localQuotations.length">
@@ -33,7 +35,7 @@
                 </TabPane>
             </Tabs>
 
-            <Card v-if="!localQuotations.length" :style="{ width:'320px', margin:'0 auto' }">
+            <Card v-if="!localQuotations.length && !isLoadingTemplate" :style="{ width:'320px', margin:'0 auto' }">
                 <div style="text-align:center">
                     <img class="mb-2" src="/images/assets/graphics/quotation-paper.jpg" :style="{ width:'100%' }">
                     <Button type="success" long @click="createQuotation()">CREATE QUOTATION</Button>
@@ -48,16 +50,21 @@
 
 <script>
 
+    import Loader from './../../components/_common/loader/Loader.vue';
     import quotationSummaryWidget from './quotationSummaryWidget.vue';
 
     export default {
         components: { 
-            quotationSummaryWidget
+            Loader, quotationSummaryWidget
         },
         props: {
             quotations: {
                 type: Array,
                 default: () => []
+            },
+            clientId:{
+                type: Number,
+                default: null
             },
             modelType:{
                 type: String,
@@ -74,8 +81,10 @@
         },
         data(){
             return {
+                user: auth.user,
                 newQuotation: false,
                 localQuotations: this.quotations,
+                isLoadingTemplate: false,
                 renderKey: 1,
             }
         },
@@ -88,176 +97,57 @@
         },
         methods: {
             createQuotation: function(){
+                this.newQuotation = true;
+                this.fetchTemplate();
+            },
+            fetchTemplate() {
+                const self = this;
+
+                //  Start loader
+                self.isLoadingTemplate = true;
+
+                console.log('Start getting company settings...');
+
+                //  Use the api call() function located in resources/js/api.js
+                api.call('get', '/api/companies/'+self.user.company_id+'/settings')
+                    .then(({data}) => {
+                        
+                        console.log(data);
+
+                        //  Stop loader
+                        self.isLoadingTemplate = false;
+
+                        //  Get currencies
+                        var template = (((data || {}).details || {}).quotationTemplate || {});
+
+                        if(template){
+                            self.localQuotations.push(template);
+                            self.populateTemplate();
+                        }
+                    })         
+                    .catch(response => { 
+
+                        //  Stop loader
+                        self.isLoadingTemplate = false;
+
+                        console.log('quotationCardListWidget.vue - Error getting company settings...');
+                        console.log(response);    
+                    });
+            },
+            populateTemplate(){
                 var date = new Date();
                 var dd = date.getDate();
-                var mm = date.getMonth();
+                var mm = date.getMonth() + 1;
                 var yy = date.getFullYear();
 
-                this.newQuotation = true;
-                this.localQuotations = [{
-                        heading: 'QUOTATION',
-                        footer: 'Terms & Conditions Apply',
-                        primaryColor: '#017BB8',
-                        secondaryColor: '#EEF4FF',
-                        refNumber: {
-                            name: 'Estimate Number',
-                            value: '86'
-                        },
-                        createdDate: {
-                            name: 'Estimate Date',
-                            value: yy+'-'+mm+'-'+dd
-                        },
-                        expiryDate: {
-                            name: 'Expires On',
-                            value: yy+'-'+mm+'-'+( dd + 7 ) 
-                        },
-                        subTotal: {
-                            name: 'Total',
-                            value: 5250
-                        },
-                        grandTotal: {
-                            name: 'Grand Total',
-                            value: 5880
-                        },
-                        calculatedTaxes: {
-                            '0': {
-                            id: 1,
-                            name: 'Value Added Tax',
-                            abbreviation: 'VAT',
-                            rate: 0.12,
-                            amount: 630
-                            }
-                        },
-                        currencyType: {
-                            country: 'Aruba',
-                            currency: {
-                            iso: {
-                                code: 'AWG',
-                                number: '533'
-                            },
-                            name: 'florin',
-                            symbol: 'ƒ'
-                            }
-                        },
-                        quoteTo: 'QUOTE TO',
-                        companyDetails: {
-                            name: 'Optimum Quality',
-                            email: 'info@optimumqbw.co.bw',
-                            phone: '+267 3993456',
-                            additionalFields: {
-                            '0': {
-                                value: 'P O Box 563 AAH Masa Center'
-                            },
-                            '1': {
-                                value: 'Gaborone, South-East'
-                            },
-                            '2': {
-                                value: 'Botswana'
-                            }
-                            }
-                        },
-                        clientDetails: {
-                            name: 'Leap Interiors',
-                            email: 'sales@leapinteriors.co.bw',
-                            phone: '+267 3908122',
-                            additionalFields: {
-                            '0': {
-                                value: 'Plot 4567, Finance Park'
-                            },
-                            '1': {
-                                value: 'Gaborone, South-East'
-                            },
-                            '2': {
-                                value: 'Botswana'
-                            }
-                            }
-                        },
-                        tableColumns: {
-                            '0': {
-                            name: 'Services',
-                            span: '4'
-                            },
-                            '1': {
-                            name: 'Quantity',
-                            span: '1'
-                            },
-                            '2': {
-                            name: 'Unit Price',
-                            span: '1'
-                            },
-                            '3': {
-                            name: 'Amount',
-                            span: '1'
-                            }
-                        },
-                        items: {
-                            '0': {
-                            name: 'Basic Website',
-                            description: 'Design and development of a basic website which includes a home page, about page, services page, contact page.',
-                            quantity: 1,
-                            unitPrice: 3500,
-                            totalPrice: 3500,
-                            taxes: {
-                                '0': {
-                                id: 1,
-                                name: 'Value Added Tax',
-                                abbreviation: 'VAT',
-                                rate: 0.12
-                                }
-                            }
-                            },
-                            '1': {
-                            name: 'Web Hosting',
-                            description: 'Hosting of website files, images, audio and videos',
-                            quantity: 1,
-                            unitPrice: 1250,
-                            totalPrice: 1250,
-                            taxes: {
-                                '0': {
-                                id: 1,
-                                name: 'Value Added Tax',
-                                abbreviation: 'VAT',
-                                rate: 0.12
-                                }
-                            }
-                            },
-                            '2': {
-                            name: 'Email Hosting',
-                            description: 'Provision, maintenance, security and hosting of emails',
-                            quantity: 1,
-                            unitPrice: 500,
-                            totalPrice: 500,
-                            taxes: {
-                                '0': {
-                                id: 1,
-                                name: 'Value Added Tax',
-                                abbreviation: 'VAT',
-                                rate: 0.12
-                                }
-                            }
-                            }
-                        },
-                        notes: {
-                            title: 'Payment Information',
-                            details: [
-                            {
-                                value: 'Bank Name: First National Bank'
-                            },
-                            {
-                                value: 'Account Name: Optimum Quality (PTY) LTD'
-                            },
-                            {
-                                value: 'Account Number: 62688415994'
-                            },
-                            {
-                                value: 'Branch: Gaborone Mall'
-                            },
-                            {
-                                value: 'Branch Code: 02828'
-                            }
-                            ]
-                        }
-                    }];
+                this.localQuotations[0].createdDate.value = yy+'-'+mm+'-'+dd;
+                this.localQuotations[0].expiryDate.value = yy+'-'+mm+'-'+( dd + 7 );
+                
+                this.fetchCompanyInfo();
+
+                this.fetchClientInfo();
+                
+
             },
             updateQuotations(newQuotation){
                 this.newQuotation = false;

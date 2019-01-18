@@ -66,10 +66,11 @@
                 <Col :span="8">
 
                   <!-- Sidebar Toggle Button -->
-                  <Icon @click.native="$emit('toggleCollapsed')" :class="rotateIcon" :style="{margin: '0 20px'}" type="md-menu" size="24"></Icon>
+                  <Icon @click.native="$emit('toggleCollapsed')" :class="rotateIcon" :style="{ margin: '0 20px' }" type="md-menu" size="24"></Icon>
 
                   <!-- Create Resources Button -->
                   <Dropdown trigger="click" class="float-right">
+                    
                     <Button type="primary">
                         + Create
                         <Icon type="ios-arrow-down"></Icon>
@@ -81,6 +82,7 @@
                         <DropdownItem divided>Asset</DropdownItem>
                         <DropdownItem><router-link :to="{ name:'create-jobcard' }">Jobcard</router-link></DropdownItem>
                     </DropdownMenu>
+
                 </Dropdown>
 
               </Col>
@@ -97,11 +99,11 @@
               </Col>
 
               <Col :span="8" style="padding-top: 12px;">
-
+                
                 <!-- Profile Image -->
                 <el-dropdown class="float-right mr-5" @command="handleProfileCommand">
                   <div class="profile-image">
-                    <img src="https://scontent.fgbe2-2.fna.fbcdn.net/v/t1.0-1/p160x160/27540018_1876784582363504_131854681115569669_n.jpg?_nc_cat=108&amp;_nc_ht=scontent.fgbe2-2.fna&amp;oh=942e649e1e7c64c89b2cf25adbe74ab9&amp;oe=5C3BEE16" alt="Profile Image">
+                    <img :src="user.avatar" alt="Profile Image">
                   </div>
 
                   <!-- Profile Options -->
@@ -145,6 +147,7 @@
     data() {
       return {
 
+        user:auth.user,
         createVal: '',
         
         searchQuery:'',
@@ -164,9 +167,8 @@
           }, {
             value: 'jobcard',
             label: 'Jobcard'
-          }
-
-        ],
+          },
+        ]
       }
     },
     computed: {

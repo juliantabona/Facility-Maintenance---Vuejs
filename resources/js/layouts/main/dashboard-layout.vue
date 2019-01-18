@@ -44,7 +44,7 @@
             <Layout :style="{marginTop: '75px', padding: '20px'}">
 
                 <!-- Dashboard content -->
-                <Content :style="{position: 'relative', minHeight: '2000px', background: '#fff'}">
+                <Content :style="{ position: 'relative', minHeight: '2000px' }">
                   
                   <!-- Put Profile, Jobcards, Staff e.t.c resource content here -->
                   <!-- Only authenticated users can access this content -->

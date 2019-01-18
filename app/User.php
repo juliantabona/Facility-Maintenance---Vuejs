@@ -41,7 +41,7 @@ class User extends Authenticatable
     protected $fillable = [
         'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 'address', 'phone_ext', 'phone_num', 'email',
         'additional_email', 'username', 'password', 'verifyToken', 'settings', 'tutorial_status',
-        'company_branch_id', 'position', 'country', 'city', 'accessibility',
+        'company_branch_id', 'company_id', 'position', 'country', 'city', 'accessibility',
     ];
 
     protected $allowedFilters = [

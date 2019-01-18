@@ -19,8 +19,8 @@ class CreateProductsAndServicesTable extends Migration
             $table->float('price')->nullable();
             $table->boolean('buy')->default(0);
             $table->boolean('sell')->default(0);
-            $table->integer('company_branch_id')->unsigned();
-            $table->integer('company_id')->unsigned();
+            $table->unsignedInteger('company_branch_id');
+            $table->unsignedInteger('company_id');
             $table->softDeletes();
             $table->timestamps();
         });

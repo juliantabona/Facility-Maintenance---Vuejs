@@ -106,15 +106,16 @@ class DownloadController extends Controller
 
         $quotation = Quotation::find($quotation_id);
 
-        $pdf = PDF::loadView('pdf.quotation', array('quotation' => $quotation->details));
+        //return view('pdf.quotation', ['quotation' => $quotation]);
+        $pdf = PDF::loadView('pdf.quotation', array('quotation' => $quotation));
 
         if ($preview) {
             return $pdf->stream('quotation.pdf');
         } else {
-            if (!empty($quotation->details['heading']) && !empty($quotation->details['refNumber']['value'])) {
+            if (!empty($quotation->details['heading']) && !empty($quotation['reference_no_value'])) {
                 $pdfName = $quotation->details['heading'].' - '.
-                           $quotation->details['refNumber']['value'].' - '.
-                           \Carbon\Carbon::parse($quotation['createdDate']['value'])->format('M d Y').
+                           $quotation->details['reference_no_value'].' - '.
+                           \Carbon\Carbon::parse($quotation['created_date_value'])->format('M d Y').
                            '.pdf';
             } else {
                 $pdfName = 'Quotation - '.$quotation->id.'.pdf';

@@ -216,6 +216,28 @@ class CompanyController extends Controller
         return oq_api_notify_no_resource();
     }
 
+    public function settings(Request $request, $company_id)
+    {
+        try {
+            //  Get the associated company
+            $company = Company::where('id', $company_id)->first();
+
+            //  If we have any company so far
+            if (count($company)) {
+                //  Get the company settings
+                $settings = $company->settings;
+
+                //  Action was executed successfully
+                return oq_api_notify($settings, 200);
+            }
+        } catch (\Exception $e) {
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+
+        //  No resource found
+        return oq_api_notify_no_resource();
+    }
+
     public function store(Request $request)
     {
     }

@@ -89,6 +89,24 @@ class Company extends Model
         return $this->hasMany('App\Tax');
     }
 
+    public function quotations()
+    {
+        return $this->hasMany('App\Quotation');
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany('App\Invoice');
+    }
+
+    /**
+     * Get the companies settings.
+     */
+    public function settings()
+    {
+        return $this->morphOne('App\Setting', 'trackable');
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////
     //                                                                              //
     //  EVERTHING BELOW THIS CAUTION IS NOT YET BEING USED BY THE SYSTEM            //

@@ -15,13 +15,14 @@
 
         <style type="text/css">
             
-            html,body {margin: 0px;padding: 0px; }
+            html,body {width:100%;height:100%;margin: 0px;padding: 0px; }
 
             body {margin-top: 20px;}
             body {font-family:Arial, Helvetica, sans-serif !important;}
             
-            #page_1 {position:relative; overflow: hidden;margin:0px;padding: 0px;border: none;width: 100%;}
-            #page_1 #id1_1 {border:none;margin: 0px 0px 0px 0px;padding: 0px;border:none;width: 100%;overflow: hidden;}
+            #page_1 {
+                
+            }
             
             /** Define the footer rules **/
             footer {
@@ -39,7 +40,7 @@
                 line-height: 30px;
             }
             
-            #page_1 #p1dimg1 {position:absolute;top:7px;left:0px;z-index:-1;width:100%;height:170px;}
+            #page_1 #p1dimg1 {position:absolute;top:5px;left:0px;z-index:-1;width:100%;height:170px;}
             #page_1 #p1dimg1 #p1img1 {width:150px;height:auto;}
             
             .ft0{font: 40px 'Arial';line-height: 45px;}
@@ -234,90 +235,106 @@
     <body>
 
         @php 
-            $primaryColor = $quotation['primaryColor'];
-            $secondaryColor = $quotation['secondaryColor'] 
+            $primaryColor = $quotation['colors'][0];
+            $secondaryColor = $quotation['colors'][1]; 
+            $company = $quotation['customized_company_details'];
+            $client = $quotation['customized_client_details'];
+            $currencySymbol = $quotation['currency_type']['currency']['symbol'];
+            $notes = $quotation['notes'];
+
+            
         @endphp
 
         <main id="page_1">
 
             <div id="p1dimg1">
-                    <img id="p1img1" class="mrl3" src="https://wave-prod-accounting.s3.amazonaws.com/uploads/invoices/business_logos/7cac2c58-4cc1-471b-a7ff-7055296fffbc.png">
+                <img id="p1img1" class="mrl3" src="https://wave-prod-accounting.s3.amazonaws.com/uploads/invoices/business_logos/7cac2c58-4cc1-471b-a7ff-7055296fffbc.png">
             </div>
 
             <div id="id1_1">
 
-                <div class="mrb2">
+                <div class="mrb2 mrr4">
                     <p class="ft0 p2" style="text-align:right;">{{ $quotation['heading'] }}</p>
-                    <p class="ft1 p2" style="text-align:right;">{{ $quotation['companyDetails']['name'] }}</p>
-                    <p class="ft2 p2">{{ $quotation['companyDetails']['email'] }}</p>
-                    <p class="ft2 p2">{{ $quotation['companyDetails']['phone'] }}</p>
+                    <p class="ft1 p2" style="text-align:right;">{{ $company['name'] }}</p>
+                    <p class="ft2 p2">{{ $company['email'] }}</p>
+                    <p class="ft2 p2">{{ $company['phone'] }}</p>
                     <br />
-                    @foreach($quotation['companyDetails']['additionalFields'] as $field)
-                        <p class="ft2 p2">{{ $field['value'] }}</p>
-                    @endforeach
+                    @if($company['additionalFields'])
+                        @foreach($company['additionalFields'] as $field)
+                            @if(isset($field['value']))
+                                <p class="ft2 p2">{{ $field['value'] }}</p>
+                            @endif
+                        @endforeach
+                    @endif
                 </div>
 
-                <table cellpadding="0" cellspacing="0" class="pdb0 pdt0 mrt0 mrb0 t0 brt">
+                <table cellpadding="0" cellspacing="0" class="pdb0 pdt0 mrt0 mrb0 t0 brt mrt2">
                     <tbody>
                         <tr>
 
                             <td colspan="8">
-                                <p class="ft18 p4 pdb1 mrt2">{{ $quotation['quoteTo'] }}:</p>
+                                <p class="ft18 p4 pdb1">{{ $quotation['quote_to_title'] }}:</p>
+                                <p class="p4 ft6 pdb1">{{ $client['name'] }}</p>
+                                <p class="p4 ft2">{{ $client['email'] }}</p>
+                                <p class="p4 ft2">{{ $client['phone'] }}</p>
+                                @if($client['additionalFields'])
+                                    @foreach($client['additionalFields'] as $field)
+                                        <p class="p4 ft2">{{ $field['value'] }}</p>
+                                    @endforeach
+                                @endif
                             </td>
 
                             <td colspan="3" class="tr0 td2">
-                                <p class="p6 ft1 pdl6">{{ $quotation['refNumber']['name'] }}:</p>
-                            </td>
+            
+                                <table cellpadding="0" cellspacing="0" class="mrt2">
+  
+                                    <tr>
+                                        <td class="tr0 td2">
+                                            <p class="p6 ft1 pdl6">{{ $quotation['reference_no_title'] }}:</p>
+                                        </td>
+            
+                                        <td class="tr0 td2">
+                                            <p class="p5 ft2 pdr4">{{ $quotation['reference_no_value'] }}</p>
+                                        </td>
+            
+                                    </tr>
+                
+                                        <tr>
+                
+                                            <td class="tr0 td2">
+                                                <p class="p6 ft1">{{ $quotation['created_date_title'] }}:</p>
+                                            </td>
+                
+                                            <td class="tr0 td2">
+                                                <p class="p5 ft2 pdr4">{{ Carbon\Carbon::parse($quotation['created_date_value'])->format('M d Y') }}</p>
+                                            </td>
+                
+                                        </tr>
+                
+                                        <tr>
+                                            <td class="tr0">
+                                                <p class="p6 ft1">{{ $quotation['expiry_date_title'] }}</p>
+                                            </td>
+                
+                                            <td class="tr0">
+                                                <p class="p5 ft2 pdr4">{{ Carbon\Carbon::parse($quotation['expiry_date_value'])->format('M d Y') }}</p>
+                                            </td>
+                
+                                        </tr>
+                
+                                        <tr>
+                                            <td class="td10 tr0">
+                                                <p class="ft1 p6 pd2">{{ $quotation['grand_total_title'] }}:</p>
+                                            </td>
+                
+                                            <td class="td10 td14">
+                                                <p class="ft1 p5 pd2">{{ $currencySymbol . number_format($quotation['grand_total_value'],2,",",".") }}</p>
+                                            </td>
+                
+                                        </tr>
 
-                            <td colspan="1" class="tr0 td2">
-                                <p class="p5 ft2 pdr4">{{ $quotation['refNumber']['value'] }}</p>
-                            </td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td colspan="8">
-                                <p class="p4 ft6 pdb1">{{ $quotation['clientDetails']['name'] }}</p>
-                            </td>
-
-                            <td colspan="3" class="tr0 td2">
-                                <p class="p6 ft1">{{ $quotation['createdDate']['name'] }}:</p>
-                            </td>
-
-                            <td colspan="1" class="tr0 td2">
-                                <p class="p5 ft2 pdr4">{{ Carbon\Carbon::parse($quotation['createdDate']['value'])->format('M d Y') }}</p>
-                            </td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td colspan="8" rowspan="4" class="tr4 td0">
-                                <p class="p4 ft2">{{ $quotation['clientDetails']['email'] }}</p>
-                                <p class="p4 ft2">{{ $quotation['clientDetails']['phone'] }}</p>
-                                @foreach($quotation['clientDetails']['additionalFields'] as $field)
-                                    <p class="p4 ft2">{{ $field['value'] }}</p>
-                                @endforeach
-                            </td>
-
-                            <td colspan="3" class="tr0">
-                                <p class="p6 ft1">{{ $quotation['expiryDate']['name'] }}</p>
-                            </td>
-
-                            <td colspan="1" class="tr0">
-                                <p class="p5 ft2 pdr4">{{ Carbon\Carbon::parse($quotation['expiryDate']['value'])->format('M d Y') }}</p>
-                            </td>
-
-                        </tr>
-
-                        <tr>
-                            <td colspan="3" class="td10 tr0">
-                                <p class="ft1 p6 pd2">{{ $quotation['grandTotal']['name'] }}:</p>
-                            </td>
-
-                            <td colspan="1" class="td10 td14">
-                                <p class="ft1 p5 pd2">{{ $quotation['currencyType']['currency']['symbol'] . number_format($quotation['grandTotal']['value'],2,",",".") }}</p>
+                                </table>
+                                
                             </td>
 
                         </tr>
@@ -331,77 +348,79 @@
 
                         <tr style="background-color:{{ $primaryColor }} !important;">
                             <td colspan="7" class="pdb1 pdt1 td16">
-                                <p class="ft12 pdl4">{{ $quotation['tableColumns'][0]['name'] }}</p>
+                                <p class="ft12 pdl4">{{ $quotation['table_columns'][0]['name'] }}</p>
                             </td>
 
                             <td colspan="1" class="pdb1 pdt1 td17">
-                                <p class="ft12">{{ $quotation['tableColumns'][1]['name'] }}</p>
+                                <p class="ft12">{{ $quotation['table_columns'][1]['name'] }}</p>
                             </td>
 
                             <td colspan="1" class="pdb1 pdt1 td19">
-                                <p class="ft12">{{ $quotation['tableColumns'][2]['name'] }}</p>
+                                <p class="ft12">{{ $quotation['table_columns'][2]['name'] }}</p>
                             </td>
 
                             <td colspan="1" class="pdb1 pdt1 td21">
-                                <p class="ft12">{{ $quotation['tableColumns'][3]['name'] }}</p>
+                                <p class="ft12 pdr6">{{ $quotation['table_columns'][3]['name'] }}</p>
                             </td>
                         </tr>
-                        @foreach($quotation['items'] as $key => $item)
-                            <tr style="background-color:{{ ( ($key + 1) % 2 ) ? $secondaryColor . ' !important': '' }} ;">
-                                <td colspan="7" style="word-wrap: break-word" class="pdt1">
-                                    <p class="ft1 p4 mrt1" style="line-height:16px;">{{ $item['name'] }}</p>
-                                </td>
+                        @if($quotation['items'])
+                            @foreach($quotation['items'] as $key => $item)
+                                <tr style="background-color:{{ ( ($key + 1) % 2 ) ? $secondaryColor . ' !important': '' }} ;">
+                                    <td colspan="7" style="word-wrap: break-word" class="pdt1">
+                                        <p class="ft1 p4 mrt1" style="line-height:16px;">{{ $item['name'] }}</p>
+                                    </td>
 
-                                <td colspan="1" class="pdt1">
-                                    <p class="ft2 p11 mrt1" style="line-height:16px;margin-top: 0px;margin-bottom: 0px;text-align:center;">{{ $item['quantity'] }}</p>
-                                </td>
+                                    <td rowspan="2" colspan="1" class="pdt1">
+                                        <p class="ft2 p11 mrt1" style="line-height:16px;margin-top: 0px;margin-bottom: 0px;text-align:center;">{{ $item['quantity'] }}</p>
+                                    </td>
 
-                                <td colspan="1" class="pdt1">
-                                    <p class="ft2 mrt1" style="line-height:16px;margin-top: 0px;margin-bottom: 0px;">{{ number_format($item['unitPrice'],2,",",".") }}</p>
-                                </td>
+                                    <td rowspan="2" colspan="1" class="pdt1">
+                                        <p class="ft2 mrt1" style="line-height:16px;margin-top: 0px;margin-bottom: 0px;">{{ number_format($item['unitPrice'],2,",",".") }}</p>
+                                    </td>
 
-                                <td colspan="1" class="pdt1">
-                                    <p class="ft2 mrt1" style="line-height:16px;margin-top: 0px;margin-bottom: 0px;">{{ number_format($item['totalPrice'],2,",",".") }}</p>
-                                </td>
-                            </tr>
+                                    <td rowspan="2" colspan="1" class="pdt1">
+                                        <p class="ft2 mrt1" style="line-height:16px;margin-top: 0px;margin-bottom: 0px;">{{ number_format($item['totalPrice'],2,",",".") }}</p>
+                                    </td>
+                                </tr>
 
-                            <tr style="background-color:{{ ( ($key + 1) % 2 ) ? $secondaryColor . ' !important': '' }} ;">
-                                <td colspan="7" class="td30 tr0 pdb1">
-                                    <p class="ft14 p14" style="line-height:16px;">{{ $item['description'] }}</p>
-                                </td>
-
-                                <td colspan="3" class="td30 tr0 pdb1"></td>
-                            </tr>
-                        @endforeach
+                                <tr style="background-color:{{ ( ($key + 1) % 2 ) ? $secondaryColor . ' !important': '' }} ;">
+                                    <td colspan="7" class="td30 tr0 pdb1">
+                                        <p class="ft14 p14" style="line-height:16px;">{{ $item['description'] }}</p>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @endif
 
                     </tbody>
                 </table>
 
-                <table cellpadding="0" cellspacing="0" class="pdb0 pdt0 mrt0 mrb0 t0">
+                <table cellpadding="0" cellspacing="0" class="pdb0 pdt0 mrt0 mrb0 t0 pdr4">
                     <tbody>
 
                         <tr>
                             <td colspan="5" class="tr12 td31"></td>
                             <td colspan="4" class="tr12 td31">
-                                <p class="ft1 p11 pdr3" style="text-align:right;">{{ $quotation['subTotal']['name'] }}:</p>
+                                <p class="ft1 p11 pdr3" style="text-align:right;">{{ $quotation['sub_total_title'] }}:</p>
                             </td>
 
                             <td colspan="1" class="tr12 td24">
-                                <p class="p10 ft2">{{ $quotation['currencyType']['currency']['symbol'] . number_format($quotation['subTotal']['value'],2,",",".") }}</p>
+                                <p class="p10 ft2 pdr4">{{ $currencySymbol . number_format($quotation['sub_total_value'],2,",",".") }}</p>
                             </td>
                         </tr>
-                        @foreach($quotation['calculatedTaxes'] as $tax)
-                            <tr>
-                                <td colspan="5" class="tr12 td31"></td>
-                                <td colspan="4" class="tr2 td31">
-                                    <p class="ft2 p10 pdr3">{{ $tax['name'] . '(' .$tax['rate']*100 .'%)' }}:</p>
-                                </td>
+                        @if($quotation['calculated_taxes'])
+                            @foreach($quotation['calculated_taxes'] as $tax)
+                                <tr>
+                                    <td colspan="5" class="tr12 td31"></td>
+                                    <td colspan="4" class="tr2 td31">
+                                        <p class="ft2 p10 pdr3">{{ $tax['name'] . '(' .$tax['rate']*100 .'%)' }}:</p>
+                                    </td>
 
-                                <td colspan="1" class="tr2 td24">
-                                    <p class="p10 ft2">{{ $quotation['currencyType']['currency']['symbol'] . number_format($tax['amount'],2,",",".") }}</p>
-                                </td>
-                            </tr>
-                        @endforeach
+                                    <td colspan="1" class="tr2 td24">
+                                        <p class="p10 ft2 pdr4">{{ $currencySymbol . number_format($tax['amount'],2,",",".") }}</p>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @endif
 
                         <tr>
                             <td colspan="5" class="tr12 td31"></td>
@@ -412,31 +431,24 @@
                         <tr>
                             <td colspan="5" class="tr12 td31"></td>
                             <td colspan="4" class="brt brb2">
-                                <p class="ft1 p11 pdr3">{{ $quotation['grandTotal']['name'] }}:</p>
+                                <p class="ft1 p11 pdr3">{{ $quotation['grand_total_title'] }}:</p>
                             </td>
 
                             <td colspan="1" class="brt brb2">
-                                <p class="p10 ft1">{{ $quotation['currencyType']['currency']['symbol'] . number_format($quotation['grandTotal']['value'],2,",",".") }}</p>
+                                <p class="p10 ft1 pdr4">{{ $currencySymbol . number_format($quotation['grand_total_value'],2,",",".") }}</p>
                             </td>
                         </tr>
 
                     </tbody>
                 </table>
 
-                <table cellpadding="0" cellspacing="0" class="pdb0 pdt0 mrt0 mrb0 t0">
+                <table cellpadding="0" cellspacing="0" class="pdb0 pdt0 mrt0 mrb0 t0" style="width:100%;">
                     <tbody>
 
                         <tr>
-                            <td class="tr16 td0">
-                                <p class="ft1 ft18 p4 pdb2">{{ $quotation['notes']['title'] }}</p>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td colspan="8" class="tr17 td0">
-                                @foreach($quotation['notes']['details'] as $detail)
-                                    <p class="p4 ft2">{{ $detail['value'] }}</p>
-                                @endforeach
+                            <td>
+                                <p class="ft1 ft18 p4 pdb2 pdr4">{{ $notes['title'] }}</p>
+                                <div class="p4 ft2 pdr6" style="white-space: normal;">{!! $notes['details'] !!}</div>
                             </td>
                         </tr>
                     </tbody>
@@ -445,7 +457,7 @@
             </div>
 
         </main>
-
+        
         <footer style="background-color:{{ $primaryColor }} !important;">
             <p style="margin-top:2px;">{{ $quotation['footer'] }}</p>
         </footer>

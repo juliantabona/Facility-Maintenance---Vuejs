@@ -39,6 +39,32 @@ let routes = [
         props: true
     },
     {
+        //  Quotations
+        path: '/quotations', name: 'quotations',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/quotation/list/main.vue')
+    },
+    {
+        //  Show one quotation
+        path: '/quotations/:id', name: 'show-quotation',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/quotation/show/main.vue'),
+        props: true
+    },
+    {
+        //  Invoices
+        path: '/invoices', name: 'invoices',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/invoice/list/main.vue')
+    },
+    {
+        //  Show one invoice
+        path: '/invoices/:id', name: 'show-invoice',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/invoice/show/main.vue'),
+        props: true
+    },
+    {
         //  Suppliers
         path: '/suppliers', name: 'suppliers',
         meta: { layout: 'Dashboard', middlewareAuth: true },
