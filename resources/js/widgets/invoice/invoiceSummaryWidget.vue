@@ -395,7 +395,7 @@
                 </Col>
                 
                 <Col v-if="isLoadingCompanyInfo" span="12" class="pr-4">
-                    <Loader v-if="isLoadingCompanyInfo" :loading="isLoadingCompanyInfo" type="text" :style="{ marginTop:'40px' }">Loading Company Details...</Loader>
+                    <Loader v-if="isLoadingCompanyInfo" :loading="isLoadingCompanyInfo" type="text" class="float-right text-right" :style="{ marginTop:'40px' }">Loading Company Details...</Loader>
                 </Col>
 
                 <Col v-if="company" span="12" class="pr-4">
@@ -481,7 +481,7 @@
                         </Alert>
                     </div>
 
-                    <companySelector v-if="editMode" :style="{maxWidth: '150px'}" class="mt-2"
+                    <companySelector v-if="editMode" :style="{maxWidth: '250px'}" class="mt-2"
                         @updated="updateClientChanges($event)">
                     </companySelector>
 
@@ -504,18 +504,21 @@
 
                         </Col>
                         <Col span="8">
-                            <p v-if="!editMode" class="text-dark">{{ localInvoice.reference_no_value || '___' }}</p>
-                            <el-input v-if="editMode" placeholder="e.g) 001" v-model="localInvoice.reference_no_value" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }"></el-input>
+                            <p v-if="!editMode && !createMode" class="text-dark">{{ localInvoice.reference_no_value || '___' }}</p>
+                            <el-input v-if="editMode && !createMode" placeholder="e.g) 001" v-model="localInvoice.reference_no_value" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }"></el-input>
+
+                            <p v-if="!editMode && createMode" class="text-dark">{{ localInvoice.reference_no_value ? 'Auto Generated' : '___' }}</p>
+                            <el-input v-if="editMode && createMode" :disabled="true" placeholder="Auto Generated" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }"></el-input>
 
                             <p v-if="!editMode" class="text-dark">{{ localInvoice.created_date_value | moment('MMM DD YYYY') || '___' }}</p>
                             <!-- Edit Created date -->
-                            <el-date-picker v-if="editMode" v-model="localInvoice.created_date_value" type="datetime" placeholder="e.g) January 1, 2018" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }"
+                            <el-date-picker v-if="editMode" v-model="localInvoice.created_date_value" type="date" placeholder="e.g) January 1, 2018" size="mini" class="mb-2" :style="{ maxWidth:'135px', float:'right' }"
                                 format="MMM dd yyyy" value-format="yyyy-MM-dd">
                             </el-date-picker>
 
                             <p v-if="!editMode" class="text-dark">{{ localInvoice.expiry_date_value | moment('MMM DD YYYY') || '___' }}</p>
                             <!-- Edit Created date -->
-                            <el-date-picker v-if="editMode" v-model="localInvoice.expiry_date_value" type="datetime" placeholder="e.g) January 7, 2018" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }"
+                            <el-date-picker v-if="editMode" v-model="localInvoice.expiry_date_value" type="date" placeholder="e.g) January 7, 2018" size="mini" class="mb-2" :style="{ maxWidth:'135px', float:'right' }"
                                 format="MMM dd yyyy" value-format="yyyy-MM-dd">
                             </el-date-picker>
 
@@ -527,50 +530,53 @@
             </Row>
 
             <Row>
+                
                 <Col span="24">
                     <div v-if="editMode">
 
                         <div class="float-right mr-2">
-                            <el-color-picker class="float-right" v-model="secondaryColor"></el-color-picker>
+                            <ColorPicker v-model="secondaryColor" @on-change="updateSecondaryColor" class="float-right" recommend alpha />
                             <span class="float-right d-inline-block font-weight-bold mr-2 mt-2">Secondary Color:</span>
                         </div>
                         
                         <div class="float-right mr-2">
-                            <el-color-picker class="float-right" v-model="primaryColor"></el-color-picker>
+                            <ColorPicker v-model="primaryColor" @on-change="updatePrimaryColor" class="float-right" okText="Ok" format="hex" recommend alpha />
                             <span class="float-right d-inline-block font-weight-bold mr-2 mt-2">Primary Color:</span>
                         </div>
-
                         <div class="float-right mr-3">
                             <Loader v-if="isLoadingCurrencies" :loading="isLoadingCurrencies" type="text" :style="{ marginTop:'40px' }">Loading currencies...</Loader>
                             
-                            <currencySelector v-if="!isLoadingCurrencies && fetchedCurrencies.length" class="float-right" :style="{maxWidth: '150px'}"
-                                :fetchedCurrencies="fetchedCurrencies" :selectedCurrency="localInvoice.currency_type"
-                                @updated="updateCurrencyChanges($event)">
-                            </currencySelector>
-                            <span v-if="!isLoadingCurrencies && fetchedCurrencies.length" class="float-right d-inline-block font-weight-bold mr-2 mt-2">Currency:</span>
+                            <div v-if="fetchedCurrencies.length">
+                                <currencySelector class="float-right" :style="{maxWidth: '150px'}"
+                                    :fetchedCurrencies="fetchedCurrencies" :selectedCurrency="localInvoice.currency_type"
+                                    @updated="updateCurrencyChanges($event)">
+                                </currencySelector>
+                                <span class="float-right d-inline-block font-weight-bold mr-2 mt-2">Currency:</span>
+                            </div>
                         </div>
 
                     </div>
                 </Col>
                 <Col span="24">
+                
                     <table  class="table table-hover mt-3 mb-0 w-100">
                         <thead :style="'background-color:'+primaryColor+';'">
                             <tr>
                                 <th colspan="4" class="p-2" style="color: #FFFFFF;">
                                     <span v-if="!editMode">{{ (tableColumns[0] || {}).name || '___' }}</span>
-                                    <el-input v-if="editMode" placeholder="e.g) Service/Product" v-model="tableColumns[0].name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                    <el-input v-if="editMode" placeholder="e.g) Service/Product" v-model="(tableColumns[0] || {}).name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                 </th>
                                 <th colspan="1" class="p-2" style="color: #FFFFFF;">
                                     <span v-if="!editMode">{{ (tableColumns[1] || {}).name || '___' }}</span>
-                                    <el-input v-if="editMode" placeholder="e.g) Quantity" v-model="tableColumns[1].name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                    <el-input v-if="editMode" placeholder="e.g) Quantity" v-model="(tableColumns[1] || {}).name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                 </th>
                                 <th colspan="1" class="p-2" style="color: #FFFFFF;">
                                     <span v-if="!editMode">{{ (tableColumns[2] || {}).name || '___' }}</span>
-                                    <el-input v-if="editMode" placeholder="e.g) Price" v-model="tableColumns[2].name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                    <el-input v-if="editMode" placeholder="e.g) Price" v-model="(tableColumns[2] || {}).name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                 </th>
                                 <th colspan="1" class="p-2" style="color: #FFFFFF;">
                                     <span v-if="!editMode">{{ (tableColumns[3] || {}).name || '___' }}</span>
-                                    <el-input v-if="editMode" placeholder="e.g) Amount" v-model="tableColumns[3].name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                    <el-input v-if="editMode" placeholder="e.g) Amount" v-model="(tableColumns[3] || {}).name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                 </th>
                                 <th v-if="editMode" class="p-2" style="color: #FFFFFF;">
                                     <span class="d-block mb-2">Tax</span>
@@ -630,7 +636,7 @@
                                   </Poptip>
                                 </td>
                             </tr>
-                            <tr v-if="!items.length">
+                            <tr v-if="!(items || {}).length">
                                 <td colspan="9" class="p-2">
                                     <Alert show-icon>
                                         No items added
@@ -673,25 +679,27 @@
                 <Col span="12" offset="12" class="pr-4">
                     <Row :gutter="20">
                         <Col :span="editMode ? '16':'20'">
-                            <p v-if="!editMode" class="text-dark text-right float-right w-100 mb-2"><strong>{{ localInvoice.sub_total_title ? (localInvoice.sub_total_title | currency(currencySymbol) + ':' ): '___' }}</strong></p>
+                            <p v-if="!editMode" class="text-dark text-right float-right w-100 mb-2"><strong>{{ localInvoice.sub_total_title | currency(currencySymbol) }} {{ localInvoice.sub_total_title ? localInvoice.sub_total_title + ':'  : '___' }}</strong></p>
                             <el-input v-if="editMode" placeholder="e.g) Total" v-model="localInvoice.sub_total_title" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
 
-                            <p v-if="!editMode" v-for="(calculatedTax , i) in localInvoice.calculated_taxes" :key="i" class="text-dark text-right float-right w-100">
-                                {{ calculatedTax.name }} ({{ calculatedTax.rate*100 }}%):
-                            </p>
-                            <el-input v-if="editMode" v-for="(calculatedTax , i) in localInvoice.calculated_taxes" :key="i" placeholder="e.g) VAT (12%)" :value="calculatedTax.name + ' (' + calculatedTax.rate*100 + '%)'" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
-                            
+                            <div v-if="(localInvoice.calculated_taxes || {}).length">
+                                <p v-if="!editMode" v-for="(calculatedTax , i) in localInvoice.calculated_taxes" :key="i" class="text-dark text-right float-right w-100">
+                                    {{ calculatedTax.name }} ({{ calculatedTax.rate*100 }}%):
+                                </p>
+                                <el-input v-if="editMode" v-for="(calculatedTax , i) in localInvoice.calculated_taxes" :key="i" placeholder="e.g) VAT (12%)" :value="calculatedTax.name + ' (' + calculatedTax.rate*100 + '%)'" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
+                            </div>
                         </Col>
                         <Col :span="editMode ? '8':'4'">
 
-                            <p v-if="!editMode" class="text-right float-right w-100 mb-2">{{ localInvoice.sub_total_value | currency(currencySymbol) }} {{ localInvoice.sub_total_value ? ':' : '___' }}</p>
+                            <p v-if="!editMode" class="text-right float-right w-100 mb-2">{{ localInvoice.sub_total_value | currency(currencySymbol) || '___' }}</p>
                             <el-input v-if="editMode" :placeholder="'e.g) '+currencySymbol+'5,000.00'" :value="localInvoice.sub_total_value | currency(currencySymbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
 
-                            <p v-if="!editMode" v-for="(calculatedTax , i) in localInvoice.calculated_taxes" :key="i" class="text-right float-right w-100">
-                                {{ calculatedTax.amount | currency(currencySymbol) || '___' }}
-                            </p>
-                            <el-input v-if="editMode" v-for="(calculatedTax , i) in localInvoice.calculated_taxes" :key="i" placeholder="e.g) 1,500.00" :value="calculatedTax.amount | currency(currencySymbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
-
+                            <div v-if="(localInvoice.calculated_taxes || {}).length">
+                                <p v-if="!editMode" v-for="(calculatedTax , i) in localInvoice.calculated_taxes" :key="i" class="text-right float-right w-100">
+                                    {{ calculatedTax.amount | currency(currencySymbol) || '___' }}
+                                </p>
+                                <el-input v-if="editMode" v-for="(calculatedTax , i) in localInvoice.calculated_taxes" :key="i" placeholder="e.g) 1,500.00" :value="calculatedTax.amount | currency(currencySymbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
+                            </div>
                         </Col>
                         
                     </Row>
@@ -700,13 +708,13 @@
 
                         <Col :span="editMode ? '16':'20'">
                         
-                            <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ localInvoice.grand_total_title ? localInvoice.grand_total_title+':' : '___' }}</strong></p>
+                            <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ localInvoice.grand_total_title | currency(currencySymbol) }} {{ localInvoice.grand_total_title ? localInvoice.grand_total_title + ':'  : '___' }}</strong></p>
                             <el-input v-if="editMode" placeholder="e.g) Grand Total" v-model="localInvoice.grand_total_title" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
 
                         </Col>
                         <Col :span="editMode ? '8':'4'">
 
-                            <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ localInvoice.grand_total_value | currency(currencySymbol) }} {{ localInvoice.grand_total_value ? ':' : '___' }}</strong></p>
+                            <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ localInvoice.grand_total_value | currency(currencySymbol) }}</strong></p>
                             <el-input v-if="editMode" :placeholder="'e.g) '+currencySymbol+'5,000.00'" :value="localInvoice.grand_total_value | currency(currencySymbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
                         
                         </Col>
@@ -779,7 +787,36 @@
         props: {
             invoice: {
                 type: Object,
-                default: () => {}
+                default: function () { 
+                    return {
+                        status: '',
+                        heading: '',
+                        invoice_to_title: '',
+                        reference_no_title: '',
+                        reference_no_value: '',
+                        created_date_title: '',
+                        created_date_value: '',
+                        expiry_date_title: '',
+                        expiry_date_value: '',
+                        sub_total_title: '',
+                        sub_total_value: 0,
+                        grand_total_title: '',
+                        grand_total_value: 0,
+                        currency_type: null,
+                        customized_company_details: null,
+                        customized_client_details: null,
+                        client_id: null,
+                        calculated_taxes: [],
+                        table_columns: [],
+                        items: [],
+                        notes: {
+                            title: '',
+                            details: ''
+                        },
+                        colors: [],
+                        footer: ''
+                    }
+                }
             },
             clientId:{
                 type: Number,
@@ -806,9 +843,11 @@
             return {
                 user: auth.user,
 
+                //  Modes
                 editMode: false,
                 createMode: this.create,
 
+                //  Loading States
                 isSavingInvoice: false,
                 isCreatingInvoice: false,
                 isLoadingClientInfo: false,
@@ -816,22 +855,27 @@
                 isConvertingToInvoice: false,
                 isLoadingTaxes: false,
                 isOpenProductsAndServicesModal: false,
+
+                //  Resources
                 fetchedTaxes: [],
                 fetchedCurrencies: [],
+
+                //  Local Invoice and state changes
                 localInvoice: (this.invoice || {}),
                 _localInvoiceBeforeChange: {},
                 invoiceHasChanged: false,
-                tableColumns: ((this.invoice || {}).table_columns || {}),
-                items: ((this.invoice || {}).items || {}),
-                footerNotes: ((this.invoice || {}).notes || {}),
-                //  The company details
-                company: ((this.invoice || {}).customized_company_details || null),
-                //  The client details
-                client: ((this.invoice || {}).customized_client_details || null),
-                currencySymbol: (((this.invoice || {}).currency_type || {}).currency || {}).symbol,
-                primaryColor: ((this.invoice || {}).colors || {})[0],
-                secondaryColor: ((this.invoice || {}).colors || {})[1],
+
+                //  Invoice Shorthands
+                primaryColor: (this.invoice.colors || {})[0],
+                secondaryColor: (this.invoice.colors || {})[1],
+                company: this.invoice.customized_company_details,
+                client: this.invoice.customized_client_details,
+                currencySymbol: ((this.invoice.currency_type || {}).currency || {}).symbol,
+                tableColumns: this.invoice.table_columns,
+                items: this.invoice.items,
+                footerNotes: this.invoice.notes,
                 
+                //  Summernote Configuration
                 summernoteConfig: {
                     height: 100,
                     toolbar: [
@@ -840,8 +884,7 @@
                         ['font', ['strikethrough', 'superscript', 'subscript']],
                         ['fontsize', ['fontsize']],
                         ['color', ['color']],
-                        ['para', ['ul', 'ol', 'paragraph']],
-                        ['insert', ['gxcode']], // plugin config: summernote-ext-codewrapper
+                        ['para', ['ul', 'ol', 'paragraph']]
                     ],
                 },
             }
@@ -856,8 +899,30 @@
             }
         },
         methods: {
+            updatePrimaryColor(newColor){
+                
+                /*  We need to use the Vue.set(object, key, value) instead of  this.localInvoice.colors[0] = newColor, 
+                 *  simply because the value of "this.localInvoice.colors" will change but the changes will not be
+                 *  realized by vue since we change a nested and non-reactive property, unless we set that 
+                 *  non-reactive property as a v-model proprty e.g) <Tag v-model="localInvoice.colors[0]"> 
+                 *  which would also work. However in this case we will use this.$set() 
+                 */ 
+                console.log('New Primary Color: ' + newColor);
+                this.$set(this.localInvoice.colors, 0, newColor);
+            },
+            updateSecondaryColor(newColor){
+                
+                /*  We need to use the Vue.set(object, key, value) instead of  this.localInvoice.colors[0] = newColor, 
+                 *  simply because the value of "this.localInvoice.colors" will change but the changes will not be
+                 *  realized by vue since we change a nested and non-reactive property, unless we set that 
+                 *  non-reactive property as a v-model proprty e.g) <Tag v-model="localInvoice.colors[0]"> 
+                 *  which would also work. However in this case we will use this.$set() 
+                 */ 
+                console.log('New Secondary Color: ' + newColor);
+                this.$set(this.localInvoice.colors, 1, newColor);
+            },
             fetchCompanyInfo() {
-                if(!this.company){
+                if(!this.company && this.user.company_id){
                     const self = this;
 
                     //  Start loader
@@ -876,7 +941,7 @@
 
                             if(data){
                                 //  Format the company details
-                                self.company = self.formatCompanyDetails(data);
+                                self.company = self.localInvoice.customized_company_details = self.formatCompanyDetails(data);
                             }
 
                         })         
@@ -910,7 +975,7 @@
                             
                             if(data){
                                 //  Format the company details
-                                self.client = self.formatCompanyDetails(data);
+                                self.client = self.localInvoice.customized_client_details = self.formatCompanyDetails(data);
                             }
                         })         
                         .catch(response => { 
@@ -946,50 +1011,80 @@
                 this.fetchInvoiceTemplate();
             },
             fetchInvoiceTemplate() {
-                const self = this;
+                if(this.user.company_id){
+                    const self = this;
 
-                //  Start loader
-                self.isLoadingInvoiceTemplate = true;
+                    //  Start loader
+                    self.isLoadingInvoiceTemplate = true;
 
-                console.log('Start getting invoice template from company settings...');
+                    console.log('Start getting invoice template from company settings...');
 
-                //  Use the api call() function located in resources/js/api.js
-                api.call('get', '/api/companies/'+self.user.company_id+'/settings')
-                    .then(({data}) => {
-                        
-                        console.log(data);
+                    //  Use the api call() function located in resources/js/api.js
+                    api.call('get', '/api/companies/'+self.user.company_id+'/settings')
+                        .then(({data}) => {
+                            
+                            console.log(data);
 
-                        //  Stop loader
-                        self.isLoadingInvoiceTemplate = false;
+                            //  Stop loader
+                            self.isLoadingInvoiceTemplate = false;
 
-                        //  Get currencies
-                        var template = (((data || {}).details || {}).invoiceTemplate || {});
+                            //  Get currencies
+                            var template = (((data || {}).details || {}).invoiceTemplate || null);
 
-                        if(template){
-                            self.localInvoice = template;
-                            console.log('Updaing the local invoice with template');
-                            console.log(self.localInvoice);
-                            self.populateInvoiceTemplate();
-                        }
-                    })         
-                    .catch(response => { 
+                            if(template){
+                                //  Activate edit mode
+                                self.editMode = true;
+                                console.log('Updaing the local invoice with template');
+                                console.log(self.localInvoice);
+                                self.populateInvoiceTemplate(template);
+                            }
+                        })         
+                        .catch(response => { 
 
-                        //  Stop loader
-                        self.isLoadingInvoiceTemplate = false;
+                            //  Stop loader
+                            self.isLoadingInvoiceTemplate = false;
 
-                        console.log('invoiceSummaryWidget.vue - Error getting invoice template from company settings...');
-                        console.log(response);    
-                    });
+                            console.log('invoiceSummaryWidget.vue - Error getting invoice template from company settings...');
+                            console.log(response);    
+                        });
+                }
             },
-            populateInvoiceTemplate(){
+            populateInvoiceTemplate(template){
                 console.log('Populating invoice template with deault settings');
                 var date = new Date();
-                var dd = date.getDate();
-                var mm = date.getMonth() + 1;
+                var dd = ('0' + date.getDate()).slice(-2);
+                var mm = ('0' + (date.getMonth() + 1)).slice(-2);
                 var yy = date.getFullYear();
+                
+                //  Update Invoice Object Using Template Data
 
+                this.localInvoice.status = template.status;
+                this.localInvoice.heading = template.heading;
+                this.localInvoice.reference_no_title = template.reference_no_title;
+                this.localInvoice.created_date_title = template.created_date_title;
+                this.localInvoice.expiry_date_title = template.expiry_date_title;
+                this.localInvoice.sub_total_title = template.sub_total_title;
+                this.localInvoice.grand_total_title = template.grand_total_title;
+                this.localInvoice.currency_type = template.currency_type;
+                this.localInvoice.invoice_to_title = template.invoice_to_title;
+                this.localInvoice.table_columns = template.table_columns;
+                this.localInvoice.items = template.items;
+                this.localInvoice.notes = template.notes;
+                this.localInvoice.colors = template.colors;
+                this.localInvoice.footer = template.footer;
+
+                //  Update Invoice Dates Using Current Dates
+                
                 this.localInvoice.created_date_value = yy+'-'+mm+'-'+dd;
-                this.localInvoice.expiry_date_value = yy+'-'+mm+'-'+( dd + 7 );
+                this.localInvoice.expiry_date_value = yy+'-'+mm+'-'+('0' + (date.getDate() + 7) ).slice(-2);
+
+                //  Update Invoice Shorthands
+
+                this.primaryColor = this.localInvoice.colors[0];
+                this.secondaryColor = this.localInvoice.colors[1],
+                this.currencySymbol = this.localInvoice.currency_type.currency.symbol;
+                this.tableColumns = this.localInvoice.table_columns;
+                this.footerNotes = this.localInvoice.notes = template.notes;
                 
                 this.fetchCompanyInfo();
 
@@ -1074,6 +1169,9 @@
                         console.log('New fetched currencies');
 
                         console.log(self.fetchedCurrencies);
+
+                        console.log('self.isLoadingCurrencies: ' + self.isLoadingCurrencies);
+                        console.log('self.fetchedCurrencies.length: ' + self.fetchedCurrencies.length);
                     })         
                     .catch(response => { 
 
@@ -1174,11 +1272,15 @@
 
             },
             addProductOrService(productsOrServices){
-                var result;
+                
+                console.log('Adding new products/services to table');
+                console.log(productsOrServices);
                 
                 for(var x = 0; x < productsOrServices.length; x++){
-                   result = this.localInvoice.items.push(productsOrServices[x]);
+                    this.localInvoice.items.push(productsOrServices[x]);
                 }
+
+                this.items = this.localInvoice.items;
 
                 //  Re-calculate the taxes
                 this.localInvoice.calculated_taxes = this.runCalculateTaxes();
@@ -1272,9 +1374,11 @@
                 let invoiceData = { invoice: self.localInvoice };
 
                 console.log(invoiceData);
+
+                var associatedModel = (this.modelType && this.modelId) ? '?model='+this.modelType+'&modelId='+this.modelId: '';
                 
                 //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/invoices?model='+this.modelType+'&modelId='+this.modelId, invoiceData)
+                api.call('post', '/api/invoices'+associatedModel, invoiceData)
                     .then(({ data }) => {
 
                         //  Stop loader
@@ -1293,6 +1397,9 @@
 
                         //  Notify parent of changes
                         self.$emit('invoiceCreated', data);
+
+                        //  Go to invoice
+                        self.$router.push({ name: 'show-invoice', params: { id: data.id } });
 
                     })         
                     .catch(response => { 

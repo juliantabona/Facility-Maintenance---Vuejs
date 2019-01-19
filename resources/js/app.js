@@ -88,8 +88,9 @@ window.Event = new Vue;
 //  Import & Use iView UI Toolkit
 import iView from 'iview';
 import 'iview/dist/styles/iview.css';
+import iViewlocale from 'iview/dist/locale/en-US';
 
-Vue.use(iView);
+Vue.use(iView, {locale: iViewlocale});
 
 //  Import & Use Element UI Toolkit
 import ElementUI from 'element-ui';

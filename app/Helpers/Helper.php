@@ -182,7 +182,8 @@ function oq_stripos_all($haystack, $needle)
  *  @return true  for update success
  *  @return false for update failed
  */
-function oq_saveActivity($model, $type, $user, $customDetails = null)
+//function oq_saveActivity($model, $type, $user, $customDetails = null)
+function oq_saveActivity($model, $user, $customDetails = null)
 {
     if ($model != null) {
         $model_1 = is_array($model) ? $model[0] : $model;

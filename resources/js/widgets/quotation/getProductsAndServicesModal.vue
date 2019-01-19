@@ -8,7 +8,7 @@
 
             <Loader v-if="isLoading" :loading="isLoading" type="text" :style="{ marginTop:'40px' }">Loading...</Loader>
             
-            <Select v-if="!isLoading && fetchedProductsAndServices" v-model="productsAndServices" :style="{ width:'100%' }" placeholder="Select product/service" multiple not-found-text="No products/services found">
+            <Select v-if="!isLoading && fetchedProductsAndServices" v-model="productsAndServices" :style="{ width:'100%' }" placeholder="Select product/service" multiple filterable not-found-text="No products/services found">
                 <Option v-for="item in fetchedProductsAndServices" :value="JSON.stringify(item)" :key="item.id">{{ item.name }} ({{ item.type }}) - {{ item.price }}</Option>
             </Select>
             

@@ -29,6 +29,13 @@ class Api {
                         });
 
                     }
+
+                    if (response.status >= 500) {
+                        Event.$Notice.error({
+                            title: 'Server Error - 500',
+                            desc: response.data.message || 'Check your console for more information'
+                        });
+                      }
     
                     reject(response);
                 });

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use Validator;
 use App\Invoice;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -172,11 +171,25 @@ class InvoiceController extends Controller
 
     public function update(Request $request, $invoice_id)
     {
+        //  Current authenticated user
+        $user = auth('api')->user();
+
+        //  Query data
+        $model_Type = request('model');                      //  Associated model e.g) invoice
+        $modelId = request('modelId');                      //  The id of the associated model
         $invoice = request('invoice');
+
+        /*******************************************************
+         *   CHECK IF USER HAS PERMISSION TO CREATE INVOICE    *
+         ******************************************************/
+
+        /*********************************************
+         *   VALIDATE INVOICE INFORMATION            *
+         ********************************************/
 
         if (!empty($invoice)) {
             try {
-                //  Run query
+                //  Update the invoice
                 $invoice = Invoice::where('id', $invoice_id)->update([
                     'status' => $invoice['status'],
                     'heading' => $invoice['heading'],
@@ -195,23 +208,39 @@ class InvoiceController extends Controller
                     'invoice_to_title' => $invoice['invoice_to_title'],
                     'customized_company_details' => json_encode($invoice['customized_company_details'], JSON_FORCE_OBJECT),
                     'customized_client_details' => json_encode($invoice['customized_client_details'], JSON_FORCE_OBJECT),
-                    'client_id' => $invoice['client_id'],
+                    'client_id' => $invoice['customized_client_details']['id'],
                     'table_columns' => json_encode($invoice['table_columns'], JSON_FORCE_OBJECT),
                     'items' => json_encode($invoice['items'], JSON_FORCE_OBJECT),
                     'notes' => json_encode($invoice['notes'], JSON_FORCE_OBJECT),
                     'colors' => json_encode($invoice['colors'], JSON_FORCE_OBJECT),
                     'footer' => $invoice['footer'],
-                    'trackable_id' => $invoice['trackable_id'],
-                    'trackable_type' => $invoice['trackable_type'],
-                    'company_branch_id' => $invoice['company_branch_id'],
-                    'company_id' => $invoice['company_id'],
+                    'trackable_type' => $model_Type,
+                    'trackable_id' => $modelId,
+                    'company_branch_id' => $user->companyBranch->id,
+                    'company_id' => $user->companyBranch->company->id,
                 ]);
 
-                //  If the lifecycle was updated successfully
+                $status = 'updated';
+
+                //  If the invoice was created/updated successfully
                 if ($invoice) {
                     //  refetch the updated invoice
                     $invoice = Invoice::find($invoice_id);
 
+                    return $invoice;
+
+                    //  Record activity of a invoice created
+                    $invoiceCreatedActivity = oq_saveActivity($invoice, $user, ['type' => $status, 'data' => $invoice]);
+
+                    //  Record activity of a invoice authourized
+                    $invoiceAuthourizedActivity = oq_saveActivity($invoice, $user, ['type' => 'authourized', 'data' => $invoice]);
+                } else {
+                    //  Record activity of a failed invoice during creation
+                    $invoiceCreatedActivity = oq_saveActivity(null, $user, ['type' => 'fail', 'message' => 'invoice update failed']);
+                }
+
+                //  If the invoice was updated successfully
+                if ($invoice) {
                     //  Action was executed successfully
                     return oq_api_notify($invoice, 200);
                 }
@@ -232,33 +261,41 @@ class InvoiceController extends Controller
         //  Query data
         $model_Type = request('model');                      //  Associated model e.g) invoice
         $modelId = request('modelId');                      //  The id of the associated model
-        $newInvoiceDetails = request('details');
+        $invoice = request('invoice');
 
-        /*  Validate and Create the new invoice associated with the users company and branch
-         *  Update recent activities
-         *
-         */
+        /*******************************************************
+         *   CHECK IF USER HAS PERMISSION TO CREATE INVOICE    *
+         ******************************************************/
 
-        //  Get the rules for validating a invoice on creation
-        $rules = oq_invoice_create_v_rules();
-
-        //  Customized error messages for validating a invoice on creation
-        $messages = oq_invoice_create_v_msgs();
-
-        // Now pass the input and rules into the validator
-        $validator = Validator::make($request->all(), $rules, $messages);
-
-        // Check to see if validation fails or passes
-        if ($validator->fails()) {
-            //  Notify the user that validation failed
-            oq_notify('Couldn\'t update invoice, check your information!', 'danger');
-            //  Return back with errors and old inputs
-            return oq_api_notify_error('Failed validation', ['failed_validation' => true, 'validator' => $validator->errors()], 404);
-        }
+        /*********************************************
+         *   VALIDATE INVOICE INFORMATION            *
+         ********************************************/
 
         //  Create the invoice
         $invoice = \App\Invoice::create([
-            'details' => $newInvoiceDetails,
+            'status' => $invoice['status'],
+            'heading' => $invoice['heading'],
+            'reference_no_title' => $invoice['reference_no_title'],
+            'reference_no_value' => $invoice['reference_no_value'],
+            'created_date_title' => $invoice['created_date_title'],
+            'created_date_value' => $invoice['created_date_value'],
+            'expiry_date_title' => $invoice['expiry_date_title'],
+            'expiry_date_value' => $invoice['expiry_date_value'],
+            'sub_total_title' => $invoice['sub_total_title'],
+            'sub_total_value' => $invoice['sub_total_value'],
+            'grand_total_title' => $invoice['grand_total_title'],
+            'grand_total_value' => $invoice['grand_total_value'],
+            'currency_type' => $invoice['currency_type'],
+            'calculated_taxes' => $invoice['calculated_taxes'],
+            'invoice_to_title' => $invoice['invoice_to_title'],
+            'customized_company_details' => $invoice['customized_company_details'],
+            'customized_client_details' => $invoice['customized_client_details'],
+            'client_id' => $invoice['customized_client_details']['id'],
+            'table_columns' => $invoice['table_columns'],
+            'items' => $invoice['items'],
+            'notes' => $invoice['notes'],
+            'colors' => $invoice['colors'],
+            'footer' => $invoice['footer'],
             'trackable_type' => $model_Type,
             'trackable_id' => $modelId,
             'company_branch_id' => $user->companyBranch->id,
@@ -269,24 +306,21 @@ class InvoiceController extends Controller
 
         //  If the invoice was created/updated successfully
         if ($invoice) {
+            //  Update the reference no
+            $invoiceNumber = str_pad($invoice->id, 3, '0', STR_PAD_LEFT);
+            $invoice->update(['reference_no_value' => $invoiceNumber]);
+
             //  re-retrieve the instance to get all of the fields in the table.
             $invoice = $invoice->fresh();
 
             //  Record activity of a invoice created
-            $invoiceCreatedActivity = oq_saveActivity($invoice, $status, $user, ['type' => 'created']);
+            $invoiceCreatedActivity = oq_saveActivity($invoice, $user, ['type' => $status, 'data' => $invoice]);
 
             //  Record activity of a invoice authourized
-            $invoiceAuthourizedActivity = oq_saveActivity($invoice, $status, $user, ['type' => 'authourized']);
-
-            //  Notify the user that the invoice creation was successful
-            oq_notify('Invoice '.$status.' successfully!', 'success');
+            $invoiceAuthourizedActivity = oq_saveActivity($invoice, $user, ['type' => 'authourized', 'data' => $invoice]);
         } else {
             //  Record activity of a failed invoice during creation
-            $failType = ($status == 'created') ? 'create' : 'update';
-            $invoiceCreatedActivity = oq_saveActivity(null, 'invoice '.$failType.' failed', $user);
-
-            //  Notify the user that the invoice creation was unsuccessful
-            oq_notify('Something went wrong '.$status.' the invoice. Please try again', 'warning');
+            $invoiceCreatedActivity = oq_saveActivity(null, $user, ['type' => 'fail', 'message' => 'invoice creation failed']);
         }
 
         //  return created invoice
