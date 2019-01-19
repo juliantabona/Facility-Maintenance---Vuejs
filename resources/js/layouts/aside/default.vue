@@ -90,7 +90,7 @@
               </router-link>
 
               <router-link :to="{name:'invoices'}">
-                <MenuItem name="quotations">Invoices</MenuItem>
+                <MenuItem name="invoices">Invoices</MenuItem>
               </router-link>
 
           </Submenu>
@@ -121,7 +121,7 @@
               </router-link>
 
               <router-link :to="{name:'jobcards'}">
-                <MenuItem name="jobcards">Jobcard Settings</MenuItem>
+                <MenuItem name="jobcardSettings">Jobcard Settings</MenuItem>
               </router-link>
 
           </Submenu>

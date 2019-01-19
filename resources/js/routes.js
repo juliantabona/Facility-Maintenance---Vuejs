@@ -58,6 +58,13 @@ let routes = [
         component: require('./views/dashboard/invoice/list/main.vue')
     },
     {
+        //  Create invoice
+        path: '/invoices/create', name: 'create-invoice',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/invoice/create/main.vue'),
+        props: true
+    },
+    {
         //  Show one invoice
         path: '/invoices/:id', name: 'show-invoice',
         meta: { layout: 'Dashboard', middlewareAuth: true },

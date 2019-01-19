@@ -3,7 +3,7 @@
     <span v-if="invoice.expiry_date_value">
         <Poptip word-wrap width="200" trigger="hover" :content="status.description">
             <Tag :style="{ 
-                width: '70px',
+                maxWidth: '70px',
                 background: status.color + '10 !important',
                 border: '1px solid '+status.color + ' !important'}">
                 <span :style="{ color: status.color }">{{ status.text }}</span>

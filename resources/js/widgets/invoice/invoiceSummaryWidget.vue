@@ -1,11 +1,11 @@
 <style scoped>
 
-    .drop-to-left-edge{
-        position:relative !important;
-    }
-
-    .drop-to-left-edge >>> .ivu-select-dropdown{
-        left:-159px !important;
+    .menu-border{
+        border: 1px solid #2d8cf080;
+        border-radius: 50%;
+        padding: 2px 5px;
+        height: 25px;
+        display: inline-block;
     }
 
     .doubleUnderline{
@@ -118,7 +118,7 @@
     }
 
     .invoice-steps.invoice-hide-step{
-        margin-top: -115px;
+        margin-top: -116px;
     }
 
     .invoice-steps.is-highlighted:hover ~ .invoice-hide-step{
@@ -141,7 +141,7 @@
         align-items: center;
         justify-content: center;
         background: #fcfbe3;
-        margin: -27px -27px 15px !important;
+        margin: -17px -27px 15px !important;
         border-radius: 10px 10px 0 0;
         padding: 15px;
     }
@@ -171,6 +171,49 @@
 
 <template>
     <div id="invoice-widget">
+
+        <Row v-if="invoice" class="border-bottom ivu-row mb-3 pb-3">
+            <Col span="5">
+                <h2 class="text-dark">Invoice #32</h2>
+            </Col>
+            <Col span="3">
+                <h6 class="text-secondary">Status</h6>
+                <h5><statusTag :invoice="invoice"></statusTag></h5>   
+            </Col>
+            <Col span="6">
+                <h6 class="text-secondary">Customer</h6>
+                <h5><a href="#">Leap Interriors</a></h5>            
+            </Col>
+            <Col span="5">
+                <h6 class="text-secondary">Amount</h6>
+                <h5>P5,250.00</h5>            
+            </Col>
+            <Col span="4">
+                <h6 class="text-secondary">Due</h6>
+                <h5>4 days</h5>            
+            </Col>
+            <Col span="1">
+                <Dropdown class="menu-border" trigger="click" placement="bottom-end">
+                    <a href="javascript:void(0)">
+                        <Icon type="md-more" :size="16"></Icon>
+                    </a>
+                    <DropdownMenu slot="list" :style="{ width: '150px' }">
+                        <DropdownItem v-if="!editMode" @click.native="editMode = true">Edit</DropdownItem>
+                        <DropdownItem v-if="editMode" @click.native="editMode = false">View</DropdownItem>
+                        <hr>
+                        <DropdownItem @click.native="downloadPDF()">Export As PDF</DropdownItem>
+                        <DropdownItem>Get Share Link</DropdownItem>
+                        <DropdownItem>Print Invoice</DropdownItem>
+                        <hr>
+                        <DropdownItem>Make Recurring</DropdownItem>
+                        <DropdownItem>Duplicate</DropdownItem>
+                        <DropdownItem>Customize</DropdownItem>
+                        <hr>
+                        <DropdownItem>Delete</DropdownItem>
+                    </DropdownMenu>
+                </Dropdown>
+            </Col>
+        </Row>
         
         <div>
 
@@ -284,7 +327,7 @@
                     </DropdownMenu>
                 </Dropdown>
 
-                <Dropdown class="drop-to-left-edge" trigger="click">
+                <Dropdown class="menu-border" trigger="click" placement="bottom-end">
                     <a href="javascript:void(0)">
                         <Icon type="md-more" :size="16"></Icon>
                     </a>
@@ -304,7 +347,7 @@
                 <Col span="24" class="pr-4">
 
                     <!-- Create Button -->
-                    <Button v-if="newInvoice" 
+                    <Button v-if="createMode" 
                             class="float-right mb-2 ml-3" :style="{ position:'relative' }"
                             type="success" size="small" @click="createInvoice()">
                         <div class="circle-ripple"></div>
@@ -312,7 +355,7 @@
                     </Button>
 
                     <!-- Save Changes Button -->
-                    <Button v-if="!newInvoice && invoiceHasChanged" 
+                    <Button v-if="!createMode && invoiceHasChanged" 
                             class="float-right mb-2 ml-3" :style="{ position:'relative' }"
                             type="success" size="small" @click="saveInvoice()">
                         <div class="circle-ripple"></div>
@@ -354,6 +397,7 @@
                 <Col v-if="isLoadingCompanyInfo" span="12" class="pr-4">
                     <Loader v-if="isLoadingCompanyInfo" :loading="isLoadingCompanyInfo" type="text" :style="{ marginTop:'40px' }">Loading Company Details...</Loader>
                 </Col>
+
                 <Col v-if="company" span="12" class="pr-4">
 
                     <h1 v-if="!editMode" class="text-dark text-right" style="font-size: 35px;">{{ localInvoice.heading || '___' }}</h1>
@@ -386,13 +430,20 @@
                     </el-input>
 
                 </Col>
+
+                <Col v-if="!company && !isLoadingCompanyInfo" :span="12">
+                    <Alert :style="{maxWidth: '250px'}" type="warning">
+                        No company details
+                    </Alert>
+                </Col>
+
             </Row>
 
             <Divider dashed class="mt-3 mb-3" />
 
             <Row>
                 <Col span="12" class="pl-2">
-                    <h3 v-if="!editMode" class="text-dark mb-3">{{ localInvoice.invoice_to_title || '___' }}:</h3>
+                    <h3 v-if="!editMode" class="text-dark mb-3">{{ localInvoice.invoice_to_title ? localInvoice.invoice_to_title+':' : '' }}</h3>
                     <el-input v-if="editMode" placeholder="Invoice heading" v-model="localInvoice.invoice_to_title" size="large" class="mb-2" :style="{ maxWidth:'250px' }"></el-input>
                     
                     <div v-if="isLoadingClientInfo">
@@ -424,22 +475,31 @@
                             v-model="client.additionalFields[i].value">
                         </el-input>
                     </div>
+                    <div v-if="!client && !isLoadingClientInfo">
+                        <Alert :style="{maxWidth: '250px'}" type="warning">
+                            No client selected
+                        </Alert>
+                    </div>
+
+                    <companySelector v-if="editMode" :style="{maxWidth: '150px'}" class="mt-2"
+                        @updated="updateClientChanges($event)">
+                    </companySelector>
 
                 </Col>
                 
                 <Col span="12">
                     <Row :gutter="20">
                         <Col span="16">
-                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ localInvoice.reference_no_title || '___' }}:</strong></p>
+                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ localInvoice.reference_no_title ? localInvoice.reference_no_title+':' : '___' }}</strong></p>
                             <el-input v-if="editMode" placeholder="e.g) Reference number" v-model="localInvoice.reference_no_title" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
                             
-                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ localInvoice.created_date_title || '___' }}:</strong></p>
+                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ localInvoice.created_date_title ? localInvoice.created_date_title+':' : '___' }}</strong></p>
                             <el-input v-if="editMode" placeholder="e.g) Created Date" v-model="localInvoice.created_date_title" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
 
-                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ localInvoice.expiry_date_title || '___' }}:</strong></p>
+                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ localInvoice.expiry_date_title ? localInvoice.expiry_date_title+':' : '___' }}</strong></p>
                             <el-input v-if="editMode" placeholder="e.g) Expiry Date" v-model="localInvoice.expiry_date_title" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
 
-                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ localInvoice.grand_total_title || '___' }}:</strong></p>
+                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ localInvoice.grand_total_title ? localInvoice.grand_total_title+':' : '___' }}</strong></p>
                             <el-input v-if="editMode" placeholder="e.g) Grand Total" v-model="localInvoice.grand_total_title" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
 
                         </Col>
@@ -497,20 +557,20 @@
                         <thead :style="'background-color:'+primaryColor+';'">
                             <tr>
                                 <th colspan="4" class="p-2" style="color: #FFFFFF;">
-                                    <span v-if="!editMode">{{ localInvoice.table_columns[0].name || '___' }}</span>
-                                    <el-input v-if="editMode" placeholder="e.g) Service/Product" v-model="localInvoice.table_columns[0].name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                    <span v-if="!editMode">{{ (tableColumns[0] || {}).name || '___' }}</span>
+                                    <el-input v-if="editMode" placeholder="e.g) Service/Product" v-model="tableColumns[0].name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                 </th>
                                 <th colspan="1" class="p-2" style="color: #FFFFFF;">
-                                    <span v-if="!editMode">{{ localInvoice.table_columns[1].name || '___' }}</span>
-                                    <el-input v-if="editMode" placeholder="e.g) Quantity" v-model="localInvoice.table_columns[1].name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                    <span v-if="!editMode">{{ (tableColumns[1] || {}).name || '___' }}</span>
+                                    <el-input v-if="editMode" placeholder="e.g) Quantity" v-model="tableColumns[1].name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                 </th>
                                 <th colspan="1" class="p-2" style="color: #FFFFFF;">
-                                    <span v-if="!editMode">{{ localInvoice.table_columns[2].name || '___' }}</span>
-                                    <el-input v-if="editMode" placeholder="e.g) Price" v-model="localInvoice.table_columns[2].name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                    <span v-if="!editMode">{{ (tableColumns[2] || {}).name || '___' }}</span>
+                                    <el-input v-if="editMode" placeholder="e.g) Price" v-model="tableColumns[2].name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                 </th>
                                 <th colspan="1" class="p-2" style="color: #FFFFFF;">
-                                    <span v-if="!editMode">{{ localInvoice.table_columns[3].name || '___' }}</span>
-                                    <el-input v-if="editMode" placeholder="e.g) Amount" v-model="localInvoice.table_columns[3].name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                    <span v-if="!editMode">{{ (tableColumns[3] || {}).name || '___' }}</span>
+                                    <el-input v-if="editMode" placeholder="e.g) Amount" v-model="tableColumns[3].name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                 </th>
                                 <th v-if="editMode" class="p-2" style="color: #FFFFFF;">
                                     <span class="d-block mb-2">Tax</span>
@@ -519,42 +579,42 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-if="localInvoice.items.length" v-for="(item, i) in localInvoice.items" :key="i"  :style=" ( (i + 1) % 2 ) ? 'background-color:'+secondaryColor+';' : ''">
+                            <tr v-if="(items || {}).length" v-for="(item, i) in items" :key="i"  :style=" ( (i + 1) % 2 ) ? 'background-color:'+secondaryColor+';' : ''">
                                 <td colspan="4" class="p-2">
                                 
                                     <p v-if="!editMode" class="text-dark mr-5">
                                         <strong>{{ item.name || '___' }}</strong>
                                     </p>
-                                    <el-input v-if="editMode" :placeholder="'e.g) Item '+ (i+1)" v-model="localInvoice.items[i].name" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                    <el-input v-if="editMode" :placeholder="'e.g) Item '+ (i+1)" v-model="items[i].name" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                     
                                     <p v-if="!editMode" class="mr-5">
                                         <span v-if="!editMode">{{ item.description }}</span>
                                     </p>
-                                    <el-input v-if="editMode" placeholder="e.g) Item" v-model="localInvoice.items[i].description" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                    <el-input v-if="editMode" placeholder="e.g) Item" v-model="items[i].description" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                 
                                 </td>
                                 <td colspan="1" class="p-2">
                                     <span v-if="!editMode">{{ item.quantity || '___' }}</span>
                                     <el-input v-if="editMode" placeholder="e.g) 2" 
-                                              v-model="localInvoice.items[i].quantity" 
+                                              v-model="items[i].quantity" 
                                               @input.native="updateSubAndGrandTotal()"
                                               size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                 </td>
                                 <td colspan="1" class="p-2">
                                     <span v-if="!editMode">{{ item.unitPrice | currency(currencySymbol) || '___' }}</span>
                                     <el-input v-if="editMode" placeholder="e.g) 2,500.00" 
-                                              v-model="localInvoice.items[i].unitPrice" 
+                                              v-model="items[i].unitPrice" 
                                               @input.native="updateSubAndGrandTotal()"
                                               size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                 </td>
                                 <td colspan="1" class="p-2">
                                     <span v-if="!editMode">{{ item.totalPrice | currency(currencySymbol) || '___' }}</span>
-                                    <el-input v-if="editMode" placeholder="e.g) 5,000.00" :value="getItemTotal(localInvoice.items[i])" size="mini" class="p-1" :style="{ maxWidth:'100%' }" disabled></el-input>
+                                    <el-input v-if="editMode" placeholder="e.g) 5,000.00" :value="getItemTotal(items[i])" size="mini" class="p-1" :style="{ maxWidth:'100%' }" disabled></el-input>
                                 </td>
                                 <td v-if="editMode" class="p-2">
                                     <Loader v-if="isLoadingTaxes" :loading="isLoadingTaxes" type="text" :style="{ marginTop:'40px' }">Loading taxes...</Loader>
                                     <taxSelector v-if="!isLoadingTaxes && fetchedTaxes.length" 
-                                        :fetchedTaxes="fetchedTaxes" :selectedTaxes="localInvoice.items[i].taxes"
+                                        :fetchedTaxes="fetchedTaxes" :selectedTaxes="items[i].taxes"
                                         @updated="updateTaxChanges($event, i)">
                                     </taxSelector>
                                 </td>
@@ -570,7 +630,7 @@
                                   </Poptip>
                                 </td>
                             </tr>
-                            <tr v-if="!localInvoice.items.length">
+                            <tr v-if="!items.length">
                                 <td colspan="9" class="p-2">
                                     <Alert show-icon>
                                         No items added
@@ -613,7 +673,7 @@
                 <Col span="12" offset="12" class="pr-4">
                     <Row :gutter="20">
                         <Col :span="editMode ? '16':'20'">
-                            <p v-if="!editMode" class="text-dark text-right float-right w-100 mb-2"><strong>{{ localInvoice.sub_total_title || '___' }}:</strong></p>
+                            <p v-if="!editMode" class="text-dark text-right float-right w-100 mb-2"><strong>{{ localInvoice.sub_total_title ? (localInvoice.sub_total_title | currency(currencySymbol) + ':' ): '___' }}</strong></p>
                             <el-input v-if="editMode" placeholder="e.g) Total" v-model="localInvoice.sub_total_title" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
 
                             <p v-if="!editMode" v-for="(calculatedTax , i) in localInvoice.calculated_taxes" :key="i" class="text-dark text-right float-right w-100">
@@ -624,7 +684,7 @@
                         </Col>
                         <Col :span="editMode ? '8':'4'">
 
-                            <p v-if="!editMode" class="text-right float-right w-100 mb-2">{{ localInvoice.sub_total_value | currency(currencySymbol) || '___' }}</p>
+                            <p v-if="!editMode" class="text-right float-right w-100 mb-2">{{ localInvoice.sub_total_value | currency(currencySymbol) }} {{ localInvoice.sub_total_value ? ':' : '___' }}</p>
                             <el-input v-if="editMode" :placeholder="'e.g) '+currencySymbol+'5,000.00'" :value="localInvoice.sub_total_value | currency(currencySymbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
 
                             <p v-if="!editMode" v-for="(calculatedTax , i) in localInvoice.calculated_taxes" :key="i" class="text-right float-right w-100">
@@ -640,13 +700,13 @@
 
                         <Col :span="editMode ? '16':'20'">
                         
-                            <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ localInvoice.grand_total_title || '___' }}:</strong></p>
+                            <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ localInvoice.grand_total_title ? localInvoice.grand_total_title+':' : '___' }}</strong></p>
                             <el-input v-if="editMode" placeholder="e.g) Grand Total" v-model="localInvoice.grand_total_title" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
 
                         </Col>
                         <Col :span="editMode ? '8':'4'">
 
-                            <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ localInvoice.grand_total_value | currency(currencySymbol) || '___' }}</strong></p>
+                            <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ localInvoice.grand_total_value | currency(currencySymbol) }} {{ localInvoice.grand_total_value ? ':' : '___' }}</strong></p>
                             <el-input v-if="editMode" :placeholder="'e.g) '+currencySymbol+'5,000.00'" :value="localInvoice.grand_total_value | currency(currencySymbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
                         
                         </Col>
@@ -659,15 +719,15 @@
             <Row class="mb-5">
                 <Col span="24">
 
-                    <h3 v-if="!editMode" class="text-dark mb-2">{{ localInvoice.notes.title }}</h3>
-                    <el-input v-if="editMode" placeholder="E.g) Notes/Payment Information" v-model="localInvoice.notes.title" size="large" class="mb-2" :style="{ maxWidth:'400px' }"></el-input>
+                    <h3 v-if="!editMode" class="text-dark mb-2">{{ footerNotes.title }}</h3>
+                    <el-input v-if="editMode" placeholder="E.g) Notes/Payment Information" v-model="footerNotes.title" size="large" class="mb-2" :style="{ maxWidth:'400px' }"></el-input>
                     <br>
-                    <p v-if="!editMode" v-html="localInvoice.notes.details"></p>
+                    <p v-if="!editMode" v-html="footerNotes.details"></p>
                     <div v-if="editMode">
                         <Summernote
                             name="editor"
-                            :model="localInvoice.notes.details"
-                            v-on:change="value => { localInvoice.notes.details = value }"
+                            :model="footerNotes.details"
+                            v-on:change="value => { footerNotes.details = value }"
                             :config="summernoteConfig">
                         </Summernote>
                     </div>
@@ -704,19 +764,22 @@
     import imageUploader from './../quotation/imageUploader.vue';
     import currencySelector from './../quotation/currencySelector.vue';
     import taxSelector from './../quotation/taxSelector.vue';
-    import Summernote from './../quotation/Summernote.vue';    
+    import Summernote from './../quotation/Summernote.vue';
+    import statusTag from './statusTag.vue';   
+    import companySelector from './companySelector.vue';         
 
     import lodash from 'lodash';
     Event.prototype._ = lodash;
 
     export default {
         components: { 
-            Loader, getProductsAndServicesModal, imageUploader,currencySelector, taxSelector, Summernote
+            Loader, getProductsAndServicesModal, imageUploader,currencySelector, taxSelector, Summernote,
+            statusTag, companySelector
         },
         props: {
             invoice: {
                 type: Object,
-                default: null
+                default: () => {}
             },
             clientId:{
                 type: Number,
@@ -726,7 +789,7 @@
                 type: Boolean,
                 default: true
             },
-            newInvoice: {
+            create: {
                 type: Boolean,
                 default: false
             },
@@ -742,26 +805,32 @@
         data(){
             return {
                 user: auth.user,
+
+                editMode: false,
+                createMode: this.create,
+
                 isSavingInvoice: false,
                 isCreatingInvoice: false,
                 isLoadingClientInfo: false,
                 isLoadingCompanyInfo: false,
                 isConvertingToInvoice: false,
-                editMode: false,
                 isLoadingTaxes: false,
                 isOpenProductsAndServicesModal: false,
                 fetchedTaxes: [],
                 fetchedCurrencies: [],
-                localInvoice: this.invoice,
+                localInvoice: (this.invoice || {}),
                 _localInvoiceBeforeChange: {},
                 invoiceHasChanged: false,
+                tableColumns: ((this.invoice || {}).table_columns || {}),
+                items: ((this.invoice || {}).items || {}),
+                footerNotes: ((this.invoice || {}).notes || {}),
                 //  The company details
-                company: this.invoice.customized_company_details,
+                company: ((this.invoice || {}).customized_company_details || null),
                 //  The client details
-                client: this.invoice.customized_client_details,
-                currencySymbol: this.invoice.currency_type.currency.symbol,
-                primaryColor: this.invoice.colors[0],
-                secondaryColor: this.invoice.colors[1],
+                client: ((this.invoice || {}).customized_client_details || null),
+                currencySymbol: (((this.invoice || {}).currency_type || {}).currency || {}).symbol,
+                primaryColor: ((this.invoice || {}).colors || {})[0],
+                secondaryColor: ((this.invoice || {}).colors || {})[1],
                 
                 summernoteConfig: {
                     height: 100,
@@ -788,67 +857,71 @@
         },
         methods: {
             fetchCompanyInfo() {
-                const self = this;
+                if(!this.company){
+                    const self = this;
 
-                //  Start loader
-                self.isLoadingCompanyInfo = true;
+                    //  Start loader
+                    self.isLoadingCompanyInfo = true;
 
-                console.log('Start getting company details...');
+                    console.log('Start getting company details...');
 
-                //  Use the api call() function located in resources/js/api.js
-                api.call('get', '/api/companies/'+self.user.company_id+'?model=Company')
-                    .then(({data}) => {
-                        
-                        console.log(data);
+                    //  Use the api call() function located in resources/js/api.js
+                    api.call('get', '/api/companies/'+self.user.company_id+'?model=Company')
+                        .then(({data}) => {
+                            
+                            console.log(data);
 
-                        //  Stop loader
-                        self.isLoadingCompanyInfo = false;
+                            //  Stop loader
+                            self.isLoadingCompanyInfo = false;
 
-                        if(data){
-                            //  Format the company details
-                            self.company = self.formatCompanyDetails(data);
-                        }
+                            if(data){
+                                //  Format the company details
+                                self.company = self.formatCompanyDetails(data);
+                            }
 
-                    })         
-                    .catch(response => { 
+                        })         
+                        .catch(response => { 
 
-                        //  Stop loader
-                        self.isLoadingCompanyInfo = false;
+                            //  Stop loader
+                            self.isLoadingCompanyInfo = false;
 
-                        console.log('invoiceSummaryWidget.vue - Error getting company details...');
-                        console.log(response);    
-                    });
+                            console.log('invoiceSummaryWidget.vue - Error getting company details...');
+                            console.log(response);    
+                        });
+                }
             },
             fetchClientInfo() {
-                const self = this;
+                if(!this.client && this.clientId){
+                    const self = this;
 
-                //  Start loader
-                self.isLoadingClientInfo = true;
+                    //  Start loader
+                    self.isLoadingClientInfo = true;
 
-                console.log('Start getting client company details...');
+                    console.log('Start getting client company details...');
 
-                //  Use the api call() function located in resources/js/api.js
-                api.call('get', '/api/companies/'+this.clientId+'?model=Company')
-                    .then(({data}) => {
-                        
-                        console.log(data);
+                    //  Use the api call() function located in resources/js/api.js
+                    api.call('get', '/api/companies/'+this.clientId+'?model=Company')
+                        .then(({data}) => {
+                            
+                            console.log(data);
 
-                        //  Stop loader
-                        self.isLoadingClientInfo = false;
-                        
-                        if(data){
-                            //  Format the company details
-                            self.client = self.formatCompanyDetails(data);
-                        }
-                    })         
-                    .catch(response => { 
+                            //  Stop loader
+                            self.isLoadingClientInfo = false;
+                            
+                            if(data){
+                                //  Format the company details
+                                self.client = self.formatCompanyDetails(data);
+                            }
+                        })         
+                        .catch(response => { 
 
-                        //  Stop loader
-                        self.isLoadingClientInfo = false;
+                            //  Stop loader
+                            self.isLoadingClientInfo = false;
 
-                        console.log('invoiceSummaryWidget.vue - Error getting client company details...');
-                        console.log(response);    
-                    });
+                            console.log('invoiceSummaryWidget.vue - Error getting client company details...');
+                            console.log(response);    
+                        });
+                }
             },
             formatCompanyDetails(company){
                 var companyDetails = {
@@ -868,6 +941,59 @@
                 }
 
                 return companyDetails;
+            },
+            activateCreateMode: function(){
+                this.fetchInvoiceTemplate();
+            },
+            fetchInvoiceTemplate() {
+                const self = this;
+
+                //  Start loader
+                self.isLoadingInvoiceTemplate = true;
+
+                console.log('Start getting invoice template from company settings...');
+
+                //  Use the api call() function located in resources/js/api.js
+                api.call('get', '/api/companies/'+self.user.company_id+'/settings')
+                    .then(({data}) => {
+                        
+                        console.log(data);
+
+                        //  Stop loader
+                        self.isLoadingInvoiceTemplate = false;
+
+                        //  Get currencies
+                        var template = (((data || {}).details || {}).invoiceTemplate || {});
+
+                        if(template){
+                            self.localInvoice = template;
+                            console.log('Updaing the local invoice with template');
+                            console.log(self.localInvoice);
+                            self.populateInvoiceTemplate();
+                        }
+                    })         
+                    .catch(response => { 
+
+                        //  Stop loader
+                        self.isLoadingInvoiceTemplate = false;
+
+                        console.log('invoiceSummaryWidget.vue - Error getting invoice template from company settings...');
+                        console.log(response);    
+                    });
+            },
+            populateInvoiceTemplate(){
+                console.log('Populating invoice template with deault settings');
+                var date = new Date();
+                var dd = date.getDate();
+                var mm = date.getMonth() + 1;
+                var yy = date.getFullYear();
+
+                this.localInvoice.created_date_value = yy+'-'+mm+'-'+dd;
+                this.localInvoice.expiry_date_value = yy+'-'+mm+'-'+( dd + 7 );
+                
+                this.fetchCompanyInfo();
+
+                this.fetchClientInfo();
             },
             checkIfinvoiceHasChanged: function(updatedInvoice = null){
                 
@@ -969,6 +1095,13 @@
 
                 this.$Notice.success({
                     title: 'Currency changed to ' + newCurrency.country + ' (' + newCurrency.currency.iso.code + ')'
+                });
+            },
+            updateClientChanges(newClient){
+                this.client = this.localInvoice.customized_client_details = this.formatCompanyDetails(newClient);
+
+                this.$Notice.success({
+                    title: 'Client changed to ' + newClient.name
                 });
             },
             updateSubAndGrandTotal(){
@@ -1178,16 +1311,16 @@
             //  Get the currencies
             this.fetchCurrencies();
 
-            if(!this.company){
-                this.fetchCompanyInfo(); 
-            }
+            this.fetchCompanyInfo(); 
 
-            if(!this.client && this.clientId){
-                this.fetchClientInfo(); 
-            }
+            this.fetchClientInfo(); 
 
             //  Store the original invoice details
             this.storeOriginalInvoice();
+
+            if(this.createMode){
+                this.activateCreateMode();
+            }
         }
     };
   
