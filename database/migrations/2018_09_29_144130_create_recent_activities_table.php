@@ -13,6 +13,7 @@ class CreateRecentActivitiesTable extends Migration
     {
         Schema::create('recent_activities', function (Blueprint $table) {
             $table->increments('id');
+            $table->string('type')->nullable();
             $table->text('activity')->nullable();
             $table->unsignedInteger('trackable_id');
             $table->string('trackable_type');

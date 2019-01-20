@@ -16,6 +16,7 @@ Relation::morphMap([
     'costcenter' => 'App\CostCenter',
     'document' => 'App\Document',
     'quotation' => 'App\Quotation',
+    'invoice' => 'App\Invoice',
 ]);
 
 class RecentActivity extends Model
@@ -34,7 +35,7 @@ class RecentActivity extends Model
      * @var array
      */
     protected $fillable = [
-        'activity', 'company_branch_id', 'company_id', 'created_by',
+        'type', 'activity', 'company_branch_id', 'company_id', 'created_by',
     ];
 
     public function creator()

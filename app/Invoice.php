@@ -33,6 +33,8 @@ class Invoice extends Model
 
     protected $dates = ['created_date_value', 'expiry_date_value'];
 
+    protected $with = ['lastApprovedActivity', 'lastSentActivity'];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -78,8 +80,36 @@ class Invoice extends Model
                     ->orderBy('created_at', 'desc');
     }
 
+    public function approvedActivities()
+    {
+        return $this->recentActivities()->where('type', 'approved');
+    }
+
+    public function lastApprovedActivity()
+    {
+        return $this->approvedActivities()->limit(1);
+    }
+
+    public function sentActivities()
+    {
+        return $this->recentActivities()->where('type', 'sent');
+    }
+
+    public function lastSentActivity()
+    {
+        return $this->sentActivities()->limit(1);
+    }
+
     public function client()
     {
         return $this->belongsTo('App\Company', 'client_id');
+    }
+
+    /**
+     * Get all of the invoice reminders.
+     */
+    public function reminders()
+    {
+        return $this->morphMany('App\Reminder', 'trackable');
     }
 }

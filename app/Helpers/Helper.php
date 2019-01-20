@@ -183,7 +183,7 @@ function oq_stripos_all($haystack, $needle)
  *  @return false for update failed
  */
 //function oq_saveActivity($model, $type, $user, $customDetails = null)
-function oq_saveActivity($model, $user, $customDetails = null)
+function oq_saveActivity($model, $user, $status, $customDetails = null)
 {
     if ($model != null) {
         $model_1 = is_array($model) ? $model[0] : $model;
@@ -198,6 +198,7 @@ function oq_saveActivity($model, $user, $customDetails = null)
         }
 
         $update = $model_1->recentActivities()->create([
+            'type' => $status,
             'activity' => $details,
             'created_by' => !empty($user) ? $user->id : null,
             'company_branch_id' => !empty($user) ? $user->company_branch_id : null,
@@ -205,6 +206,7 @@ function oq_saveActivity($model, $user, $customDetails = null)
         ]);
     } else {
         $update = \App\RecentActivity::create([
+            'type' => $status,
             'activity' => '',
             'created_by' => !empty($user) ? $user->id : null,
             'company_branch_id' => !empty($user) ? $user->company_branch_id : null,

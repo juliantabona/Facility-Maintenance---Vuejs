@@ -220,20 +220,18 @@ class InvoiceController extends Controller
                     'company_id' => $user->companyBranch->company->id,
                 ]);
 
-                $status = 'updated';
-
                 //  If the invoice was created/updated successfully
                 if ($invoice) {
                     //  refetch the updated invoice
                     $invoice = Invoice::find($invoice_id);
 
-                    return $invoice;
-
                     //  Record activity of a invoice created
-                    $invoiceCreatedActivity = oq_saveActivity($invoice, $user, ['type' => $status, 'data' => $invoice]);
+                    $status = 'updated';
+                    $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status, ['data' => $invoice]);
 
                     //  Record activity of a invoice authourized
-                    $invoiceAuthourizedActivity = oq_saveActivity($invoice, $user, ['type' => 'authourized', 'data' => $invoice]);
+                    $status = 'authourized';
+                    $invoiceAuthourizedActivity = oq_saveActivity($invoice, $user, $status, ['data' => $invoice]);
                 } else {
                     //  Record activity of a failed invoice during creation
                     $invoiceCreatedActivity = oq_saveActivity(null, $user, ['type' => 'fail', 'message' => 'invoice update failed']);
@@ -302,8 +300,6 @@ class InvoiceController extends Controller
             'company_id' => $user->companyBranch->company->id,
         ]);
 
-        $status = 'created';
-
         //  If the invoice was created/updated successfully
         if ($invoice) {
             //  Update the reference no
@@ -314,16 +310,162 @@ class InvoiceController extends Controller
             $invoice = $invoice->fresh();
 
             //  Record activity of a invoice created
-            $invoiceCreatedActivity = oq_saveActivity($invoice, $user, ['type' => $status, 'data' => $invoice]);
-
-            //  Record activity of a invoice authourized
-            $invoiceAuthourizedActivity = oq_saveActivity($invoice, $user, ['type' => 'authourized', 'data' => $invoice]);
+            $status = 'created';
+            $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status, ['data' => $invoice]);
         } else {
             //  Record activity of a failed invoice during creation
-            $invoiceCreatedActivity = oq_saveActivity(null, $user, ['type' => 'fail', 'message' => 'invoice creation failed']);
+            $status = 'fail';
+            $invoiceCreatedActivity = oq_saveActivity(null, $status, $user, ['message' => 'Invoice creation failed']);
         }
 
         //  return created invoice
         return oq_api_notify($invoice, 201);
+    }
+
+    public function approve(Request $request, $invoice_id)
+    {
+        //  Current authenticated user
+        $user = auth('api')->user();
+
+        /********************************************************
+         *   CHECK IF USER HAS PERMISSION TO APPROVE INVOICE    *
+         *******************************************************/
+
+        try {
+            //  Get the invoice
+            $invoice = Invoice::where('id', $invoice_id)->first();
+
+            //  Check if we an invoice
+            if (count($invoice)) {
+                //  Set status to "approved"
+                $status = 'approved';
+
+                //  Record activity of a invoice approved
+                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status, ['data' => $invoice]);
+
+                //  Re-fresh invoice to get the latest approved status from our recent activties
+                $invoice = $invoice->fresh();
+
+                //  If the invoice was approved successfully, return back
+                return oq_api_notify($invoice, 200);
+            }
+        } catch (\Exception $e) {
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+
+        //  No resource found
+        return oq_api_notify_no_resource();
+    }
+
+    public function send(Request $request, $invoice_id)
+    {
+        //  Current authenticated user
+        $user = auth('api')->user();
+
+        /*****************************************************
+         *   CHECK IF USER HAS PERMISSION TO SEND INVOICE    *
+         *****************************************************/
+
+        try {
+            //  Get the invoice
+            $invoice = Invoice::where('id', $invoice_id)->first();
+
+            //  Check if we an invoice
+            if (count($invoice)) {
+                /*****************************
+                 *   SEND INVOICE VIA EMAIL  *
+                 *****************************/
+
+                //  Set status to "sent"
+                $status = 'sent';
+
+                //  Record activity of a invoice sent
+                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status, ['data' => $invoice]);
+
+                //  Re-fresh invoice to get the latest sent status from our recent activties
+                $invoice = $invoice->fresh();
+
+                //  If the invoice was sent successfully, return back
+                return oq_api_notify($invoice, 200);
+            }
+        } catch (\Exception $e) {
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+
+        //  No resource found
+        return oq_api_notify_no_resource();
+    }
+
+    public function updateReminders(Request $request, $invoice_id)
+    {
+        //  Current authenticated user
+        $user = auth('api')->user();
+
+        /************************************************************
+         *   CHECK IF USER HAS PERMISSION TO ADD INVOICE REMINDERS  *
+         ***********************************************************/
+
+        try {
+            //  Get the invoice
+            $invoice = Invoice::where('id', $invoice_id)->first();
+
+            //  Check if we an invoice
+            if (count($invoice)) {
+                $reminders = [];
+
+                foreach (request('reminders')['days'] as $key => $reminder) {
+                    $can_email = 0;
+                    $can_sms = 0;
+
+                    foreach (request('reminders')['method'] as $method) {
+                        if ($method == 'email') {
+                            $can_email = 1;
+                        }
+
+                        if ($method == 'sms') {
+                            $can_sms = 1;
+                        }
+                    }
+
+                    $reminders[$key] = [
+                        'days_after' => request('reminders')['days'][$key],
+                        'type' => 'payment',
+                        'can_sms' => $can_sms,
+                        'can_email' => $can_email,
+                        'email' => $invoice->customized_company_details['email'],
+                        'phone' => $invoice->customized_company_details['phone'],
+                        'company_branch_id' => $user->company_branch_id,
+                        'company_id' => $user->company_id,
+                        'trackable_id' => $invoice->id,
+                        'trackable_type' => 'invoice',
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ];
+                }
+
+                //  Delete old reminders
+                $deleted = $invoice->reminders()->delete();
+
+                //  Insert new reminders
+                $invoice = $invoice->reminders()->insert($reminders);
+
+                //  Re-fresh invoice to get the latest sent status from our recent activties
+                $invoice = Invoice::where('id', $invoice_id)->with('reminders')->first();
+
+                //  Set status to "reminder"
+                $status = 'payment reminder';
+
+                //  Record activity of a invoice sent
+                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status, ['data' => $invoice->reminders]);
+
+                //  If the invoice was sent successfully, return back
+                return oq_api_notify($invoice, 200);
+            }
+        } catch (\Exception $e) {
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+
+        //  No resource found
+        return oq_api_notify_no_resource();
     }
 }

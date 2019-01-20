@@ -81,6 +81,8 @@
                         <DropdownItem>Supplier</DropdownItem>
                         <DropdownItem divided>Asset</DropdownItem>
                         <DropdownItem><router-link :to="{ name:'create-jobcard' }">Jobcard</router-link></DropdownItem>
+                        <DropdownItem divided><router-link :to="{ name:'create-quotation' }">Quotation</router-link></DropdownItem>
+                        <DropdownItem><router-link :to="{ name:'create-invoice' }">Invoice</router-link></DropdownItem>
                     </DropdownMenu>
 
                 </Dropdown>

@@ -167,14 +167,66 @@
         box-sizing: border-box;
     }
 
+.checkmark__circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  stroke: #7ac142;
+  fill: none;
+  animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.checkmark {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    float: right;
+    margin: 0;
+    box-shadow: inset 0px 0px 0px #7ac142;
+    animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
+}
+
+.checkmark__check {
+  transform-origin: 50% 50%;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes stroke {
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes scale {
+  0%, 100% {
+    transform: none;
+  }
+  50% {
+    transform: scale3d(1.1, 1.1, 1);
+  }
+}
+@keyframes fill {
+  100% {
+    box-shadow: inset 0px 0px 0px 30px #7ac142;
+  }
+}
+
+
+
 </style>
 
 <template>
     <div id="invoice-widget">
-
-        <Row v-if="invoice" class="border-bottom ivu-row mb-3 pb-3">
+        
+        <Row v-if="!createMode && (localInvoice.last_approved_activity || {}).length" class="border-bottom ivu-row mb-3 pb-3">
             <Col span="5">
-                <h2 class="text-dark">Invoice #32</h2>
+                <h2 class="text-dark">Invoice #{{ localInvoice.reference_no_value }}</h2>
             </Col>
             <Col span="3">
                 <h6 class="text-secondary">Status</h6>
@@ -182,15 +234,15 @@
             </Col>
             <Col span="6">
                 <h6 class="text-secondary">Customer</h6>
-                <h5><a href="#">Leap Interriors</a></h5>            
+                <h5><a href="#">{{ localInvoice.customized_client_details.name }}</a></h5>            
             </Col>
             <Col span="5">
                 <h6 class="text-secondary">Amount</h6>
-                <h5>P5,250.00</h5>            
+                <h5>{{ localInvoice.grand_total_value | currency(currencySymbol)  }}</h5>            
             </Col>
             <Col span="4">
                 <h6 class="text-secondary">Due</h6>
-                <h5>4 days</h5>            
+                <h5>{{ localInvoice.expiry_date_value | moment("from", "now")  }}</h5>            
             </Col>
             <Col span="1">
                 <Dropdown class="menu-border" trigger="click" placement="bottom-end">
@@ -215,542 +267,639 @@
             </Col>
         </Row>
         
-        <div>
-
-            <Card :bordered="false" class="invoice-steps is-highlighted">
-
-                <Row :gutter="20" class="invoice-header">
-                    <Col span="24">
-                       <Icon type="ios-information-circle-outline" :size="28" style="margin-top: -4px;"/>
-                        <span>This is a DRAFT invoice. You can take further actions once you approve it. <a href="#" class="font-weight-bold">Learn more <Icon type="ios-share-alt-outline" :size="20" style="margin-top: -9px;"/></a></span>
-                    </Col>
-                </Row>
-                <Row :gutter="20">
-                    <Col span="12">
-                        <div class="invoice-step-badge">
-                            <div class="invoice-step-badge-inner">1</div>
-                        </div>
-                        <h4 class="text-secondary">Approve invoice</h4>
-                        <p class="mt-2 mb-2"><span class="font-weight-bold">Created:</span> 7 hours ago from <a href="#"><span class="font-weight-bold">Estimate #87</span></a></p>
-                    </Col>
-                    <Col span="12">
-
-                        <Button class="float-right ml-2" type="default" size="large" @click="downloadPDF({ preview: true })">
-                            <span>Edit Draft</span>
-                        </Button>
-
-                        <Button class="float-right" type="primary" size="large" @click="downloadPDF({ preview: true })">
-                            <span>Approve Draft</span>
-                        </Button>
-
-                    </Col>
-                </Row>
-        
-            </Card>
-
-            <div class="invoice-vertical-line"></div>
-
-            <Card :bordered="false" class="invoice-steps invoice-hide-step disabled">
-                <Row :gutter="20">
-                    <Col span="12">
-                        <div class="invoice-step-badge">
-                            <div class="invoice-step-badge-inner">2</div>
-                        </div>
-                        <h4 class="text-secondary">Send invoice</h4>
-                        <p class="mt-2 mb-2"><span class="font-weight-bold">Last Sent:</span> 2 hours ago from</p>
-                    </Col>
-                    <Col span="12">
-
-                        <Button class="float-right ml-2" type="default" size="large" @click="downloadPDF({ preview: true })">
-                            <span>Skip</span>
-                        </Button>
-
-                        <Button class="float-right" type="primary" size="large" @click="downloadPDF({ preview: true })">
-                            <span>Send Invoice</span>
-                        </Button>
-
-                    </Col>
-                </Row>
-            </Card>
-
-            <div class="invoice-vertical-line"></div>
-
-            <Card :bordered="false" class="invoice-steps invoice-hide-step disabled">
-                <Row :gutter="20">
-                    <Col span="12">
-                        <div class="invoice-step-badge">
-                            <div class="invoice-step-badge-inner">3</div>
-                        </div>
-                        <h4 class="text-secondary">Get Paid</h4>
-                        <p class="mt-2 mb-2"><span class="font-weight-bold">Amount Due:</span> P2,890.00</a></p>
-                    </Col>
-                    <Col span="12">
-
-                        <Icon class="float-right" :size="50" type="md-checkmark-circle-outline" color="#19be6b"/>
-
-                    </Col>
-                </Row>
-            </Card>
-
-
-        </div>
-
-        <div v-if="isCreatingInvoice" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Creating, please wait...</div>
-        <div v-if="isSavingInvoice" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Saving, please wait...</div>
-
-        <Card :style="{ width: '100%' }">
+        <Row v-if="!createMode">   
             
-            <Spin size="large" fix v-if="isSavingInvoice || isCreatingInvoice"></Spin>
-
-            <div slot="title">
-                <h5>Invoice Summary</h5>
-            </div>
-
-            <div slot="extra" v-if="showMenuBtn">
-
-                <Button type="primary" size="small" @click="downloadPDF({ preview: true })">
-                    <Icon type="ios-eye-outline" :size="20" style="margin-top: -4px;"/>
-                    <span>Preview</span>
-                </Button>
-
-                <Dropdown trigger="click" class="mr-4">
-                    <Button type="primary" size="small">
-                        <span>Send</span>
-                        <Icon type="ios-send-outline" :size="20" style="margin-top: -4px;"/>
-                    </Button>
-                    <DropdownMenu slot="list">
-                        <DropdownItem>Send With Email</DropdownItem>
-                        <DropdownItem>
-                            <p>Share Link</p>
-                            <Input value="https://optimumqbw.com/invoice/GUYSD54983IIOWIW728UUIH2344IUH2I332D" style="width: 100%" :readonly="true" />
-                        </DropdownItem>
-                    </DropdownMenu>
-                </Dropdown>
-
-                <Dropdown class="menu-border" trigger="click" placement="bottom-end">
-                    <a href="javascript:void(0)">
-                        <Icon type="md-more" :size="16"></Icon>
-                    </a>
-                    <DropdownMenu slot="list">
-                        <DropdownItem v-if="!editMode" @click.native="editMode = true">Edit</DropdownItem>
-                        <DropdownItem v-if="editMode" @click.native="editMode = false">View</DropdownItem>
-                        <DropdownItem>Trash</DropdownItem>
-                        <DropdownItem>Edit Business Information</DropdownItem>
-                        <DropdownItem @click.native="downloadPDF()">Export As PDF</DropdownItem>
-                        <DropdownItem>Print Invoice</DropdownItem>
-                    </DropdownMenu>
-                </Dropdown>
-            </div>
-
-            <Row>
-
-                <Col span="24" class="pr-4">
-
-                    <!-- Create Button -->
-                    <Button v-if="createMode" 
-                            class="float-right mb-2 ml-3" :style="{ position:'relative' }"
-                            type="success" size="small" @click="createInvoice()">
-                        <div class="circle-ripple"></div>
-                        <span :style="{ position:'relative', zIndex:'2' }">Create Invoice</span>
-                    </Button>
-
-                    <!-- Save Changes Button -->
-                    <Button v-if="!createMode && invoiceHasChanged" 
-                            class="float-right mb-2 ml-3" :style="{ position:'relative' }"
-                            type="success" size="small" @click="saveInvoice()">
-                        <div class="circle-ripple"></div>
-                        <span :style="{ position:'relative', zIndex:'2' }">Save Changes</span>
-                    </Button>
-
-                    <!-- Edit Mode Switch -->
-                    <span class="float-right mb-2">
-                        <Poptip word-wrap width="200" trigger="hover" content="Edit this invoice">
-                            <span>
-                                <Icon type="ios-create-outline mr-1" :size="24" />
-                                <strong>Edit Mode: </strong>
-                                <i-switch v-model="editMode" class="ml-1" size="large">
-                                    <span slot="open">On</span>
-                                    <span slot="close">Off</span>
-                                </i-switch>
-                            </span>
-                        </Poptip>
-                    </span>
-
-                    <div class="clearfix"></div>
-
-                </Col>
+            <Col :span="24">
                 
-                <Col span="12">
-                    <imageUploader 
-                        uploadMsg="Upload or change logo"
-                        :thumbnailStyle="{ width:'200px', height:'auto' }"
-                        :allowUpload="editMode"
-                        :multiple="false"
-                        :imageList="
-                            [{
-                                'name': 'Company Logo',
-                                'url': 'https://wave-prod-accounting.s3.amazonaws.com/uploads/invoices/business_logos/7cac2c58-4cc1-471b-a7ff-7055296fffbc.png'
-                            }]">
-                    </imageUploader>
-                </Col>
+                <div v-if="isApprovingInvoice" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Approving, please wait...</div>
                 
-                <Col v-if="isLoadingCompanyInfo" span="12" class="pr-4">
-                    <Loader v-if="isLoadingCompanyInfo" :loading="isLoadingCompanyInfo" type="text" class="float-right text-right" :style="{ marginTop:'40px' }">Loading Company Details...</Loader>
-                </Col>
+                <Card :bordered="false" :class="'invoice-steps is-highlighted' + (isApprovingInvoice ? 'disabled': '')">
 
-                <Col v-if="company" span="12" class="pr-4">
-
-                    <h1 v-if="!editMode" class="text-dark text-right" style="font-size: 35px;">{{ localInvoice.heading || '___' }}</h1>
-                    <el-input v-if="editMode" placeholder="Invoice heading" v-model="localInvoice.heading" size="large" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
-                    
-                    <div class="clearfix"></div>
-
-                    <p v-if="!editMode" class="mt-3 text-dark text-right"><strong>{{ company.name || '___' }}</strong></p>
-                    <el-input v-if="editMode" placeholder="Company name" v-model="company.name" size="mini" class="mb-1" :style="{ maxWidth:'250px', float:'right' }"></el-input>
-
-                    <div class="clearfix"></div>
-
-                    <p v-if="!editMode" class="text-right">{{ company.email || '___' }}</p>
-                    <el-input v-if="editMode" placeholder="Company email" v-model="company.email" size="mini" class="mb-1" :style="{ maxWidth:'250px', float:'right' }"></el-input>
-
-                    <div class="clearfix"></div>
-
-                    <p v-if="!editMode" class="text-right">{{ company.phone || '___' }}</p>
-                    <el-input v-if="editMode" placeholder="Company tel/phone" v-model="company.phone" size="mini" class="mb-1" :style="{ maxWidth:'250px', float:'right' }"></el-input>
-                    
-                    
-                    <div class="clearfix"> <br> </div>
-
-                    <p v-if="!editMode" v-for="(field, i) in company.additionalFields" :key="i" class="text-right">
-                        {{ field.value }}
-                    </p>
-                    <el-input v-if="editMode" v-for="(field, i) in company.additionalFields" :key="i" 
-                              size="mini" class="mb-1" :style="{ maxWidth:'250px', float:'right' }"
-                              :placeholder="'Company details ' + i" v-model="company.additionalFields[i].value"></el-input>
-                    </el-input>
-
-                </Col>
-
-                <Col v-if="!company && !isLoadingCompanyInfo" :span="12">
-                    <Alert :style="{maxWidth: '250px'}" type="warning">
-                        No company details
-                    </Alert>
-                </Col>
-
-            </Row>
-
-            <Divider dashed class="mt-3 mb-3" />
-
-            <Row>
-                <Col span="12" class="pl-2">
-                    <h3 v-if="!editMode" class="text-dark mb-3">{{ localInvoice.invoice_to_title ? localInvoice.invoice_to_title+':' : '' }}</h3>
-                    <el-input v-if="editMode" placeholder="Invoice heading" v-model="localInvoice.invoice_to_title" size="large" class="mb-2" :style="{ maxWidth:'250px' }"></el-input>
-                    
-                    <div v-if="isLoadingClientInfo">
-                        <Loader v-if="isLoadingClientInfo" :loading="isLoadingClientInfo" type="text" :style="{ marginTop:'40px' }">Loading Client Details...</Loader>
-                    </div>
-
-                    <div v-if="client">
-                        <p v-if="!editMode" class="mt-3 text-dark"><strong>{{ client.name || '___' }}</strong></p>
-                        <el-input v-if="editMode" placeholder="Company name" v-model="client.name" size="mini" class="mb-1" :style="{ maxWidth:'250px' }"></el-input>
-
-                        <div class="clearfix"></div>
-
-                        <p v-if="!editMode">{{ client.email || '___' }}</p>
-                        <el-input v-if="editMode" placeholder="Company email" v-model="client.email" size="mini" class="mb-1" :style="{ maxWidth:'250px' }"></el-input>
-
-                        <div class="clearfix"></div>
-
-                        <p v-if="!editMode">{{ client.phone || '___' }}</p>
-                        <el-input v-if="editMode" placeholder="Company tel/phone" v-model="client.phone" size="mini" class="mb-1" :style="{ maxWidth:'250px' }"></el-input>
-                        
-                        <div class="clearfix"> <br> </div>
-
-                        <p v-if="!editMode" v-for="(field, i) in client.additionalFields" :key="i">
-                            {{ field.value }}
-                        </p>
-                        <el-input v-if="editMode" v-for="(field, i) in client.additionalFields" :key="i" 
-                            size="mini" class="mb-1" :style="{ maxWidth:'250px' }"
-                            :placeholder="'Client details ' + i" 
-                            v-model="client.additionalFields[i].value">
-                        </el-input>
-                    </div>
-                    <div v-if="!client && !isLoadingClientInfo">
-                        <Alert :style="{maxWidth: '250px'}" type="warning">
-                            No client selected
-                        </Alert>
-                    </div>
-
-                    <companySelector v-if="editMode" :style="{maxWidth: '250px'}" class="mt-2"
-                        @updated="updateClientChanges($event)">
-                    </companySelector>
-
-                </Col>
-                
-                <Col span="12">
-                    <Row :gutter="20">
-                        <Col span="16">
-                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ localInvoice.reference_no_title ? localInvoice.reference_no_title+':' : '___' }}</strong></p>
-                            <el-input v-if="editMode" placeholder="e.g) Reference number" v-model="localInvoice.reference_no_title" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
-                            
-                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ localInvoice.created_date_title ? localInvoice.created_date_title+':' : '___' }}</strong></p>
-                            <el-input v-if="editMode" placeholder="e.g) Created Date" v-model="localInvoice.created_date_title" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
-
-                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ localInvoice.expiry_date_title ? localInvoice.expiry_date_title+':' : '___' }}</strong></p>
-                            <el-input v-if="editMode" placeholder="e.g) Expiry Date" v-model="localInvoice.expiry_date_title" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
-
-                            <p v-if="!editMode" class="text-dark text-right"><strong>{{ localInvoice.grand_total_title ? localInvoice.grand_total_title+':' : '___' }}</strong></p>
-                            <el-input v-if="editMode" placeholder="e.g) Grand Total" v-model="localInvoice.grand_total_title" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
-
-                        </Col>
-                        <Col span="8">
-                            <p v-if="!editMode && !createMode" class="text-dark">{{ localInvoice.reference_no_value || '___' }}</p>
-                            <el-input v-if="editMode && !createMode" placeholder="e.g) 001" v-model="localInvoice.reference_no_value" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }"></el-input>
-
-                            <p v-if="!editMode && createMode" class="text-dark">{{ localInvoice.reference_no_value ? 'Auto Generated' : '___' }}</p>
-                            <el-input v-if="editMode && createMode" :disabled="true" placeholder="Auto Generated" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }"></el-input>
-
-                            <p v-if="!editMode" class="text-dark">{{ localInvoice.created_date_value | moment('MMM DD YYYY') || '___' }}</p>
-                            <!-- Edit Created date -->
-                            <el-date-picker v-if="editMode" v-model="localInvoice.created_date_value" type="date" placeholder="e.g) January 1, 2018" size="mini" class="mb-2" :style="{ maxWidth:'135px', float:'right' }"
-                                format="MMM dd yyyy" value-format="yyyy-MM-dd">
-                            </el-date-picker>
-
-                            <p v-if="!editMode" class="text-dark">{{ localInvoice.expiry_date_value | moment('MMM DD YYYY') || '___' }}</p>
-                            <!-- Edit Created date -->
-                            <el-date-picker v-if="editMode" v-model="localInvoice.expiry_date_value" type="date" placeholder="e.g) January 7, 2018" size="mini" class="mb-2" :style="{ maxWidth:'135px', float:'right' }"
-                                format="MMM dd yyyy" value-format="yyyy-MM-dd">
-                            </el-date-picker>
-
-                            <p v-if="!editMode" class="text-dark">{{ localInvoice.grand_total_value | currency(currencySymbol) || '___' }}</p>
-                            <el-input v-if="editMode" :placeholder="'e.g) '+currencySymbol+'5,000.00'" :value="localInvoice.grand_total_value | currency(currencySymbol)" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }" disabled></el-input>
+                    <Row v-if="!(localInvoice.last_approved_activity || {}).length" :gutter="20" class="invoice-header">
+                        <Col span="24">
+                        <Icon type="ios-information-circle-outline" :size="28" style="margin-top: -4px;"/>
+                            <span>This is a DRAFT invoice. You can take further actions once you approve it. <a href="#" class="font-weight-bold">Learn more <Icon type="ios-share-alt-outline" :size="20" style="margin-top: -9px;"/></a></span>
                         </Col>
                     </Row>
-                </Col>
-            </Row>
-
-            <Row>
-                
-                <Col span="24">
-                    <div v-if="editMode">
-
-                        <div class="float-right mr-2">
-                            <ColorPicker v-model="secondaryColor" @on-change="updateSecondaryColor" class="float-right" recommend alpha />
-                            <span class="float-right d-inline-block font-weight-bold mr-2 mt-2">Secondary Color:</span>
-                        </div>
-                        
-                        <div class="float-right mr-2">
-                            <ColorPicker v-model="primaryColor" @on-change="updatePrimaryColor" class="float-right" okText="Ok" format="hex" recommend alpha />
-                            <span class="float-right d-inline-block font-weight-bold mr-2 mt-2">Primary Color:</span>
-                        </div>
-                        <div class="float-right mr-3">
-                            <Loader v-if="isLoadingCurrencies" :loading="isLoadingCurrencies" type="text" :style="{ marginTop:'40px' }">Loading currencies...</Loader>
-                            
-                            <div v-if="fetchedCurrencies.length">
-                                <currencySelector class="float-right" :style="{maxWidth: '150px'}"
-                                    :fetchedCurrencies="fetchedCurrencies" :selectedCurrency="localInvoice.currency_type"
-                                    @updated="updateCurrencyChanges($event)">
-                                </currencySelector>
-                                <span class="float-right d-inline-block font-weight-bold mr-2 mt-2">Currency:</span>
+                    <Row :gutter="20">
+                        <Col span="12">
+                            <div class="invoice-step-badge">
+                                <div class="invoice-step-badge-inner">1</div>
                             </div>
-                        </div>
+                            <h4 v-if="" class="text-secondary">{{ (localInvoice.last_approved_activity || {}).length ? 'Invoice Approved' : 'Approve Invoice' }}</h4>
+                            <Poptip word-wrap width="200" trigger="hover" :content="localInvoice.created_date_value | moment('DD MMM YYYY, H:mmA') || '___'">
+                                <p class="mt-2 mb-2">
+                                    <span class="font-weight-bold">Created:</span> {{ localInvoice.created_at | moment("from", "now") | capitalize }} from <a href="#"><span class="font-weight-bold">Estimate #87</span></a>
+                                </p>
+                            </Poptip>
+                        </Col>
+                        <Col span="12">
 
-                    </div>
-                </Col>
-                <Col span="24">
+                            <Button class="float-right ml-2" type="default" size="large" @click="editInvoice()">
+                                <span>Edit Draft</span>
+                            </Button>
+
+                            <Button v-if="!(localInvoice.last_approved_activity || {}).length" class="float-right" type="primary" size="large" @click="approveInvoice()">
+                                <span>Approve Draft</span>
+                            </Button>
+
+                        </Col>
+                    </Row>
+            
+                </Card>
+
+                <div class="invoice-vertical-line"></div>
+
+                <div v-if="isSendingInvoice" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Sending, please wait...</div>
+
+                <Card :bordered="false" :class="'invoice-steps' + 
+                        (!(localInvoice.last_approved_activity || {}).length ? ' invoice-hide-step disabled' : ' is-highlighted') +
+                        (isSendingInvoice ? ' disabled': '')">
+                    <Row :gutter="20">
+                        <Col span="12">
+                            <div class="invoice-step-badge">
+                                <div class="invoice-step-badge-inner">2</div>
+                            </div>
+                            <h4 v-if="" class="text-secondary">{{ (localInvoice.last_sent_activity || {}).length ? 'Invoice Sent' : 'Send Invoice' }}</h4>
+                            <Poptip word-wrap width="200" trigger="hover" :content="((localInvoice.last_sent_activity || {})[0] || {}).created_at | moment('DD MMM YYYY, H:mmA') || '___'">
+                                <p class="mt-2 mb-2">
+                                    <span v-if="!(localInvoice.last_sent_activity || {}).length" class="font-weight-bold">Last Sent: Never</span>
+                                    <span v-if="(localInvoice.last_sent_activity || {}).length" class="font-weight-bold">Last Sent:</span> {{ ((localInvoice.last_sent_activity || {})[0] || {}).created_at | moment("from", "now") }}
+                                </p>
+                            </Poptip>
+                        </Col>
+                        <Col span="12">
+
+                            <Button v-if="!((localInvoice.last_sent_activity || {}).length)" class="float-right ml-2" type="default" size="large" @click="sendInvoice()">
+                                <span>Skip</span>
+                            </Button>
+
+                            <Button class="float-right" type="primary" size="large" @click="sendInvoice()">
+                                <span>{{ (localInvoice.last_sent_activity || {}).length ? 'Resend Invoice': 'Send Invoice' }}</span>
+                            </Button>
+
+                        </Col>
+                    </Row>
+                </Card>
+
+                <div class="invoice-vertical-line"></div>
+
+                <div v-if="isRecordingPayment" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Recording payment, please wait...</div>
+
+                <Card :bordered="false" :class="'invoice-steps' + 
+                        (!(localInvoice.last_sent_activity || {}).length ? ' invoice-hide-step disabled' : ' is-highlighted') +
+                        (isRecordingPayment ? ' disabled': '')">
+                    <Row :gutter="20">
+                        <Col span="12">
+                            <div class="invoice-step-badge">
+                                <div class="invoice-step-badge-inner">3</div>
+                            </div>
+                            <h4 v-if="" class="text-secondary">{{ (localInvoice.last_paid_activity || {}).length ? 'Got Paid' : 'Get Paid' }}</h4>
+                            <p class="mt-2 mb-2"><span class="font-weight-bold">{{ ((localInvoice.last_paid_activity || {}).length ? 'Amount Paid' : 'Amount Due') }}:</span> {{ localInvoice.grand_total_value | currency(currencySymbol)  }}</p>
+                        </Col>
+                        <Col v-if="(localInvoice.last_paid_activity || {}).length" span="12">
+                            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52"><circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/><path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/></svg>
+                        </Col>
+                        <Col v-else span="12">
+                            <Button class="float-right" type="primary" size="large" @click="recordPayment()">
+                                <span>Record Payment</span>
+                            </Button>
+                        </Col>
+                    </Row>
+                    
+                    <Row :gutter="20" v-if="((localInvoice.last_sent_activity || []).length)">
+                        <Col span="24">
+                            <Alert :style="{ zIndex:'1' }" closable>
+                                <h6 class="mt-2 mb-2"><span class="font-weight-bold">Status:</span> Your invoice is awaiting payment for - {{ localInvoice.grand_total_value | currency(currencySymbol) }}</h6>
+                            </Alert>
+                        </Col>
+                        <Row>
+                            <Col span="24">
+                                <div style="background:#eee;padding: 20px">
+                                    <Card :bordered="false">
+                                        <Row>
+                                            <Col span="24" class="mb-3">
+                                                <h6>
+                                                    <Icon type="ios-information-circle-outline" :size="24" :style="{ marginTop:'-3px' }" />
+                                                    <span class="font-weight-bold mb-3">Get paid on time by scheduling payment reminders for your customer:</span>
+                                                </h6>
+                                            </Col>
+                                            <Col span="8">
+                                                <h6 class="text-secondary mb-3">1) Remind before due date</h6>
+                                                <CheckboxGroup v-model="paymentReminderTime">
+                                                    <Checkbox class="font-weight-bold" label="1-b">1 day before</Checkbox>
+                                                    <Checkbox class="font-weight-bold" label="3-b">3 days before</Checkbox>
+                                                    <Checkbox class="font-weight-bold" label="7-b">7 days before</Checkbox>
+                                                    <Checkbox class="font-weight-bold" label="14-b">14 days before</Checkbox>
+                                                </CheckboxGroup>
+                                            </Col>
+                                            <Col span="8" class="border-left border-right pl-3">
+                                                <h6 class="text-secondary mb-3">2) Remind on due date</h6>
+                                                <CheckboxGroup v-model="paymentReminderTime">
+                                                    <Checkbox class="font-weight-bold" label="0">On due date</Checkbox>
+                                                </CheckboxGroup>
+                                            </Col>
+                                            <Col span="8" class="pl-3">
+                                                <h6 class="text-secondary mb-3">3) Remind after due date</h6>
+                                                <CheckboxGroup v-model="paymentReminderTime" @change="updatePaymentReminders()">
+                                                    <Checkbox class="font-weight-bold" label="1-a">1 day after</Checkbox>
+                                                    <Checkbox class="font-weight-bold" label="3-a">3 days after</Checkbox>
+                                                    <Checkbox class="font-weight-bold" label="7-a">7 days after</Checkbox>
+                                                    <Checkbox class="font-weight-bold" label="14-a">14 days after</Checkbox>
+                                                </CheckboxGroup>
+                                            </Col>
+                                            
+                                            <Col span="24 mt-2 pt-3 border-top">
+                                                <span class="font-weight-bold mr-1">Reminder Method: </span>
+                                                <!-- Reminder method Selector -->
+                                                <Select v-model="paymentReminderMethod" :style="{ width:'250px' }" placeholder="Select reminder method" multiple filterable>
+                                                    <Option value="email" key="email">Email</Option>
+                                                    <Option value="sms" key="sms" :disabled="true">SMS</Option>
+                                                </Select>
+
+                                                <Button class="float-right" type="primary" size="large" @click="updatePaymentReminders()">
+                                                    <span>Save Changes</span>
+                                                </Button>
+
+                                            </Col>
+                                        </Row>
+                                    </Card>
+                                </div>
+                            </Col>
+                        </Row>
+
+                    </Row>
+
+                </Card>
                 
-                    <table  class="table table-hover mt-3 mb-0 w-100">
-                        <thead :style="'background-color:'+primaryColor+';'">
-                            <tr>
-                                <th colspan="4" class="p-2" style="color: #FFFFFF;">
-                                    <span v-if="!editMode">{{ (tableColumns[0] || {}).name || '___' }}</span>
-                                    <el-input v-if="editMode" placeholder="e.g) Service/Product" v-model="(tableColumns[0] || {}).name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
-                                </th>
-                                <th colspan="1" class="p-2" style="color: #FFFFFF;">
-                                    <span v-if="!editMode">{{ (tableColumns[1] || {}).name || '___' }}</span>
-                                    <el-input v-if="editMode" placeholder="e.g) Quantity" v-model="(tableColumns[1] || {}).name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
-                                </th>
-                                <th colspan="1" class="p-2" style="color: #FFFFFF;">
-                                    <span v-if="!editMode">{{ (tableColumns[2] || {}).name || '___' }}</span>
-                                    <el-input v-if="editMode" placeholder="e.g) Price" v-model="(tableColumns[2] || {}).name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
-                                </th>
-                                <th colspan="1" class="p-2" style="color: #FFFFFF;">
-                                    <span v-if="!editMode">{{ (tableColumns[3] || {}).name || '___' }}</span>
-                                    <el-input v-if="editMode" placeholder="e.g) Amount" v-model="(tableColumns[3] || {}).name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
-                                </th>
-                                <th v-if="editMode" class="p-2" style="color: #FFFFFF;">
-                                    <span class="d-block mb-2">Tax</span>
-                                </th>
-                                <th v-if="editMode" class="p-2" style="color: #FFFFFF;"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-if="(items || {}).length" v-for="(item, i) in items" :key="i"  :style=" ( (i + 1) % 2 ) ? 'background-color:'+secondaryColor+';' : ''">
-                                <td colspan="4" class="p-2">
-                                
-                                    <p v-if="!editMode" class="text-dark mr-5">
-                                        <strong>{{ item.name || '___' }}</strong>
-                                    </p>
-                                    <el-input v-if="editMode" :placeholder="'e.g) Item '+ (i+1)" v-model="items[i].name" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
-                                    
-                                    <p v-if="!editMode" class="mr-5">
-                                        <span v-if="!editMode">{{ item.description }}</span>
-                                    </p>
-                                    <el-input v-if="editMode" placeholder="e.g) Item" v-model="items[i].description" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
-                                
-                                </td>
-                                <td colspan="1" class="p-2">
-                                    <span v-if="!editMode">{{ item.quantity || '___' }}</span>
-                                    <el-input v-if="editMode" placeholder="e.g) 2" 
-                                              v-model="items[i].quantity" 
-                                              @input.native="updateSubAndGrandTotal()"
-                                              size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
-                                </td>
-                                <td colspan="1" class="p-2">
-                                    <span v-if="!editMode">{{ item.unitPrice | currency(currencySymbol) || '___' }}</span>
-                                    <el-input v-if="editMode" placeholder="e.g) 2,500.00" 
-                                              v-model="items[i].unitPrice" 
-                                              @input.native="updateSubAndGrandTotal()"
-                                              size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
-                                </td>
-                                <td colspan="1" class="p-2">
-                                    <span v-if="!editMode">{{ item.totalPrice | currency(currencySymbol) || '___' }}</span>
-                                    <el-input v-if="editMode" placeholder="e.g) 5,000.00" :value="getItemTotal(items[i])" size="mini" class="p-1" :style="{ maxWidth:'100%' }" disabled></el-input>
-                                </td>
-                                <td v-if="editMode" class="p-2">
-                                    <Loader v-if="isLoadingTaxes" :loading="isLoadingTaxes" type="text" :style="{ marginTop:'40px' }">Loading taxes...</Loader>
-                                    <taxSelector v-if="!isLoadingTaxes && fetchedTaxes.length" 
-                                        :fetchedTaxes="fetchedTaxes" :selectedTaxes="items[i].taxes"
-                                        @updated="updateTaxChanges($event, i)">
-                                    </taxSelector>
-                                </td>
-                                <td v-if="editMode" class="p-2">
-                                    <Poptip
-                                      confirm
-                                      title="Are you sure you want to remove this item?"
-                                      ok-text="Yes"
-                                      cancel-text="No"
-                                      @on-ok="removeItem(i)"
-                                      placement="left-start">
-                                      <Icon type="ios-trash-outline" class="mr-2" size="20"/>
-                                  </Poptip>
-                                </td>
-                            </tr>
-                            <tr v-if="!(items || {}).length">
-                                <td colspan="9" class="p-2">
-                                    <Alert show-icon>
-                                        No items added
-                                        <Icon type="ios-bulb-outline" slot="icon"></Icon>
-                                        <template slot="desc">Start adding products/services to your invoice. You will be able to modify your item name, details, quantity, price and any applicable taxes.</template>
-                                    </Alert>
+            </Col>
 
-                                    <!-- Edit Mode Switch -->
-                                    <span v-if="!editMode" class="d-block m-auto" :style="{ width: '200px' }">
-                                        <Poptip word-wrap width="200" trigger="hover" content="Edit this invoice">
-                                            <span>
-                                                <Icon type="ios-create-outline mr-1" :size="24" />
-                                                <strong>Edit Mode: </strong>
-                                                <i-switch v-model="editMode" class="ml-1" size="large">
-                                                    <span slot="open">On</span>
-                                                    <span slot="close">Off</span>
-                                                </i-switch>
-                                            </span>
-                                        </Poptip>
+        </Row>
+
+        <Row>
+            <Col :span="24">
+                <div v-if="isCreatingInvoice" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Creating, please wait...</div>
+                <div v-if="isSavingInvoice" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Saving, please wait...</div>
+            </Col>
+        </Row>
+
+        <Row>
+            <Col :span="24">
+                <Card :style="{ width: '100%' }">
+                    
+                    <Spin size="large" fix v-if="isSavingInvoice || isCreatingInvoice"></Spin>
+
+                    <div slot="title">
+                        <h5>Invoice Summary</h5>
+                    </div>
+
+                    <div slot="extra" v-if="showMenuBtn">
+
+                        <Button type="primary" size="small" @click="downloadPDF({ preview: true })">
+                            <Icon type="ios-eye-outline" :size="20" style="margin-top: -4px;"/>
+                            <span>Preview</span>
+                        </Button>
+
+                        <Dropdown trigger="click" class="mr-4">
+                            <Button type="primary" size="small">
+                                <span>Send</span>
+                                <Icon type="ios-send-outline" :size="20" style="margin-top: -4px;"/>
+                            </Button>
+                            <DropdownMenu slot="list">
+                                <DropdownItem>Send With Email</DropdownItem>
+                                <DropdownItem>
+                                    <p>Share Link</p>
+                                    <Input value="https://optimumqbw.com/invoice/GUYSD54983IIOWIW728UUIH2344IUH2I332D" style="width: 100%" :readonly="true" />
+                                </DropdownItem>
+                            </DropdownMenu>
+                        </Dropdown>
+
+                        <Dropdown class="menu-border" trigger="click" placement="bottom-end">
+                            <a href="javascript:void(0)">
+                                <Icon type="md-more" :size="16"></Icon>
+                            </a>
+                            <DropdownMenu slot="list">
+                                <DropdownItem v-if="!editMode" @click.native="editMode = true">Edit</DropdownItem>
+                                <DropdownItem v-if="editMode" @click.native="editMode = false">View</DropdownItem>
+                                <DropdownItem>Trash</DropdownItem>
+                                <DropdownItem>Edit Business Information</DropdownItem>
+                                <DropdownItem @click.native="downloadPDF()">Export As PDF</DropdownItem>
+                                <DropdownItem>Print Invoice</DropdownItem>
+                            </DropdownMenu>
+                        </Dropdown>
+                    </div>
+
+                    <Row>
+
+                        <Col span="24" class="pr-4">
+
+                            <!-- Create Button -->
+                            <Button v-if="createMode" 
+                                    class="float-right mb-2 ml-3" :style="{ position:'relative' }"
+                                    type="success" size="small" @click="createInvoice()">
+                                <div class="circle-ripple"></div>
+                                <span :style="{ position:'relative', zIndex:'2' }">Create Invoice</span>
+                            </Button>
+
+                            <!-- Save Changes Button -->
+                            <Button v-if="!createMode && invoiceHasChanged" 
+                                    class="float-right mb-2 ml-3" :style="{ position:'relative' }"
+                                    type="success" size="small" @click="saveInvoice()">
+                                <div class="circle-ripple"></div>
+                                <span :style="{ position:'relative', zIndex:'2' }">Save Changes</span>
+                            </Button>
+
+                            <!-- Edit Mode Switch -->
+                            <span class="float-right mb-2">
+                                <Poptip word-wrap width="200" trigger="hover" content="Edit this invoice">
+                                    <span>
+                                        <Icon type="ios-create-outline mr-1" :size="24" />
+                                        <strong>Edit Mode: </strong>
+                                        <i-switch v-model="editMode" class="ml-1" size="large">
+                                            <span slot="open">On</span>
+                                            <span slot="close">Off</span>
+                                        </i-switch>
                                     </span>
+                                </Poptip>
+                            </span>
 
-                                </td>
-                            </tr>
-                            <tr v-if="editMode">
-                                <td colspan="10" class="p-2">
-                                    <el-tooltip class="ml-auto mr-auto mb-3 d-block item" effect="dark" content="Add Service/Product" placement="top-start">
-                                        <el-button @click="isOpenProductsAndServicesModal = true" type="primary" icon="el-icon-plus" circle></el-button>
-                                        <span>Add an item</span>
-                                    </el-tooltip>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </Col>
-            </Row>
-            
-            <Divider dashed class="mt-0 mb-4" />
+                            <div class="clearfix"></div>
 
-            <Row>
-                <Col span="12" offset="12" class="pr-4">
-                    <Row :gutter="20">
-                        <Col :span="editMode ? '16':'20'">
-                            <p v-if="!editMode" class="text-dark text-right float-right w-100 mb-2"><strong>{{ localInvoice.sub_total_title | currency(currencySymbol) }} {{ localInvoice.sub_total_title ? localInvoice.sub_total_title + ':'  : '___' }}</strong></p>
-                            <el-input v-if="editMode" placeholder="e.g) Total" v-model="localInvoice.sub_total_title" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
-
-                            <div v-if="(localInvoice.calculated_taxes || {}).length">
-                                <p v-if="!editMode" v-for="(calculatedTax , i) in localInvoice.calculated_taxes" :key="i" class="text-dark text-right float-right w-100">
-                                    {{ calculatedTax.name }} ({{ calculatedTax.rate*100 }}%):
-                                </p>
-                                <el-input v-if="editMode" v-for="(calculatedTax , i) in localInvoice.calculated_taxes" :key="i" placeholder="e.g) VAT (12%)" :value="calculatedTax.name + ' (' + calculatedTax.rate*100 + '%)'" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
-                            </div>
-                        </Col>
-                        <Col :span="editMode ? '8':'4'">
-
-                            <p v-if="!editMode" class="text-right float-right w-100 mb-2">{{ localInvoice.sub_total_value | currency(currencySymbol) || '___' }}</p>
-                            <el-input v-if="editMode" :placeholder="'e.g) '+currencySymbol+'5,000.00'" :value="localInvoice.sub_total_value | currency(currencySymbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
-
-                            <div v-if="(localInvoice.calculated_taxes || {}).length">
-                                <p v-if="!editMode" v-for="(calculatedTax , i) in localInvoice.calculated_taxes" :key="i" class="text-right float-right w-100">
-                                    {{ calculatedTax.amount | currency(currencySymbol) || '___' }}
-                                </p>
-                                <el-input v-if="editMode" v-for="(calculatedTax , i) in localInvoice.calculated_taxes" :key="i" placeholder="e.g) 1,500.00" :value="calculatedTax.amount | currency(currencySymbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
-                            </div>
                         </Col>
                         
+                        <Col span="12">
+                            <imageUploader 
+                                uploadMsg="Upload or change logo"
+                                :thumbnailStyle="{ width:'200px', height:'auto' }"
+                                :allowUpload="editMode"
+                                :multiple="false"
+                                :imageList="
+                                    [{
+                                        'name': 'Company Logo',
+                                        'url': 'https://wave-prod-accounting.s3.amazonaws.com/uploads/invoices/business_logos/7cac2c58-4cc1-471b-a7ff-7055296fffbc.png'
+                                    }]">
+                            </imageUploader>
+                        </Col>
+                        
+                        <Col v-if="isLoadingCompanyInfo" span="12" class="pr-4">
+                            <Loader v-if="isLoadingCompanyInfo" :loading="isLoadingCompanyInfo" type="text" class="float-right text-right" :style="{ marginTop:'40px' }">Loading Company Details...</Loader>
+                        </Col>
+
+                        <Col v-if="company" span="12" class="pr-4">
+
+                            <h1 v-if="!editMode" class="text-dark text-right" style="font-size: 35px;">{{ localInvoice.heading || '___' }}</h1>
+                            <el-input v-if="editMode" placeholder="Invoice heading" v-model="localInvoice.heading" size="large" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+                            
+                            <div class="clearfix"></div>
+
+                            <p v-if="!editMode" class="mt-3 text-dark text-right"><strong>{{ company.name || '___' }}</strong></p>
+                            <el-input v-if="editMode" placeholder="Company name" v-model="company.name" size="mini" class="mb-1" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+
+                            <div class="clearfix"></div>
+
+                            <p v-if="!editMode" class="text-right">{{ company.email || '___' }}</p>
+                            <el-input v-if="editMode" placeholder="Company email" v-model="company.email" size="mini" class="mb-1" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+
+                            <div class="clearfix"></div>
+
+                            <p v-if="!editMode" class="text-right">{{ company.phone || '___' }}</p>
+                            <el-input v-if="editMode" placeholder="Company tel/phone" v-model="company.phone" size="mini" class="mb-1" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+                            
+                            
+                            <div class="clearfix"> <br> </div>
+
+                            <p v-if="!editMode" v-for="(field, i) in company.additionalFields" :key="i" class="text-right">
+                                {{ field.value }}
+                            </p>
+                            <el-input v-if="editMode" v-for="(field, i) in company.additionalFields" :key="i" 
+                                    size="mini" class="mb-1" :style="{ maxWidth:'250px', float:'right' }"
+                                    :placeholder="'Company details ' + i" v-model="company.additionalFields[i].value"></el-input>
+                            </el-input>
+
+                        </Col>
+
+                        <Col v-if="!company && !isLoadingCompanyInfo" :span="12">
+                            <Alert :style="{maxWidth: '250px'}" type="warning">
+                                No company details
+                            </Alert>
+                        </Col>
+
                     </Row>
 
-                    <Row :gutter="20" class="doubleUnderline mt-3">
+                    <Divider dashed class="mt-3 mb-3" />
 
-                        <Col :span="editMode ? '16':'20'">
-                        
-                            <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ localInvoice.grand_total_title | currency(currencySymbol) }} {{ localInvoice.grand_total_title ? localInvoice.grand_total_title + ':'  : '___' }}</strong></p>
-                            <el-input v-if="editMode" placeholder="e.g) Grand Total" v-model="localInvoice.grand_total_title" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+                    <Row>
+                        <Col span="12" class="pl-2">
+                            <h3 v-if="!editMode" class="text-dark mb-3">{{ localInvoice.invoice_to_title ? localInvoice.invoice_to_title+':' : '' }}</h3>
+                            <el-input v-if="editMode" placeholder="Invoice heading" v-model="localInvoice.invoice_to_title" size="large" class="mb-2" :style="{ maxWidth:'250px' }"></el-input>
+                            
+                            <div v-if="isLoadingClientInfo">
+                                <Loader v-if="isLoadingClientInfo" :loading="isLoadingClientInfo" type="text" :style="{ marginTop:'40px' }">Loading Client Details...</Loader>
+                            </div>
+
+                            <div v-if="client">
+                                <p v-if="!editMode" class="mt-3 text-dark"><strong>{{ client.name || '___' }}</strong></p>
+                                <el-input v-if="editMode" placeholder="Company name" v-model="client.name" size="mini" class="mb-1" :style="{ maxWidth:'250px' }"></el-input>
+
+                                <div class="clearfix"></div>
+
+                                <p v-if="!editMode">{{ client.email || '___' }}</p>
+                                <el-input v-if="editMode" placeholder="Company email" v-model="client.email" size="mini" class="mb-1" :style="{ maxWidth:'250px' }"></el-input>
+
+                                <div class="clearfix"></div>
+
+                                <p v-if="!editMode">{{ client.phone || '___' }}</p>
+                                <el-input v-if="editMode" placeholder="Company tel/phone" v-model="client.phone" size="mini" class="mb-1" :style="{ maxWidth:'250px' }"></el-input>
+                                
+                                <div class="clearfix"> <br> </div>
+
+                                <p v-if="!editMode" v-for="(field, i) in client.additionalFields" :key="i">
+                                    {{ field.value }}
+                                </p>
+                                <el-input v-if="editMode" v-for="(field, i) in client.additionalFields" :key="i" 
+                                    size="mini" class="mb-1" :style="{ maxWidth:'250px' }"
+                                    :placeholder="'Client details ' + i" 
+                                    v-model="client.additionalFields[i].value">
+                                </el-input>
+                            </div>
+                            <div v-if="!client && !isLoadingClientInfo">
+                                <Alert :style="{maxWidth: '250px'}" type="warning">
+                                    No client selected
+                                </Alert>
+                            </div>
+
+                            <companySelector v-if="editMode" :style="{maxWidth: '250px'}" class="mt-2"
+                                @updated="updateClientChanges($event)">
+                            </companySelector>
 
                         </Col>
-                        <Col :span="editMode ? '8':'4'">
+                        
+                        <Col span="12">
+                            <Row :gutter="20">
+                                <Col span="16">
+                                    <p v-if="!editMode" class="text-dark text-right"><strong>{{ localInvoice.reference_no_title ? localInvoice.reference_no_title+':' : '___' }}</strong></p>
+                                    <el-input v-if="editMode" placeholder="e.g) Reference number" v-model="localInvoice.reference_no_title" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+                                    
+                                    <p v-if="!editMode" class="text-dark text-right"><strong>{{ localInvoice.created_date_title ? localInvoice.created_date_title+':' : '___' }}</strong></p>
+                                    <el-input v-if="editMode" placeholder="e.g) Created Date" v-model="localInvoice.created_date_title" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
 
-                            <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ localInvoice.grand_total_value | currency(currencySymbol) }}</strong></p>
-                            <el-input v-if="editMode" :placeholder="'e.g) '+currencySymbol+'5,000.00'" :value="localInvoice.grand_total_value | currency(currencySymbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
-                        
+                                    <p v-if="!editMode" class="text-dark text-right"><strong>{{ localInvoice.expiry_date_title ? localInvoice.expiry_date_title+':' : '___' }}</strong></p>
+                                    <el-input v-if="editMode" placeholder="e.g) Expiry Date" v-model="localInvoice.expiry_date_title" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+
+                                    <p v-if="!editMode" class="text-dark text-right"><strong>{{ localInvoice.grand_total_title ? localInvoice.grand_total_title+':' : '___' }}</strong></p>
+                                    <el-input v-if="editMode" placeholder="e.g) Grand Total" v-model="localInvoice.grand_total_title" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+
+                                </Col>
+                                <Col span="8">
+                                    <p v-if="!editMode && !createMode" class="text-dark">{{ localInvoice.reference_no_value || '___' }}</p>
+                                    <el-input v-if="editMode && !createMode" placeholder="e.g) 001" v-model="localInvoice.reference_no_value" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }"></el-input>
+
+                                    <p v-if="!editMode && createMode" class="text-dark">{{ localInvoice.reference_no_value ? 'Auto Generated' : '___' }}</p>
+                                    <el-input v-if="editMode && createMode" :disabled="true" placeholder="Auto Generated" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }"></el-input>
+
+                                    <p v-if="!editMode" class="text-dark">{{ localInvoice.created_date_value | moment('MMM DD YYYY') || '___' }}</p>
+                                    <!-- Edit Created date -->
+                                    <el-date-picker v-if="editMode" v-model="localInvoice.created_date_value" type="date" placeholder="e.g) January 1, 2018" size="mini" class="mb-2" :style="{ maxWidth:'135px', float:'right' }"
+                                        format="MMM dd yyyy" value-format="yyyy-MM-dd">
+                                    </el-date-picker>
+
+                                    <p v-if="!editMode" class="text-dark">{{ localInvoice.expiry_date_value | moment('MMM DD YYYY') || '___' }}</p>
+                                    <!-- Edit Created date -->
+                                    <el-date-picker v-if="editMode" v-model="localInvoice.expiry_date_value" type="date" placeholder="e.g) January 7, 2018" size="mini" class="mb-2" :style="{ maxWidth:'135px', float:'right' }"
+                                        format="MMM dd yyyy" value-format="yyyy-MM-dd">
+                                    </el-date-picker>
+
+                                    <p v-if="!editMode" class="text-dark">{{ localInvoice.grand_total_value | currency(currencySymbol) || '___' }}</p>
+                                    <el-input v-if="editMode" :placeholder="'e.g) '+currencySymbol+'5,000.00'" :value="localInvoice.grand_total_value | currency(currencySymbol)" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }" disabled></el-input>
+                                </Col>
+                            </Row>
                         </Col>
-                        
                     </Row>
 
-                </Col>
-            </Row>
+                    <Row>
+                        
+                        <Col span="24">
+                            <div v-if="editMode">
 
-            <Row class="mb-5">
-                <Col span="24">
+                                <div class="float-right mr-2">
+                                    <ColorPicker v-model="secondaryColor" @on-change="updateSecondaryColor" class="float-right" recommend alpha />
+                                    <span class="float-right d-inline-block font-weight-bold mr-2 mt-2">Secondary Color:</span>
+                                </div>
+                                
+                                <div class="float-right mr-2">
+                                    <ColorPicker v-model="primaryColor" @on-change="updatePrimaryColor" class="float-right" okText="Ok" format="hex" recommend alpha />
+                                    <span class="float-right d-inline-block font-weight-bold mr-2 mt-2">Primary Color:</span>
+                                </div>
+                                <div class="float-right mr-3">
+                                    <Loader v-if="isLoadingCurrencies" :loading="isLoadingCurrencies" type="text" :style="{ marginTop:'40px' }">Loading currencies...</Loader>
+                                    
+                                    <div v-if="fetchedCurrencies.length">
+                                        <currencySelector class="float-right" :style="{maxWidth: '150px'}"
+                                            :fetchedCurrencies="fetchedCurrencies" :selectedCurrency="localInvoice.currency_type"
+                                            @updated="updateCurrencyChanges($event)">
+                                        </currencySelector>
+                                        <span class="float-right d-inline-block font-weight-bold mr-2 mt-2">Currency:</span>
+                                    </div>
+                                </div>
 
-                    <h3 v-if="!editMode" class="text-dark mb-2">{{ footerNotes.title }}</h3>
-                    <el-input v-if="editMode" placeholder="E.g) Notes/Payment Information" v-model="footerNotes.title" size="large" class="mb-2" :style="{ maxWidth:'400px' }"></el-input>
-                    <br>
-                    <p v-if="!editMode" v-html="footerNotes.details"></p>
-                    <div v-if="editMode">
-                        <Summernote
-                            name="editor"
-                            :model="footerNotes.details"
-                            v-on:change="value => { footerNotes.details = value }"
-                            :config="summernoteConfig">
-                        </Summernote>
-                    </div>
+                            </div>
+                        </Col>
+                        <Col span="24">
+                        
+                            <table  class="table table-hover mt-3 mb-0 w-100">
+                                <thead :style="'background-color:'+primaryColor+';'">
+                                    <tr>
+                                        <th colspan="4" class="p-2" style="color: #FFFFFF;">
+                                            <span v-if="!editMode">{{ (tableColumns[0] || {}).name || '___' }}</span>
+                                            <el-input v-if="editMode" placeholder="e.g) Service/Product" v-model="(tableColumns[0] || {}).name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                        </th>
+                                        <th colspan="1" class="p-2" style="color: #FFFFFF;">
+                                            <span v-if="!editMode">{{ (tableColumns[1] || {}).name || '___' }}</span>
+                                            <el-input v-if="editMode" placeholder="e.g) Quantity" v-model="(tableColumns[1] || {}).name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                        </th>
+                                        <th colspan="1" class="p-2" style="color: #FFFFFF;">
+                                            <span v-if="!editMode">{{ (tableColumns[2] || {}).name || '___' }}</span>
+                                            <el-input v-if="editMode" placeholder="e.g) Price" v-model="(tableColumns[2] || {}).name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                        </th>
+                                        <th colspan="1" class="p-2" style="color: #FFFFFF;">
+                                            <span v-if="!editMode">{{ (tableColumns[3] || {}).name || '___' }}</span>
+                                            <el-input v-if="editMode" placeholder="e.g) Amount" v-model="(tableColumns[3] || {}).name" size="large" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                        </th>
+                                        <th v-if="editMode" class="p-2" style="color: #FFFFFF;">
+                                            <span class="d-block mb-2">Tax</span>
+                                        </th>
+                                        <th v-if="editMode" class="p-2" style="color: #FFFFFF;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-if="(items || {}).length" v-for="(item, i) in items" :key="i"  :style=" ( (i + 1) % 2 ) ? 'background-color:'+secondaryColor+';' : ''">
+                                        <td colspan="4" class="p-2">
+                                        
+                                            <p v-if="!editMode" class="text-dark mr-5">
+                                                <strong>{{ item.name || '___' }}</strong>
+                                            </p>
+                                            <el-input v-if="editMode" :placeholder="'e.g) Item '+ (i+1)" v-model="items[i].name" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                            
+                                            <p v-if="!editMode" class="mr-5">
+                                                <span v-if="!editMode">{{ item.description }}</span>
+                                            </p>
+                                            <el-input v-if="editMode" placeholder="e.g) Item" v-model="items[i].description" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                        
+                                        </td>
+                                        <td colspan="1" class="p-2">
+                                            <span v-if="!editMode">{{ item.quantity || '___' }}</span>
+                                            <el-input v-if="editMode" placeholder="e.g) 2" 
+                                                    v-model="items[i].quantity" 
+                                                    @input.native="updateSubAndGrandTotal()"
+                                                    size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                        </td>
+                                        <td colspan="1" class="p-2">
+                                            <span v-if="!editMode">{{ item.unitPrice | currency(currencySymbol) || '___' }}</span>
+                                            <el-input v-if="editMode" placeholder="e.g) 2,500.00" 
+                                                    v-model="items[i].unitPrice" 
+                                                    @input.native="updateSubAndGrandTotal()"
+                                                    size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                        </td>
+                                        <td colspan="1" class="p-2">
+                                            <span v-if="!editMode">{{ item.totalPrice | currency(currencySymbol) || '___' }}</span>
+                                            <el-input v-if="editMode" placeholder="e.g) 5,000.00" :value="getItemTotal(items[i])" size="mini" class="p-1" :style="{ maxWidth:'100%' }" disabled></el-input>
+                                        </td>
+                                        <td v-if="editMode" class="p-2">
+                                            <Loader v-if="isLoadingTaxes" :loading="isLoadingTaxes" type="text" :style="{ marginTop:'40px' }">Loading taxes...</Loader>
+                                            <taxSelector v-if="!isLoadingTaxes && fetchedTaxes.length" 
+                                                :fetchedTaxes="fetchedTaxes" :selectedTaxes="items[i].taxes"
+                                                @updated="updateTaxChanges($event, i)">
+                                            </taxSelector>
+                                        </td>
+                                        <td v-if="editMode" class="p-2">
+                                            <Poptip
+                                            confirm
+                                            title="Are you sure you want to remove this item?"
+                                            ok-text="Yes"
+                                            cancel-text="No"
+                                            @on-ok="removeItem(i)"
+                                            placement="left-start">
+                                            <Icon type="ios-trash-outline" class="mr-2" size="20"/>
+                                        </Poptip>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="!(items || {}).length">
+                                        <td colspan="9" class="p-2">
+                                            <Alert show-icon>
+                                                No items added
+                                                <Icon type="ios-bulb-outline" slot="icon"></Icon>
+                                                <template slot="desc">Start adding products/services to your invoice. You will be able to modify your item name, details, quantity, price and any applicable taxes.</template>
+                                            </Alert>
+
+                                            <!-- Edit Mode Switch -->
+                                            <span v-if="!editMode" class="d-block m-auto" :style="{ width: '200px' }">
+                                                <Poptip word-wrap width="200" trigger="hover" content="Edit this invoice">
+                                                    <span>
+                                                        <Icon type="ios-create-outline mr-1" :size="24" />
+                                                        <strong>Edit Mode: </strong>
+                                                        <i-switch v-model="editMode" class="ml-1" size="large">
+                                                            <span slot="open">On</span>
+                                                            <span slot="close">Off</span>
+                                                        </i-switch>
+                                                    </span>
+                                                </Poptip>
+                                            </span>
+
+                                        </td>
+                                    </tr>
+                                    <tr v-if="editMode">
+                                        <td colspan="10" class="p-2">
+                                            <el-tooltip class="ml-auto mr-auto mb-3 d-block item" effect="dark" content="Add Service/Product" placement="top-start">
+                                                <el-button @click="isOpenProductsAndServicesModal = true" type="primary" icon="el-icon-plus" circle></el-button>
+                                                <span>Add an item</span>
+                                            </el-tooltip>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </Col>
+                    </Row>
                     
-                </Col>
-            </Row>
+                    <Divider dashed class="mt-0 mb-4" />
 
-            <footer :style="'background-color:'+primaryColor+';'">
-                <div class="mt-1">
-                    <span v-if="!editMode">{{ localInvoice.footer }}</span>
-                    <el-input v-if="editMode" :placeholder="'e.g) Terms And Conditions Apply'" v-model="localInvoice.footer" size="mini" :style="{ width:'50%', margin:'0 auto' }"></el-input>
-                </div>     
-            </footer>
+                    <Row>
+                        <Col span="12" offset="12" class="pr-4">
+                            <Row :gutter="20">
+                                <Col :span="editMode ? '16':'20'">
+                                    <p v-if="!editMode" class="text-dark text-right float-right w-100 mb-2"><strong>{{ localInvoice.sub_total_title | currency(currencySymbol) }} {{ localInvoice.sub_total_title ? localInvoice.sub_total_title + ':'  : '___' }}</strong></p>
+                                    <el-input v-if="editMode" placeholder="e.g) Total" v-model="localInvoice.sub_total_title" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
 
-        </Card>
+                                    <div v-if="(localInvoice.calculated_taxes || {}).length">
+                                        <p v-if="!editMode" v-for="(calculatedTax , i) in localInvoice.calculated_taxes" :key="i" class="text-dark text-right float-right w-100">
+                                            {{ calculatedTax.name }} ({{ calculatedTax.rate*100 }}%):
+                                        </p>
+                                        <el-input v-if="editMode" v-for="(calculatedTax , i) in localInvoice.calculated_taxes" :key="i" placeholder="e.g) VAT (12%)" :value="calculatedTax.name + ' (' + calculatedTax.rate*100 + '%)'" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
+                                    </div>
+                                </Col>
+                                <Col :span="editMode ? '8':'4'">
+
+                                    <p v-if="!editMode" class="text-right float-right w-100 mb-2">{{ localInvoice.sub_total_value | currency(currencySymbol) || '___' }}</p>
+                                    <el-input v-if="editMode" :placeholder="'e.g) '+currencySymbol+'5,000.00'" :value="localInvoice.sub_total_value | currency(currencySymbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
+
+                                    <div v-if="(localInvoice.calculated_taxes || {}).length">
+                                        <p v-if="!editMode" v-for="(calculatedTax , i) in localInvoice.calculated_taxes" :key="i" class="text-right float-right w-100">
+                                            {{ calculatedTax.amount | currency(currencySymbol) || '___' }}
+                                        </p>
+                                        <el-input v-if="editMode" v-for="(calculatedTax , i) in localInvoice.calculated_taxes" :key="i" placeholder="e.g) 1,500.00" :value="calculatedTax.amount | currency(currencySymbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
+                                    </div>
+                                </Col>
+                                
+                            </Row>
+
+                            <Row :gutter="20" class="doubleUnderline mt-3">
+
+                                <Col :span="editMode ? '16':'20'">
+                                
+                                    <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ localInvoice.grand_total_title | currency(currencySymbol) }} {{ localInvoice.grand_total_title ? localInvoice.grand_total_title + ':'  : '___' }}</strong></p>
+                                    <el-input v-if="editMode" placeholder="e.g) Grand Total" v-model="localInvoice.grand_total_title" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }"></el-input>
+
+                                </Col>
+                                <Col :span="editMode ? '8':'4'">
+
+                                    <p v-if="!editMode" class="text-dark text-right float-right w-100"><strong>{{ localInvoice.grand_total_value | currency(currencySymbol) }}</strong></p>
+                                    <el-input v-if="editMode" :placeholder="'e.g) '+currencySymbol+'5,000.00'" :value="localInvoice.grand_total_value | currency(currencySymbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
+                                
+                                </Col>
+                                
+                            </Row>
+
+                        </Col>
+                    </Row>
+
+                    <Row class="mb-5">
+                        <Col span="24">
+
+                            <h3 v-if="!editMode" class="text-dark mb-2">{{ footerNotes.title }}</h3>
+                            <el-input v-if="editMode" placeholder="E.g) Notes/Payment Information" v-model="footerNotes.title" size="large" class="mb-2" :style="{ maxWidth:'400px' }"></el-input>
+                            <br>
+                            <p v-if="!editMode" v-html="footerNotes.details"></p>
+                            <div v-if="editMode">
+                                <Summernote
+                                    name="editor"
+                                    :model="footerNotes.details"
+                                    v-on:change="value => { footerNotes.details = value }"
+                                    :config="summernoteConfig">
+                                </Summernote>
+                            </div>
+                            
+                        </Col>
+                    </Row>
+
+                    <footer :style="'background-color:'+primaryColor+';'">
+                        <div class="mt-1">
+                            <span v-if="!editMode">{{ localInvoice.footer }}</span>
+                            <el-input v-if="editMode" :placeholder="'e.g) Terms And Conditions Apply'" v-model="localInvoice.footer" size="mini" :style="{ width:'50%', margin:'0 auto' }"></el-input>
+                        </div>     
+                    </footer>
+
+                </Card>
+            </Col>
+        </Row>
 
         <!-- 
             MODAL TO GET PRODUCTS AND SERVICES
@@ -855,6 +1004,9 @@
                 isConvertingToInvoice: false,
                 isLoadingTaxes: false,
                 isOpenProductsAndServicesModal: false,
+                isApprovingInvoice: false,
+                isSendingInvoice: false,
+                isRecordingPayment: false,
 
                 //  Resources
                 fetchedTaxes: [],
@@ -874,6 +1026,10 @@
                 tableColumns: this.invoice.table_columns,
                 items: this.invoice.items,
                 footerNotes: this.invoice.notes,
+
+                //  Payment Reminder Details
+                paymentReminderTime: [],
+                paymentReminderMethod: ['email'],
                 
                 //  Summernote Configuration
                 summernoteConfig: {
@@ -991,9 +1147,9 @@
             formatCompanyDetails(company){
                 var companyDetails = {
                         id: company.id,
-                        name: company.name,
-                        email: company.email,
-                        phone: company.phone,
+                        name: company.name || '',
+                        email: company.email || '',
+                        phone: company.phone || '',
                         additionalFields: []
                     }
 
@@ -1409,7 +1565,187 @@
                         console.log('invoiceSummaryWidget.vue - Error creating invoice...');
                         console.log(response);
                     });
-            }
+            },
+            approveInvoice(){
+
+                var self = this;
+
+                //  Start loader
+                self.isApprovingInvoice = true;
+
+                console.log('Attempt to approve invoice...');
+
+                //  Use the api call() function located in resources/js/api.js
+                api.call('post', '/api/invoices/'+self.localInvoice.id+'/approve')
+                    .then(({ data }) => {
+
+                        //  Stop loader
+                        self.isApprovingInvoice = false;
+
+                        //  Disable edit mode
+                        self.editMode = false;
+
+                        self.localInvoice = data;
+
+                        //  Store the original invoice details
+                        self.storeOriginalInvoice();
+
+                        self.invoiceHasChanged = self.checkIfinvoiceHasChanged();
+
+                        //  Alert creation success
+                        self.$Message.success('Invoice approved sucessfully!');
+
+                        //  Notify parent of changes
+                        self.$emit('invoiceApproved', data);
+
+                        //  Go to invoice
+                        self.$router.push({ name: 'show-invoice', params: { id: data.id } });
+
+                    })         
+                    .catch(response => { 
+                        //  Stop loader
+                        self.isApprovingInvoice = false;
+
+                        console.log('invoiceSummaryWidget.vue - Error approving invoice...');
+                        console.log(response);
+                    });
+            },
+            sendInvoice(){
+
+                var self = this;
+
+                //  Start loader
+                self.isSendingInvoice = true;
+
+                console.log('Attempt to send invoice...');
+
+                //  Use the api call() function located in resources/js/api.js
+                api.call('post', '/api/invoices/'+self.localInvoice.id+'/send')
+                    .then(({ data }) => {
+
+                        //  Stop loader
+                        self.isSendingInvoice = false;
+
+                        //  Disable edit mode
+                        self.editMode = false;
+
+                        self.localInvoice = data;
+
+                        //  Store the original invoice details
+                        self.storeOriginalInvoice();
+
+                        self.invoiceHasChanged = self.checkIfinvoiceHasChanged();
+
+                        //  Alert creation success
+                        self.$Message.success('Invoice sent sucessfully!');
+
+                        //  Notify parent of changes
+                        self.$emit('invoiceSent', data);
+
+                        //  Go to invoice
+                        self.$router.push({ name: 'show-invoice', params: { id: data.id } });
+
+                    })         
+                    .catch(response => { 
+                        //  Stop loader
+                        self.isApprovingInvoice = false;
+
+                        console.log('invoiceSummaryWidget.vue - Error sending invoice...');
+                        console.log(response);
+                    });
+            },
+            recordPayment(){
+
+                var self = this;
+
+                //  Start loader
+                self.isRecordingPayment = true;
+
+                console.log('Attempt to record invoice payment...');
+
+                //  Use the api call() function located in resources/js/api.js
+                api.call('post', '/api/invoices/'+self.localInvoice.id+'/record-payment')
+                    .then(({ data }) => {
+
+                        //  Stop loader
+                        self.isRecordingPayment = false;
+
+                        //  Disable edit mode
+                        self.editMode = false;
+
+                        self.localInvoice = data;
+
+                        //  Store the original invoice details
+                        self.storeOriginalInvoice();
+
+                        self.invoiceHasChanged = self.checkIfinvoiceHasChanged();
+
+                        //  Alert creation success
+                        self.$Message.success('Payment recorded sucessfully!');
+
+                        //  Notify parent of changes
+                        self.$emit('invoicePaid', data);
+
+                        //  Go to invoice
+                        self.$router.push({ name: 'show-invoice', params: { id: data.id } });
+
+                    })         
+                    .catch(response => { 
+                        //  Stop loader
+                        self.isApprovingInvoice = false;
+
+                        console.log('invoiceSummaryWidget.vue - Error recording invoice payment...');
+                        console.log(response);
+                    });
+            },
+            updatePaymentReminders(){
+
+                var self = this;
+
+                //  Start loader
+                self.isRecordingPayment = true;
+
+                var remindersData = { 
+                    reminders: {
+                        days: this.paymentReminderTime,
+                        method: this.paymentReminderMethod
+                    } 
+                };
+
+                console.log('Attempt to update invoice payment reminders...');
+
+                //  Use the api call() function located in resources/js/api.js
+                api.call('post', '/api/invoices/'+self.localInvoice.id+'/reminders', remindersData)
+                    .then(({ data }) => {
+
+                        //  Stop loader
+                        self.isRecordingPayment = false;
+
+                        //  Disable edit mode
+                        self.editMode = false;
+
+                        self.localInvoice = data;
+
+                        //  Store the original invoice details
+                        self.storeOriginalInvoice();
+
+                        self.invoiceHasChanged = self.checkIfinvoiceHasChanged();
+
+                        //  Alert creation success
+                        self.$Message.success('Reminder added sucessfully!');
+
+                        //  Notify parent of changes
+                        self.$emit('invoiceReminerAdded', data);
+
+                    })         
+                    .catch(response => { 
+                        //  Stop loader
+                        self.isApprovingInvoice = false;
+
+                        console.log('invoiceSummaryWidget.vue - Error updating invoice payment reminders...');
+                        console.log(response);
+                    });
+            },
         },
         created(){
             //  Get the taxes

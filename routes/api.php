@@ -110,6 +110,9 @@ Route::get('invoices', 'Api\InvoiceController@index');
 Route::post('invoices', 'Api\InvoiceController@store');
 Route::get('invoices/{invoice_id}', 'Api\InvoiceController@show');
 Route::post('invoices/{invoice_id}', 'Api\InvoiceController@update');
+Route::post('invoices/{invoice_id}/approve', 'Api\InvoiceController@approve');
+Route::post('invoices/{invoice_id}/send', 'Api\InvoiceController@send');
+Route::post('invoices/{invoice_id}/reminders', 'Api\InvoiceController@updateReminders');
 
 /*   PRODUCT/SERVICE RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
