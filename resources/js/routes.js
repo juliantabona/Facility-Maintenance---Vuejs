@@ -20,6 +20,36 @@ let routes = [
         component: require('./views/dashboard/overview/main.vue')
     },
     {
+        //  User Settings
+        path: '/user/settings', name: 'show-user-settings',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/setting/user/main.vue'),
+        children: [
+            {
+              // UserProfile will be rendered inside User's <router-view>
+              // when /user/:id/profile is matched
+              path: 'profile', name: 'user-profile-settings',
+              meta: { layout: 'Dashboard', middlewareAuth: true },
+              component: require('./widgets/settings/profileWidget.vue'),
+            },
+            {
+              // UserPosts will be rendered inside User's <router-view>
+              // when /user/:id/posts is matched
+              path: 'password', name: 'user-password-settings',
+              meta: { layout: 'Dashboard', middlewareAuth: true },
+              component: require('./widgets/settings/passwordWidget.vue'),
+            },
+            {
+              // UserPosts will be rendered inside User's <router-view>
+              // when /user/:id/posts is matched
+              path: 'notifications', name: 'user-notification-settings',
+              meta: { layout: 'Dashboard', middlewareAuth: true },
+              component: require('./widgets/settings/notificationsWidget.vue'),
+            }
+        ],
+        props: true
+    },
+    {
         //  Staff
         path: '/staff', name: 'staff',
         meta: { layout: 'Dashboard', middlewareAuth: true },
@@ -121,6 +151,7 @@ let routes = [
         meta: { layout: 'Dashboard', middlewareAuth: true },
         component: require('./views/dashboard/report/main.vue')
     },
+    
 
 
     //  TEST ROUTES TO REMOVE

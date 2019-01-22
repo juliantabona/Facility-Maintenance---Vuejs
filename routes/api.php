@@ -112,6 +112,8 @@ Route::get('invoices/{invoice_id}', 'Api\InvoiceController@show');
 Route::post('invoices/{invoice_id}', 'Api\InvoiceController@update');
 Route::post('invoices/{invoice_id}/approve', 'Api\InvoiceController@approve');
 Route::post('invoices/{invoice_id}/send', 'Api\InvoiceController@send');
+Route::post('invoices/{invoice_id}/payment', 'Api\InvoiceController@recordPayment');
+Route::post('invoices/{invoice_id}/cancel-payment', 'Api\InvoiceController@cancelPayment');
 Route::post('invoices/{invoice_id}/reminders', 'Api\InvoiceController@updateReminders');
 
 /*   PRODUCT/SERVICE RESOURCE ROUTES
@@ -129,7 +131,10 @@ Route::get('taxes', 'Api\TaxController@index');
      -  taxes, geometry maps, topology maps, currencies, countries, timezones, borders, flags, states, cities, timezones times
 */
 Route::get('countries', 'Api\CountryController@countries');
+Route::get('states', 'Api\CountryController@states');
+Route::get('cities', 'Api\CountryController@cities');
 Route::get('currencies', 'Api\CountryController@currencies');
+Route::get('callingcodes', 'Api\CountryController@callingCodes');
 
 /*   DOWNLOAD RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
@@ -137,4 +142,5 @@ Route::get('currencies', 'Api\CountryController@currencies');
 
 Route::get('downloadFile', 'Api\DownloadController@download');
 
+Route::get('download/invoices/{invoice_id}', 'Api\DownloadController@downloadInvoice');
 Route::get('download/quotations/{quotation_id}', 'Api\DownloadController@downloadQuotation');

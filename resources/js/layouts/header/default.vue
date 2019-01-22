@@ -120,7 +120,9 @@
                     <Icon type="ios-notifications-outline" :size="20"/>
                 </Badge>
                 <Badge :count="0" class="icon-border float-right mr-3 mt-1">
-                    <Icon type="ios-settings-outline" :size="20"/>
+                    <router-link :to="{ name:'show-user-settings' }">
+                      <Icon type="ios-settings-outline" :size="20"/>
+                    </router-link>
                 </Badge>
                 <Badge :count="0" class="icon-border float-right mr-3 mt-1">
                     <Icon type="ios-apps-outline" :size="20"/>

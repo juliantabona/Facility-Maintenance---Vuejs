@@ -33,7 +33,7 @@ class Invoice extends Model
 
     protected $dates = ['created_date_value', 'expiry_date_value'];
 
-    protected $with = ['lastApprovedActivity', 'lastSentActivity'];
+    protected $with = ['reminders'];
 
     /**
      * The attributes that are mass assignable.
@@ -85,19 +85,19 @@ class Invoice extends Model
         return $this->recentActivities()->where('type', 'approved');
     }
 
-    public function lastApprovedActivity()
-    {
-        return $this->approvedActivities()->limit(1);
-    }
-
     public function sentActivities()
     {
         return $this->recentActivities()->where('type', 'sent');
     }
 
-    public function lastSentActivity()
+    public function paidActivities()
     {
-        return $this->sentActivities()->limit(1);
+        return $this->recentActivities()->where('type', 'paid')->limit(1);
+    }
+
+    public function paymentCanceledActivities()
+    {
+        return $this->recentActivities()->where('type', 'payment cancelled')->limit(1);
     }
 
     public function client()
@@ -111,5 +111,27 @@ class Invoice extends Model
     public function reminders()
     {
         return $this->morphMany('App\Reminder', 'trackable');
+    }
+
+    protected $appends = ['last_approved_activity', 'last_sent_activity', 'last_paid_activity', 'last_payment_cancelled_activity'];
+
+    public function getLastApprovedActivityAttribute()
+    {
+        return $this->recentActivities->where('type', 'approved')->first();
+    }
+
+    public function getLastSentActivityAttribute()
+    {
+        return $this->recentActivities->where('type', 'sent')->first();
+    }
+
+    public function getLastPaidActivityAttribute()
+    {
+        return $this->recentActivities->where('type', 'paid')->first();
+    }
+
+    public function getLastPaymentCancelledActivityAttribute()
+    {
+        return $this->recentActivities->where('type', 'payment cancelled')->first();
     }
 }

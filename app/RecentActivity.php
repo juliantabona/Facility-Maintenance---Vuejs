@@ -29,6 +29,8 @@ class RecentActivity extends Model
         'activity' => 'array',
     ];
 
+    protected $with = ['createdBy'];
+
     /**
      * The attributes that are mass assignable.
      *

@@ -107,6 +107,10 @@ import Vue2Filters from 'vue2-filters';
 
 Vue.use(Vue2Filters);
 
+var VueScrollTo = require('vue-scrollto');
+
+Vue.use(VueScrollTo)
+
 const app = new Vue({
     el: '#app',
     //  Render the main app view

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use PDF;
 use App\Jobcard;
+use App\Invoice;
 use App\Quotation;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -119,6 +120,33 @@ class DownloadController extends Controller
                            '.pdf';
             } else {
                 $pdfName = 'Quotation - '.$quotation->id.'.pdf';
+            }
+
+            return $pdf->download($pdfName);
+        }
+    }
+
+    public function downloadInvoice(Request $request, $invoice_id)
+    {
+        $user = auth('api')->user();
+        $preview = request('preview', 0);
+        $print = request('print', 0);
+
+        $invoice = Invoice::find($invoice_id);
+
+        //return view('pdf.invoice', ['invoice' => $invoice, 'print' => $print]);
+        $pdf = PDF::loadView('pdf.invoice', array('invoice' => $invoice, 'print' => $print));
+
+        if ($preview || $print) {
+            return $pdf->stream('invoice.pdf');
+        } else {
+            if (!empty($invoice->details['heading']) && !empty($invoice['reference_no_value'])) {
+                $pdfName = $invoice->details['heading'].' - '.
+                           $invoice->details['reference_no_value'].' - '.
+                           \Carbon\Carbon::parse($invoice['created_date_value'])->format('M d Y').
+                           '.pdf';
+            } else {
+                $pdfName = 'Invoice - '.$invoice->id.'.pdf';
             }
 
             return $pdf->download($pdfName);

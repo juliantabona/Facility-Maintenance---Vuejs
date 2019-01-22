@@ -189,12 +189,17 @@ function oq_saveActivity($model, $user, $status, $customDetails = null)
         $model_1 = is_array($model) ? $model[0] : $model;
         $model_2 = is_array($model) ? $model[1] : $model;
 
-        if ($customDetails == null) {
+        //  If $customDetails = true, then use the same model for starage
+        if ($customDetails == true) {
             $details = [
                 strtolower(snake_case(class_basename($model_2))) => $model_2,    //  'document' => [Document Object]
             ];
-        } else {
+        //  Otherwise if its a different value, then use that value instead
+        } elseif ($customDetails != null) {
             $details = $customDetails;
+        //  Otherwise default to nothing
+        } else {
+            $details = null;
         }
 
         $update = $model_1->recentActivities()->create([

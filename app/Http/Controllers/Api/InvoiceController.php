@@ -232,9 +232,8 @@ class InvoiceController extends Controller
                     //  Record activity of a invoice authourized
                     $status = 'authourized';
                     $invoiceAuthourizedActivity = oq_saveActivity($invoice, $user, $status, ['data' => $invoice]);
-                } else {
-                    //  Record activity of a failed invoice during creation
-                    $invoiceCreatedActivity = oq_saveActivity(null, $user, ['type' => 'fail', 'message' => 'invoice update failed']);
+
+                    $invoice = $invoice->fresh();
                 }
 
                 //  If the invoice was updated successfully
@@ -312,10 +311,6 @@ class InvoiceController extends Controller
             //  Record activity of a invoice created
             $status = 'created';
             $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status, ['data' => $invoice]);
-        } else {
-            //  Record activity of a failed invoice during creation
-            $status = 'fail';
-            $invoiceCreatedActivity = oq_saveActivity(null, $status, $user, ['message' => 'Invoice creation failed']);
         }
 
         //  return created invoice
@@ -341,7 +336,7 @@ class InvoiceController extends Controller
                 $status = 'approved';
 
                 //  Record activity of a invoice approved
-                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status, ['data' => $invoice]);
+                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status);
 
                 //  Re-fresh invoice to get the latest approved status from our recent activties
                 $invoice = $invoice->fresh();
@@ -380,9 +375,79 @@ class InvoiceController extends Controller
                 $status = 'sent';
 
                 //  Record activity of a invoice sent
-                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status, ['data' => $invoice]);
+                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status);
 
                 //  Re-fresh invoice to get the latest sent status from our recent activties
+                $invoice = $invoice->fresh();
+
+                //  If the invoice was sent successfully, return back
+                return oq_api_notify($invoice, 200);
+            }
+        } catch (\Exception $e) {
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+
+        //  No resource found
+        return oq_api_notify_no_resource();
+    }
+
+    public function recordPayment(Request $request, $invoice_id)
+    {
+        //  Current authenticated user
+        $user = auth('api')->user();
+
+        /*****************************************************
+         *   CHECK IF USER HAS PERMISSION TO RECORD PAYMENT  *
+         *****************************************************/
+
+        try {
+            //  Get the invoice
+            $invoice = Invoice::where('id', $invoice_id)->first();
+
+            //  Check if we an invoice
+            if (count($invoice)) {
+                //  Set status to "paid"
+                $status = 'paid';
+
+                //  Record activity of a invoice sent
+                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status);
+
+                //  Re-fresh invoice to get the latest sent status from our recent activties
+                $invoice = $invoice->fresh();
+
+                //  If the invoice was sent successfully, return back
+                return oq_api_notify($invoice, 200);
+            }
+        } catch (\Exception $e) {
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+
+        //  No resource found
+        return oq_api_notify_no_resource();
+    }
+
+    public function cancelPayment(Request $request, $invoice_id)
+    {
+        //  Current authenticated user
+        $user = auth('api')->user();
+
+        /*****************************************************
+         *   CHECK IF USER HAS PERMISSION TO RECORD PAYMENT  *
+         *****************************************************/
+
+        try {
+            //  Get the invoice
+            $invoice = Invoice::where('id', $invoice_id)->first();
+
+            //  Check if we an invoice
+            if (count($invoice)) {
+                //  Set status to "payment cancelled"
+                $status = 'payment cancelled';
+
+                //  Record activity of a invoice sent
+                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status);
+
+                //  Re-fresh invoice to get the latest status from our recent activties
                 $invoice = $invoice->fresh();
 
                 //  If the invoice was sent successfully, return back
@@ -456,7 +521,7 @@ class InvoiceController extends Controller
                 $status = 'payment reminder';
 
                 //  Record activity of a invoice sent
-                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status, ['data' => $invoice->reminders]);
+                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status);
 
                 //  If the invoice was sent successfully, return back
                 return oq_api_notify($invoice, 200);

@@ -34,6 +34,7 @@
         "vue-lodash": "^2.0.0",
         "vue-moment": "^4.0.0",
         "vue-router": "^3.0.2",
+        "vue-scrollto": "^2.13.0",
         "vue-slick": "^1.1.15",
         "vue-summernote": "^1.0.3",
         "vue2-filters": "^0.4.1",

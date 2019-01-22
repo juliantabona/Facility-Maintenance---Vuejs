@@ -217,14 +217,12 @@
   }
 }
 
-
-
 </style>
 
 <template>
     <div id="invoice-widget">
         
-        <Row v-if="!createMode && (localInvoice.last_approved_activity || {}).length" class="border-bottom ivu-row mb-3 pb-3">
+        <Row v-if="!createMode && localInvoice.last_approved_activity" class="border-bottom ivu-row mb-3 pb-3">
             <Col span="5">
                 <h2 class="text-dark">Invoice #{{ localInvoice.reference_no_value }}</h2>
             </Col>
@@ -250,12 +248,12 @@
                         <Icon type="md-more" :size="16"></Icon>
                     </a>
                     <DropdownMenu slot="list" :style="{ width: '150px' }">
-                        <DropdownItem v-if="!editMode" @click.native="editMode = true">Edit</DropdownItem>
-                        <DropdownItem v-if="editMode" @click.native="editMode = false">View</DropdownItem>
+                        <DropdownItem v-if="!editMode" @click.native="activateEditMode(true)">Edit</DropdownItem>
+                        <DropdownItem v-if="editMode" @click.native="activateEditMode(false)">View</DropdownItem>
                         <hr>
                         <DropdownItem @click.native="downloadPDF()">Export As PDF</DropdownItem>
                         <DropdownItem>Get Share Link</DropdownItem>
-                        <DropdownItem>Print Invoice</DropdownItem>
+                        <DropdownItem @click.native="downloadPDF({ print: true })">Print Invoice</DropdownItem>
                         <hr>
                         <DropdownItem>Make Recurring</DropdownItem>
                         <DropdownItem>Duplicate</DropdownItem>
@@ -275,7 +273,7 @@
                 
                 <Card :bordered="false" :class="'invoice-steps is-highlighted' + (isApprovingInvoice ? 'disabled': '')">
 
-                    <Row v-if="!(localInvoice.last_approved_activity || {}).length" :gutter="20" class="invoice-header">
+                    <Row v-if="!localInvoice.last_approved_activity" :gutter="20" class="invoice-header">
                         <Col span="24">
                         <Icon type="ios-information-circle-outline" :size="28" style="margin-top: -4px;"/>
                             <span>This is a DRAFT invoice. You can take further actions once you approve it. <a href="#" class="font-weight-bold">Learn more <Icon type="ios-share-alt-outline" :size="20" style="margin-top: -9px;"/></a></span>
@@ -286,7 +284,7 @@
                             <div class="invoice-step-badge">
                                 <div class="invoice-step-badge-inner">1</div>
                             </div>
-                            <h4 v-if="" class="text-secondary">{{ (localInvoice.last_approved_activity || {}).length ? 'Invoice Approved' : 'Approve Invoice' }}</h4>
+                            <h4 v-if="" class="text-secondary">{{ localInvoice.last_approved_activity ? 'Invoice Approved' : 'Approve Invoice' }}</h4>
                             <Poptip word-wrap width="200" trigger="hover" :content="localInvoice.created_date_value | moment('DD MMM YYYY, H:mmA') || '___'">
                                 <p class="mt-2 mb-2">
                                     <span class="font-weight-bold">Created:</span> {{ localInvoice.created_at | moment("from", "now") | capitalize }} from <a href="#"><span class="font-weight-bold">Estimate #87</span></a>
@@ -295,11 +293,11 @@
                         </Col>
                         <Col span="12">
 
-                            <Button class="float-right ml-2" type="default" size="large" @click="editInvoice()">
+                            <Button class="float-right ml-2" type="default" size="large" @click.native="activateEditMode(true)">
                                 <span>Edit Draft</span>
                             </Button>
 
-                            <Button v-if="!(localInvoice.last_approved_activity || {}).length" class="float-right" type="primary" size="large" @click="approveInvoice()">
+                            <Button v-if="!localInvoice.last_approved_activity" class="float-right" type="primary" size="large" @click="approveInvoice()">
                                 <span>Approve Draft</span>
                             </Button>
 
@@ -313,29 +311,30 @@
                 <div v-if="isSendingInvoice" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Sending, please wait...</div>
 
                 <Card :bordered="false" :class="'invoice-steps' + 
-                        (!(localInvoice.last_approved_activity || {}).length ? ' invoice-hide-step disabled' : ' is-highlighted') +
+                        (!localInvoice.last_approved_activity ? ' invoice-hide-step disabled' : ' is-highlighted') +
                         (isSendingInvoice ? ' disabled': '')">
                     <Row :gutter="20">
                         <Col span="12">
                             <div class="invoice-step-badge">
                                 <div class="invoice-step-badge-inner">2</div>
                             </div>
-                            <h4 v-if="" class="text-secondary">{{ (localInvoice.last_sent_activity || {}).length ? 'Invoice Sent' : 'Send Invoice' }}</h4>
-                            <Poptip word-wrap width="200" trigger="hover" :content="((localInvoice.last_sent_activity || {})[0] || {}).created_at | moment('DD MMM YYYY, H:mmA') || '___'">
+                            <h4 v-if="" class="text-secondary">{{ localInvoice.last_sent_activity ? 'Invoice Sent' : 'Send Invoice' }}</h4>
+                            <Poptip word-wrap width="200" trigger="hover" :content="(localInvoice.last_sent_activity || {}).created_at | moment('DD MMM YYYY, H:mmA') || '___'">
                                 <p class="mt-2 mb-2">
-                                    <span v-if="!(localInvoice.last_sent_activity || {}).length" class="font-weight-bold">Last Sent: Never</span>
-                                    <span v-if="(localInvoice.last_sent_activity || {}).length" class="font-weight-bold">Last Sent:</span> {{ ((localInvoice.last_sent_activity || {})[0] || {}).created_at | moment("from", "now") }}
+                                    <span v-if="!localInvoice.last_sent_activity" class="font-weight-bold">Last Sent: Never</span>
+                                    <span v-if="localInvoice.last_sent_activity" class="font-weight-bold">Last Sent:</span> {{ (localInvoice.last_sent_activity || {}).created_at | moment("from", "now") }}
                                 </p>
                             </Poptip>
                         </Col>
                         <Col span="12">
 
-                            <Button v-if="!((localInvoice.last_sent_activity || {}).length)" class="float-right ml-2" type="default" size="large" @click="sendInvoice()">
+                            <Button v-if="!localInvoice.last_sent_activity" class="float-right ml-2" type="default" size="large" @click="sendInvoice()">
                                 <span>Skip</span>
                             </Button>
 
-                            <Button class="float-right" type="primary" size="large" @click="sendInvoice()">
-                                <span>{{ (localInvoice.last_sent_activity || {}).length ? 'Resend Invoice': 'Send Invoice' }}</span>
+                            <Button class="float-right" :type="localInvoice.last_sent_activity ? 'default' : 'primary'" 
+                                    size="large" @click="sendInvoice()">
+                                <span>{{ localInvoice.last_sent_activity ? 'Resend Invoice': 'Send Invoice' }}</span>
                             </Button>
 
                         </Col>
@@ -345,31 +344,38 @@
                 <div class="invoice-vertical-line"></div>
 
                 <div v-if="isRecordingPayment" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Recording payment, please wait...</div>
+                <div v-if="isCancelingPayment" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Canceling payment, please wait...</div>
 
                 <Card :bordered="false" :class="'invoice-steps' + 
-                        (!(localInvoice.last_sent_activity || {}).length ? ' invoice-hide-step disabled' : ' is-highlighted') +
-                        (isRecordingPayment ? ' disabled': '')">
+                        (!localInvoice.last_sent_activity ? ' invoice-hide-step disabled' : ' is-highlighted') +
+                        (isRecordingPayment || isCancelingPayment ? ' disabled': '')">
                     <Row :gutter="20">
                         <Col span="12">
                             <div class="invoice-step-badge">
                                 <div class="invoice-step-badge-inner">3</div>
                             </div>
-                            <h4 v-if="" class="text-secondary">{{ (localInvoice.last_paid_activity || {}).length ? 'Got Paid' : 'Get Paid' }}</h4>
-                            <p class="mt-2 mb-2"><span class="font-weight-bold">{{ ((localInvoice.last_paid_activity || {}).length ? 'Amount Paid' : 'Amount Due') }}:</span> {{ localInvoice.grand_total_value | currency(currencySymbol)  }}</p>
+                            <h4 v-if="" class="text-secondary">{{ hasPaidInvoice ? 'Got Paid' : 'Get Paid' }}</h4>
+                            <p class="mt-2 mb-2"><span class="font-weight-bold">{{ (hasPaidInvoice ? 'Amount Paid' : 'Amount Due') }}:</span> {{ localInvoice.grand_total_value | currency(currencySymbol)  }}</p>
                         </Col>
-                        <Col v-if="(localInvoice.last_paid_activity || {}).length" span="12">
-                            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52"><circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/><path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/></svg>
-                        </Col>
-                        <Col v-else span="12">
-                            <Button class="float-right" type="primary" size="large" @click="recordPayment()">
+                        <Col span="12">
+
+                            <svg v-if="hasPaidInvoice" class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52"><circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/><path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/></svg>
+                        
+                            <Button v-if="hasPaidInvoice" class="float-right mt-2 mr-4" type="default" size="large" @click="cancelPayment()">
+                                <span>Cancel Payment</span>
+                            </Button>
+                            
+                            <Button v-if="!hasPaidInvoice" class="float-right" type="primary" size="large" @click="recordPayment()">
                                 <span>Record Payment</span>
                             </Button>
+                            
                         </Col>
+
                     </Row>
                     
-                    <Row :gutter="20" v-if="((localInvoice.last_sent_activity || []).length)">
+                    <Row :gutter="20" v-if="localInvoice.last_sent_activity && !hasPaidInvoice">
                         <Col span="24">
-                            <Alert :style="{ zIndex:'1' }" closable>
+                            <Alert :style="{ zIndex:'1' }">
                                 <h6 class="mt-2 mb-2"><span class="font-weight-bold">Status:</span> Your invoice is awaiting payment for - {{ localInvoice.grand_total_value | currency(currencySymbol) }}</h6>
                             </Alert>
                         </Col>
@@ -418,7 +424,7 @@
                                                 </Select>
 
                                                 <Button class="float-right" type="primary" size="large" @click="updatePaymentReminders()">
-                                                    <span>Save Changes</span>
+                                                    <span>Save Reminders</span>
                                                 </Button>
 
                                             </Col>
@@ -443,7 +449,7 @@
             </Col>
         </Row>
 
-        <Row>
+        <Row id="invoice-summary-1">
             <Col :span="24">
                 <Card :style="{ width: '100%' }">
                     
@@ -455,7 +461,7 @@
 
                     <div slot="extra" v-if="showMenuBtn">
 
-                        <Button type="primary" size="small" @click="downloadPDF({ preview: true })">
+                        <Button type="primary" size="small" @click.native="downloadPDF({ preview: true })">
                             <Icon type="ios-eye-outline" :size="20" style="margin-top: -4px;"/>
                             <span>Preview</span>
                         </Button>
@@ -479,12 +485,12 @@
                                 <Icon type="md-more" :size="16"></Icon>
                             </a>
                             <DropdownMenu slot="list">
-                                <DropdownItem v-if="!editMode" @click.native="editMode = true">Edit</DropdownItem>
-                                <DropdownItem v-if="editMode" @click.native="editMode = false">View</DropdownItem>
+                                <DropdownItem v-if="!editMode" @click.native="activateEditMode(true)">Edit</DropdownItem>
+                                <DropdownItem v-if="editMode" @click.native="activateEditMode(false)">View</DropdownItem>
                                 <DropdownItem>Trash</DropdownItem>
                                 <DropdownItem>Edit Business Information</DropdownItem>
                                 <DropdownItem @click.native="downloadPDF()">Export As PDF</DropdownItem>
-                                <DropdownItem>Print Invoice</DropdownItem>
+                                <DropdownItem @click.native="downloadPDF({ print: true })">Print Invoice</DropdownItem>
                             </DropdownMenu>
                         </Dropdown>
                     </div>
@@ -511,7 +517,7 @@
 
                             <!-- Edit Mode Switch -->
                             <span class="float-right mb-2">
-                                <Poptip word-wrap width="200" trigger="hover" content="Edit this invoice">
+                                <Poptip word-wrap width="200" trigger="hover" content="Turn on to edit invoice">
                                     <span>
                                         <Icon type="ios-create-outline mr-1" :size="24" />
                                         <strong>Edit Mode: </strong>
@@ -732,42 +738,42 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-if="(items || {}).length" v-for="(item, i) in items" :key="i"  :style=" ( (i + 1) % 2 ) ? 'background-color:'+secondaryColor+';' : ''">
+                                    <tr v-if="(localInvoice.items || {}).length" v-for="(item, i) in localInvoice.items" :key="i"  :style=" ( (i + 1) % 2 ) ? 'background-color:'+secondaryColor+';' : ''">
                                         <td colspan="4" class="p-2">
                                         
                                             <p v-if="!editMode" class="text-dark mr-5">
                                                 <strong>{{ item.name || '___' }}</strong>
                                             </p>
-                                            <el-input v-if="editMode" :placeholder="'e.g) Item '+ (i+1)" v-model="items[i].name" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                            <el-input v-if="editMode" :placeholder="'e.g) Item '+ (i+1)" v-model="localInvoice.items[i].name" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                             
                                             <p v-if="!editMode" class="mr-5">
                                                 <span v-if="!editMode">{{ item.description }}</span>
                                             </p>
-                                            <el-input v-if="editMode" placeholder="e.g) Item" v-model="items[i].description" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
+                                            <el-input v-if="editMode" placeholder="e.g) Item" v-model="localInvoice.items[i].description" size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                         
                                         </td>
                                         <td colspan="1" class="p-2">
                                             <span v-if="!editMode">{{ item.quantity || '___' }}</span>
                                             <el-input v-if="editMode" placeholder="e.g) 2" 
-                                                    v-model="items[i].quantity" 
+                                                    v-model="localInvoice.items[i].quantity" 
                                                     @input.native="updateSubAndGrandTotal()"
                                                     size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                         </td>
                                         <td colspan="1" class="p-2">
                                             <span v-if="!editMode">{{ item.unitPrice | currency(currencySymbol) || '___' }}</span>
                                             <el-input v-if="editMode" placeholder="e.g) 2,500.00" 
-                                                    v-model="items[i].unitPrice" 
+                                                    v-model="localInvoice.items[i].unitPrice" 
                                                     @input.native="updateSubAndGrandTotal()"
                                                     size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                                         </td>
                                         <td colspan="1" class="p-2">
                                             <span v-if="!editMode">{{ item.totalPrice | currency(currencySymbol) || '___' }}</span>
-                                            <el-input v-if="editMode" placeholder="e.g) 5,000.00" :value="getItemTotal(items[i])" size="mini" class="p-1" :style="{ maxWidth:'100%' }" disabled></el-input>
+                                            <el-input v-if="editMode" placeholder="e.g) 5,000.00" :value="getItemTotal(localInvoice.items[i])" size="mini" class="p-1" :style="{ maxWidth:'100%' }" disabled></el-input>
                                         </td>
                                         <td v-if="editMode" class="p-2">
                                             <Loader v-if="isLoadingTaxes" :loading="isLoadingTaxes" type="text" :style="{ marginTop:'40px' }">Loading taxes...</Loader>
                                             <taxSelector v-if="!isLoadingTaxes && fetchedTaxes.length" 
-                                                :fetchedTaxes="fetchedTaxes" :selectedTaxes="items[i].taxes"
+                                                :fetchedTaxes="fetchedTaxes" :selectedTaxes="localInvoice.items[i].taxes"
                                                 @updated="updateTaxChanges($event, i)">
                                             </taxSelector>
                                         </td>
@@ -783,7 +789,7 @@
                                         </Poptip>
                                         </td>
                                     </tr>
-                                    <tr v-if="!(items || {}).length">
+                                    <tr v-if="!(localInvoice.items || {}).length">
                                         <td colspan="9" class="p-2">
                                             <Alert show-icon>
                                                 No items added
@@ -923,7 +929,7 @@
     import taxSelector from './../quotation/taxSelector.vue';
     import Summernote from './../quotation/Summernote.vue';
     import statusTag from './statusTag.vue';   
-    import companySelector from './companySelector.vue';         
+    import companySelector from './companySelector.vue';   
 
     import lodash from 'lodash';
     Event.prototype._ = lodash;
@@ -1007,6 +1013,7 @@
                 isApprovingInvoice: false,
                 isSendingInvoice: false,
                 isRecordingPayment: false,
+                isCancelingPayment: false,
 
                 //  Resources
                 fetchedTaxes: [],
@@ -1024,12 +1031,10 @@
                 client: this.invoice.customized_client_details,
                 currencySymbol: ((this.invoice.currency_type || {}).currency || {}).symbol,
                 tableColumns: this.invoice.table_columns,
-                items: this.invoice.items,
                 footerNotes: this.invoice.notes,
 
-                //  Payment Reminder Details
-                paymentReminderTime: [],
-                paymentReminderMethod: ['email'],
+                paymentReminderTime: this.getPaymentReminderTime(),
+                paymentReminderMethod: this.getPaymentReminderMethod(),
                 
                 //  Summernote Configuration
                 summernoteConfig: {
@@ -1054,7 +1059,102 @@
                 deep: true
             }
         },
+        computed: {
+            hasPaidInvoice: function(){
+
+                //  Have we ever cancelled before
+                if( this.localInvoice.last_payment_cancelled_activity ){
+                    //  Then that means we have recorded payment before
+                    if( this.localInvoice.last_paid_activity ){
+                        //  Then we can compare the two dates and see which was more recent
+
+                        var cancelledDate = this.localInvoice.last_payment_cancelled_activity.created_at.split(' ').join('/');
+                        var recordedPaymentDate = this.localInvoice.last_paid_activity.created_at.split(' ').join('/');
+
+                        cancelledDate = new Date(cancelledDate).getTime();
+                        recordedPaymentDate = new Date(recordedPaymentDate).getTime();
+
+                        if (recordedPaymentDate > cancelledDate) {
+                            // The user has been confirmed as paid
+                            return true;
+                        } else {
+                            //  Payment record was cancelled
+                            return false
+                        }
+
+                    }
+                }else if( this.localInvoice.last_paid_activity ){
+                    return true;
+                }
+            }
+        },
         methods: {
+            activateEditMode(activate = true){
+
+                var self = this,
+                    options = {
+                        easing: 'ease-in-out',
+                        offset: -100,
+                        force: true,
+                        cancelable: true,
+                        onStart: function(element) {
+                            // scrolling started
+                        },
+                        onDone: function(element) {
+                            //  Activate edit mode
+                            self.editMode = activate;
+                        },
+                        onCancel: function() {
+                        // scrolling has been interrupted
+                        },
+                        x: false,
+                        y: true
+                    }
+
+                //var cancelScroll = VueScrollTo.scrollTo('invoice-summary-1', 500, options)
+
+                // or alternatively inside your components you can use
+                var cancelScroll = this.$scrollTo('#invoice-summary-1', 1000, options);
+
+                // to cancel scrolling you can call the returned function
+                //cancelScroll()
+            },
+            getPaymentReminderTime: function(){
+                if( (this.invoice.reminders || {}).length ){
+                    return this.invoice.reminders.map(reminder => reminder.days_after);
+                }else{
+                    return [];
+                }
+
+            },
+            getPaymentReminderMethod: function(){
+                if( (this.invoice.reminders || {}).length ){
+                    return this.invoice.reminders.map(reminder => {
+                        var can = [];
+
+                        //  If this reminder can be emailed return 'email' value
+                        if(reminder.can_email){
+                            can.push('email');
+
+                        //  If this reminder can be sms'd return 'sms' value
+                        }else if(reminder.can_sms){
+                            can.push('sms');
+                        }
+
+                        return can;
+
+                    //  if result is [['email', 'email'], ['sms', 'sms']] then flatten to ['email', 'email', 'sms', 'sms']
+                    }).flat()
+
+                    //  if result is ['email', 'email', 'sms', 'sms'] then filter to only unique values ['email', 'sms']
+                    .filter( (value, index, self) => { 
+                        return self.indexOf(value) === index;
+                    });
+                }else{
+                    return ['email'];
+                }
+
+            },
             updatePrimaryColor(newColor){
                 
                 /*  We need to use the Vue.set(object, key, value) instead of  this.localInvoice.colors[0] = newColor, 
@@ -1436,8 +1536,6 @@
                     this.localInvoice.items.push(productsOrServices[x]);
                 }
 
-                this.items = this.localInvoice.items;
-
                 //  Re-calculate the taxes
                 this.localInvoice.calculated_taxes = this.runCalculateTaxes();
 
@@ -1461,11 +1559,11 @@
             closeModal(){
                 this.isOpenProductsAndServicesModal = !this.isOpenProductsAndServicesModal;
             },
-            downloadPDF(download = { preview: false }){
+            downloadPDF(download = { preview: false, print: false }){
                 if(this.invoice.id){
-                    var showAsPreview = download.preview ? '?preview=1' : '';
+                    var action = (download.preview ? '?preview=1' : '') + (download.print ? '?print=1' : '');
                     let routeData = this.$router.resolve({
-                            path: '/api/download/invoices/'+this.invoice.id + showAsPreview
+                            path: '/api/download/invoices/'+this.invoice.id + action
                         });
 
                     window.open(routeData.href.replace("#", ""), '_blank');
@@ -1497,6 +1595,12 @@
 
                         //  Disable edit mode
                         self.editMode = false;
+
+                        /*
+                        *  updateInvoiceData() : This method ensures the property is
+                        *  updated as a reactive property and triggers future view updates:
+                        */
+                        self.updateInvoiceData(data);
 
                         //  Store the original invoice details
                         self.storeOriginalInvoice();
@@ -1585,7 +1689,31 @@
                         //  Disable edit mode
                         self.editMode = false;
 
-                        self.localInvoice = data;
+                        /*
+                        *  updateInvoiceData() : This method ensures the property is
+                        *  updated as a reactive property and triggers future view updates:
+                        */
+
+
+                        /*
+                         *  Vue.set()
+                         *  We use Vue.set to set a new object property. This method ensures the  
+                         *  property is created as a reactive property and triggers view updates:
+                         
+                        for(var x = 0; x < data.length; x++){
+                            self.set(self.localInvoice, x, data[x]);
+                        }
+                        */
+                        console.log('newInvoice to make reactive 1: ');
+                        console.log(data);
+
+                        for(var x = 0; x <  _.size(data); x++){
+                            console.log('set: ' + Object.keys(data)[x]);
+                            var key = Object.keys(data)[x];
+                            self.$set(self.localInvoice, key, data[key]);
+                        }
+                        
+                        //self.updateInvoiceData(data);
 
                         //  Store the original invoice details
                         self.storeOriginalInvoice();
@@ -1597,9 +1725,6 @@
 
                         //  Notify parent of changes
                         self.$emit('invoiceApproved', data);
-
-                        //  Go to invoice
-                        self.$router.push({ name: 'show-invoice', params: { id: data.id } });
 
                     })         
                     .catch(response => { 
@@ -1629,7 +1754,11 @@
                         //  Disable edit mode
                         self.editMode = false;
 
-                        self.localInvoice = data;
+                        /*
+                        *  updateInvoiceData() : This method ensures the property is
+                        *  updated as a reactive property and triggers future view updates:
+                        */
+                        self.updateInvoiceData(data);
 
                         //  Store the original invoice details
                         self.storeOriginalInvoice();
@@ -1642,13 +1771,10 @@
                         //  Notify parent of changes
                         self.$emit('invoiceSent', data);
 
-                        //  Go to invoice
-                        self.$router.push({ name: 'show-invoice', params: { id: data.id } });
-
                     })         
                     .catch(response => { 
                         //  Stop loader
-                        self.isApprovingInvoice = false;
+                        self.isSendingInvoice = false;
 
                         console.log('invoiceSummaryWidget.vue - Error sending invoice...');
                         console.log(response);
@@ -1664,7 +1790,7 @@
                 console.log('Attempt to record invoice payment...');
 
                 //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/invoices/'+self.localInvoice.id+'/record-payment')
+                api.call('post', '/api/invoices/'+self.localInvoice.id+'/payment')
                     .then(({ data }) => {
 
                         //  Stop loader
@@ -1673,7 +1799,11 @@
                         //  Disable edit mode
                         self.editMode = false;
 
-                        self.localInvoice = data;
+                        /*
+                        *  updateInvoiceData() : This method ensures the property is
+                        *  updated as a reactive property and triggers future view updates:
+                        */
+                        self.updateInvoiceData(data);
 
                         //  Store the original invoice details
                         self.storeOriginalInvoice();
@@ -1686,15 +1816,57 @@
                         //  Notify parent of changes
                         self.$emit('invoicePaid', data);
 
-                        //  Go to invoice
-                        self.$router.push({ name: 'show-invoice', params: { id: data.id } });
+                    })         
+                    .catch(response => { 
+                        //  Stop loader
+                        self.isRecordingPayment = false;
+
+                        console.log('invoiceSummaryWidget.vue - Error recording invoice payment...');
+                        console.log(response);
+                    });
+            },
+            cancelPayment(){
+
+                var self = this;
+
+                //  Start loader
+                self.isCancelingPayment = true;
+
+                console.log('Attempt to cancel invoice payment...');
+
+                //  Use the api call() function located in resources/js/api.js
+                api.call('post', '/api/invoices/'+self.localInvoice.id+'/cancel-payment')
+                    .then(({ data }) => {
+
+                        //  Stop loader
+                        self.isCancelingPayment = false;
+
+                        //  Disable edit mode
+                        self.editMode = false;
+
+                        /*
+                        *  updateInvoiceData() : This method ensures the property is
+                        *  updated as a reactive property and triggers future view updates:
+                        */
+                        self.updateInvoiceData(data);
+
+                        //  Store the original invoice details
+                        self.storeOriginalInvoice();
+
+                        self.invoiceHasChanged = self.checkIfinvoiceHasChanged();
+
+                        //  Alert creation success
+                        self.$Message.success('Payment canceled sucessfully!');
+
+                        //  Notify parent of changes
+                        self.$emit('invoicePaymentCanceled', data);
 
                     })         
                     .catch(response => { 
                         //  Stop loader
-                        self.isApprovingInvoice = false;
+                        self.isCancelingPayment = false;
 
-                        console.log('invoiceSummaryWidget.vue - Error recording invoice payment...');
+                        console.log('invoiceSummaryWidget.vue - Error canceling invoice payment...');
                         console.log(response);
                     });
             },
@@ -1724,7 +1896,11 @@
                         //  Disable edit mode
                         self.editMode = false;
 
-                        self.localInvoice = data;
+                        /*
+                        *  updateInvoiceData() : This method ensures the property is
+                        *  updated as a reactive property and triggers future view updates:
+                        */
+                        self.updateInvoiceData(data);
 
                         //  Store the original invoice details
                         self.storeOriginalInvoice();
@@ -1746,6 +1922,20 @@
                         console.log(response);
                     });
             },
+            updateInvoiceData(newInvoice){
+                /*
+                 *  Vue.set()
+                 *  We use Vue.set to set a new object property. This method ensures the  
+                 *  property is created as a reactive property and triggers view updates:
+                 */
+                console.log('newInvoice to make reactive 2: ' + _.size(newInvoice));
+                console.log(newInvoice);
+                for(var x = 0; x <  _.size(newInvoice); x++){
+                    console.log('set: ' + Object.keys(this.localInvoice)[x]);
+                    var key = Object.keys(this.localInvoice)[x];
+                    this.$set(this.localInvoice, key, newInvoice[key]);
+                }
+            }
         },
         created(){
             //  Get the taxes

@@ -50,7 +50,7 @@
                   <!-- Only authenticated users can access this content -->
 
                   <transition name="slide">
-
+                    
                       <slot></slot>
 
                   </transition>
