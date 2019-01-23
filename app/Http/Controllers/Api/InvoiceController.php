@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Invoice;
+use App\Notifications\InvoiceCreated;
+use App\Notifications\InvoiceUpdated;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -234,6 +236,9 @@ class InvoiceController extends Controller
                     $invoiceAuthourizedActivity = oq_saveActivity($invoice, $user, $status, ['data' => $invoice]);
 
                     $invoice = $invoice->fresh();
+
+                    //  Send notification to the user
+                    $user->notify(new InvoiceUpdated($invoice));
                 }
 
                 //  If the invoice was updated successfully
@@ -307,6 +312,9 @@ class InvoiceController extends Controller
 
             //  re-retrieve the instance to get all of the fields in the table.
             $invoice = $invoice->fresh();
+
+            //  Send notification to the user
+            $user->notify(new InvoiceCreated($invoice));
 
             //  Record activity of a invoice created
             $status = 'created';

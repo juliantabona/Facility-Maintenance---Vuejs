@@ -21,7 +21,7 @@ let routes = [
     },
     {
         //  User Settings
-        path: '/user/settings', name: 'show-user-settings',
+        path: '/user/settings', redirect: { name: 'user-profile-settings' }, name: 'show-user-settings',
         meta: { layout: 'Dashboard', middlewareAuth: true },
         component: require('./views/dashboard/setting/user/main.vue'),
         children: [

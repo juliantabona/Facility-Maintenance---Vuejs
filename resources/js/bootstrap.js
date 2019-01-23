@@ -52,5 +52,16 @@ window.Echo = new Echo({
      broadcaster: 'pusher',
      key: '0afa69f43d05b964054e',
      cluster: 'ap2',
-     encrypted: true
+     encrypted: true,
+     /*
+      * I have added a custom authentication route to check if the user
+      * is authourized to listen to any channel that requires authentication. 
+      * The reason why i created a custom route for this was because of
+      * errors i got due to the default authentication done by "Broadcast::routes();"
+      * located in the "BroadcastServiceProvider". I would fail with the error
+      * "419 - Sorry, your session has expired. Please refresh and try again." 
+      * because i added "\Illuminate\Session\Middleware\StartSession::class," 
+      * to "api" middleware in "App/Http/Kernel.php".
+      */
+     authEndpoint: 'api/pusher/auth'
 });

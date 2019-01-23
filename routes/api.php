@@ -37,6 +37,12 @@ use Illuminate\Http\Request;
     -   Logout
 */
 
+Route::post('/pusher/auth', function (Request $request) {
+    $pusher = new Pusher\Pusher(env('PUSHER_APP_KEY'), env('PUSHER_APP_SECRET'), env('PUSHER_APP_ID'));
+
+    return $pusher->socket_auth($request->request->get('channel_name'), $request->request->get('socket_id'));
+});
+
 Route::middleware('auth:api')->group(function () {
     //  Logout for all devices
     Route::post('/logout', 'Auth\LoginController@logout');
@@ -93,6 +99,11 @@ Route::get('costcenters', 'Api\CostCenterController@index');
      -  Get, Show, Update, Trash, Delete
 */
 Route::get('priorities', 'Api\PriorityController@index');
+
+/*   NOTIFICATIONS RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::get('notifications', 'Api\NotificationsController@index');
 
 /*   QUOTATION RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
