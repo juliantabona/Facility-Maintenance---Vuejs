@@ -6,7 +6,8 @@
             <invoiceSummaryWidget 
                 v-if="invoice"
                 :invoice="invoice"
-                v-bind="$props">
+                v-bind="$props"
+                :key="renderKey">
             </invoiceSummaryWidget>
         </Col>
 
@@ -30,8 +31,17 @@
         },
         data(){
             return {
+                renderKey: 1,
                 isLoadingInvoice: false,
                 invoice: null
+            }
+        },
+        watch: {
+            '$route.params.id': function (id) {
+                
+                // react to route changes...
+                this.fetchInvoice();
+
             }
         },
         methods: {
@@ -56,6 +66,8 @@
 
                             self.invoice = data;
 
+                            self.renderComponent();
+
                         })         
                         .catch(response => { 
 
@@ -68,6 +80,11 @@
 
                 }
             },
+            renderComponent: function(){
+                console.log('Re-rendering currencies');
+                //  Re-render the component
+                this.renderKey++;
+            }
         },
         created(){
             this.fetchInvoice();

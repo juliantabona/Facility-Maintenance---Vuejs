@@ -66,16 +66,30 @@
     position: relative;
   }
 
-  .notification-bar::before{
+  .notification-bar >>> .ivu-select-dropdown{
+    padding: 0 !important;
+  }
+
+  .notification-bar >>> .ivu-select-dropdown::before{
     content: "";
-    z-index: 1;
+    z-index: 2;
     position: absolute;
-    top: -9px;
-    right: 0;
+    top: -14px;
+    right: 0px;
     border-top: 0px solid #00000000;
-    border-left: 9px solid #0000;
-    border-right: 9px solid #0000;
-    border-bottom: 13px solid #d2d2d2;
+    border-left: 12px solid #0000;
+    border-right: 12px solid #0000;
+    border-bottom: 16px solid #f1f1f1;
+  }
+
+  .notification-bar >>> .nofify-header{
+    width: 94.8%;
+    position: absolute;
+    border-radius: 6px 0px 0 0;
+    top: 0px;
+    z-index: 1;
+    background: #f1f1f1;
+    border-top: 2px solid #fff;
   }
 
   .wordwrap { 
@@ -162,7 +176,7 @@
                       <Icon type="ios-notifications-outline" :size="20"/>
                     </span>
                       <DropdownMenu :style="{ width: '320px', maxHeight: '300px', paddingTop: '50px', overflowY: 'scroll' }" slot="list">
-                          <Row class="nofify-header bg-light pt-2 pb-2 pl-3 pr-3" :style="{ width: '100%', position: 'absolute', top: '0', zIndex: '1' }">
+                          <Row class="nofify-header pt-2 pb-2 pl-3 pr-3">
                               <Col :span="12">
                                 <h5 class="text-secondary mt-1">Notifications</h5>
                               </Col>
@@ -182,7 +196,7 @@
                                     <Row>
                                         <Col :span="24">
                                           <span class="wordwrap">
-                                            <a href="#">Invoice #{{ notification.data.invoice.reference_no_value }}</a> created for <a href="#">{{ notification.data.invoice.customized_client_details.name }}</a> by <a href="#">Julian Tabona</a>
+                                            <router-link :to="{ name: 'show-invoice', params: { id: notification.data.invoice.id }}">Invoice #{{ notification.data.invoice.reference_no_value }}</router-link> created for <a href="#">{{ notification.data.invoice.customized_client_details.name }}</a> by <a href="#">Julian Tabona</a>
                                           </span>  
                                         </Col>
                                           
@@ -330,7 +344,7 @@
                   console.log('notification.type below:');
                   console.log(notification);
                   console.log('notification.type above');
-                  self.notifications.push(notification);
+                  self.notifications.unshift(notification);
               });
 
         }
