@@ -99,6 +99,12 @@ class Company extends Model
         return $this->hasMany('App\Invoice');
     }
 
+    public function phones()
+    {
+        return $this->morphMany('App\Phone', 'trackable')
+                    ->orderBy('created_at', 'desc');
+    }
+
     /**
      * Get the companies settings.
      */

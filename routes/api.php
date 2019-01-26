@@ -53,6 +53,7 @@ Route::post('/activate-account', 'Auth\AccountActivation@activate');
 Route::post('/resend-activation', 'Auth\AccountActivation@resend');
 
 Route::middleware('auth:api')->get('/user', 'Api\UserController@getUser');
+Route::middleware('auth:api')->post('/user/{user_id}', 'Api\UserController@update');
 Route::middleware('auth:api')->get('/user/settings', 'Api\UserController@getUserSettings');
 Route::middleware('auth:api')->post('/user/settings', 'Api\UserController@updateUserSettings');
 
@@ -137,7 +138,14 @@ Route::get('products', 'Api\ProductOrServiceController@index');
 */
 Route::get('taxes', 'Api\TaxController@index');
 
-/*   TAXES RESOURCE ROUTES
+/*   PHONE RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::post('phones', 'Api\PhoneController@store');
+Route::post('phones/{phone_id}', 'Api\PhoneController@update');
+Route::delete('phones/{phone_id}', 'Api\PhoneController@delete');
+
+/*   MISC RESOURCE ROUTES
      -  Visit: https://github.com/antonioribeiro/countries
      -  taxes, geometry maps, topology maps, currencies, countries, timezones, borders, flags, states, cities, timezones times
 */
@@ -146,6 +154,7 @@ Route::get('states', 'Api\CountryController@states');
 Route::get('cities', 'Api\CountryController@cities');
 Route::get('currencies', 'Api\CountryController@currencies');
 Route::get('callingcodes', 'Api\CountryController@callingCodes');
+Route::get('exchangerates', 'Api\CountryController@exchangeRates');
 
 /*   DOWNLOAD RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
@@ -155,3 +164,11 @@ Route::get('downloadFile', 'Api\DownloadController@download');
 
 Route::get('download/invoices/{invoice_id}', 'Api\DownloadController@downloadInvoice');
 Route::get('download/quotations/{quotation_id}', 'Api\DownloadController@downloadQuotation');
+
+/*
+ *  TEST ROUTES - DELETE EVERYTHING BELOW HERE
+ *  TEST ROUTES - DELETE EVERYTHING BELOW HERE
+ *  TEST ROUTES - DELETE EVERYTHING BELOW HERE
+ */
+
+ Route::get('send-email', 'Api\TestController@sendEmail');

@@ -33,24 +33,26 @@ class User extends Authenticatable
         'date_of_birth',
     ];
 
+    //  protected $with = ['phones'];
+
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
-        'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 'address', 'phone_ext', 'phone_num', 'email',
+        'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 'address', 'email',
         'additional_email', 'username', 'password', 'verifyToken', 'settings', 'tutorial_status',
         'company_branch_id', 'company_id', 'position', 'country', 'city', 'accessibility',
     ];
 
     protected $allowedFilters = [
-        'id', 'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 'address', 'phone_ext', 'phone_num', 'email',
+        'id', 'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 'address', 'email',
         'additional_email', 'position', 'country', 'city', 'accessibility', 'created_at',
     ];
 
     protected $orderable = [
-        'id', 'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 'address', 'phone_ext', 'phone_num', 'email',
+        'id', 'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 'address', 'email',
         'additional_email', 'position', 'country', 'city', 'accessibility', 'created_at',
     ];
 
@@ -88,6 +90,12 @@ class User extends Authenticatable
         return $this->morphMany('App\Document', 'documentable');
     }
 
+    public function phones()
+    {
+        return $this->morphMany('App\Phone', 'trackable')
+                    ->orderBy('created_at', 'desc');
+    }
+
     /**
      *   Get the recent activities that belong to the user.
      */
@@ -105,41 +113,5 @@ class User extends Authenticatable
         //  If the avatar is not empty ('', NULL, false, e.t.c) then return the avatar url
         //  Otherwise return the default avatar placeholder
         return !empty($value) ? $value : '/images/assets/placeholders/profile_placeholder.png';
-    }
-
-    /**
-     * Generate a new passport token used for authentication
-     * during API calls to retrieve or modify records.
-     */
-    public function generateToken($request)
-    {
-        $http = new \GuzzleHttp\Client();
-
-        $response = $http->post(URL::to('/').'/oauth/token', [
-            'form_params' => [
-                'grant_type' => 'password',
-                'client_id' => '2',
-                'client_secret' => 'wosVFuDb7gqFM10AJvixPfyfp2NF0fQvPGidyNJ5',
-                'username' => $this->email,
-                'password' => $request->input('password'),
-                'scope' => '',
-            ],
-        ]);
-
-        //  Lets get an array instead of a stdObject so that we can return without errors
-        $response = json_decode($response->getBody(), true);
-
-        return oq_api_notify([
-                    'auth' => $response,            //  API ACCESS TOKEN
-                    'user' => $this->toArray(),      //  NEW REGISTERED USER
-                ], 201);
-    }
-
-    protected $appends = ['fullName'];
-
-    //  Getter for calculating the deadline returned as array
-    public function getFullNameAttribute()
-    {
-        return $this->first_name.' '.$this->last_name;
     }
 }

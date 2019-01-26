@@ -1,7 +1,3 @@
-<style scoped>
-    @import 'https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/2.8.0/css/flag-icon.min.css';
-</style>
-
 <template>
     
     <!-- City Selector -->

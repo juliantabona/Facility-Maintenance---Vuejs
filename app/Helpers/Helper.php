@@ -183,14 +183,14 @@ function oq_stripos_all($haystack, $needle)
  *  @return false for update failed
  */
 //function oq_saveActivity($model, $type, $user, $customDetails = null)
-function oq_saveActivity($model, $user, $status, $customDetails = null)
+function oq_saveActivity($model, $user, $status, $customDetails = false)
 {
     if ($model != null) {
         $model_1 = is_array($model) ? $model[0] : $model;
         $model_2 = is_array($model) ? $model[1] : $model;
 
         //  If $customDetails = true, then use the same model for starage
-        if ($customDetails == true) {
+        if ($customDetails === false) {
             $details = [
                 strtolower(snake_case(class_basename($model_2))) => $model_2,    //  'document' => [Document Object]
             ];
@@ -201,6 +201,9 @@ function oq_saveActivity($model, $user, $status, $customDetails = null)
         } else {
             $details = null;
         }
+
+        //return auth('api')->user()->recentActivities()->all();
+        //return $user->recentActivities;
 
         $update = $model_1->recentActivities()->create([
             'type' => $status,

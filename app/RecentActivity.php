@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use App\AdvancedFilter\Dataviewer;
 
 Relation::morphMap([
-    'user' => 'App\User',
     'company' => 'App\Company',
     'companybranch' => 'App\CompanyBranch',
     'jobcard' => 'App\Jobcard',
@@ -17,6 +16,8 @@ Relation::morphMap([
     'document' => 'App\Document',
     'quotation' => 'App\Quotation',
     'invoice' => 'App\Invoice',
+    'phone' => 'App\Phone',
+    'user' => 'App\User',
 ]);
 
 class RecentActivity extends Model

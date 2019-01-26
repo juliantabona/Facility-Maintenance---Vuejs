@@ -5,6 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Invoice;
 use App\Notifications\InvoiceCreated;
 use App\Notifications\InvoiceUpdated;
+use App\Notifications\InvoiceApproved;
+use App\Notifications\InvoiceSent;
+use App\Notifications\InvoicePaid;
+use App\Notifications\InvoicePaymentCancelled;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -191,8 +195,7 @@ class InvoiceController extends Controller
 
         if (!empty($invoice)) {
             try {
-                //  Update the invoice
-                $invoice = Invoice::where('id', $invoice_id)->update([
+                $template = [
                     'status' => $invoice['status'],
                     'heading' => $invoice['heading'],
                     'reference_no_title' => $invoice['reference_no_title'],
@@ -220,25 +223,31 @@ class InvoiceController extends Controller
                     'trackable_id' => $modelId,
                     'company_branch_id' => $user->companyBranch->id,
                     'company_id' => $user->companyBranch->company->id,
-                ]);
+                ];
+
+                //  Update the invoice
+                $invoice = Invoice::where('id', $invoice_id)->update($template);
 
                 //  If the invoice was created/updated successfully
                 if ($invoice) {
                     //  refetch the updated invoice
                     $invoice = Invoice::find($invoice_id);
 
+                    /*****************************
+                     *   SEND NOTIFICATIONS      *
+                     *****************************/
+
+                    $user->notify(new InvoiceUpdated($invoice));
+
                     //  Record activity of a invoice created
                     $status = 'updated';
-                    $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status, ['data' => $invoice]);
+                    $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status, $template);
 
                     //  Record activity of a invoice authourized
                     $status = 'authourized';
-                    $invoiceAuthourizedActivity = oq_saveActivity($invoice, $user, $status, ['data' => $invoice]);
+                    $invoiceAuthourizedActivity = oq_saveActivity($invoice, $user, $status, $template);
 
                     $invoice = $invoice->fresh();
-
-                    //  Send notification to the user
-                    $user->notify(new InvoiceUpdated($invoice));
                 }
 
                 //  If the invoice was updated successfully
@@ -273,8 +282,7 @@ class InvoiceController extends Controller
          *   VALIDATE INVOICE INFORMATION            *
          ********************************************/
 
-        //  Create the invoice
-        $invoice = \App\Invoice::create([
+        $template = [
             'status' => $invoice['status'],
             'heading' => $invoice['heading'],
             'reference_no_title' => $invoice['reference_no_title'],
@@ -302,7 +310,10 @@ class InvoiceController extends Controller
             'trackable_id' => $modelId,
             'company_branch_id' => $user->companyBranch->id,
             'company_id' => $user->companyBranch->company->id,
-        ]);
+        ];
+
+        //  Create the invoice
+        $invoice = Invoice::create($template);
 
         //  If the invoice was created/updated successfully
         if ($invoice) {
@@ -313,12 +324,15 @@ class InvoiceController extends Controller
             //  re-retrieve the instance to get all of the fields in the table.
             $invoice = $invoice->fresh();
 
-            //  Send notification to the user
+            /*****************************
+             *   SEND NOTIFICATIONS      *
+             *****************************/
+
             $user->notify(new InvoiceCreated($invoice));
 
             //  Record activity of a invoice created
             $status = 'created';
-            $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status, ['data' => $invoice]);
+            $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status, $template);
         }
 
         //  return created invoice
@@ -340,11 +354,17 @@ class InvoiceController extends Controller
 
             //  Check if we an invoice
             if (count($invoice)) {
+                /*****************************
+                 *   SEND NOTIFICATIONS      *
+                 *****************************/
+
+                $user->notify(new InvoiceApproved($invoice));
+
                 //  Set status to "approved"
                 $status = 'approved';
 
                 //  Record activity of a invoice approved
-                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status);
+                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status, null);
 
                 //  Re-fresh invoice to get the latest approved status from our recent activties
                 $invoice = $invoice->fresh();
@@ -376,6 +396,12 @@ class InvoiceController extends Controller
             //  Check if we an invoice
             if (count($invoice)) {
                 /*****************************
+                 *   SEND NOTIFICATIONS      *
+                 *****************************/
+
+                $user->notify(new InvoiceSent($invoice));
+
+                /*****************************
                  *   SEND INVOICE VIA EMAIL  *
                  *****************************/
 
@@ -383,7 +409,7 @@ class InvoiceController extends Controller
                 $status = 'sent';
 
                 //  Record activity of a invoice sent
-                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status);
+                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status, null);
 
                 //  Re-fresh invoice to get the latest sent status from our recent activties
                 $invoice = $invoice->fresh();
@@ -414,11 +440,17 @@ class InvoiceController extends Controller
 
             //  Check if we an invoice
             if (count($invoice)) {
+                /*****************************
+                 *   SEND NOTIFICATIONS      *
+                 *****************************/
+
+                $user->notify(new InvoicePaid($invoice));
+
                 //  Set status to "paid"
                 $status = 'paid';
 
                 //  Record activity of a invoice sent
-                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status);
+                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status, null);
 
                 //  Re-fresh invoice to get the latest sent status from our recent activties
                 $invoice = $invoice->fresh();
@@ -449,11 +481,17 @@ class InvoiceController extends Controller
 
             //  Check if we an invoice
             if (count($invoice)) {
+                /*****************************
+                 *   SEND NOTIFICATIONS      *
+                 *****************************/
+
+                $user->notify(new InvoicePaymentCancelled($invoice));
+
                 //  Set status to "payment cancelled"
                 $status = 'payment cancelled';
 
                 //  Record activity of a invoice sent
-                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status);
+                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status, null);
 
                 //  Re-fresh invoice to get the latest status from our recent activties
                 $invoice = $invoice->fresh();
@@ -529,7 +567,7 @@ class InvoiceController extends Controller
                 $status = 'payment reminder';
 
                 //  Record activity of a invoice sent
-                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status);
+                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status, null);
 
                 //  If the invoice was sent successfully, return back
                 return oq_api_notify($invoice, 200);

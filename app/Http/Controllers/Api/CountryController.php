@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use PragmaRX\Countries\Package\Countries;
+use Carbon\Carbon;
+use Swap;
 
 class CountryController extends Controller
 {
@@ -116,5 +118,28 @@ class CountryController extends Controller
 
         //  Action was executed successfully
         return oq_api_notify($currencies, 200);
+    }
+
+    public function exchangeRates()
+    {
+        // Get the latest EUR/USD rate
+        $exchange = Swap::historical('EUR/BWP', Carbon::yesterday());
+
+        $exchange = [
+                        /*
+                        *  "rate": "11.986803",
+                        *  "date": {
+                        *        "date": "2019-01-23 00:00:00.000000",
+                        *        "timezone_type": 3,
+                        *        "timezone": "UTC"
+                        *   }
+                        */
+                        'rate' => $exchange->getValue(),
+                        'date' => $exchange->getDate(),
+                    ];
+
+        return $exchange;
+
+        return oq_api_notify($exchange, 200);
     }
 }

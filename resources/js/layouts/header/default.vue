@@ -82,6 +82,14 @@
     border-bottom: 16px solid #f1f1f1;
   }
 
+  .notification-bar >>> .notification-content{
+    width: 320px;
+    max-height: 300px;
+    padding-top: 50px;
+    overflow-y: auto;
+    background: #f1f1f1;
+  }
+
   .notification-bar >>> .nofify-header{
     width: 94.8%;
     position: absolute;
@@ -90,6 +98,10 @@
     z-index: 1;
     background: #f1f1f1;
     border-top: 2px solid #fff;
+  }
+
+  .notification-bar >>> .nofify-item {
+      background: #fff;
   }
 
   .wordwrap { 
@@ -175,7 +187,7 @@
                     <span :style="{ marginTop: '-35px', float: 'left' }">
                       <Icon type="ios-notifications-outline" :size="20"/>
                     </span>
-                      <DropdownMenu :style="{ width: '320px', maxHeight: '300px', paddingTop: '50px', overflowY: 'scroll' }" slot="list">
+                      <DropdownMenu class="notification-content" slot="list">
                           <Row class="nofify-header pt-2 pb-2 pl-3 pr-3">
                               <Col :span="12">
                                 <h5 class="text-secondary mt-1">Notifications</h5>
@@ -184,37 +196,28 @@
                                 <Button class="float-right">View All</Button>
                               </Col>
                           </Row>
-                          <DropdownItem 
-                                v-for="(notification, i) in notifications" :key="i"
-                                v-if="notification.type.split('\\').pop() == 'InvoiceCreated'" 
-                                class="nofify-item pb-2 mb-1 border-bottom ">
-                              <Row>
-                                  <Col :span="4">
-                                    <Icon class="nofify-icon" type="ios-cash-outline" :size="20"/>
-                                  </Col>
-                                  <Col :span="20">
-                                    <Row>
-                                        <Col :span="24">
-                                          <span class="wordwrap">
-                                            <router-link :to="{ name: 'show-invoice', params: { id: notification.data.invoice.id }}">Invoice #{{ notification.data.invoice.reference_no_value }}</router-link> created for <a href="#">{{ notification.data.invoice.customized_client_details.name }}</a> by <a href="#">Julian Tabona</a>
-                                          </span>  
-                                        </Col>
-                                          
-                                        <Col :span="24"><small class="float-right">22 Jan 2019 @ 09:43AM</small></Col>
-                                    </Row>
-                                  </Col>
-                              </Row>
-                              <Row v-if="!notifications.length">
-                                
-                                <Loader v-if="isLoadingNotifications" :loading="isLoadingNotifications" type="text" class="mt-2 mb-2">Loading notifications...</Loader>
-                                
-                                <Alert v-else show-icon class="mt-2 mb-2">
-                                    <Icon type="ios-notifications-outline" slot="icon" :size="20"></Icon>
-                                    No notifications yet
-                                </Alert>
+                          
+                          <DropdownItem v-for="(notification, i) in notifications" :key="i" class="nofify-item pt-3 pb-2 border-bottom ">
                               
+                              <Notification :style="(i == 0) ? { paddingTop: '10px' } :''" :notification="notification"></Notification>
+
+                          </DropdownItem>
+                          <DropdownItem v-if="!notifications.length" class="nofify-item pb-2 mb-1 border-bottom ">
+                              
+                              <Row>
+                                <Col :span="24">
+                                  
+                                  <Loader v-if="isLoadingNotifications" :loading="isLoadingNotifications" type="text" class="mt-2 mb-2">Loading notifications...</Loader>
+                                  
+                                  <Alert v-else show-icon class="mt-2 mb-2">
+                                      <Icon type="ios-notifications-outline" slot="icon" :size="20"></Icon>
+                                      No notifications yet
+                                  </Alert>
+                                
+                                </Col>
                               </Row>
                           </DropdownItem>
+
                       </DropdownMenu>
                   </Dropdown>
                 </Badge>
@@ -242,10 +245,11 @@
 <script>
 
   import Loader from './../../components/_common/loader/Loader.vue';
+  import Notification from './notification.vue';
 
   export default {
     components: { 
-        Loader
+        Loader, Notification
     },
     props:{
       isCollapsed: {
@@ -340,7 +344,7 @@
 
           Echo.private('App.User.' + this.user.id)
               .notification((notification) => {
-                  //alert(notification);
+                  alert(notification);
                   console.log('notification.type below:');
                   console.log(notification);
                   console.log('notification.type above');

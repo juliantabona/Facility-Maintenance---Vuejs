@@ -36,22 +36,35 @@ class InvoiceCreated extends Notification
 
     public function toDatabase($notifiable)
     {
-        return [
-            'invoice' => $this->invoice,
-        ];
+        return $this->customTemplate();
     }
 
     public function toBroadcast($notifiable)
     {
         return new BroadcastMessage([
             'id' => $this->invoice->id,
-            'data' => [
-                'invoice' => $this->invoice,
-                ],
+            'data' => $this->customTemplate(),
             'read_at' => $this->invoice->read_at,
             'type' => $this->invoice->type,
             'created_at' => $this->invoice->created_at,
         ]);
+    }
+
+    public function customTemplate()
+    {
+        return [
+            'id' => $this->invoice->id,
+            'reference_no_value' => $this->invoice->reference_no_value,
+            'sub_total_value' => $this->invoice->sub_total_value,
+            'grand_total_value' => $this->invoice->grand_total_value,
+            'currency_type' => $this->invoice->currency_type,
+            'created_date_value' => $this->invoice->created_date_value,
+            'expiry_date_value' => $this->invoice->expiry_date_value,
+            'customized_client_details' => $this->invoice->customized_client_details,
+            'quotation_id' => $this->invoice->quotation_id,
+            'company_id' => $this->invoice->company_id,
+            'company_branch_id' => $this->invoice->company_branch_id,
+        ];
     }
 
     public function toArray($notifiable)
