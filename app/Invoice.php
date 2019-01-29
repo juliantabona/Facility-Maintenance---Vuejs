@@ -2,6 +2,7 @@
 
 namespace App;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -113,7 +114,8 @@ class Invoice extends Model
         return $this->morphMany('App\Reminder', 'trackable');
     }
 
-    protected $appends = ['last_approved_activity', 'last_sent_activity', 'last_paid_activity', 'last_payment_cancelled_activity'];
+    protected $appends = ['last_approved_activity', 'last_sent_activity', 'last_paid_activity', 'last_payment_cancelled_activity',
+                          'has_paid', 'has_expired', 'has_cancelled', 'has_sent', 'has_approved', 'current_activity_status', ];
 
     public function getLastApprovedActivityAttribute()
     {
@@ -133,5 +135,79 @@ class Invoice extends Model
     public function getLastPaymentCancelledActivityAttribute()
     {
         return $this->recentActivities->where('type', 'payment cancelled')->first();
+    }
+
+    public function getHasPaidAttribute()
+    {
+        //  Have we ever cancelled before
+        if ($this->last_payment_cancelled_activity) {
+            //  Then that means we have recorded payment before
+            if ($this->last_paid_activity) {
+                //  Then we can compare the two dates and see which was more recent
+                $cancelledDate = strtotime($this->last_payment_cancelled_activity->created_at);
+                $recordedPaymentDate = strtotime($this->last_paid_activity->created_at);
+
+                if ($recordedPaymentDate > $cancelledDate) {
+                    // The user has been confirmed as paid
+                    return true;
+                } else {
+                    //  Payment record was cancelled
+                    return false;
+                }
+            }
+        } elseif ($this->last_paid_activity) {
+            return true;
+        }
+    }
+
+    public function gethasExpiredAttribute()
+    {
+        $expiryDate = strtotime($this->expiry_date_value);
+        $now = Carbon::now()->toDateTimeString();
+
+        return ($now > $expiryDate) ? true : false;
+    }
+
+    public function gethasCancelledAttribute()
+    {
+        return $this->last_payment_cancelled_activity ? true : false;
+    }
+
+    public function gethasSentAttribute()
+    {
+        return $this->last_sent_activity ? true : false;
+    }
+
+    public function gethasApprovedAttribute()
+    {
+        return $this->last_approved_activity ? true : false;
+    }
+
+    public function getCurrentActivityStatusAttribute()
+    {
+        //  If paid
+        if ($this->has_paid) {
+            return 'Paid';
+
+        //  If expired
+        } elseif ($this->has_expired) {
+            return 'Expired';
+
+        //  If cancelled
+        } elseif ($this->has_cancelled) {
+            return 'Cancelled';
+
+        //  If approved
+        } elseif ($this->has_sent) {
+            return 'Sent';
+
+        //  If approved
+        } elseif ($this->has_approved) {
+            return 'Approved';
+
+        //  If draft
+        } else {
+            return 'Draft';
+        }
     }
 }

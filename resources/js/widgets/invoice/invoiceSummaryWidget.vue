@@ -1,27 +1,9 @@
 <style scoped>
 
-    .menu-border{
-        border: 1px solid #2d8cf080;
-        border-radius: 50%;
-        padding: 2px 5px;
-        height: 25px;
-        display: inline-block;
-    }
-
     .doubleUnderline{
         padding: 8px 0px;
         border-bottom: 3px solid #dee1e2;
         border-top: 1px solid #dee1e2;
-    }
-
-    .animate-opacity {
-        animation: opacityAnimation 2s linear infinite;
-    }
-
-    @keyframes opacityAnimation {
-        50% {
-            opacity: 0;
-        }
     }
 
     .circle-ripple {
@@ -87,361 +69,30 @@
         line-height: 30px;
     }
 
-    .invoice-steps {
-        display: block;
-        padding: 0px 10px;
-        margin-bottom: 12px;
-        border-radius: 8px;
-        border: 1px solid #b2c2cd;
-        background-color: #fff;
-    }
-
-    .invoice-steps:nth-child(1) {
-        position: relative;
-        z-index: 3;
-    }
-
-    .invoice-steps:nth-child(2) {
-        position: relative;
-        z-index: 2;
-    }
-
-    .invoice-steps:nth-child(3) {
-        position: relative;
-        z-index: 1;
-    }
-
-    .invoice-steps.is-highlighted {
-        box-shadow: 0 8px 32px rgba(77,101,117,0.35);
-        border-radius: 12px;
-        border-color: transparent;
-    }
-
-    .invoice-steps.invoice-hide-step{
-        margin-top: -116px;
-    }
-
-    .invoice-steps.is-highlighted:hover ~ .invoice-hide-step{
-        margin-top: 0;
-    }
-
-    .invoice-steps.disabled {
-        opacity:0.4;
-    }
-
-    .invoice-vertical-line{
-        margin: -13px 0 0 39px;
-        border: 2px solid #b2c2cd;
-        height: 18px;
-        width: 0;
-    }
-
-    .invoice-header {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #fcfbe3;
-        margin: -17px -27px 15px !important;
-        border-radius: 10px 10px 0 0;
-        padding: 15px;
-    }
-
-    .invoice-step-badge {
-        color: #cdd1d3;
-        float: left;
-        font-size: 25px;
-        line-height: 50px;
-        margin-right: 18px;
-        text-align: center;
-        border-width: 2px;
-    }
-
-    .invoice-step-badge-inner {
-        background: #fff;
-        border: 2px solid #136acd;
-        border-radius: 50%;
-        color: #136acd;
-        width: 50px;
-        height: 50px;
-        line-height: 46px;
-        box-sizing: border-box;
-    }
-
-.checkmark__circle {
-  stroke-dasharray: 166;
-  stroke-dashoffset: 166;
-  stroke-width: 2;
-  stroke-miterlimit: 10;
-  stroke: #7ac142;
-  fill: none;
-  animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
-}
-
-.checkmark {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    display: block;
-    stroke-width: 2;
-    stroke: #fff;
-    stroke-miterlimit: 10;
-    float: right;
-    margin: 0;
-    box-shadow: inset 0px 0px 0px #7ac142;
-    animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
-}
-
-.checkmark__check {
-  transform-origin: 50% 50%;
-  stroke-dasharray: 48;
-  stroke-dashoffset: 48;
-  animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
-}
-
-@keyframes stroke {
-  100% {
-    stroke-dashoffset: 0;
-  }
-}
-@keyframes scale {
-  0%, 100% {
-    transform: none;
-  }
-  50% {
-    transform: scale3d(1.1, 1.1, 1);
-  }
-}
-@keyframes fill {
-  100% {
-    box-shadow: inset 0px 0px 0px 30px #7ac142;
-  }
-}
-
 </style>
 
 <template>
+
     <div id="invoice-widget">
         
-        <Row v-if="!createMode && localInvoice.last_approved_activity" class="border-bottom ivu-row mb-3 pb-3">
-            <Col span="5">
-                <h2 class="text-dark">Invoice #{{ localInvoice.reference_no_value }}</h2>
-            </Col>
-            <Col span="3">
-                <h6 class="text-secondary">Status</h6>
-                <h5><statusTag :invoice="invoice"></statusTag></h5>   
-            </Col>
-            <Col span="6">
-                <h6 class="text-secondary">Customer</h6>
-                <h5><a href="#">{{ localInvoice.customized_client_details.name }}</a></h5>            
-            </Col>
-            <Col span="5">
-                <h6 class="text-secondary">Amount</h6>
-                <h5>{{ localInvoice.grand_total_value | currency(currencySymbol)  }}</h5>            
-            </Col>
-            <Col span="4">
-                <h6 class="text-secondary">Due</h6>
-                <h5>{{ localInvoice.expiry_date_value | moment("from", "now")  }}</h5>            
-            </Col>
-            <Col span="1">
-                <Dropdown class="menu-border" trigger="click" placement="bottom-end">
-                    <a href="javascript:void(0)">
-                        <Icon type="md-more" :size="16"></Icon>
-                    </a>
-                    <DropdownMenu slot="list" :style="{ width: '150px' }">
-                        <DropdownItem v-if="!editMode" @click.native="activateEditMode(true)">Edit</DropdownItem>
-                        <DropdownItem v-if="editMode" @click.native="activateEditMode(false)">View</DropdownItem>
-                        <hr>
-                        <DropdownItem @click.native="downloadPDF()">Export As PDF</DropdownItem>
-                        <DropdownItem>Get Share Link</DropdownItem>
-                        <DropdownItem @click.native="downloadPDF({ print: true })">Print Invoice</DropdownItem>
-                        <hr>
-                        <DropdownItem>Make Recurring</DropdownItem>
-                        <DropdownItem>Duplicate</DropdownItem>
-                        <DropdownItem>Customize</DropdownItem>
-                        <hr>
-                        <DropdownItem>Delete</DropdownItem>
-                    </DropdownMenu>
-                </Dropdown>
-            </Col>
-        </Row>
+        <!-- Get the summary header to display the invoice #, status, due date, amount due and menu options -->
+        <summaryHeader 
+             v-if="!createMode && localInvoice.has_approved"
+            :invoice="localInvoice" :editMode="editMode" :createMode="createMode" :currencySymbol="currencySymbol"
+            @toggleEditMode="toggleEditMode($event)">
+        </summaryHeader>
         
-        <Row v-if="!createMode">   
-            
-            <Col :span="24">
-                
-                <div v-if="isApprovingInvoice" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Approving, please wait...</div>
-                
-                <Card :bordered="false" :class="'invoice-steps is-highlighted' + (isApprovingInvoice ? 'disabled': '')">
+        <!-- Get the staging toolbar to display the invoice approved, sent/re-send and record payment stages -->
+        <stagingToolbar 
+            v-if="!createMode"
+            :invoice="localInvoice" :editMode="editMode" :createMode="createMode" 
+            @toggleEditMode="toggleEditMode($event)" @approved="updateInvoiceData($event)" 
+            @sent="updateInvoiceData($event)"
+            @paid="updateInvoiceData($event)" @cancelled="updateInvoiceData($event)" 
+            @reminderSet="updateInvoiceData($event)">
+        </stagingToolbar>
 
-                    <Row v-if="!localInvoice.last_approved_activity" :gutter="20" class="invoice-header">
-                        <Col span="24">
-                        <Icon type="ios-information-circle-outline" :size="28" style="margin-top: -4px;"/>
-                            <span>This is a DRAFT invoice. You can take further actions once you approve it. <a href="#" class="font-weight-bold">Learn more <Icon type="ios-share-alt-outline" :size="20" style="margin-top: -9px;"/></a></span>
-                        </Col>
-                    </Row>
-                    <Row :gutter="20">
-                        <Col span="12">
-                            <div class="invoice-step-badge">
-                                <div class="invoice-step-badge-inner">1</div>
-                            </div>
-                            <h4 v-if="" class="text-secondary">{{ localInvoice.last_approved_activity ? 'Invoice Approved' : 'Approve Invoice' }}</h4>
-                            <Poptip word-wrap width="200" trigger="hover" :content="localInvoice.created_date_value | moment('DD MMM YYYY, H:mmA') || '___'">
-                                <p class="mt-2 mb-2">
-                                    <span class="font-weight-bold">Created:</span> {{ localInvoice.created_at | moment("from", "now") | capitalize }} from <a href="#"><span class="font-weight-bold">Estimate #87</span></a>
-                                </p>
-                            </Poptip>
-                        </Col>
-                        <Col span="12">
-
-                            <Button class="float-right ml-2" type="default" size="large" @click.native="activateEditMode(true)">
-                                <span>Edit Draft</span>
-                            </Button>
-
-                            <Button v-if="!localInvoice.last_approved_activity" class="float-right" type="primary" size="large" @click="approveInvoice()">
-                                <span>Approve Draft</span>
-                            </Button>
-
-                        </Col>
-                    </Row>
-            
-                </Card>
-
-                <div class="invoice-vertical-line"></div>
-
-                <div v-if="isSendingInvoice" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Sending, please wait...</div>
-
-                <Card :bordered="false" :class="'invoice-steps' + 
-                        (!localInvoice.last_approved_activity ? ' invoice-hide-step disabled' : ' is-highlighted') +
-                        (isSendingInvoice ? ' disabled': '')">
-                    <Row :gutter="20">
-                        <Col span="12">
-                            <div class="invoice-step-badge">
-                                <div class="invoice-step-badge-inner">2</div>
-                            </div>
-                            <h4 v-if="" class="text-secondary">{{ localInvoice.last_sent_activity ? 'Invoice Sent' : 'Send Invoice' }}</h4>
-                            <Poptip word-wrap width="200" trigger="hover" :content="(localInvoice.last_sent_activity || {}).created_at | moment('DD MMM YYYY, H:mmA') || '___'">
-                                <p class="mt-2 mb-2">
-                                    <span v-if="!localInvoice.last_sent_activity" class="font-weight-bold">Last Sent: Never</span>
-                                    <span v-if="localInvoice.last_sent_activity" class="font-weight-bold">Last Sent:</span> {{ (localInvoice.last_sent_activity || {}).created_at | moment("from", "now") }}
-                                </p>
-                            </Poptip>
-                        </Col>
-                        <Col span="12">
-
-                            <Button v-if="!localInvoice.last_sent_activity" class="float-right ml-2" type="default" size="large" @click="sendInvoice()">
-                                <span>Skip</span>
-                            </Button>
-
-                            <Button class="float-right" :type="localInvoice.last_sent_activity ? 'default' : 'primary'" 
-                                    size="large" @click="sendInvoice()">
-                                <span>{{ localInvoice.last_sent_activity ? 'Resend Invoice': 'Send Invoice' }}</span>
-                            </Button>
-
-                        </Col>
-                    </Row>
-                </Card>
-
-                <div class="invoice-vertical-line"></div>
-
-                <div v-if="isRecordingPayment" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Recording payment, please wait...</div>
-                <div v-if="isCancelingPayment" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Canceling payment, please wait...</div>
-
-                <Card :bordered="false" :class="'invoice-steps' + 
-                        (!localInvoice.last_sent_activity ? ' invoice-hide-step disabled' : ' is-highlighted') +
-                        (isRecordingPayment || isCancelingPayment ? ' disabled': '')">
-                    <Row :gutter="20">
-                        <Col span="12">
-                            <div class="invoice-step-badge">
-                                <div class="invoice-step-badge-inner">3</div>
-                            </div>
-                            <h4 v-if="" class="text-secondary">{{ hasPaidInvoice ? 'Got Paid' : 'Get Paid' }}</h4>
-                            <p class="mt-2 mb-2"><span class="font-weight-bold">{{ (hasPaidInvoice ? 'Amount Paid' : 'Amount Due') }}:</span> {{ localInvoice.grand_total_value | currency(currencySymbol)  }}</p>
-                        </Col>
-                        <Col span="12">
-
-                            <svg v-if="hasPaidInvoice" class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52"><circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/><path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/></svg>
-                        
-                            <Button v-if="hasPaidInvoice" class="float-right mt-2 mr-4" type="default" size="large" @click="cancelPayment()">
-                                <span>Cancel Payment</span>
-                            </Button>
-                            
-                            <Button v-if="!hasPaidInvoice" class="float-right" type="primary" size="large" @click="recordPayment()">
-                                <span>Record Payment</span>
-                            </Button>
-                            
-                        </Col>
-
-                    </Row>
-                    
-                    <Row :gutter="20" v-if="localInvoice.last_sent_activity && !hasPaidInvoice">
-                        <Col span="24">
-                            <Alert :style="{ zIndex:'1' }">
-                                <h6 class="mt-2 mb-2"><span class="font-weight-bold">Status:</span> Your invoice is awaiting payment for - {{ localInvoice.grand_total_value | currency(currencySymbol) }}</h6>
-                            </Alert>
-                        </Col>
-                        <Row>
-                            <Col span="24">
-                                <div style="background:#eee;padding: 20px">
-                                    <Card :bordered="false">
-                                        <Row>
-                                            <Col span="24" class="mb-3">
-                                                <h6>
-                                                    <Icon type="ios-information-circle-outline" :size="24" :style="{ marginTop:'-3px' }" />
-                                                    <span class="font-weight-bold mb-3">Get paid on time by scheduling payment reminders for your customer:</span>
-                                                </h6>
-                                            </Col>
-                                            <Col span="8">
-                                                <h6 class="text-secondary mb-3">1) Remind before due date</h6>
-                                                <CheckboxGroup v-model="paymentReminderTime">
-                                                    <Checkbox class="font-weight-bold" label="1-b">1 day before</Checkbox>
-                                                    <Checkbox class="font-weight-bold" label="3-b">3 days before</Checkbox>
-                                                    <Checkbox class="font-weight-bold" label="7-b">7 days before</Checkbox>
-                                                    <Checkbox class="font-weight-bold" label="14-b">14 days before</Checkbox>
-                                                </CheckboxGroup>
-                                            </Col>
-                                            <Col span="8" class="border-left border-right pl-3">
-                                                <h6 class="text-secondary mb-3">2) Remind on due date</h6>
-                                                <CheckboxGroup v-model="paymentReminderTime">
-                                                    <Checkbox class="font-weight-bold" label="0">On due date</Checkbox>
-                                                </CheckboxGroup>
-                                            </Col>
-                                            <Col span="8" class="pl-3">
-                                                <h6 class="text-secondary mb-3">3) Remind after due date</h6>
-                                                <CheckboxGroup v-model="paymentReminderTime" @change="updatePaymentReminders()">
-                                                    <Checkbox class="font-weight-bold" label="1-a">1 day after</Checkbox>
-                                                    <Checkbox class="font-weight-bold" label="3-a">3 days after</Checkbox>
-                                                    <Checkbox class="font-weight-bold" label="7-a">7 days after</Checkbox>
-                                                    <Checkbox class="font-weight-bold" label="14-a">14 days after</Checkbox>
-                                                </CheckboxGroup>
-                                            </Col>
-                                            
-                                            <Col span="24 mt-2 pt-3 border-top">
-                                                <span class="font-weight-bold mr-1">Reminder Method: </span>
-                                                <!-- Reminder method Selector -->
-                                                <Select v-model="paymentReminderMethod" :style="{ width:'250px' }" placeholder="Select reminder method" multiple filterable>
-                                                    <Option value="email" key="email">Email</Option>
-                                                    <Option value="sms" key="sms" :disabled="true">SMS</Option>
-                                                </Select>
-
-                                                <Button class="float-right" type="primary" size="large" @click="updatePaymentReminders()">
-                                                    <span>Save Reminders</span>
-                                                </Button>
-
-                                            </Col>
-                                        </Row>
-                                    </Card>
-                                </div>
-                            </Col>
-                        </Row>
-
-                    </Row>
-
-                </Card>
-                
-            </Col>
-
-        </Row>
-
+        <!-- Loaders for creating/saving invoice -->
         <Row>
             <Col :span="24">
                 <div v-if="isCreatingInvoice" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Creating, please wait...</div>
@@ -449,23 +100,29 @@
             </Col>
         </Row>
 
+        <!-- Invoice View/Editor -->
         <Row id="invoice-summary-1">
             <Col :span="24">
                 <Card :style="{ width: '100%' }">
                     
+                    <!-- White overlay when creating/saving invoice -->
                     <Spin size="large" fix v-if="isSavingInvoice || isCreatingInvoice"></Spin>
 
+                    <!-- Main header -->
                     <div slot="title">
                         <h5>Invoice Summary</h5>
                     </div>
 
+                    <!-- Invoice options -->
                     <div slot="extra" v-if="showMenuBtn">
 
+                        <!-- Preview button -->
                         <Button type="primary" size="small" @click.native="downloadPDF({ preview: true })">
                             <Icon type="ios-eye-outline" :size="20" style="margin-top: -4px;"/>
                             <span>Preview</span>
                         </Button>
 
+                        <!-- Send dropdown button -->
                         <Dropdown trigger="click" class="mr-4">
                             <Button type="primary" size="small">
                                 <span>Send</span>
@@ -480,13 +137,14 @@
                             </DropdownMenu>
                         </Dropdown>
 
+                        <!-- Invoice Menu -->
                         <Dropdown class="menu-border" trigger="click" placement="bottom-end">
                             <a href="javascript:void(0)">
                                 <Icon type="md-more" :size="16"></Icon>
                             </a>
                             <DropdownMenu slot="list">
-                                <DropdownItem v-if="!editMode" @click.native="activateEditMode(true)">Edit</DropdownItem>
-                                <DropdownItem v-if="editMode" @click.native="activateEditMode(false)">View</DropdownItem>
+                                <DropdownItem v-if="!editMode" @click.native="toggleEditMode(true)">Edit</DropdownItem>
+                                <DropdownItem v-if="editMode" @click.native="toggleEditMode(false)">View</DropdownItem>
                                 <DropdownItem>Trash</DropdownItem>
                                 <DropdownItem>Edit Business Information</DropdownItem>
                                 <DropdownItem @click.native="downloadPDF()">Export As PDF</DropdownItem>
@@ -499,7 +157,7 @@
 
                         <Col span="24" class="pr-4">
 
-                            <!-- Create Button -->
+                            <!-- Create button -->
                             <Button v-if="createMode" 
                                     class="float-right mb-2 ml-3" :style="{ position:'relative' }"
                                     type="success" size="small" @click="createInvoice()">
@@ -507,7 +165,7 @@
                                 <span :style="{ position:'relative', zIndex:'2' }">Create Invoice</span>
                             </Button>
 
-                            <!-- Save Changes Button -->
+                            <!-- Save changes button -->
                             <Button v-if="!createMode && invoiceHasChanged" 
                                     class="float-right mb-2 ml-3" :style="{ position:'relative' }"
                                     type="success" size="small" @click="saveInvoice()">
@@ -515,7 +173,7 @@
                                 <span :style="{ position:'relative', zIndex:'2' }">Save Changes</span>
                             </Button>
 
-                            <!-- Edit Mode Switch -->
+                            <!-- Edit mode switch -->
                             <span class="float-right mb-2">
                                 <Poptip word-wrap width="200" trigger="hover" content="Turn on to edit invoice">
                                     <span>
@@ -534,6 +192,8 @@
                         </Col>
                         
                         <Col span="12">
+
+                            <!-- Company logo -->
                             <imageUploader 
                                 uploadMsg="Upload or change logo"
                                 :thumbnailStyle="{ width:'200px', height:'auto' }"
@@ -547,10 +207,12 @@
                             </imageUploader>
                         </Col>
                         
+                        <!-- Loader for when loading the company information -->
                         <Col v-if="isLoadingCompanyInfo" span="12" class="pr-4">
                             <Loader v-if="isLoadingCompanyInfo" :loading="isLoadingCompanyInfo" type="text" class="float-right text-right" :style="{ marginTop:'40px' }">Loading Company Details...</Loader>
                         </Col>
 
+                        <!-- Company information -->
                         <Col v-if="company" span="12" class="pr-4">
 
                             <h1 v-if="!editMode" class="text-dark text-right" style="font-size: 35px;">{{ localInvoice.heading || '___' }}</h1>
@@ -584,6 +246,7 @@
 
                         </Col>
 
+                        <!-- No company information alert -->
                         <Col v-if="!company && !isLoadingCompanyInfo" :span="12">
                             <Alert :style="{maxWidth: '250px'}" type="warning">
                                 No company details
@@ -599,10 +262,12 @@
                             <h3 v-if="!editMode" class="text-dark mb-3">{{ localInvoice.invoice_to_title ? localInvoice.invoice_to_title+':' : '' }}</h3>
                             <el-input v-if="editMode" placeholder="Invoice heading" v-model="localInvoice.invoice_to_title" size="large" class="mb-2" :style="{ maxWidth:'250px' }"></el-input>
                             
+                            <!-- Loader for when loading the client information -->
                             <div v-if="isLoadingClientInfo">
                                 <Loader v-if="isLoadingClientInfo" :loading="isLoadingClientInfo" type="text" :style="{ marginTop:'40px' }">Loading Client Details...</Loader>
                             </div>
 
+                            <!-- Client information -->
                             <div v-if="client">
                                 <p v-if="!editMode" class="mt-3 text-dark"><strong>{{ client.name || '___' }}</strong></p>
                                 <el-input v-if="editMode" placeholder="Company name" v-model="client.name" size="mini" class="mb-1" :style="{ maxWidth:'250px' }"></el-input>
@@ -628,18 +293,22 @@
                                     v-model="client.additionalFields[i].value">
                                 </el-input>
                             </div>
+
+                            <!-- No client information alert -->
                             <div v-if="!client && !isLoadingClientInfo">
                                 <Alert :style="{maxWidth: '250px'}" type="warning">
                                     No client selected
                                 </Alert>
                             </div>
 
+                            <!-- Company selector -->
                             <companySelector v-if="editMode" :style="{maxWidth: '250px'}" class="mt-2"
                                 @updated="updateClientChanges($event)">
                             </companySelector>
 
                         </Col>
                         
+                        <!-- Invoice details e.g) Reference #, created date, due date, grand total -->
                         <Col span="12">
                             <Row :gutter="20">
                                 <Col span="16">
@@ -682,6 +351,7 @@
                         </Col>
                     </Row>
 
+                    <!-- Edit mode toolbar e.g) Currency selector, primary/secondary color picker -->
                     <Row>
                         
                         <Col span="24">
@@ -710,6 +380,8 @@
 
                             </div>
                         </Col>
+
+                        <!-- Invoice list items (products/services) -->
                         <Col span="24">
                         
                             <table  class="table table-hover mt-3 mb-0 w-100">
@@ -789,6 +461,8 @@
                                         </Poptip>
                                         </td>
                                     </tr>
+
+                                    <!-- No list items alert -->
                                     <tr v-if="!(localInvoice.items || {}).length">
                                         <td colspan="9" class="p-2">
                                             <Alert show-icon>
@@ -813,6 +487,8 @@
 
                                         </td>
                                     </tr>
+
+                                    <!-- Add item button -->
                                     <tr v-if="editMode">
                                         <td colspan="10" class="p-2">
                                             <el-tooltip class="ml-auto mr-auto mb-3 d-block item" effect="dark" content="Add Service/Product" placement="top-start">
@@ -828,6 +504,7 @@
                     
                     <Divider dashed class="mt-0 mb-4" />
 
+                    <!-- Total details e.g) Sub/grand total and tax amounts -->
                     <Row>
                         <Col span="12" offset="12" class="pr-4">
                             <Row :gutter="20">
@@ -877,6 +554,8 @@
                         </Col>
                     </Row>
 
+                    <!-- Invoice summary e.g) For noting payment details/terms and conditions -->
+
                     <Row class="mb-5">
                         <Col span="24">
 
@@ -895,6 +574,8 @@
                             
                         </Col>
                     </Row>
+
+                    <!-- Invoice page footer -->
 
                     <footer :style="'background-color:'+primaryColor+';'">
                         <div class="mt-1">
@@ -922,13 +603,18 @@
 </template>
 
 <script>
+
+    import summaryHeader from './header/main.vue';
+    import stagingToolbar from './stagingToolbar/main.vue';
+
+
     import Loader from './../../components/_common/loader/Loader.vue';
     import getProductsAndServicesModal from './../quotation/getProductsAndServicesModal.vue';
     import imageUploader from './../quotation/imageUploader.vue';
     import currencySelector from './../quotation/currencySelector.vue';
     import taxSelector from './../quotation/taxSelector.vue';
     import Summernote from './../quotation/Summernote.vue';
-    import statusTag from './statusTag.vue';   
+     
     import companySelector from './companySelector.vue';   
 
     import lodash from 'lodash';
@@ -936,8 +622,10 @@
 
     export default {
         components: { 
+            summaryHeader, stagingToolbar,
+
             Loader, getProductsAndServicesModal, imageUploader,currencySelector, taxSelector, Summernote,
-            statusTag, companySelector
+            companySelector
         },
         props: {
             invoice: {
@@ -1010,10 +698,6 @@
                 isConvertingToInvoice: false,
                 isLoadingTaxes: false,
                 isOpenProductsAndServicesModal: false,
-                isApprovingInvoice: false,
-                isSendingInvoice: false,
-                isRecordingPayment: false,
-                isCancelingPayment: false,
 
                 //  Resources
                 fetchedTaxes: [],
@@ -1032,9 +716,6 @@
                 currencySymbol: ((this.invoice.currency_type || {}).currency || {}).symbol,
                 tableColumns: this.invoice.table_columns,
                 footerNotes: this.invoice.notes,
-
-                paymentReminderTime: this.getPaymentReminderTime(),
-                paymentReminderMethod: this.getPaymentReminderMethod(),
                 
                 //  Summernote Configuration
                 summernoteConfig: {
@@ -1059,37 +740,8 @@
                 deep: true
             }
         },
-        computed: {
-            hasPaidInvoice: function(){
-
-                //  Have we ever cancelled before
-                if( this.localInvoice.last_payment_cancelled_activity ){
-                    //  Then that means we have recorded payment before
-                    if( this.localInvoice.last_paid_activity ){
-                        //  Then we can compare the two dates and see which was more recent
-
-                        var cancelledDate = this.localInvoice.last_payment_cancelled_activity.created_at.split(' ').join('/');
-                        var recordedPaymentDate = this.localInvoice.last_paid_activity.created_at.split(' ').join('/');
-
-                        cancelledDate = new Date(cancelledDate).getTime();
-                        recordedPaymentDate = new Date(recordedPaymentDate).getTime();
-
-                        if (recordedPaymentDate > cancelledDate) {
-                            // The user has been confirmed as paid
-                            return true;
-                        } else {
-                            //  Payment record was cancelled
-                            return false
-                        }
-
-                    }
-                }else if( this.localInvoice.last_paid_activity ){
-                    return true;
-                }
-            }
-        },
         methods: {
-            activateEditMode(activate = true){
+            toggleEditMode(activate = true){
 
                 var self = this,
                     options = {
@@ -1118,42 +770,6 @@
 
                 // to cancel scrolling you can call the returned function
                 //cancelScroll()
-            },
-            getPaymentReminderTime: function(){
-                if( (this.invoice.reminders || {}).length ){
-                    return this.invoice.reminders.map(reminder => reminder.days_after);
-                }else{
-                    return [];
-                }
-
-            },
-            getPaymentReminderMethod: function(){
-                if( (this.invoice.reminders || {}).length ){
-                    return this.invoice.reminders.map(reminder => {
-                        var can = [];
-
-                        //  If this reminder can be emailed return 'email' value
-                        if(reminder.can_email){
-                            can.push('email');
-
-                        //  If this reminder can be sms'd return 'sms' value
-                        }else if(reminder.can_sms){
-                            can.push('sms');
-                        }
-
-                        return can;
-
-                    //  if result is [['email', 'email'], ['sms', 'sms']] then flatten to ['email', 'email', 'sms', 'sms']
-                    }).flat()
-
-                    //  if result is ['email', 'email', 'sms', 'sms'] then filter to only unique values ['email', 'sms']
-                    .filter( (value, index, self) => { 
-                        return self.indexOf(value) === index;
-                    });
-                }else{
-                    return ['email'];
-                }
-
             },
             updatePrimaryColor(newColor){
                 
@@ -1559,17 +1175,6 @@
             closeModal(){
                 this.isOpenProductsAndServicesModal = !this.isOpenProductsAndServicesModal;
             },
-            downloadPDF(download = { preview: false, print: false }){
-                if(this.invoice.id){
-                    var action = (download.preview ? '?preview=1' : '') + (download.print ? '?print=1' : '');
-                    let routeData = this.$router.resolve({
-                            path: '/api/download/invoices/'+this.invoice.id + action
-                        });
-
-                    window.open(routeData.href.replace("#", ""), '_blank');
-
-                }
-            },
             saveInvoice(){
 
                 var self = this;
@@ -1593,19 +1198,11 @@
                         //  Stop loader
                         self.isSavingInvoice = false;
 
-                        //  Disable edit mode
-                        self.editMode = false;
-
                         /*
                         *  updateInvoiceData() : This method ensures the property is
                         *  updated as a reactive property and triggers future view updates:
                         */
                         self.updateInvoiceData(data);
-
-                        //  Store the original invoice details
-                        self.storeOriginalInvoice();
-
-                        self.invoiceHasChanged = self.checkIfinvoiceHasChanged();
 
                         //  Alert creation success
                         self.$Message.success('Invoice saved sucessfully!');
@@ -1647,7 +1244,7 @@
                         //  Disable edit mode
                         self.editMode = false;
 
-                        //  Store the original invoice details
+                        //  Store the current state of the invoice as the original invoice
                         self.storeOriginalInvoice();
 
                         self.invoiceHasChanged = self.checkIfinvoiceHasChanged();
@@ -1670,271 +1267,27 @@
                         console.log(response);
                     });
             },
-            approveInvoice(){
-
-                var self = this;
-
-                //  Start loader
-                self.isApprovingInvoice = true;
-
-                console.log('Attempt to approve invoice...');
-
-                //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/invoices/'+self.localInvoice.id+'/approve')
-                    .then(({ data }) => {
-
-                        //  Stop loader
-                        self.isApprovingInvoice = false;
-
-                        //  Disable edit mode
-                        self.editMode = false;
-
-                        /*
-                        *  updateInvoiceData() : This method ensures the property is
-                        *  updated as a reactive property and triggers future view updates:
-                        */
-
-
-                        /*
-                         *  Vue.set()
-                         *  We use Vue.set to set a new object property. This method ensures the  
-                         *  property is created as a reactive property and triggers view updates:
-                         
-                        for(var x = 0; x < data.length; x++){
-                            self.set(self.localInvoice, x, data[x]);
-                        }
-                        */
-                        console.log('newInvoice to make reactive 1: ');
-                        console.log(data);
-
-                        for(var x = 0; x <  _.size(data); x++){
-                            console.log('set: ' + Object.keys(data)[x]);
-                            var key = Object.keys(data)[x];
-                            self.$set(self.localInvoice, key, data[key]);
-                        }
-                        
-                        //self.updateInvoiceData(data);
-
-                        //  Store the original invoice details
-                        self.storeOriginalInvoice();
-
-                        self.invoiceHasChanged = self.checkIfinvoiceHasChanged();
-
-                        //  Alert creation success
-                        self.$Message.success('Invoice approved sucessfully!');
-
-                        //  Notify parent of changes
-                        self.$emit('invoiceApproved', data);
-
-                    })         
-                    .catch(response => { 
-                        //  Stop loader
-                        self.isApprovingInvoice = false;
-
-                        console.log('invoiceSummaryWidget.vue - Error approving invoice...');
-                        console.log(response);
-                    });
-            },
-            sendInvoice(){
-
-                var self = this;
-
-                //  Start loader
-                self.isSendingInvoice = true;
-
-                console.log('Attempt to send invoice...');
-
-                //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/invoices/'+self.localInvoice.id+'/send')
-                    .then(({ data }) => {
-
-                        //  Stop loader
-                        self.isSendingInvoice = false;
-
-                        //  Disable edit mode
-                        self.editMode = false;
-
-                        /*
-                        *  updateInvoiceData() : This method ensures the property is
-                        *  updated as a reactive property and triggers future view updates:
-                        */
-                        self.updateInvoiceData(data);
-
-                        //  Store the original invoice details
-                        self.storeOriginalInvoice();
-
-                        self.invoiceHasChanged = self.checkIfinvoiceHasChanged();
-
-                        //  Alert creation success
-                        self.$Message.success('Invoice sent sucessfully!');
-
-                        //  Notify parent of changes
-                        self.$emit('invoiceSent', data);
-
-                    })         
-                    .catch(response => { 
-                        //  Stop loader
-                        self.isSendingInvoice = false;
-
-                        console.log('invoiceSummaryWidget.vue - Error sending invoice...');
-                        console.log(response);
-                    });
-            },
-            recordPayment(){
-
-                var self = this;
-
-                //  Start loader
-                self.isRecordingPayment = true;
-
-                console.log('Attempt to record invoice payment...');
-
-                //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/invoices/'+self.localInvoice.id+'/payment')
-                    .then(({ data }) => {
-
-                        //  Stop loader
-                        self.isRecordingPayment = false;
-
-                        //  Disable edit mode
-                        self.editMode = false;
-
-                        /*
-                        *  updateInvoiceData() : This method ensures the property is
-                        *  updated as a reactive property and triggers future view updates:
-                        */
-                        self.updateInvoiceData(data);
-
-                        //  Store the original invoice details
-                        self.storeOriginalInvoice();
-
-                        self.invoiceHasChanged = self.checkIfinvoiceHasChanged();
-
-                        //  Alert creation success
-                        self.$Message.success('Payment recorded sucessfully!');
-
-                        //  Notify parent of changes
-                        self.$emit('invoicePaid', data);
-
-                    })         
-                    .catch(response => { 
-                        //  Stop loader
-                        self.isRecordingPayment = false;
-
-                        console.log('invoiceSummaryWidget.vue - Error recording invoice payment...');
-                        console.log(response);
-                    });
-            },
-            cancelPayment(){
-
-                var self = this;
-
-                //  Start loader
-                self.isCancelingPayment = true;
-
-                console.log('Attempt to cancel invoice payment...');
-
-                //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/invoices/'+self.localInvoice.id+'/cancel-payment')
-                    .then(({ data }) => {
-
-                        //  Stop loader
-                        self.isCancelingPayment = false;
-
-                        //  Disable edit mode
-                        self.editMode = false;
-
-                        /*
-                        *  updateInvoiceData() : This method ensures the property is
-                        *  updated as a reactive property and triggers future view updates:
-                        */
-                        self.updateInvoiceData(data);
-
-                        //  Store the original invoice details
-                        self.storeOriginalInvoice();
-
-                        self.invoiceHasChanged = self.checkIfinvoiceHasChanged();
-
-                        //  Alert creation success
-                        self.$Message.success('Payment canceled sucessfully!');
-
-                        //  Notify parent of changes
-                        self.$emit('invoicePaymentCanceled', data);
-
-                    })         
-                    .catch(response => { 
-                        //  Stop loader
-                        self.isCancelingPayment = false;
-
-                        console.log('invoiceSummaryWidget.vue - Error canceling invoice payment...');
-                        console.log(response);
-                    });
-            },
-            updatePaymentReminders(){
-
-                var self = this;
-
-                //  Start loader
-                self.isRecordingPayment = true;
-
-                var remindersData = { 
-                    reminders: {
-                        days: this.paymentReminderTime,
-                        method: this.paymentReminderMethod
-                    } 
-                };
-
-                console.log('Attempt to update invoice payment reminders...');
-
-                //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/invoices/'+self.localInvoice.id+'/reminders', remindersData)
-                    .then(({ data }) => {
-
-                        //  Stop loader
-                        self.isRecordingPayment = false;
-
-                        //  Disable edit mode
-                        self.editMode = false;
-
-                        /*
-                        *  updateInvoiceData() : This method ensures the property is
-                        *  updated as a reactive property and triggers future view updates:
-                        */
-                        self.updateInvoiceData(data);
-
-                        //  Store the original invoice details
-                        self.storeOriginalInvoice();
-
-                        self.invoiceHasChanged = self.checkIfinvoiceHasChanged();
-
-                        //  Alert creation success
-                        self.$Message.success('Reminder added sucessfully!');
-
-                        //  Notify parent of changes
-                        self.$emit('invoiceReminerAdded', data);
-
-                    })         
-                    .catch(response => { 
-                        //  Stop loader
-                        self.isApprovingInvoice = false;
-
-                        console.log('invoiceSummaryWidget.vue - Error updating invoice payment reminders...');
-                        console.log(response);
-                    });
-            },
             updateInvoiceData(newInvoice){
                 /*
                  *  Vue.set()
                  *  We use Vue.set to set a new object property. This method ensures the  
                  *  property is created as a reactive property and triggers view updates:
                  */
-                console.log('newInvoice to make reactive 2: ' + _.size(newInvoice));
-                console.log(newInvoice);
+                
                 for(var x = 0; x <  _.size(newInvoice); x++){
-                    console.log('set: ' + Object.keys(this.localInvoice)[x]);
                     var key = Object.keys(this.localInvoice)[x];
                     this.$set(this.localInvoice, key, newInvoice[key]);
                 }
+
+                //  Store the current state of the invoice as the original invoice
+                this.storeOriginalInvoice();
+
+                //  Update the invoice change status
+                this.invoiceHasChanged = this.checkIfinvoiceHasChanged();
+
+                //  Disable edit mode
+                this.editMode = false;
+
             }
         },
         created(){
@@ -1948,7 +1301,7 @@
 
             this.fetchClientInfo(); 
 
-            //  Store the original invoice details
+            //  Store the current state of the invoice as the original invoice
             this.storeOriginalInvoice();
 
             if(this.createMode){

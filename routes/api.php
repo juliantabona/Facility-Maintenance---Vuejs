@@ -124,6 +124,7 @@ Route::get('invoices/{invoice_id}', 'Api\InvoiceController@show');
 Route::post('invoices/{invoice_id}', 'Api\InvoiceController@update');
 Route::post('invoices/{invoice_id}/approve', 'Api\InvoiceController@approve');
 Route::post('invoices/{invoice_id}/send', 'Api\InvoiceController@send');
+Route::post('invoices/{invoice_id}/skip-send', 'Api\InvoiceController@skipSend');
 Route::post('invoices/{invoice_id}/payment', 'Api\InvoiceController@recordPayment');
 Route::post('invoices/{invoice_id}/cancel-payment', 'Api\InvoiceController@cancelPayment');
 Route::post('invoices/{invoice_id}/reminders', 'Api\InvoiceController@updateReminders');

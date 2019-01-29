@@ -35,16 +35,12 @@ Vue.component('oq-Template-Field-Mockup',  require('./views/dashboard/draggable/
 //Vue.component('oq-Template-Drawer',  require('./views/dashboard/draggable/drawer/main.vue'));
 //Vue.component('oq-Template-Modal',  require('./views/dashboard/draggable/modal/main.vue'));
 
-
-
 Vue.component('create-draggable-section',  require('./views/dashboard/draggable/create-section-modal.vue'));
 Vue.component('show-draggable-section',  require('./views/dashboard/draggable/show-section-modal.vue'));
 Vue.component('create-draggable-field',  require('./views/dashboard/draggable/create-field-modal.vue'));
 Vue.component('field-template',  require('./views/dashboard/draggable/field-template.vue'));
 Vue.component('section-edit-drawer',  require('./views/dashboard/draggable/section-edit-drawer.vue'));
 Vue.component('field-edit-drawer',  require('./views/dashboard/draggable/field-edit-drawer.vue'));
-
-
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to
@@ -110,6 +106,19 @@ Vue.use(Vue2Filters);
 var VueScrollTo = require('vue-scrollto');
 
 Vue.use(VueScrollTo)
+
+// Imports Froala Editor for wysiwyg functionality
+require('froala-editor/js/froala_editor.pkgd.min')
+
+// Require Froala Editor css files.
+require('froala-editor/css/froala_editor.pkgd.min.css')
+require('font-awesome/css/font-awesome.css')
+require('froala-editor/css/froala_style.min.css')
+
+// Import and use Vue Froala lib.
+import VueFroala from 'vue-froala-wysiwyg'
+
+Vue.use(VueFroala)
 
 const app = new Vue({
     el: '#app',

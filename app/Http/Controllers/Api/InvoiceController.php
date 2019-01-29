@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
+use PDF;
+use Mail;
 use App\Invoice;
+use App\Mail\InvoiceMail;
 use App\Notifications\InvoiceCreated;
 use App\Notifications\InvoiceUpdated;
 use App\Notifications\InvoiceApproved;
@@ -380,7 +383,7 @@ class InvoiceController extends Controller
         return oq_api_notify_no_resource();
     }
 
-    public function send(Request $request, $invoice_id)
+    public function skipSend(Request $request, $invoice_id)
     {
         //  Current authenticated user
         $user = auth('api')->user();
@@ -404,6 +407,68 @@ class InvoiceController extends Controller
                 /*****************************
                  *   SEND INVOICE VIA EMAIL  *
                  *****************************/
+
+                //  Set status to "sent"
+                $status = 'sent';
+
+                //  Record activity of a invoice sent
+                $invoiceCreatedActivity = oq_saveActivity($invoice, $user, $status, null);
+
+                //  Re-fresh invoice to get the latest sent status from our recent activties
+                $invoice = $invoice->fresh();
+
+                //  If the invoice was sent successfully, return back
+                return oq_api_notify($invoice, 200);
+            }
+        } catch (\Exception $e) {
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+
+        //  No resource found
+        return oq_api_notify_no_resource();
+    }
+
+    public function send(Request $request, $invoice_id)
+    {
+        //  Current authenticated user
+        $user = auth('api')->user();
+
+        /*****************************************************
+         *   CHECK IF USER HAS PERMISSION TO SEND INVOICE    *
+         *****************************************************/
+
+        try {
+            //  Get the invoice
+            $invoice = Invoice::where('id', $invoice_id)->first();
+
+            //  Check if we have an invoice
+            if (count($invoice)) {
+                /*****************************
+                 *   SEND INVOICE VIA EMAIL  *
+                 *****************************/
+
+                $email = request('email');
+                $subject = request('subject');
+                $message = request('message');
+
+                $invoicePDF = PDF::loadView('pdf.invoice', array('invoice' => $invoice));
+
+                if (!empty($invoice->details['heading']) && !empty($invoice['reference_no_value'])) {
+                    $pdfName = $invoice->details['heading'].' - '.
+                               $invoice->details['reference_no_value'].' - '.
+                               \Carbon\Carbon::parse($invoice['created_date_value'])->format('M d Y').
+                               '.pdf';
+                } else {
+                    $pdfName = 'Invoice - '.$invoice->id.'.pdf';
+                }
+
+                Mail::to($user->email)->send(new InvoiceMail($subject, $message, $invoicePDF, $pdfName));
+
+                /*****************************
+                 *   SEND NOTIFICATIONS      *
+                 *****************************/
+
+                $user->notify(new InvoiceSent($invoice));
 
                 //  Set status to "sent"
                 $status = 'sent';

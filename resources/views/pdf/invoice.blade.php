@@ -463,7 +463,7 @@
         </footer>
 
         <script type="text/javascript"> 
-            @if($print)
+            @if(isset($print) && $print == 1)
                 this.print();
             @endif 
         </script> 

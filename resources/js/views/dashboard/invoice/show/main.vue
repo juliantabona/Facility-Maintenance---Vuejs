@@ -1,59 +1,60 @@
 <template>
 
     <Row :gutter="20">
-
+        
         <Col span="20" offset="2">
-            <invoiceSummaryWidget 
-                v-if="invoice"
-                :invoice="invoice"
-                v-bind="$props"
-                :key="renderKey">
-            </invoiceSummaryWidget>
+
+            <!-- Get the page toolbar with back button and page title -->
+            <pageToolbar :fallbackRoute="{ name: 'invoices' }"></pageToolbar>
+
+            <!-- Get the invoice details -->
+            <invoiceSummaryWidget v-if="invoice" :invoice="invoice" :key="renderKey"></invoiceSummaryWidget>
+            
         </Col>
 
     </Row>
 
 </template>
+
 <script>
 
+    import pageToolbar from './../../../../components/_common/toolbar/pageToolbar.vue';
     import invoiceSummaryWidget from './../../../../widgets/invoice/invoiceSummaryWidget.vue';
 
 
     export default {
         components: { 
-          invoiceSummaryWidget
-        },
-        props: {
-            receipt: {
-                type: Object,
-                default: null
-            },
+          pageToolbar, invoiceSummaryWidget
         },
         data(){
             return {
                 renderKey: 1,
+                invoice: null,
                 isLoadingInvoice: false,
-                invoice: null
             }
         },
         watch: {
+            //  Watch for changes on the invoice id
             '$route.params.id': function (id) {
                 
-                // react to route changes...
+                // react to route changes by fetching the associated invoice...
                 this.fetchInvoice();
 
             }
         },
         methods: {
             fetchInvoice() {
-                const self = this;
 
-                //  Start loader
-                self.isLoadingInvoice = true;
-
-                console.log('Start getting invoice details...');
-
+                //  If we have the route id set
                 if( this.$route.params.id ){
+
+                    //  Hold constant reference to the vue instance
+                    const self = this;
+
+                    //  Start loader
+                    self.isLoadingInvoice = true;
+
+                    console.log('Start getting invoice details...');
 
                     //  Use the api call() function located in resources/js/api.js
                     api.call('get', '/api/invoices/'+this.$route.params.id)
@@ -64,8 +65,10 @@
                             //  Stop loader
                             self.isLoadingInvoice = false;
 
+                            //  Store the invoice data
                             self.invoice = data;
 
+                            //  Re-render the component
                             self.renderComponent();
 
                         })         
@@ -74,19 +77,22 @@
                             //  Stop loader
                             self.isLoadingInvoice = false;
 
-                            console.log('dashboard/invoice/main.vue - Error getting invoice details...');
+                            //  Error Location
+                            console.log('dashboard/invoice/show/main.vue - Error getting invoice details...');
+
+                            //  Log the responce
                             console.log(response);    
                         });
 
                 }
             },
             renderComponent: function(){
-                console.log('Re-rendering currencies');
                 //  Re-render the component
                 this.renderKey++;
             }
         },
         created(){
+            //  Fetch the invoice
             this.fetchInvoice();
         }
     };
