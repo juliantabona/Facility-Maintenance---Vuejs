@@ -516,12 +516,12 @@
                     <br>
                     <p v-if="!editMode" v-html="localQuote.notes.details"></p>
                     <div v-if="editMode">
-                        <Summernote
+                        <froalaEditor
                             name="editor"
                             :model="localQuote.notes.details"
                             v-on:change="value => { localQuote.notes.details = value }"
-                            :config="summernoteConfig">
-                        </Summernote>
+                            :config="froalaEditorConfig">
+                        </froalaEditor>
                     </div>
                     
                 </Col>
@@ -552,18 +552,18 @@
 
 <script>
     import Loader from './../../components/_common/loader/Loader.vue';
-    import getProductsAndServicesModal from './getProductsAndServicesModal.vue';
-    import imageUploader from './imageUploader.vue';
-    import currencySelector from './currencySelector.vue';
-    import taxSelector from './taxSelector.vue';
-    import Summernote from './Summernote.vue';    
+    import getProductsAndServicesModal from './../invoice/modals/getProductsAndServicesModal.vue';
+    import imageUploader from './../invoice/upload/imageUploader.vue';
+    import currencySelector from './../invoice/selectors/currencySelector.vue';
+    import taxSelector from './../invoice/selectors/taxSelector.vue';
+    import froalaEditor from './../invoice/wiziwigEditors/froalaEditor.vue';    
 
     import lodash from 'lodash';
     Event.prototype._ = lodash;
 
     export default {
         components: { 
-            Loader, getProductsAndServicesModal, imageUploader,currencySelector, taxSelector, Summernote
+            Loader, getProductsAndServicesModal, imageUploader,currencySelector, taxSelector, froalaEditor
         },
         props: {
             quotation: {
@@ -615,7 +615,7 @@
                 primaryColor: this.quotation.colors[0],
                 secondaryColor: this.quotation.colors[1],
                 
-                summernoteConfig: {
+                froalaEditorConfig: {
                     height: 100,
                     toolbar: [
                         // [groupName, [list of button]]
@@ -624,7 +624,7 @@
                         ['fontsize', ['fontsize']],
                         ['color', ['color']],
                         ['para', ['ul', 'ol', 'paragraph']],
-                        ['insert', ['gxcode']], // plugin config: summernote-ext-codewrapper
+                        ['insert', ['gxcode']], // plugin config: froalaEditor-ext-codewrapper
                     ],
                 },
             }

@@ -5,7 +5,6 @@
         <!-- Fade loader - Shows when recording invoice payment  -->
         <fadeLoader :loading="isRecordingPayment" msg="Recording payment, please wait..."></fadeLoader>
 
-
         <!-- Fade loader - Shows when cancelling invoice payment  -->
         <fadeLoader :loading="isCancelingPayment" msg="Cancelling payment, please wait..."></fadeLoader>
 
@@ -31,25 +30,36 @@
                 <!-- Animated checkmark  -->
                 <animatedCheckmark v-if="localInvoice.has_paid"></animatedCheckmark>
             
+                <!-- Cancel Payment Button  -->
                 <Button v-if="localInvoice.has_paid" class="float-right mt-2 mr-4" type="default" size="large" @click="cancelPayment()">
                     <span>Cancel Payment</span>
                 </Button>
                 
-                <Button v-if="!localInvoice.has_paid" class="float-right" type="primary" size="large" @click="recordPayment()">
-                    <span>Record Payment</span>
-                </Button>
+                <!-- Focus Ripple  -->
+                <focusRipple v-if="!localInvoice.has_paid" color="blue" :ripple="localInvoice.has_sent && !localInvoice.has_paid" class="float-right">
+
+                    <!-- Record Payment Button  -->
+                    <Button type="primary" size="large" @click="recordPayment()">
+                        <span>Record Payment</span>
+                    </Button>
+
+                </focusRipple>
                 
             </template>
 
             <!-- Extra Content  -->
             <template slot="extraContent">
-
+                
                 <Row :gutter="20" v-if="localInvoice.has_sent && !localInvoice.has_paid">
+
+                    <!-- Explainer Message  -->
                     <Col span="24">
                         <Alert :style="{ zIndex:'1' }">
                             <h6 class="mt-2 mb-2"><span class="font-weight-bold">Status:</span> Your invoice is awaiting payment for - {{ localInvoice.grand_total_value | currency(currencySymbol) }}</h6>
                         </Alert>
                     </Col>
+
+                    <!-- Schedule Client Reminders -->
                     <Row>
                         <Col span="24">
                             <div style="background:#eee;padding: 20px">
@@ -61,6 +71,8 @@
                                                 <span class="font-weight-bold mb-3">Get paid on time by scheduling payment reminders for your customer:</span>
                                             </h6>
                                         </Col>
+
+                                        <!-- Reminders - Before Due Date  -->
                                         <Col span="8">
                                             <h6 class="text-secondary mb-3">1) Remind before due date</h6>
                                             <CheckboxGroup v-model="paymentReminderTime">
@@ -70,12 +82,16 @@
                                                 <Checkbox class="font-weight-bold" label="14-b">14 days before</Checkbox>
                                             </CheckboxGroup>
                                         </Col>
+
+                                        <!-- Reminders - On Due Date  -->
                                         <Col span="8" class="border-left border-right pl-3">
                                             <h6 class="text-secondary mb-3">2) Remind on due date</h6>
                                             <CheckboxGroup v-model="paymentReminderTime">
                                                 <Checkbox class="font-weight-bold" label="0">On due date</Checkbox>
                                             </CheckboxGroup>
                                         </Col>
+
+                                        <!-- Reminders - After Due Date  -->
                                         <Col span="8" class="pl-3">
                                             <h6 class="text-secondary mb-3">3) Remind after due date</h6>
                                             <CheckboxGroup v-model="paymentReminderTime">
@@ -88,12 +104,14 @@
                                         
                                         <Col span="24 mt-2 pt-3 border-top">
                                             <span class="font-weight-bold mr-1">Reminder Method: </span>
+
                                             <!-- Reminder method Selector -->
                                             <Select v-model="paymentReminderMethod" :style="{ width:'250px' }" placeholder="Select reminder method" multiple filterable>
                                                 <Option value="email" key="email">Email</Option>
                                                 <Option value="sms" key="sms" :disabled="true">SMS</Option>
                                             </Select>
 
+                                             <!-- Save Button -->
                                             <Button class="float-right" type="primary" size="large" @click="updatePaymentReminders()">
                                                 <span>Save Reminders</span>
                                             </Button>
@@ -108,7 +126,6 @@
                 </Row>
                 
             </template>
-
             
         </stagingCard>
 
@@ -120,9 +137,12 @@
     import fadeLoader from './fadeLoader.vue';
     import stagingCard from './stagingCard.vue';
     import animatedCheckmark from './animatedCheckmark.vue';
+    
+    /*  Ripples  */
+    import focusRipple from './../ripples/focusRipple.vue';
 
     export default {
-        components: { fadeLoader, stagingCard, animatedCheckmark },
+        components: { fadeLoader, stagingCard, animatedCheckmark, focusRipple },
         props: {
             invoice: {
                 type: Object,
@@ -151,31 +171,36 @@
             //  Watch for changes on the invoice
             invoice: {
                 handler: function (val, oldVal) {
-                    alert('Changed!')
-                    if(this.localInvoice != val){
 
-                        //  Update the local invoice value
-                        this.localInvoice = val;
+                    //  Update the local invoice value
+                    this.localInvoice = val;
 
-                        //  Update the currency value
-                        this.currencySymbol = ((val.currency_type || {}).currency || {}).symbol;
-                    }
-                }
+                    //  Update the currency value
+                    this.currencySymbol = ((val.currency_type || {}).currency || {}).symbol;
+
+                    //  Update the payment reminder times
+                    this.paymentReminderTime = this.getPaymentReminderTime();
+
+                    //  Update the payment reminder methods
+                    this.paymentReminderMethod = this.getPaymentReminderMethod();
+
+                },
+                deep: true
             }
         },
         methods: {
 
             getPaymentReminderTime: function(){
-                if( (this.invoice.reminders || {}).length ){
-                    return this.invoice.reminders.map(reminder => reminder.days_after);
+                if( ((this.localInvoice || {}).reminders || {}).length ){
+                    return this.localInvoice.reminders.map(reminder => reminder.days_after);
                 }else{
                     return [];
                 }
 
             },
             getPaymentReminderMethod: function(){
-                if( (this.invoice.reminders || {}).length ){
-                    return this.invoice.reminders.map(reminder => {
+                if( ((this.localInvoice || {}).reminders || {}).length ){
+                    return this.localInvoice.reminders.map(reminder => {
                         var can = [];
 
                         //  If this reminder can be emailed return 'email' value
@@ -290,7 +315,7 @@
                         console.log(data);
 
                         //  Stop loader
-                        self.isRecordingPayment = false;
+                        self.isUpdatingReminders = false;
                         
                         //  Alert creation success
                         self.$Message.success('Reminder added sucessfully!');

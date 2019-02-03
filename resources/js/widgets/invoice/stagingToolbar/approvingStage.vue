@@ -37,9 +37,15 @@
                     <span>Edit Draft</span>
                 </Button>
 
-                <Button v-if="!localInvoice.has_approved" class="float-right" type="primary" size="large" @click="approveInvoice()">
-                    <span>Approve Draft</span>
-                </Button>
+                <!-- Focus Ripple  -->
+                <focusRipple v-if="!localInvoice.has_approved" color="blue" :ripple="true" class="float-right">
+
+                    <!-- Create Invoice Button  -->
+                    <Button type="primary" size="large" @click="approveInvoice()">
+                        <span>Approve Draft</span>
+                    </Button>
+
+                </focusRipple>
 
             </template>
             
@@ -51,10 +57,13 @@
 <script type="text/javascript">
 
     import fadeLoader from './fadeLoader.vue';
-    import stagingCard from './stagingCard.vue';
+    import stagingCard from './stagingCard.vue';   
+    
+    /*  Ripples  */
+    import focusRipple from './../ripples/focusRipple.vue';
 
     export default {
-        components: { fadeLoader, stagingCard },
+        components: { fadeLoader, stagingCard, focusRipple },
         props: {
             invoice: {
                 type: Object,
@@ -69,7 +78,7 @@
             return {
                 isApprovingInvoice: false,
                 localInvoice: this.invoice,
-                locallocalEditMode: this.editMode
+                localEditMode: this.editMode
             }
         },
         watch: {
@@ -77,22 +86,19 @@
             //  Watch for changes on the invoice
             invoice: {
                 handler: function (val, oldVal) {
-                    if(this.localInvoice != val){
 
-                        //  Update the local invoice value
-                        this.localInvoice = val;
-                    }
-                }
+                    //  Update the local invoice value
+                    this.localInvoice = val;
+
+                },
+                deep: true
             },
 
             //  Watch for changes on the edit mode value
             editMode: {
                 handler: function (val, oldVal) {
-                    if(this.locallocalEditMode != val){
-
-                        //  Update the edit mode value
-                        this.locallocalEditMode = val;
-                    }
+                    //  Update the edit mode value
+                    this.localEditMode = val;
                 }
             }
         },

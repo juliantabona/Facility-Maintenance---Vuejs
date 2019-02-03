@@ -85,38 +85,50 @@
 <template>
 
     <div>
+        <!-- Card  -->
         <Card :bordered="false" :class="'invoice-steps is-highlighted' + (disabled ? ' disabled': '')">
-
+            
+            <!-- Header Content  -->
             <Row v-if="showHeader" :gutter="20" class="invoice-header">
                 <Col span="24">
+                    <!-- Content  -->
                     <slot name="header"></slot>
                 </Col>
             </Row>
 
+            <!-- Center Content  -->
             <Row :gutter="20">
 
+                <!-- Left Content  -->
                 <Col span="12">
-
+                    
+                    <!-- Step Number  -->
                     <div class="invoice-step-badge">
                         <div class="invoice-step-badge-inner">{{ stageNumber }}</div>
                     </div>
 
+                    <!-- Content  -->
                     <slot name="leftContent"></slot>
 
                 </Col>
 
+                <!-- Right Content  -->
                 <Col span="12">
 
+                    <!-- Content  -->
                     <slot name="rightContent"></slot>
 
                 </Col>
             </Row>
 
+            <!-- Extra Content  -->
             <slot name="extraContent"></slot>
 
         </Card>
 
+        <!-- Vertical Line  -->
         <div v-if="showVerticalLine" class="invoice-vertical-line"></div>
+
     </div>
         
 </template>

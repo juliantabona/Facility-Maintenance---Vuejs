@@ -3,6 +3,11 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
+
+Relation::morphMap([
+    'invoice' => 'App\Invoice',
+]);
 
 class Reminder extends Model
 {

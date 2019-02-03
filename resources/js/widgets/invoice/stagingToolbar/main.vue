@@ -17,7 +17,6 @@
                 @paid="$emit('paid', $event)" @cancelled="$emit('cancelled', $event)" @reminderSet="$emit('reminderSet', $event)">
             </paymentStage>
             
-
         </Col>
 
     </Row>

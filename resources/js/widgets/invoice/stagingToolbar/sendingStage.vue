@@ -25,28 +25,35 @@
 
             <!-- Right Content  -->
             <template slot="rightContent">
-
+                
+                <!-- Skip Sending Button -->
                 <Button v-if="!localInvoice.has_sent" class="float-right ml-2" type="default" size="large" @click="sendInvoice()">
                     <span>Skip</span>
                 </Button>
 
-                <Button class="float-right" :type="localInvoice.has_sent ? 'default' : 'primary'" 
-                        size="large" @click="isOpenSendInvoiceModal = true">
-                    <span>{{ localInvoice.has_sent ? 'Resend Invoice': 'Send Invoice' }}</span>
-                </Button>
+                <!-- Focus Ripple  -->
+                <focusRipple color="blue" :ripple="localInvoice.has_approved &&!localInvoice.has_sent" class="float-right">
+
+                    <!-- Send/Resend Button -->
+                    <Button :type="localInvoice.has_sent ? 'default' : 'primary'" 
+                            size="large" @click="isOpenSendInvoiceModal = true">
+                        <span>{{ localInvoice.has_sent ? 'Resend Invoice': 'Send Invoice' }}</span>
+                    </Button>
+
+                </focusRipple>
                 
             </template>
             
         </stagingCard>
 
         <!-- 
-            MODAL TO SEND INVOICE
+            MODAL TO SEND INVOICE - VIA EMAIL
         -->
-        <sendInvoiceModal
-            v-show="isOpenSendInvoiceModal" 
-            :show="isOpenSendInvoiceModal"
-            :invoice="localInvoice"
-            v-on:closed="closeModal">
+        <sendInvoiceModal 
+            v-if="isOpenSendInvoiceModal" 
+            :invoice="localInvoice" 
+            @visibility="isOpenSendInvoiceModal = $event"
+            @sent="updateParent($event)">
         </sendInvoiceModal>
 
     </div>
@@ -56,10 +63,13 @@
 
     import fadeLoader from './fadeLoader.vue';
     import stagingCard from './stagingCard.vue';
-    import sendInvoiceModal from './sendInvoiceModal.vue';
+    import sendInvoiceModal from './../modals/sendInvoiceModal.vue';
+
+    /*  Ripples  */
+    import focusRipple from './../ripples/focusRipple.vue';
 
     export default {
-        components: { fadeLoader, stagingCard, sendInvoiceModal },
+        components: { fadeLoader, stagingCard, focusRipple, sendInvoiceModal },
         props: {
             invoice: {
                 type: Object,
@@ -82,18 +92,15 @@
             //  Watch for changes on the invoice
             invoice: {
                 handler: function (val, oldVal) {
-                    if(this.localInvoice != val){
 
-                        //  Update the local invoice value
-                        this.localInvoice = val;
-                    }
-                }
+                    //  Update the local invoice value
+                    this.localInvoice = val;
+
+                },
+                deep: true
             }
         },
         methods: {
-            closeModal(){
-                this.isOpenSendInvoiceModal = !this.isOpenSendInvoiceModal;
-            },
             sendInvoice(){
 
                 var self = this;
@@ -115,8 +122,8 @@
                         //  Alert creation success
                         self.$Message.success('Invoice sent sucessfully!');
 
-                        //  Alert parent and pass updated invoice data
-                        self.$emit('sent', data);
+                        //  NOTE that "data = updated invoice"
+                        self.updateParent(updatedInvoice);
 
                     })         
                     .catch(response => { 
@@ -127,6 +134,10 @@
                         console.log(response);
                     });
             },
+            updateParent(updatedInvoice){
+                //  Alert parent and pass updated invoice data
+                this.$emit('sent', updatedInvoice);
+            }
 
         }
     }
