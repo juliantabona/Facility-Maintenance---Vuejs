@@ -53,9 +53,10 @@ Route::post('/activate-account', 'Auth\AccountActivation@activate');
 Route::post('/resend-activation', 'Auth\AccountActivation@resend');
 
 Route::middleware('auth:api')->get('/user', 'Api\UserController@getUser');
-Route::middleware('auth:api')->post('/user/{user_id}', 'Api\UserController@update');
 Route::middleware('auth:api')->get('/user/settings', 'Api\UserController@getUserSettings');
 Route::middleware('auth:api')->post('/user/settings', 'Api\UserController@updateUserSettings');
+Route::middleware('auth:api')->post('/users/{user_id}', 'Api\UserController@update');
+Route::middleware('auth:api')->post('/users', 'Api\UserController@create');
 
 /*   PROCESS FORM RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
@@ -75,7 +76,7 @@ Route::get('jobcards/{jobcard_id}/lifecycle', 'Api\JobcardController@getLifecycl
 Route::post('jobcards/{jobcard_id}/lifecycle', 'Api\JobcardController@updateLifecycle');
 Route::post('jobcards/{jobcard_id}/addLifecycle', 'Api\JobcardController@addLifecycle');
 
-/*   JOBCARD RESOURCE ROUTES
+/*   COMPANY RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
 */
 Route::get('companies', 'Api\CompanyController@index');
@@ -85,6 +86,11 @@ Route::get('companies', 'Api\CompanyController@index');
  */
 Route::get('companies/{model_id}', 'Api\CompanyController@show');
 Route::get('companies/{company_id}/settings', 'Api\CompanyController@settings');
+
+/*   DIRECTORY RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::get('directories', 'Api\DirectoryController@index');
 
 /*   CATEGORY RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
@@ -128,6 +134,7 @@ Route::post('invoices/{invoice_id}/skip-send', 'Api\InvoiceController@skipSend')
 Route::post('invoices/{invoice_id}/payment', 'Api\InvoiceController@recordPayment');
 Route::post('invoices/{invoice_id}/cancel-payment', 'Api\InvoiceController@cancelPayment');
 Route::post('invoices/{invoice_id}/reminders', 'Api\InvoiceController@updateReminders');
+Route::post('invoices/{invoice_id}/receipts/send', 'Api\InvoiceController@sendReceipt');
 
 /*   PRODUCT/SERVICE RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
@@ -145,6 +152,11 @@ Route::get('taxes', 'Api\TaxController@index');
 Route::post('phones', 'Api\PhoneController@store');
 Route::post('phones/{phone_id}', 'Api\PhoneController@update');
 Route::delete('phones/{phone_id}', 'Api\PhoneController@delete');
+
+/*   RECENT ACTIVITIES RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::get('recentactivities', 'Api\RecentActivityController@getActivities');
 
 /*   MISC RESOURCE ROUTES
      -  Visit: https://github.com/antonioribeiro/countries

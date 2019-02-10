@@ -29,8 +29,8 @@
 </template>
 <script type="text/javascript">
 
-    import pageToolbar from './../../../../components/_common/toolbar/pageToolbar.vue';
-    import resourceTypeButton from './../../../../components/resourceTypeButton.vue';
+    import pageToolbar from './../../../../components/_common/toolbars/pageToolbar.vue';
+    import resourceTypeButton from './../../../../components/_common/buttons/resourceTypeButton.vue';
     import invoiceListWidget from './../../../../widgets/invoice/invoiceListWidget.vue';
 
     export default {

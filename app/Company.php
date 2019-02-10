@@ -61,22 +61,45 @@ class Company extends Model
         return $this->belongsToMany('App\Company', 'company_directory', 'owning_company_id', 'company_id')
                     ->withPivot('id', 'type', 'owning_branch_id', 'owning_company_id')
                     //  Select everything and make the jobcard id the primary id
-                    ->select('*', 'companies.id as id',  'companies.type as type',
+                    ->select('*', 'companies.id as id', 'companies.type as type', 'company_directory.type as directory_type',
                              'companies.deleted_at as deleted_at', 'companies.created_at as created_at',
                              'companies.updated_at as updated_at')
                     ->withTimestamps();
     }
 
-    public function clients()
+    public function userDirectory()
+    {
+        return $this->belongsToMany('App\User', 'user_directory', 'owning_company_id', 'user_id')
+                    ->withPivot('id', 'type', 'owning_branch_id', 'owning_company_id')
+                    //  Select everything and make the jobcard id the primary id
+                    ->select('*', 'users.id as id', 'user_directory.type as directory_type',
+                             'users.deleted_at as deleted_at', 'users.created_at as created_at',
+                             'users.updated_at as updated_at')
+                    ->withTimestamps();
+    }
+
+    public function companyClients()
     {
         return $this->companyDirectory()
                     ->where('company_directory.type', 'client');
     }
 
-    public function suppliers()
+    public function companySuppliers()
     {
         return $this->companyDirectory()
                     ->where('company_directory.type', 'supplier');
+    }
+
+    public function userClients()
+    {
+        return $this->userDirectory()
+                    ->where('user_directory.type', 'client');
+    }
+
+    public function userSuppliers()
+    {
+        return $this->userDirectory()
+                    ->where('user_directory.type', 'supplier');
     }
 
     public function productsOrServices()
@@ -111,6 +134,14 @@ class Company extends Model
     public function settings()
     {
         return $this->morphOne('App\Setting', 'trackable');
+    }
+
+    protected $appends = ['model_type'];
+
+    //  Getter for the type of model
+    public function getModelTypeAttribute()
+    {
+        return 'company';
     }
 
     ///////////////////////////////////////////////////////////////////////////////////
@@ -193,13 +224,6 @@ class Company extends Model
     {
         return $this->morphMany('App\RecentActivity', 'trackable')
                     ->orderBy('created_at', 'desc');
-    }
-
-    public function userDirectory()
-    {
-        return $this->belongsToMany('App\User', 'user_directory', 'owning_company_id', 'user_id')
-                    ->withPivot('id', 'type', 'owning_branch_id', 'owning_company_id')
-                    ->withTimestamps();
     }
 
     public function staff()

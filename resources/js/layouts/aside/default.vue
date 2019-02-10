@@ -46,7 +46,7 @@
       
       <!--  Main Menu -->
       <Menu :class="menuitemClasses"
-            :style="{ width: (isCollapsedState ? '78px' : '200px'), position: 'fixed', top: '64px', bottom: 0, paddingTop: '22px', zIndex: '4' }" 
+            :style="{ width: (isCollapsedState ? '78px' : '200px'), overflowY:'scroll',position: 'fixed', top: '64px', bottom: 0, paddingTop: '22px', zIndex: '4' }" 
             :active-name="activeLink" :open-names="['1']" theme="light">
 
           <router-link :to="{name:'overview'}">
@@ -73,8 +73,8 @@
           <Submenu name="4" style="color:#2d8cf0;">
 
               <template slot="title">
-                  <Icon type="ios-copy-outline" :size="20"/>
-                  <span>Accounting</span>
+                  <Icon type="ios-cash-outline" :size="20"/>
+                  <span>Sales</span>
               </template>
 
               <router-link :to="{ name:'create-quotation' }">
@@ -163,15 +163,15 @@
               <Icon type="ios-pie-outline" :size="20"/>
               <span>Reports</span>
             </MenuItem>
-          </router-link>10
-          <MenuItem name="9-1">
+          </router-link>
+          <MenuItem name="10-1">
             <Icon type="ios-help-buoy-outline" :size="20"/>
             <span>Support</span></el-menu-item>
           </MenuItem>
 
           <MenuItem name="11-1">
             <Icon type="ios-key-outline" :size="20"/>
-            <span>Roles/Permissions</span>
+            <span>User Roles</span>
           </MenuItem>
       </Menu>
 

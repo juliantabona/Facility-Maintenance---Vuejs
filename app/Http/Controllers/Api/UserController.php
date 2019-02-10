@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\User;
+use App\Phone;
 use Illuminate\Http\Request;
-use App\Notifications\UserUpdated;
 use App\Http\Controllers\Controller;
 
 class UserController extends Controller
@@ -74,6 +74,40 @@ class UserController extends Controller
             //  No resource found
             oq_api_notify_no_resource();
         }
+    }
+
+    public function create(Request $request)
+    {
+        //  Start creating the user
+        $userInstance = new User();
+        $data = $userInstance->initiateCreate();
+        $success = $data['success'];
+        $response = $data['response'];
+
+        //  If the user was created successfully
+        if ($success) {
+            //  If this is a success then we have a user returned
+            $user = $response;
+            //  Get any associated phones if any
+            $phones = request('profile')['phones'];
+            if (isset($phones)) {
+                //  Add new phone numbers
+                $phoneInstance = new Phone();
+
+                $data = $phoneInstance->addAndReplace($user, $phones);
+                $success = $data['success'];
+                $phones = $data['response'];
+            }
+
+            //  Get a fresh instance of the user
+            $user = $user->fresh()->load('phones');
+
+            //  Action was executed successfully
+            return oq_api_notify($user, 200);
+        }
+
+        //  If the data was not a success then return the response
+        return $response;
     }
 
     public function getUser(Request $request)

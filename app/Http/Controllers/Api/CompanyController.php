@@ -170,8 +170,6 @@ class CompanyController extends Controller
                     $client = $model->where('id', $model_id);
                 }
 
-                return $client->first();
-
                 try {
                     //  Get all and trashed
                     if (request('withtrashed') == 1) {

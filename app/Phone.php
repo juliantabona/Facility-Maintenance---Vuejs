@@ -4,6 +4,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use App\Traits\PhoneTraits;
 
 Relation::morphMap([
     'user' => 'App\User',
@@ -12,6 +13,8 @@ Relation::morphMap([
 
 class Phone extends Model
 {
+    use PhoneTraits;
+
     //  protected $with = ['createdBy'];
 
     protected $casts = [

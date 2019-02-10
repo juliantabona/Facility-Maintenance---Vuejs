@@ -276,7 +276,7 @@
 <script type="text/javascript">
     import Vue from 'vue'
     import axios from 'axios'
-    import Loader from './../loader/Loader.vue';
+    import Loader from './../loaders/Loader.vue';
 
     export default {
         props: {

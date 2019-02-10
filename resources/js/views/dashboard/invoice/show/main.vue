@@ -18,8 +18,8 @@
 
 <script>
 
-    import pageToolbar from './../../../../components/_common/toolbar/pageToolbar.vue';
-    import invoiceSummaryWidget from './../../../../widgets/invoice/invoiceSummaryWidget.vue';
+    import pageToolbar from './../../../../components/_common/toolbars/pageToolbar.vue';
+    import invoiceSummaryWidget from './../../../../widgets/invoice/show/main.vue';
 
 
     export default {

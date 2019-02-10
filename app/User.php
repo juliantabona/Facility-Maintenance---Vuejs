@@ -6,14 +6,15 @@ use Laravel\Passport\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Zizaco\Entrust\Traits\EntrustUserTrait;
-use Illuminate\Support\Facades\URL;
 use App\AdvancedFilter\Dataviewer;
+use App\Traits\UserTraits;
 
 class User extends Authenticatable
 {
     use EntrustUserTrait { restore as private restoreA; }
     use HasApiTokens, Notifiable;
     use Dataviewer;
+    use UserTraits;
 
     public function restore()
     {
@@ -32,8 +33,6 @@ class User extends Authenticatable
     protected $dates = [
         'date_of_birth',
     ];
-
-    //  protected $with = ['phones'];
 
     /**
      * The attributes that are mass assignable.
@@ -115,37 +114,17 @@ class User extends Authenticatable
         return !empty($value) ? $value : '/images/assets/placeholders/profile_placeholder.png';
     }
 
-    /**
-     * Generate a new passport token used for authentication
-     * during API calls to retrieve or modify records.
-     */
-    public function generateToken($request)
-    {
-        $http = new \GuzzleHttp\Client();
-        $response = $http->post(URL::to('/').'/oauth/token', [
-            'form_params' => [
-                'grant_type' => 'password',
-                'client_id' => '2',
-                'client_secret' => 'wosVFuDb7gqFM10AJvixPfyfp2NF0fQvPGidyNJ5',
-                'username' => $this->email,
-                'password' => $request->input('password'),
-                'scope' => '',
-            ],
-        ]);
-        //  Lets get an array instead of a stdObject so that we can return without errors
-        $response = json_decode($response->getBody(), true);
-
-        return oq_api_notify([
-                    'auth' => $response,            //  API ACCESS TOKEN
-                    'user' => $this->toArray(),      //  NEW REGISTERED USER
-                ], 201);
-    }
-
-    protected $appends = ['fullName'];
+    protected $appends = ['full_name', 'model_type'];
 
     //  Getter for calculating the deadline returned as array
     public function getFullNameAttribute()
     {
         return $this->first_name.' '.$this->last_name;
+    }
+
+    //  Getter for the type of model
+    public function getModelTypeAttribute()
+    {
+        return 'user';
     }
 }

@@ -244,7 +244,7 @@
 
 <script>
 
-  import Loader from './../../components/_common/loader/Loader.vue';
+  import Loader from './../../components/_common/loaders/Loader.vue';
   import Notification from './notification.vue';
 
   export default {

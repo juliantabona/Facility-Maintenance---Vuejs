@@ -2,85 +2,6 @@ import VueRouter from 'vue-router';
 import NProgress from 'nprogress';
 
 let routes = [
-        //  Login
-    {
-        path: '/login', name: 'login',
-        meta: { middlewareGuest: true },
-        component: require('./views/auth/login.vue')
-    },
-    {
-        path: '/activate-account', name: 'activate-account',
-        meta: { middlewareGuest: true },
-        component: require('./views/auth/ActivateAccount.vue')
-    },
-    {
-        //  Dashboard overview
-        path: '/overview', name: 'overview',
-        meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/overview/main.vue')
-    },
-    {
-        //  User Settings
-        path: '/user/settings', redirect: { name: 'user-profile-settings' }, name: 'show-user-settings',
-        meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/setting/user/main.vue'),
-        children: [
-            {
-              // UserProfile will be rendered inside User's <router-view>
-              // when /user/:id/profile is matched
-              path: 'profile', name: 'user-profile-settings',
-              meta: { layout: 'Dashboard', middlewareAuth: true },
-              component: require('./widgets/settings/profileWidget.vue'),
-            },
-            {
-              // UserPosts will be rendered inside User's <router-view>
-              // when /user/:id/posts is matched
-              path: 'password', name: 'user-password-settings',
-              meta: { layout: 'Dashboard', middlewareAuth: true },
-              component: require('./widgets/settings/passwordWidget.vue'),
-            },
-            {
-              // UserPosts will be rendered inside User's <router-view>
-              // when /user/:id/posts is matched
-              path: 'notifications', name: 'user-notification-settings',
-              meta: { layout: 'Dashboard', middlewareAuth: true },
-              component: require('./widgets/settings/notificationsWidget.vue'),
-            }
-        ],
-        props: true
-    },
-    {
-        //  Staff
-        path: '/staff', name: 'staff',
-        meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/staff/main.vue')
-    },
-    {
-        //  Clients
-        path: '/clients', name: 'clients',
-        meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/client/list/main.vue')
-    },
-    {
-        //  Show one client
-        path: '/clients/:id', name: 'show-client',
-        meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/client/show/main.vue'),
-        props: true
-    },
-    {
-        //  Quotations
-        path: '/quotations', name: 'quotations',
-        meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/quotation/list/main.vue')
-    },
-    {
-        //  Show one quotation
-        path: '/quotations/:id', name: 'show-quotation',
-        meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/quotation/show/main.vue'),
-        props: true
-    },
     {
         //  Invoices
         path: '/invoices', name: 'invoices',
@@ -102,66 +23,19 @@ let routes = [
         props: true
     },
     {
-        //  Suppliers
-        path: '/suppliers', name: 'suppliers',
+        //  Show invoice activities
+        path: '/invoices/:id/activities', name: 'show-invoice-activities',
         meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/supplier/list/main.vue')
-    },
-    {
-        //  Jobcards
-        path: '/jobcards', name: 'jobcards',
-        meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/jobcard/list/main.vue')
-    },
-    {
-        //  Create jobcard
-        path: '/jobcards/create', name: 'create-jobcard',
-        meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/jobcard/create/main.vue'),
+        component: require('./views/dashboard/invoice/show/allActivities.vue'),
         props: true
     },
     {
-        //  Show one jobcard
-        path: '/jobcards/:id', name: 'show-jobcard',
+        //  Show sent invoice activities
+        path: '/invoices/:id/sent-activities', name: 'show-sent-invoice-activities',
         meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/jobcard/show/main.vue'),
+        component: require('./views/dashboard/invoice/show/sentInvoiceActivities.vue'),
         props: true
-    },
-    {
-        //  Templates
-        path: '/templates', name: 'templates',
-        meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/template/main.vue')
-    },
-    {
-        //  Recent Activities
-        path: '/recent-activities', name: 'recent-activities',
-        meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/activity/main.vue')
-    },
-    {
-        //  Calendar
-        path: '/calendar', name: 'calendar',
-        meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/calendar/main.vue')
-    },
-    {
-        //  Reports
-        path: '/reports', name: 'reports',
-        meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/report/main.vue')
-    },
-    
-
-
-    //  TEST ROUTES TO REMOVE
-    {
-        //  Reports
-        path: '/draggable', name: 'draggable',
-        meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/draggable/main.vue')
     }
-    //  TEST ROUTES TO REMOVE
 
 ];
 

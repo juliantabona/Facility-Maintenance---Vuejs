@@ -239,6 +239,8 @@
             $secondaryColor = $invoice['colors'][1]; 
             $company = $invoice['customized_company_details'];
             $client = $invoice['customized_client_details'];
+            $companyPhones = collect(array_filter($company['phones'], function($phone){ return $phone['show']; }))->values();
+            $clientPhones = collect(array_filter($client['phones'], function($phone){ return $phone['show']; }))->values();
             $currencySymbol = $invoice['currency_type']['currency']['symbol'];
             $notes = $invoice['notes'];
 
@@ -257,7 +259,11 @@
                     <p class="ft0 p2" style="text-align:right;">{{ $invoice['heading'] }}</p>
                     <p class="ft1 p2" style="text-align:right;">{{ $company['name'] }}</p>
                     <p class="ft2 p2">{{ $company['email'] }}</p>
-                    <p class="ft2 p2">{{ $company['phone'] }}</p>
+                    <p class="ft2 p2">
+                        @if(COUNT($companyPhones))
+                            @foreach($companyPhones as $key => $phone){{($key != 0 ? ', ': '') . '(+' . $phone['calling_code']['calling_code'] . ') ' . $phone['number']}} @endforeach
+                        @endif
+                    </p>
                     <br />
                     @if($company['additionalFields'])
                         @foreach($company['additionalFields'] as $field)
@@ -276,7 +282,12 @@
                                 <p class="ft18 p4 pdb1">{{ $invoice['invoice_to_title'] }}:</p>
                                 <p class="p4 ft6 pdb1">{{ $client['name'] }}</p>
                                 <p class="p4 ft2">{{ $client['email'] }}</p>
-                                <p class="p4 ft2">{{ $client['phone'] }}</p>
+                                <p class="p4 ft2">
+                                    @if(COUNT($clientPhones))
+                                        @foreach($clientPhones as $key => $phone){{($key != 0 ? ', ': '') . '(+' . $phone['calling_code']['calling_code'] . ') ' . $phone['number']}} @endforeach
+                                    @endif
+                                </p>
+
                                 @if($client['additionalFields'])
                                     @foreach($client['additionalFields'] as $field)
                                         <p class="p4 ft2">{{ $field['value'] }}</p>

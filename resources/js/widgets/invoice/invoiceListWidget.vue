@@ -13,7 +13,7 @@
 <script type="text/javascript">
 
     import moment from 'moment';
-    import statusTag from './overview/statusTag.vue';
+    import statusTag from './../../components/_common/statuses/InvoiceStatusTag.vue';
     import filterableList from './../../components/_common/list/filterableList.vue';
 
     export default {

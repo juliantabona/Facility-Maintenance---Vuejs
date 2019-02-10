@@ -23,6 +23,7 @@
     },
     "dependencies": {
         "@tinymce/tinymce-vue": "^1.1.0",
+        "chart.js": "^2.7.3",
         "element-ui": "^2.4.11",
         "iview": "^3.1.5",
         "jspdf": "^1.5.3",
@@ -31,6 +32,7 @@
         "pusher-js": "^4.3.1",
         "simple-line-icons": "^2.4.1",
         "slick-carousel": "^1.8.1",
+        "vue-chartjs": "^3.4.0",
         "vue-froala-wysiwyg": "^2.9.1",
         "vue-lodash": "^2.0.0",
         "vue-moment": "^4.0.0",

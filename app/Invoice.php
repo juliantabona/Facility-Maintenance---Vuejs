@@ -2,10 +2,12 @@
 
 namespace App;
 
+use DB;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use App\Traits\InvoiceTraits;
 
 Relation::morphMap([
     'jobcard' => 'App\Jobcard',
@@ -14,6 +16,7 @@ Relation::morphMap([
 class Invoice extends Model
 {
     use Dataviewer;
+    use InvoiceTraits;
 
     /**
      * The table associated with the model.
@@ -46,6 +49,17 @@ class Invoice extends Model
         'expiry_date_title', 'expiry_date_value', 'sub_total_title', 'sub_total_value', 'grand_total_title', 'grand_total_value',
         'currency_type', 'calculated_taxes', 'invoice_to_title', 'customized_company_details', 'customized_client_details', 'client_id',
         'table_columns', 'items', 'notes', 'colors', 'footer', 'quotation_id', 'trackable_id', 'trackable_type', 'company_branch_id', 'company_id',
+    ];
+
+    /**
+     * The attributes that should be hidden for arrays.
+     *
+     * @var array
+     */
+    protected $hidden = [
+        //  Hide the recentActivities from the returned results
+        //  since they can be way too many
+        'recentActivities',
     ];
 
     protected $allowedFilters = [
@@ -91,6 +105,11 @@ class Invoice extends Model
         return $this->recentActivities()->where('type', 'sent');
     }
 
+    public function sentReceiptActivities()
+    {
+        return $this->recentActivities()->where('type', 'sent receipt');
+    }
+
     public function paidActivities()
     {
         return $this->recentActivities()->where('type', 'paid')->limit(1);
@@ -114,8 +133,10 @@ class Invoice extends Model
         return $this->morphMany('App\Reminder', 'trackable');
     }
 
-    protected $appends = ['last_approved_activity', 'last_sent_activity', 'last_paid_activity', 'last_payment_cancelled_activity',
-                          'has_paid', 'has_expired', 'has_cancelled', 'has_sent', 'has_approved', 'current_activity_status', ];
+    protected $appends = ['last_approved_activity', 'last_sent_activity', 'last_sent_receipt_activity', 'last_paid_activity', 'last_payment_cancelled_activity',
+                          'has_paid', 'has_expired', 'has_cancelled', 'has_sent', 'has_sent_receipt', 'has_approved', 'current_activity_status',
+                          'activity_count', 'sent_invoice_activity_count', 'sent_receipt_activity_count',
+                        ];
 
     public function getLastApprovedActivityAttribute()
     {
@@ -125,6 +146,11 @@ class Invoice extends Model
     public function getLastSentActivityAttribute()
     {
         return $this->recentActivities->where('type', 'sent')->first();
+    }
+
+    public function getLastSentReceiptActivityAttribute()
+    {
+        return $this->recentActivities->where('type', 'sent receipt')->first();
     }
 
     public function getLastPaidActivityAttribute()
@@ -178,6 +204,11 @@ class Invoice extends Model
         return $this->last_sent_activity ? true : false;
     }
 
+    public function gethasSentReceiptAttribute()
+    {
+        return $this->last_sent_receipt_activity ? true : false;
+    }
+
     public function gethasApprovedAttribute()
     {
         return $this->last_approved_activity ? true : false;
@@ -209,5 +240,34 @@ class Invoice extends Model
         } else {
             return 'Draft';
         }
+    }
+
+    public function getActivityCountAttribute()
+    {
+        $count = $this->recentActivities()->select(DB::raw('count(*) as total'))
+                                       ->groupBy('trackable_type')
+                                       ->first();
+
+        return $count ? $count->only(['total']) : ['total' => 0];
+    }
+
+    public function getSentInvoiceActivityCountAttribute()
+    {
+        $count = $this->recentActivities()->select(DB::raw('count(*) as total'))
+                                           ->where('type', 'sent')
+                                           ->groupBy('type')
+                                           ->first();
+
+        return $count ? $count->only(['total']) : ['total' => 0];
+    }
+
+    public function getSentReceiptActivityCountAttribute()
+    {
+        $count = $this->recentActivities()->select(DB::raw('count(*) as total'))
+                                           ->where('type', 'sent receipt')
+                                           ->groupBy('type')
+                                           ->first();
+
+        return $count ? $count->only(['total']) : ['total' => 0];
     }
 }

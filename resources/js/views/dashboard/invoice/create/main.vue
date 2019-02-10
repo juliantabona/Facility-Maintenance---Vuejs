@@ -11,7 +11,7 @@
 </template>
 <script>
 
-    import invoiceSummaryWidget from './../../../../widgets/invoice/invoiceSummaryWidget.vue';
+    import invoiceSummaryWidget from './../../../../widgets/invoice/show/main.vue';
 
 
     export default {
