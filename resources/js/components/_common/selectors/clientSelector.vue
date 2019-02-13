@@ -23,17 +23,21 @@
 
         <!-- Add Company Button -->
         <Poptip :style="{ float:'left' }" class="ml-1" word-wrap width="200" trigger="hover" content="Add a new client">
-            <Button class="pt-1 pb-1" icon="ios-add" type="dashed" size="small" @click="isOpenCreateClientModal = true">Add</Button>
+            <Button class="pt-1 pb-1" icon="ios-add" type="dashed" size="small" @click="isOpenCreateOrEditCompanyOrIndividualModal = true">Add</Button>
         </Poptip>
 
         <!-- 
-            MODAL TO CREATE NEW CLIENT - INDIVIDUAL/COMPANY
+            MODAL TO CREATE/EDIT COMPANY/INDIVIDUAL
         -->
-        <createCompanyOrUserModal 
-            v-if="isOpenCreateClientModal"
-            @visibility="isOpenCreateClientModal = $event"
-            @created:user="updateCreatedUser($event)">
-        </createCompanyOrUserModal>
+        <createOrEditCompanyOrIndividualModal 
+            v-if="isOpenCreateOrEditCompanyOrIndividualModal"
+            :editableCompanyOrIndividual="null"
+            :showCompanyOrUserSelector="showCompanyOrUserSelector"
+            :showClientOrSupplierSelector="showClientOrSupplierSelector"
+            @visibility="isOpenCreateOrEditCompanyOrIndividualModal = $event"
+            @updated="localSelectedClient = $event"
+            @created="localSelectedClient = $event">
+        </createOrEditCompanyOrIndividualModal>
 
     </div>
 
@@ -50,20 +54,29 @@
     import individualSelector from './individualSelector.vue'; 
 
     /*  Modals  */
-    import createCompanyOrUserModal from './../modals/createCompanyOrUserModal.vue';
+    import createOrEditCompanyOrIndividualModal from './../modals/createOrEditCompanyOrIndividualModal.vue';
 
     export default {
         props: {
             selectedClient:{
                 type: Object,
                 default: null
+            },
+            showCompanyOrUserSelector:{
+                type: Boolean,
+                default: true
+            },
+            showClientOrSupplierSelector:{
+                type: Boolean,
+                default: true
             }
         },
-        components: { Loader, companyOrUserSelector, companySelector, individualSelector, createCompanyOrUserModal },
+
+        components: { Loader, companyOrUserSelector, companySelector, individualSelector, createOrEditCompanyOrIndividualModal },
         data(){
             return {
                 selectedClientType: '',
-                isOpenCreateClientModal: false
+                isOpenCreateOrEditCompanyOrIndividualModal: false
             }
         },
         computed:{
@@ -75,12 +88,6 @@
                     this.$emit('updated',  newClient );
 
                 }
-            }
-        },
-        methods: {
-            updateCreatedUser(newUser){
-                this.selectedClientType = 'user';
-                this.localSelectedClient = newUser;
             }
         }
     };

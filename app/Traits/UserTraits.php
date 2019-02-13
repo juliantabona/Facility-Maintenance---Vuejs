@@ -59,11 +59,17 @@ trait UserTraits
                     'address' => $profile['address'],
                     'country' => $profile['country'],
                     'provience' => $profile['provience'],
-                    'postal_or_zipcode' => $profile['postal_or_zipcode'],
                     'city' => $profile['city'],
+                    'postal_or_zipcode' => $profile['postal_or_zipcode'],
                     'email' => $profile['email'],
                     'additional_email' => $profile['additional_email'],
+                    'facebook_link' => $profile['facebook_link'],
+                    'twitter_link' => $profile['twitter_link'],
+                    'linkedin_link' => $profile['linkedin_link'],
+                    'instagram_link' => $profile['instagram_link'],
                     'bio' => $profile['bio'],
+                    'position' => $profile['position'],
+                    'accessibility' => $profile['accessibility'],
                 ];
 
                 //  Create the user

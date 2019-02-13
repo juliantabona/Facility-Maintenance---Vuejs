@@ -459,7 +459,7 @@ class InvoiceController extends Controller
                     $pdfName = 'Invoice - '.$invoice->id.'.pdf';
                 }
 
-                Mail::to($user->email)->send(new InvoiceMail($subject, $message, $invoicePDF, $pdfName));
+                Mail::to($email)->send(new InvoiceMail($subject, $message, $invoicePDF, $pdfName));
 
                 /*****************************
                  *   SEND NOTIFICATIONS      *
@@ -513,7 +513,7 @@ class InvoiceController extends Controller
                 $subject = request('subject');
                 $message = request('message');
 
-                $receiptPDF = PDF::loadView('emails.send_invoice_receipt', array('invoice' => $invoice));
+                $receiptPDF = PDF::loadView('emails.send_invoice_receipt', array('invoice' => $invoice, 'msg' => null));
 
                 if (!empty($invoice->details['heading']) && !empty($invoice['reference_no_value'])) {
                     $pdfName = 'Receipt - '.
@@ -524,7 +524,7 @@ class InvoiceController extends Controller
                     $pdfName = 'Receipt - '.$invoice->id.'.pdf';
                 }
 
-                Mail::to($user->email)->send(new InvoiceReceiptMail($subject, $message, $receiptPDF, $pdfName));
+                Mail::to($email)->send(new InvoiceReceiptMail($subject, $message, $invoice, $receiptPDF, $pdfName));
 
                 /*****************************
                  *   SEND NOTIFICATIONS      *

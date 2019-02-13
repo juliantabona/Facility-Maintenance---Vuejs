@@ -76,14 +76,45 @@
                 localInvoice: this.invoice,
                 localSubject: this.subject || 'Receipt For Invoice #'+this.invoice['reference_no_value'],
                 localEmail: this.invoice.customized_client_details.email,
-                localMessage: this.message || 'Good Day, <br/><br/> Please find attached your receipt for invoice '+this.invoice['reference_no_value']+'. <br/><br/> Thank you.',
-            
+                localMessage: this.emailMsg(),
+                
                 hideModal: false,
                 isLoading: false,
                 isSending: false
             }
         },
         methods: {
+            emailMsg(){
+                
+                var money = this.invoice.grand_total_value || 0;
+                var currency = (((this.invoice || {}).currency_type || {}).currency || {}).symbol || '';
+                var amount = this.formatPrice(money, currency);
+                var company_name = this.invoice.customized_company_details.name;
+
+                return '<p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:12px;font-family:arial, \'helvetica neue\', helvetica, sans-serif;line-height:18px;color:#000000;">  \
+                            Good day,  \
+                        </p> \
+                        <br> \
+                        <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:12px;font-family:arial, \'helvetica neue\', helvetica, sans-serif;line-height:18px;color:#000000;">  \
+                            Please find attached receipt for <strong>Invoice #'+this.invoice['reference_no_value']+'</strong> \
+                            created on your account as confirmation of payment for the balance of  \
+                            <strong>'+amount+'. \
+                        </p> \
+                        <br> \
+                        <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:12px;font-family:arial, \'helvetica neue\', helvetica, sans-serif;line-height:18px;color:#000000;">  \
+                            Thank you for your business. \
+                        </p> \
+                        <br> \
+                        <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:12px;font-family:arial, \'helvetica neue\', helvetica, sans-serif;line-height:18px;color:#000000;">  \
+                            Regards, \
+                            <br> \
+                            '+company_name+' \
+                        </p>';
+            },
+            formatPrice(money, symbol) {
+                let val = (money/1).toFixed(2).replace(',', '.');
+                return symbol + val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            },
             sendEmail(){
 
                 var self = this;

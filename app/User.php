@@ -40,19 +40,19 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 'address', 'email',
-        'additional_email', 'username', 'password', 'verifyToken', 'settings', 'tutorial_status',
-        'company_branch_id', 'company_id', 'position', 'country', 'city', 'accessibility',
+        'first_name', 'last_name', 'date_of_birth', 'gender', 'address', 'country', 'provience', 'city',
+        'postal_or_zipcode', 'email', 'additional_email', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link',
+        'bio', 'username', 'password', 'verified', 'company_branch_id', 'company_id', 'position', 'accessibility',
     ];
 
     protected $allowedFilters = [
-        'id', 'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 'address', 'email',
-        'additional_email', 'position', 'country', 'city', 'accessibility', 'created_at',
+        'id', 'first_name', 'last_name', 'date_of_birth', 'gender', 'address', 'country', 'provience', 'city',
+        'postal_or_zipcode', 'email', 'additional_email', 'position', 'accessibility', 'created_at',
     ];
 
     protected $orderable = [
-        'id', 'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 'address', 'email',
-        'additional_email', 'position', 'country', 'city', 'accessibility', 'created_at',
+        'id', 'first_name', 'last_name', 'date_of_birth', 'gender', 'address', 'country', 'provience', 'city',
+        'postal_or_zipcode', 'email', 'additional_email', 'position', 'accessibility', 'created_at',
     ];
 
     /**

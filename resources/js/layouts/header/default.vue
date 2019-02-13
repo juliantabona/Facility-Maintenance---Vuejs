@@ -37,13 +37,18 @@
     margin-top:-5px;
   }
 
-  .main-header >>> .profile-image img {
+  .main-header >>> .profile-image .roundedShape {
     width: 50px;
     height: 50px;
     padding: 2px;
     border: 1px solid #c5c5c5;
     border-radius: 100%;
     display: block;
+  }
+
+  .main-header >>> .profile-image h1.roundedShape{
+    padding: 8px 0 0 15px;
+    color: #2d8cf0;
   }
 
   .notification-bar span{
@@ -171,7 +176,8 @@
                 <!-- Profile Image -->
                 <el-dropdown class="float-right mr-5" @command="handleProfileCommand">
                   <div class="profile-image">
-                    <img :src="user.avatar" alt="Profile Image">
+                    <img v-if="user.avatar" :src="user.avatar" alt="Profile Image" class="roundedShape">
+                    <h1 v-else  class="roundedShape">{{ user.full_name.charAt(0) ? user.full_name.charAt(0) : '?' }}</h1>
                   </div>
 
                   <!-- Profile Options -->

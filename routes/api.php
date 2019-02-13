@@ -47,6 +47,7 @@ Route::middleware('auth:api')->group(function () {
     //  Logout for all devices
     Route::post('/logout', 'Auth\LoginController@logout');
 });
+
 Route::post('/login', 'Auth\LoginController@login');
 Route::post('/register', 'Auth\RegisterController@register');
 Route::post('/activate-account', 'Auth\AccountActivation@activate');
@@ -55,8 +56,22 @@ Route::post('/resend-activation', 'Auth\AccountActivation@resend');
 Route::middleware('auth:api')->get('/user', 'Api\UserController@getUser');
 Route::middleware('auth:api')->get('/user/settings', 'Api\UserController@getUserSettings');
 Route::middleware('auth:api')->post('/user/settings', 'Api\UserController@updateUserSettings');
+Route::middleware('auth:api')->get('/users/{user_id}', 'Api\UserController@show');
 Route::middleware('auth:api')->post('/users/{user_id}', 'Api\UserController@update');
 Route::middleware('auth:api')->post('/users', 'Api\UserController@create');
+
+/*   COMPANY RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::get('companies', 'Api\CompanyController@index');
+
+/*  *** NOTE *** model_id means that this could be a company/branch associated id since
+ *  we could be trying to retrieve the company using either its branch/company id.
+ */
+Route::post('companies', 'Api\CompanyController@store');
+Route::get('companies/{company_id}', 'Api\CompanyController@show');
+Route::post('companies/{company_id}', 'Api\CompanyController@update');
+Route::get('companies/{company_id}/settings', 'Api\CompanyController@settings');
 
 /*   PROCESS FORM RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
@@ -75,17 +90,6 @@ Route::get('jobcards/lifecycle/stages', 'Api\JobcardController@getLifecycleStage
 Route::get('jobcards/{jobcard_id}/lifecycle', 'Api\JobcardController@getLifecycle');
 Route::post('jobcards/{jobcard_id}/lifecycle', 'Api\JobcardController@updateLifecycle');
 Route::post('jobcards/{jobcard_id}/addLifecycle', 'Api\JobcardController@addLifecycle');
-
-/*   COMPANY RESOURCE ROUTES
-     -  Get, Show, Update, Trash, Delete
-*/
-Route::get('companies', 'Api\CompanyController@index');
-
-/*  *** NOTE *** model_id means that this could be a company/branch associated id since
- *  we could be trying to retrieve the company using either its branch/company id.
- */
-Route::get('companies/{model_id}', 'Api\CompanyController@show');
-Route::get('companies/{company_id}/settings', 'Api\CompanyController@settings');
 
 /*   DIRECTORY RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete

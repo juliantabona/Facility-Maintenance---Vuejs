@@ -62,6 +62,17 @@
 </style> 
  </head> 
  <body style="width:100%;font-family:arial, 'helvetica neue', helvetica, sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;padding:0;Margin:0;"> 
+  
+  
+  @php 
+      $company = $invoice['customized_company_details'];
+      $client = $invoice['customized_client_details'];
+      $clientName = $client['name'] ?? $client['full_name'];
+      $companyPhones = isset($company['phones']) ? collect(array_filter($company['phones'], function($phone){ return $phone['show']; }))->values() : [];
+      $clientPhones = isset($client['phones']) ? collect(array_filter($client['phones'], function($phone){ return $phone['show']; }))->values() : [];
+      $currencySymbol = $invoice['currency_type']['currency']['symbol'];
+  @endphp
+    
   <div id="page" class="es-wrapper-color" style="background-color:#F6F6F6;"> 
    <!--[if gte mso 9]>
 			<v:background xmlns:v="urn:schemas-microsoft-com:vml" fill="t">
@@ -95,7 +106,33 @@
            </table> </td> 
          </tr> 
        </table>
+
        
+       @if($msg)
+       <table cellpadding="0" cellspacing="0" class="es-content" align="center" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;table-layout:fixed !important;width:100%;padding-bottom:20px;"> 
+          <tr style="border-collapse:collapse;"> 
+           <td align="center" style="padding:0;Margin:0;"> 
+            <table bgcolor="#ffffff" class="es-content-body" align="center" cellpadding="0" cellspacing="0" width="600" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:#FFFFFF;"> 
+              <tr style="border-collapse:collapse;"> 
+               <td align="left" bgcolor="#ffffff" style="padding:0;Margin:0;padding-left:20px;padding-right:20px;background-color:#FFFFFF;background-position:left top;"> 
+                <table cellpadding="0" cellspacing="0" width="100%" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
+                  <tr style="border-collapse:collapse;"> 
+                   <td width="560" align="center" valign="top" style="padding:0;Margin:0;"> 
+                    <table cellpadding="0" cellspacing="0" width="100%" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
+                      <tr style="border-collapse:collapse;"> 
+                        <td align="left" style="padding:0;Margin:0;padding-bottom:15px;"> 
+                            {!! $msg !!}
+                        </td> 
+                      </tr>
+                    </table> </td> 
+                  </tr> 
+                </table> </td> 
+              </tr> 
+            </table> </td> 
+          </tr> 
+        </table> 
+        @endif
+
        <table cellpadding="0" cellspacing="0" class="es-content" align="center" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;table-layout:fixed !important;width:100%;"> 
          <tr style="border-collapse:collapse;"> 
           <td align="center" style="padding:0;Margin:0;"> 
@@ -110,7 +147,9 @@
                       <td align="left" style="padding:0;Margin:0;padding-bottom:15px;"> <h2 style="Margin:0;line-height:29px;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:24px;font-style:normal;font-weight:normal;color:#43BB18;text-align:center;"><strong>Payment Receipt</strong></h2> </td> 
                      </tr> 
                      <tr style="border-collapse:collapse;"> 
-                      <td align="center" style="padding:0;Margin:0;padding-bottom:30px;"> <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#43BB18;"><strong>INVOICE #77</strong></p> </td> 
+                      <td align="center" style="padding:0;Margin:0;padding-bottom:30px;"> <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#43BB18;">
+                        <strong>INVOICE #{{ $invoice['reference_no_value'] }}</strong></p> 
+                      </td> 
                      </tr> 
                    </table> </td> 
                  </tr> 
@@ -131,7 +170,14 @@
                                         <td width="560" align="center" valign="top" style="padding:0;Margin:0;"> 
                                         <table cellpadding="0" cellspacing="0" width="100%" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
                                             <tr style="border-collapse:collapse;"> 
-                                            <td align="left" style="padding:0;Margin:0;padding-bottom:20px;"> <h2 style="Margin:0;line-height:29px;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:24px;font-style:normal;font-weight:normal;color:#000000;text-align:center;"><strong>Amount Paid: P5,560.00</strong></h2><h2 style="Margin:0;line-height:17px;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:14px;font-style:normal;font-weight:normal;color:#000000;text-align:center;">Payment Method: BANK PAYMENT</h2> </td> 
+                                              <td align="left" style="padding:0;Margin:0;padding-bottom:20px;"> 
+                                                <h2 style="Margin:0;line-height:29px;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:24px;font-style:normal;font-weight:normal;color:#000000;text-align:center;">
+                                                  <strong>Amount Paid: {{ $currencySymbol . number_format($invoice['grand_total_value'],2,",",".") }}</strong>
+                                                </h2>
+                                                <h3 style="Margin:0;margin-top: 5px;line-height:14px;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:12px;font-style:normal;font-weight:normal;color:#000000;text-align:center;">
+                                                  Payment Method: BANK PAYMENT
+                                                </h3> 
+                                              </td> 
                                             </tr> 
                                         </table> </td> 
                                         </tr> 
@@ -150,15 +196,30 @@
                                                     <table cellpadding="0" cellspacing="0" width="100%" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
                                                         <tr style="border-collapse:collapse;"> 
                                                             <td align="center" style="padding:0;Margin:0;"> 
-                                                            <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:16px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:24px;color:#1B1B1B;">
-                                                                <strong>PAYMENT BY</strong>
-                                                            </p>
-                                                            <br>
-                                                            <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">PinkySesiane</p>
-                                                            <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">pinkysesiane@gmail.com</p>
-                                                            <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">(+244) 7689056, (+267) 74647699</p>
-                                                            <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;"><br></p>
-                                                            <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">Plot 5689, Selepa, Gaborone, Botswana</p> </td> 
+                                                              <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:16px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:24px;color:#1B1B1B;">
+                                                                  <strong>PAYMENT BY</strong>
+                                                              </p>
+                                                              <br>
+                                                              <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">
+                                                                {{ $clientName }}
+                                                              </p>
+                                                              <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">
+                                                                {{ $client['email'] }}
+                                                              </p>
+                                                              <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">
+                                                                @if(COUNT($clientPhones))
+                                                                    @foreach($clientPhones as $key => $phone){{($key != 0 ? ', ': '') . '(+' . $phone['calling_code']['calling_code'] . ') ' . $phone['number']}} @endforeach
+                                                                @endif
+                                                              </p>
+                                                              <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">
+                                                                <br>
+                                                              </p>
+                                                              <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">
+                                                                  {{ $client['address'] }}@if(!empty($client['address'] && ($client['city']) || !empty($client['country']) ) ), @endif
+                                                                  {{ $client['city'] }}@if(!empty($client['city'] && !empty($client['country']) ) ), @endif
+                                                                  {{ $client['country'] }}
+                                                              </p> 
+                                                            </td> 
                                                         </tr> 
                                                     </table> 
                                                 </td> 
@@ -171,15 +232,30 @@
                                                     <table cellpadding="0" cellspacing="0" width="100%" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
                                                         <tr style="border-collapse:collapse;"> 
                                                             <td align="center" style="padding:0;Margin:0;"> 
-                                                            <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:16px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:24px;color:#1B1B1B;">
-                                                                <strong>RECEIPT FROM</strong>
-                                                            </p>
-                                                            <br>
-                                                            <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">Optimum Quality</p>
-                                                            <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">info@optimumqbw.com</p>
-                                                            <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">(+244) 3990934, (+267) 3989087</p>
-                                                            <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;"><br></p>
-                                                            <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">Plot 4590, Fairgrounds, Gaborone, Botswana</p> </td> 
+                                                                <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:16px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:24px;color:#1B1B1B;">
+                                                                    <strong>RECEIPT FROM</strong>
+                                                                </p>
+                                                                <br>
+                                                                <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">
+                                                                  {{ $company['name'] }}
+                                                                </p>
+                                                                <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">
+                                                                  {{ $company['email'] }}
+                                                                </p>
+                                                                <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">
+                                                                  @if(COUNT($companyPhones))
+                                                                      @foreach($companyPhones as $key => $phone){{($key != 0 ? ', ': '') . '(+' . $phone['calling_code']['calling_code'] . ') ' . $phone['number']}} @endforeach
+                                                                  @endif
+                                                                </p>
+                                                                <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">
+                                                                  <br>
+                                                                </p>
+                                                                <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">
+                                                                    {{ $company['address'] }}@if(!empty($company['address'] && ($company['city']) || !empty($company['country']) ) ), @endif
+                                                                    {{ $company['city'] }}@if(!empty($company['city'] && !empty($company['country']) ) ), @endif
+                                                                    {{ $company['country'] }}
+                                                                </p> 
+                                                            </td> 
                                                         </tr> 
                                                     </table> 
                                                 </td> 
@@ -193,6 +269,7 @@
                 </td> 
             </tr> 
        </table> 
+
        <table cellpadding="0" cellspacing="0" class="es-content" align="center" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;table-layout:fixed !important;width:100%;"> 
             <tr style="border-collapse:collapse;"> 
              <td align="center" style="padding:0;Margin:0;"> 
@@ -241,6 +318,7 @@
           </table> </td> 
         </tr> 
       </table> 
-     </div>  
+     
+      </div>  
     </body>
    </html>

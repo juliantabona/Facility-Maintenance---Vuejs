@@ -235,16 +235,17 @@
     <body>
 
         @php 
+
             $primaryColor = $invoice['colors'][0];
             $secondaryColor = $invoice['colors'][1]; 
             $company = $invoice['customized_company_details'];
             $client = $invoice['customized_client_details'];
-            $companyPhones = collect(array_filter($company['phones'], function($phone){ return $phone['show']; }))->values();
-            $clientPhones = collect(array_filter($client['phones'], function($phone){ return $phone['show']; }))->values();
+            $clientName = $client['name'] ?? $client['full_name'];
+            $companyPhones = isset($company['phones']) ? collect(array_filter($company['phones'], function($phone){ return $phone['show']; }))->values() : [];
+            $clientPhones = isset($client['phones']) ? collect(array_filter($client['phones'], function($phone){ return $phone['show']; }))->values() : [];
             $currencySymbol = $invoice['currency_type']['currency']['symbol'];
             $notes = $invoice['notes'];
 
-            
         @endphp
 
         <main id="page_1">
@@ -265,13 +266,18 @@
                         @endif
                     </p>
                     <br />
-                    @if($company['additionalFields'])
-                        @foreach($company['additionalFields'] as $field)
-                            @if(isset($field['value']))
-                                <p class="ft2 p2">{{ $field['value'] }}</p>
-                            @endif
-                        @endforeach
+                    
+                    @if($company['address'])
+                        <p class="ft2 p2">{{ $company['address'] }}</p>
                     @endif
+                    @if($company['city'])
+                        <p class="ft2 p2">{{ $company['city'] }}</p>
+                    @endif
+                    @if($company['country'])
+                        <p class="ft2 p2">{{ $company['country'] }}</p>
+                    @endif
+
+
                 </div>
 
                 <table cellpadding="0" cellspacing="0" class="brt mrb0 mrt1 pdb4" style="width:100%;">
@@ -280,7 +286,7 @@
 
                             <td colspan="8" class="mrt3">
                                 <p class="ft18 p4 pdb1">{{ $invoice['invoice_to_title'] }}:</p>
-                                <p class="p4 ft6 pdb1">{{ $client['name'] }}</p>
+                                <p class="p4 ft6 pdb1">{{ $clientName }}</p>
                                 <p class="p4 ft2">{{ $client['email'] }}</p>
                                 <p class="p4 ft2">
                                     @if(COUNT($clientPhones))
@@ -288,11 +294,16 @@
                                     @endif
                                 </p>
 
-                                @if($client['additionalFields'])
-                                    @foreach($client['additionalFields'] as $field)
-                                        <p class="p4 ft2">{{ $field['value'] }}</p>
-                                    @endforeach
+                                @if($client['address'])
+                                    <p class="p4 ft2">{{ $client['address'] }}</p>
                                 @endif
+                                @if($client['city'])
+                                    <p class="p4 ft2">{{ $client['city'] }}</p>
+                                @endif
+                                @if($client['country'])
+                                    <p class="p4 ft2">{{ $client['country'] }}</p>
+                                @endif
+            
                             </td>
 
                             <td colspan="3" class="tr0 td2 mrt3">

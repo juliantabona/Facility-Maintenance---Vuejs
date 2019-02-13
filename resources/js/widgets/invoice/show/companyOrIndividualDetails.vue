@@ -1,73 +1,59 @@
 <template>
 
     <div :style="align == 'right' ? 'float: right; text-align: right;' : ''">
-                
+            
         <!-- Loader for when loading the client information -->
         <Loader v-if="isLoadingClientInfo" :loading="isLoadingClientInfo" type="text" :style="{ marginTop:'40px' }">Loading client details...</Loader>
 
         <!-- Client Information -->
         <div v-if="localClient">
 
-            <!-- Client Name -->
-            <p v-if="!localEditMode" class="mt-3 text-dark"><strong>{{ localClient.name || '___' }}</strong></p>
-            <el-input v-if="localEditMode" placeholder="Client name" v-model="localClient.name" size="mini" class="mb-1" :style="{ maxWidth:'250px' }"></el-input>
+            <!-- Edit button -->
+            <Poptip class="mt-2 mb-2" trigger="hover" :content="'Edit '+(localClient.model_type == 'company' ? 'company' : 'profile')+' details?'">
+                <Button class="mt-1 ml-1" icon="ios-create-outline" type="dashed" size="small" @click="editCompanyOrIndividual()">{{ 'Edit '+(localClient.model_type == 'company' ? 'company' : 'profile')+' details' }}</Button>
+            </Poptip>
+
+            <div class="clearfix"></div>
+
+            <!-- Client Name - For Company/Individual -->
+            <p v-if="!localEditMode" class="mt-3 text-dark"><strong>{{ clientName || '___' }}</strong></p>
+            <el-input v-if="localEditMode" placeholder="Client name" disabled v-model="clientName" size="mini" class="mb-1" :style="{ maxWidth:'250px' }"></el-input>
 
             <div class="clearfix"></div>
 
             <!-- Client Email -->
             <p v-if="!localEditMode">{{ localClient.email || '___' }}</p>
-            <el-input v-if="localEditMode" placeholder="Client email" v-model="localClient.email" size="mini" class="mb-1" :style="{ maxWidth:'250px' }"></el-input>
+            <el-input v-if="localEditMode" placeholder="Client email" disabled v-model="localClient.email" size="mini" class="mb-1" :style="{ maxWidth:'250px' }"></el-input>
+
+            <div class="clearfix mt-1"></div>
+
+            <!-- Client Phones display -->
+            <p v-if="!localEditMode && phoneList">{{ phoneList }}</p>
+
+            <div class="clearfix mt-1"></div>
+
+            <!-- Client Address -->
+            <p v-if="!localEditMode && localClient.address" class="mt-1"><strong>{{ localClient.address }}</strong></p>
+
+            <!-- Client City -->
+            <p v-if="!localEditMode && localClient.city" class="mt-1"><strong>{{ localClient.city }}</strong></p>
+
+            <!-- Client Country -->
+            <p v-if="!localEditMode && localClient.country" class="mt-1"><strong>{{ localClient.country }}</strong></p>
 
             <div class="clearfix"></div>
             
-            <!-- Client Phones -->
-            <p v-if="!localEditMode">{{ phoneList || '___' }}</p>
-            <phoneInput v-if="localEditMode" class="mb-2"  
-                        :style="{ maxWidth:'360px' }"
+            <!-- Client Phones editor -->
+            <phoneInput :style="(align == 'right' ? 'float: right; text-align: left;' : '') + 'max-width:360px'"
+                        v-if="localEditMode" class="mb-2"  
                         :modelId="localClient.id" 
                         :modelType="localClient.type" 
                         :phones="localClient.phones" 
                         :deletable="false"
                         :hidedable="true"
-                        :editable="true"
+                        :editable="false"
                         @updated="updatePhoneChanges($event)">
             </phoneInput>
-            
-            <div class="clearfix"> <br> </div>
-
-            <!-- Show mode switch -->
-            <showModeSwitch v-if="localEditMode" v-bind:showMode.sync="showModeDetails"
-                            title="Show More Details:" :showIcon="true" :ripple="false" class="mr-2 mb-1"/>
-            </showModeSwitch>
-
-            <div v-if="showModeDetails" style="border: 1px dotted #ccc;" class="p-2">
-
-                <!-- Client Address -->
-                <p v-if="!localEditMode && localClient.address" class="mt-1 text-dark"><strong>{{ localClient.address || '___' }}</strong></p>
-                <el-input v-if="localEditMode" placeholder="Client address" v-model="localClient.address" size="mini" class="mb-1" :style="{ maxWidth:'250px' }"></el-input>
-
-                <!-- Client City -->
-                <p v-if="!localEditMode && localClient.city" class="mt-1 text-dark"><strong>{{ localClient.city || '___' }}</strong></p>
-                <citySelector 
-                    v-if="localEditMode"
-                    :selectedCity="localClient.city"
-                    :selectedCountry="localClient.country"
-                    @updated="localClient.city = $event"
-                    style="text-align: right;"
-                    class="mt-1">
-                </citySelector>
-            
-                <!-- Client Country -->
-                <p v-if="!localEditMode && localClient.country" class="mt-1 text-dark"><strong>{{ localClient.country || '___' }}</strong></p>
-                <countrySelector 
-                    v-if="localEditMode"
-                    :selectedCountry="localClient.country"
-                    @updated="localClient.country = $event"
-                    style="text-align: right;"
-                    class="mt-1">
-                </countrySelector>
-            </div>
-
 
         </div>
 
@@ -77,6 +63,19 @@
                 No Client selected
             </Alert>
         </div>
+
+        <!-- 
+            MODAL TO CREATE/EDIT COMPANY/INDIVIDUAL
+        -->
+        <createOrEditCompanyOrIndividualModal 
+            v-if="isOpenCreateOrEditCompanyOrIndividualModal"
+            :editableCompanyOrIndividual="editableCompanyOrIndividual"
+            :showCompanyOrUserSelector="showCompanyOrUserSelector"
+            :showClientOrSupplierSelector="showClientOrSupplierSelector"
+            @visibility="isOpenCreateOrEditCompanyOrIndividualModal = $event"
+            @updated="updateClient($event)"
+            @created="updateClient($event)">
+        </createOrEditCompanyOrIndividualModal>
 
     </div>
 
@@ -95,6 +94,9 @@
     import citySelector from './../../../components/_common/selectors/citySelector.vue'; 
     import countrySelector from './../../../components/_common/selectors/countrySelector.vue'; 
 
+    /*  Modals  */
+    import createOrEditCompanyOrIndividualModal from './../../../components/_common/modals/createOrEditCompanyOrIndividualModal.vue';
+
     /*  Switches   */
     import showModeSwitch from './../../../components/_common/switches/showModeSwitch.vue'; 
 
@@ -112,12 +114,22 @@
                 type: String,
                 default: 'left'
             },
+            showCompanyOrUserSelector: { 
+                type: Boolean,
+                default: false
+            },
+            showClientOrSupplierSelector: { 
+                type: Boolean,
+                default: false
+            }
         },
-        components: { phoneInput, citySelector, countrySelector, showModeSwitch },
+        components: { phoneInput, citySelector, countrySelector, createOrEditCompanyOrIndividualModal, showModeSwitch },
         data() {
             return {
-                localClient: null,
+                localClient: this.client,
                 localEditMode: this.editMode,
+                editableCompanyOrIndividual: null,
+                isOpenCreateOrEditCompanyOrIndividualModal: false,
                 isLoadingClientInfo: false,
                 phoneList: null,
                 showModeDetails: false
@@ -130,19 +142,7 @@
                 handler: function (val, oldVal) {
                     if( !_.isEqual(val, this.localClient) ){
 
-                        console.log('Company/User Detail changes...');
-                        //  If this is a company then forge details from company
-                        if(val.model_type == 'company'){
-                            this.localClient = this.formatCompanyDetails(val);
-                            console.log('Company changed to...');
-                            console.log(this.localClient);
-
-                        //  If this is a user then forge details from user
-                        }else if(val.model_type == 'user'){
-                            this.localClient = this.formatUserDetails(val);
-                            console.log('User changed to...');
-                            console.log(this.localClient);
-                        }
+                        this.localClient = val;
                         
                         //  Update phones to show/hide
                         this.determinePhonesToShow();
@@ -157,7 +157,8 @@
                         //  running the "this.determinePhonesToShow()" method to let the parent know
                         //  that the changes made should not be considered for alerting the
                         //  user to save.
-                        this.$emit('reUpdateParent');
+                        
+                        //this.$emit('reUpdateParent');
 
                     }
                 },
@@ -172,46 +173,31 @@
             }
 
         },
+        computed: {
+            clientName: {
+                get: function () {
+                    //  If this is a company then return the company name
+                    //  If this is an individual then return the individual full name
+                    return this.localClient.model_type == 'company' ? this.localClient.name : this.localClient.full_name;
+                },
+                set: function (newVal) {
+                    if(this.localClient.model_type == 'company'){
+                        this.localClient.name = newVal;
+                    }else if(this.localClient.model_type == 'user'){
+                        this.localClient.full_name = newVal;
+                    }
+                }
+            }
+        },
         methods: {
-            formatCompanyDetails(company){
-                var companyDetails = {
-                        id: company.id,
-                        type: 'company',
-                        name: company.name || '',
-                        email: company.email || '',
-                        phones: company.phones || [],
-                        additionalFields: []
-                    }
-
-                var x, include = ['website', 'address', 'city', 'country'];
-
-                for(x = 0; x < include.length; x++){
-                    if(company[ include[x] ]){
-                        companyDetails.additionalFields.push({ value: company[ include[x] ] });
-                    }
-                }
-
-                return companyDetails;
+            updateClient(newCompanyOrIndividual){
+                this.localClient = newCompanyOrIndividual;
+                this.determinePhonesToShow();
+                this.$emit('updated:companyOrIndividual', newCompanyOrIndividual);
             },
-            formatUserDetails(user){
-                var userDetails = {
-                        id: user.id,
-                        type: 'user',
-                        name: (user.full_name || ''),
-                        email: user.email || '',
-                        phones: user.phones || [],
-                        additionalFields: [],
-                    }
-
-                var x, include = ['website', 'address', 'city', 'country'];
-
-                for(x = 0; x < include.length; x++){
-                    if(user[ include[x] ]){
-                        userDetails.additionalFields.push({ value: user[ include[x] ] });
-                    }
-                }
-
-                return userDetails;
+            editCompanyOrIndividual(){
+                this.isOpenCreateOrEditCompanyOrIndividualModal = true;
+                this.editableCompanyOrIndividual = this.localClient;
             },
             determinePhonesToShow(){
                 console.log('Phone stage 2');
@@ -321,19 +307,9 @@
             },
         },
         created(){
-            
-            //  If this is a company then forge details from company
-            if( (this.client || {}).model_type == 'company'){
-
-                this.localClient = this.formatCompanyDetails(this.client);
-
-            //  If this is a user then forge details from user
-            }else if( (this.client || {}).model_type == 'user'){
-
-                this.localClient = this.formatUserDetails(this.client);
-            }
 
             this.determinePhonesToShow();
+
         }
     }
 

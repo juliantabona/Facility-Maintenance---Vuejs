@@ -24,14 +24,14 @@
                         </showModeSwitch>
 
                         <!-- Delete button -->
-                        <Poptip v-if="deletable" confirm title="Are you sure you want to remove this phone number?"
+                        <Poptip v-if="deletable" confirm title="Are you sure you want to delete this phone number?"
                                 ok-text="Yes" cancel-text="No" @on-ok="removePhone(localPhones[i], i)" placement="left-start">
                                 <Icon class="field-icon mr-2" type="ios-trash-outline" :size="20"/>
                         </Poptip>
 
                         <!-- Edit button -->
                         <Poptip v-if="editable" trigger="hover" content="Edit this phone number?">
-                                <Icon class="field-icon" type="ios-create-outline" :size="20" @click="editPhone(localPhones[i])"/>
+                            <Icon class="field-icon" type="ios-create-outline" :size="20" @click="editPhone(localPhones[i])"/>
                         </Poptip>
                     </template>
                 

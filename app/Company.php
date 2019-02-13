@@ -5,11 +5,13 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\AdvancedFilter\Dataviewer;
+use App\Traits\CompanyTraits;
 
 class Company extends Model
 {
     use SoftDeletes;
     use Dataviewer;
+    use CompanyTraits;
 
     protected $table = 'companies';
     /**
@@ -18,18 +20,21 @@ class Company extends Model
      * @var array
      */
     protected $fillable = [
-        'name', 'description', 'city', 'state_or_region', 'address', 'industry', 'type', 'website_link',
-        'profile_doc_url', 'phone_ext', 'phone_num', 'email', 'logo_url',
+        'name', 'description', 'date_of_incorporation', 'type', 'address', 'country', 'provience', 'city', 'postal_or_zipcode',
+        'email', 'additional_email', 'website_link', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link',
+        'logo_url', 'bio',
     ];
 
     protected $allowedFilters = [
-        'id', 'name', 'description', 'city', 'state_or_region', 'address', 'industry', 'type', 'website_link',
-        'profile_doc_url', 'phone_ext', 'phone_num', 'email', 'created_at',
+        'id', 'name', 'description', 'date_of_incorporation', 'type', 'address', 'country', 'provience', 'city', 'postal_or_zipcode',
+        'email', 'additional_email', 'website_link', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link',
+        'logo_url', 'bio', 'created_at',
     ];
 
     protected $orderable = [
-        'id', 'name', 'description', 'city', 'state_or_region', 'address', 'industry', 'type', 'website_link',
-        'profile_doc_url', 'phone_ext', 'phone_num', 'email', 'created_at',
+        'id', 'name', 'description', 'date_of_incorporation', 'type', 'address', 'country', 'provience', 'city', 'postal_or_zipcode',
+        'email', 'additional_email', 'website_link', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link',
+        'logo_url', 'bio', 'created_at',
     ];
 
     /*  Get the jobcards created by this company, get them in relation to the company branches that created them

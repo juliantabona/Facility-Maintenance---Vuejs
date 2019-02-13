@@ -127,6 +127,9 @@
                             <!-- Company information -->
                             <companyOrIndividualDetails 
                                 :client="localInvoice.customized_company_details" :editMode="editMode" align="right"
+                                :showCompanyOrUserSelector="false"
+                                :showClientOrSupplierSelector="false"
+                                @updated:companyOrIndividual="updateCompany($event)"
                                 @updated:phones="updatePhoneChanges(localInvoice.customized_company_details, $event)"
                                 @reUpdateParent="storeOriginalInvoice()">
                             </companyOrIndividualDetails>
@@ -145,13 +148,16 @@
                             <!-- Client information -->
                             <companyOrIndividualDetails 
                                 :client="localInvoice.customized_client_details" :editMode="editMode"
+                                :showCompanyOrUserSelector="false"
+                                :showClientOrSupplierSelector="true"
+                                @updated:companyOrIndividual="updateClient($event)"
                                 @updated:phones="updatePhoneChanges(localInvoice.customized_client_details, $event)"
                                 @reUpdateParent="storeOriginalInvoice()">
                             </companyOrIndividualDetails>
 
                             <!-- Client selector -->
                             <clientSelector :style="{maxWidth: '250px'}" class="mt-2"
-                                @updated="updateClientChanges($event)">
+                                @updated="changeClient($event)">
                             </clientSelector>
 
                         </Col>
@@ -361,13 +367,8 @@
                 // to cancel scrolling you can call the returned function
                 //cancelScroll()
             },
-            updateClientChanges(newClient){
-                
-                /*  DATA STRUCTURE: 
-                 *  
-                 *  newClient = [ type: user, details: {} ]
-                 *  newClient = [ type: company, details: {} ]
-                 */
+
+            changeClient(newClient){
 
                 if(newClient.model_type == 'user'){
                     this.$Notice.success({
@@ -381,12 +382,33 @@
                 }
 
                 this.client = this.localInvoice.customized_client_details = newClient;
+                alert('Check if client changed');
+                this.invoiceHasChanged = this.checkIfinvoiceHasChanged();
 
             },
-            updatePhoneChanges(companyOrIndividual, phones){
-                companyOrIndividual.phones = phones;
-                console.log('checkIfinvoiceHasChanged - 2');
+
+            updateClient(newClientDetails){
+
+                this.client = this.localInvoice.customized_client_details = newClientDetails;
+
                 this.invoiceHasChanged = this.checkIfinvoiceHasChanged();
+
+            },
+
+            updateCompany(newCompanyDetails){
+                
+                this.company = this.localInvoice.customized_company_details = newCompanyDetails;
+
+                this.invoiceHasChanged = this.checkIfinvoiceHasChanged();
+
+            },
+
+            updatePhoneChanges(companyOrIndividual, phones){
+                
+                companyOrIndividual.phones = phones;
+                
+                this.invoiceHasChanged = this.checkIfinvoiceHasChanged();
+
             },
             activateCreateMode: function(){
                 this.fetchInvoiceTemplate();

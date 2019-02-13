@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\User;
 use App\Phone;
 use Illuminate\Http\Request;
+use App\Notifications\UserUpdated;
 use App\Http\Controllers\Controller;
 
 class UserController extends Controller
@@ -18,11 +19,11 @@ class UserController extends Controller
         $profile = request('profile');
 
         /*******************************************************
-         *   CHECK IF USER HAS PERMISSION TO UPDATE PROFILE   *
+         *   CHECK IF USER HAS PERMISSION TO UPDATE PROFILE    *
          ******************************************************/
 
         /*********************************************
-         *   VALIDATE USER INFORMATION              *
+         *   VALIDATE USER INFORMATION               *
          ********************************************/
 
         if (!empty($profile)) {
@@ -32,10 +33,20 @@ class UserController extends Controller
                     'last_name' => $profile['last_name'],
                     'date_of_birth' => $profile['date_of_birth'],
                     'gender' => $profile['gender'],
+                    'address' => $profile['address'],
                     'country' => $profile['country'],
+                    'provience' => $profile['provience'],
                     'city' => $profile['city'],
+                    'postal_or_zipcode' => $profile['postal_or_zipcode'],
                     'email' => $profile['email'],
                     'additional_email' => $profile['additional_email'],
+                    'facebook_link' => $profile['facebook_link'],
+                    'twitter_link' => $profile['twitter_link'],
+                    'linkedin_link' => $profile['linkedin_link'],
+                    'instagram_link' => $profile['instagram_link'],
+                    'bio' => $profile['bio'],
+                    'position' => $profile['position'],
+                    'accessibility' => $profile['accessibility'],
                     'company_branch_id' => $user->companyBranch->id,
                     'company_id' => $user->companyBranch->company->id,
                 ];
@@ -43,7 +54,7 @@ class UserController extends Controller
                 //  Update the profile
                 $profile = User::where('id', $user_id)->update($template);
 
-                //  If the profile was created/updated successfully
+                //  If the profile was updated successfully
                 if ($profile) {
                     //  refetch the updated profile
                     $user = User::find($user_id);
@@ -76,6 +87,37 @@ class UserController extends Controller
         }
     }
 
+    public function show($user_id)
+    {
+        //  Current authenticated user
+        $auth_user = auth('api')->user();
+
+        /*******************************************************
+         *   CHECK IF USER HAS PERMISSION TO VIEW USER         *
+         ******************************************************/
+
+        try {
+            //  Fetch the user
+            $user = User::find($user_id);
+
+            //  Eager load other relationships wanted if specified
+            if (request('connections')) {
+                $user->load(oq_url_to_array(request('connections')));
+            }
+
+            //  If the user was found successfully
+            if ($user) {
+                //  Action was executed successfully
+                return oq_api_notify($user, 200);
+            }
+        } catch (\Exception $e) {
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+
+        //  No resource found
+        return oq_api_notify_no_resource();
+    }
+
     public function create(Request $request)
     {
         //  Start creating the user
@@ -101,6 +143,11 @@ class UserController extends Controller
 
             //  Get a fresh instance of the user
             $user = $user->fresh()->load('phones');
+
+            //  Eager load other relationships wanted if specified
+            if (request('connections')) {
+                $user->load(oq_url_to_array(request('connections')));
+            }
 
             //  Action was executed successfully
             return oq_api_notify($user, 200);

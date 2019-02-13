@@ -2,7 +2,8 @@
     
     <!-- Gender Selector -->
     <div>
-        <Select v-model="localSelectedGender" :style="{ width:'100%' }" placeholder="Select gender" not-found-text="No gender found" filterable>
+        <Select v-model="localSelectedGender" :style="{ width:'100%' }" placeholder="Select gender" not-found-text="No gender found"
+                @on-change="$emit('updated', $event)">
             <Option 
                 v-for="(item, index) in genders" 
                 :value="item" 

@@ -41,10 +41,15 @@
             }
         },
         watch: {
-            selectedCountry: function (val) {
-                //  Re-fetch the country associated cities
-                this.fetchCities();
+
+            //  Watch for changes on the selected country
+            selectedCountry: {
+                handler: function (val, oldVal) {
+                    //  Re-fetch the country associated cities
+                    this.fetchCities();
+                }
             }
+
         },
         computed:{
             localSelectedCity:{
@@ -74,7 +79,7 @@
         },
         methods: {
             fetchCities() {
-
+                
                 if( this.selectedCountry ){
 
                     const self = this;
