@@ -14,7 +14,7 @@
         <!-- Stage card  -->
         <stagingCard 
             :stageNumber="3" :showHeader="false" 
-            :disabled="isRecordingPayment || isCancelingPayment || isUpdatingReminders" :showVerticalLine="true"
+            :disabled="isRecordingPayment || isCancelingPayment || isUpdatingReminders || !localInvoice.has_sent" :showVerticalLine="true"
             :leftWidth="10" :rightWidth="14">
 
             <!-- Left Content  -->
@@ -35,7 +35,7 @@
                 <focusRipple v-if="!localInvoice.has_paid" color="blue" :ripple="localInvoice.has_sent && !localInvoice.has_paid" class="float-right">
 
                     <!-- Record Payment Button  -->
-                    <Button type="primary" size="large" @click="recordPayment()">
+                    <Button v-if="localInvoice.has_sent" type="primary" size="large" @click="recordPayment()">
                         <span>Record Payment</span>
                     </Button>
 

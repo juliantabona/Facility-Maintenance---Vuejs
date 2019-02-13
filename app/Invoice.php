@@ -24,7 +24,6 @@ class Invoice extends Model
      * @var string
      */
     protected $casts = [
-        'status' => 'array',
         'currency_type' => 'array',
         'calculated_taxes' => 'array',
         'customized_company_details' => 'array',
@@ -105,6 +104,11 @@ class Invoice extends Model
         return $this->recentActivities()->where('type', 'sent');
     }
 
+    public function skippedSendingActivities()
+    {
+        return $this->recentActivities()->where('type', 'skip send');
+    }
+
     public function sentReceiptActivities()
     {
         return $this->recentActivities()->where('type', 'sent receipt');
@@ -133,8 +137,8 @@ class Invoice extends Model
         return $this->morphMany('App\Reminder', 'trackable');
     }
 
-    protected $appends = ['last_approved_activity', 'last_sent_activity', 'last_sent_receipt_activity', 'last_paid_activity', 'last_payment_cancelled_activity',
-                          'has_paid', 'has_expired', 'has_cancelled', 'has_sent', 'has_sent_receipt', 'has_approved', 'current_activity_status',
+    protected $appends = ['last_approved_activity', 'last_sent_activity', 'last_skipped_sending_activity', 'last_sent_receipt_activity', 'last_paid_activity', 'last_payment_cancelled_activity',
+                          'has_paid', 'has_expired', 'has_cancelled', 'has_sent', 'has_skipped_sending', 'has_sent_receipt', 'has_approved', 'current_activity_status',
                           'activity_count', 'sent_invoice_activity_count', 'sent_receipt_activity_count',
                         ];
 
@@ -146,6 +150,11 @@ class Invoice extends Model
     public function getLastSentActivityAttribute()
     {
         return $this->recentActivities->where('type', 'sent')->first();
+    }
+
+    public function getLastSkippedSendingActivityAttribute()
+    {
+        return $this->recentActivities->where('type', 'skip send')->first();
     }
 
     public function getLastSentReceiptActivityAttribute()
@@ -204,6 +213,11 @@ class Invoice extends Model
         return $this->last_sent_activity ? true : false;
     }
 
+    public function gethasSkippedSendingAttribute()
+    {
+        return $this->last_skipped_sending_activity ? true : false;
+    }
+
     public function gethasSentReceiptAttribute()
     {
         return $this->last_sent_receipt_activity ? true : false;
@@ -240,6 +254,48 @@ class Invoice extends Model
         } else {
             return 'Draft';
         }
+    }
+
+    /**
+     * Scope a query to only include popular users.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeIsDraft($query)
+    {
+        return $query->where('status', 'Draft');
+    }
+
+    public function scopeIsApproved($query)
+    {
+        return $query->where('status', 'Approved');
+    }
+
+    public function scopeIsSent($query)
+    {
+        return $query->where('status', 'Sent');
+    }
+
+    public function scopeIsCancelled($query)
+    {
+        return $query->where('status', 'Cancelled');
+    }
+
+    public function scopeIsExpired($query)
+    {
+        return $query->where('status', 'Expired');
+    }
+
+    public function scopeIsPaid($query)
+    {
+        return $query->where('status', 'Paid');
+    }
+
+    public function scopeGetGrandTotalAndCount($query)
+    {
+        return $query->select(DB::raw('SUM(grand_total_value) as grand_total'), DB::raw('count(*) as total_count'))->first()->only('grand_total', 'total_count');
     }
 
     public function getActivityCountAttribute()

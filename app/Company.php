@@ -13,6 +13,15 @@ class Company extends Model
     use Dataviewer;
     use CompanyTraits;
 
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $casts = [
+        'currency_type' => 'array',
+    ];
+
     protected $table = 'companies';
     /**
      * The attributes that are mass assignable.
@@ -22,7 +31,7 @@ class Company extends Model
     protected $fillable = [
         'name', 'description', 'date_of_incorporation', 'type', 'address', 'country', 'provience', 'city', 'postal_or_zipcode',
         'email', 'additional_email', 'website_link', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link',
-        'logo_url', 'bio',
+        'logo_url', 'bio', 'currency_type',
     ];
 
     protected $allowedFilters = [

@@ -130,6 +130,7 @@ Route::post('quotations/{quotation_id}/convert', 'Api\QuotationController@conver
 */
 Route::get('invoices', 'Api\InvoiceController@index');
 Route::post('invoices', 'Api\InvoiceController@store');
+Route::get('invoices/stats', 'Api\InvoiceController@getEstimatedStats');
 Route::get('invoices/{invoice_id}', 'Api\InvoiceController@show');
 Route::post('invoices/{invoice_id}', 'Api\InvoiceController@update');
 Route::post('invoices/{invoice_id}/approve', 'Api\InvoiceController@approve');

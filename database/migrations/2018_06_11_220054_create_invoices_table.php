@@ -13,7 +13,7 @@ class CreateInvoicesTable extends Migration
     {
         Schema::create('invoices', function (Blueprint $table) {
             $table->increments('id');
-            $table->json('status')->nullable();
+            $table->string('status')->nullable();
             $table->string('heading')->nullable();
             $table->string('reference_no_title')->nullable();
             $table->unsignedInteger('reference_no_value')->nullable();

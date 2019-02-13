@@ -73,6 +73,11 @@ class User extends Authenticatable
         return $this->hasOne('App\VerifyUser');
     }
 
+    public function company()
+    {
+        return $this->belongsTo('App\Company', 'company_id');
+    }
+
     /**
      *   Get the users company branch. This is the branch that the user belongs to.
      *   A user must belong to a company branch to access more information for that

@@ -15,6 +15,8 @@ trait RecentActivityTraits
             $activityType                 //  Specific activity e.g) created, updated, e.t.c - (Optional)
         */
 
+        $activityType = str_replace('_', ' ', $activityType);   //  This is to change "sent_receipt" to "sent receipt"
+
         //  Current authenticated user
         $user = auth('api')->user();
 

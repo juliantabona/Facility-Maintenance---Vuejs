@@ -28,11 +28,13 @@
 
                 <!-- Sent Incoices Number Card -->
                 <IconAndCounterCard title="Sent Invoices" icon="ios-send-outline" :count="localInvoice.sent_invoice_activity_count.total" class="mb-2"
-                                    :route="{ name: 'show-sent-invoice-activities', params: { id: localInvoice.id } }">
+                                    :route="{ name: 'show-invoice-activities', params: { id: localInvoice.id } , query: { activity_type: 'sent' } }">
                 </IconAndCounterCard>
 
                 <!-- Sent Recipts Number Card -->
-                <IconAndCounterCard title="Sent Receipts" icon="ios-paper-outline" :count="localInvoice.sent_receipt_activity_count.total" class="mb-2"></IconAndCounterCard>
+                <IconAndCounterCard title="Sent Receipts" icon="ios-paper-outline" :count="localInvoice.sent_receipt_activity_count.total" class="mb-2"
+                                    :route="{ name: 'show-invoice-activities', params: { id: localInvoice.id } , query: { activity_type: 'sent_receipt' } }">
+                </IconAndCounterCard>
             
             </Col>
             <Col :span="localInvoice.has_approved ? 19 : 24">
@@ -382,7 +384,7 @@
                 }
 
                 this.client = this.localInvoice.customized_client_details = newClient;
-                alert('Check if client changed');
+                
                 this.invoiceHasChanged = this.checkIfinvoiceHasChanged();
 
             },

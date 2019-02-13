@@ -350,7 +350,6 @@
 
           Echo.private('App.User.' + this.user.id)
               .notification((notification) => {
-                  alert(notification);
                   console.log('notification.type below:');
                   console.log(notification);
                   console.log('notification.type above');

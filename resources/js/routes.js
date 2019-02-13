@@ -26,14 +26,7 @@ let routes = [
         //  Show invoice activities
         path: '/invoices/:id/activities', name: 'show-invoice-activities',
         meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/invoice/show/allActivities.vue'),
-        props: true
-    },
-    {
-        //  Show sent invoice activities
-        path: '/invoices/:id/sent-activities', name: 'show-sent-invoice-activities',
-        meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/invoice/show/sentInvoiceActivities.vue'),
+        component: require('./views/dashboard/invoice/show/activities.vue'),
         props: true
     }
 

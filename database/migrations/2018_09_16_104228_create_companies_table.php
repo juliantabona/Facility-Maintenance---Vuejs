@@ -30,6 +30,7 @@ class CreateCompaniesTable extends Migration
             $table->string('linkedin_link')->nullable();
             $table->string('instagram_link')->nullable();
             $table->text('bio')->nullable();
+            $table->json('currency_type')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

@@ -2,11 +2,11 @@
 
     <Card :style="{ width: '100%' }">
 
-            <!-- Loader for when loading the chart information -->
-            <Loader v-if="isLoading" :loading="isLoading" type="text" :style="{ marginTop:'40px' }">Loading chart...</Loader>
+        <!-- Loader for when loading the chart information -->
+        <Loader v-if="isLoading" :loading="isLoading" type="text" :style="{ marginTop:'40px' }">Loading chart...</Loader>
 
-            <!-- Chart Data -->
-            <canvas v-show="!isLoading" id="chart"></canvas>
+        <!-- Chart Data -->
+        <canvas v-show="!isLoading" id="chart"></canvas>
 
     </Card>
 

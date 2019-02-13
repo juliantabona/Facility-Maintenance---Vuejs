@@ -21,7 +21,18 @@
 
             </pageToolbar>
 
-            <!-- Get the filterable jobcard list -->
+            <Row :gutter="20">
+
+                <Col :span="24" :style="{ padding: '0 20px' }">
+
+                    <!-- Get the invoice activity cards -->
+                    <activityCardWidget url="/invoices/stats"></activityCardWidget>
+
+                </Col>
+                
+            </Row>
+
+            <!-- Get the filterable invoice list -->
             <invoiceListWidget></invoiceListWidget>
 
         </Col>
@@ -31,9 +42,10 @@
 
     import pageToolbar from './../../../../components/_common/toolbars/pageToolbar.vue';
     import resourceTypeButton from './../../../../components/_common/buttons/resourceTypeButton.vue';
-    import invoiceListWidget from './../../../../widgets/invoice/invoiceListWidget.vue';
+    import activityCardWidget from './../../../../widgets/activity/activityCardWidget.vue';
+    import invoiceListWidget from './../../../../widgets/invoice/list/invoiceListWidget.vue';
 
     export default {
-        components: { pageToolbar, resourceTypeButton, invoiceListWidget }
+        components: { pageToolbar, resourceTypeButton, activityCardWidget, invoiceListWidget }
     }
 </script>
