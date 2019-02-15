@@ -15,7 +15,7 @@
                 <!-- Slot Extra functionality -->
                 <template slot="extra">
                     <!-- Get the resource type button to allow user to toggle between getting company/branch specific data -->
-                    <resourceTypeButton></resourceTypeButton>
+                    <allocationTypeButton></allocationTypeButton>
                 </template>
 
 
@@ -41,11 +41,11 @@
 <script type="text/javascript">
 
     import pageToolbar from './../../../../components/_common/toolbars/pageToolbar.vue';
-    import resourceTypeButton from './../../../../components/_common/buttons/resourceTypeButton.vue';
+    import allocationTypeButton from './../../../../components/_common/buttons/allocationTypeButton.vue';
     import activityCardWidget from './../../../../widgets/activity/activityCardWidget.vue';
     import invoiceListWidget from './../../../../widgets/invoice/list/invoiceListWidget.vue';
 
     export default {
-        components: { pageToolbar, resourceTypeButton, activityCardWidget, invoiceListWidget }
+        components: { pageToolbar, allocationTypeButton, activityCardWidget, invoiceListWidget }
     }
 </script>

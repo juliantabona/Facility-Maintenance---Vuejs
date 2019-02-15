@@ -7,6 +7,7 @@ use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
+    'user' => 'App\User',
     'company' => 'App\Company',
 ]);
 

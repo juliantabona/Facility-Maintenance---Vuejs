@@ -197,7 +197,7 @@
                                             </Poptip>
                                         </Button>
 
-                                        <Button type="primary" @click.native="resetFilter" v-if="this.appliedFilters.length > 0">
+                                        <Button type="primary" @click.native="resetAndAddOneFilter" v-if="this.appliedFilters.length > 0">
                                             <Poptip word-wrap width="200" trigger="hover" content="Remove all filters">
                                                 <Icon type="md-refresh" :size="16"></Icon>
                                             </Poptip>
@@ -224,8 +224,15 @@
                                 :loading="loading">
                             </slot>
                         
-                            <Alert v-if="!collection.data.length && !loading" type="warning" show-icon class="mt-4 mb-4">
-                                No Results - We didn't find any records. - <span class="btn btn-link btn-sm p-0" @click="resetFilter">Remove Filters</span>
+                            <Alert v-if="!collection.data.length && !loading" show-icon class="mt-4 mb-4">
+                                No Results
+                                <Icon type="ios-bulb-outline" slot="icon"></Icon>
+                                <template slot="desc">
+                                    We didn't find any records.
+                                    <span v-if="filterCandidates.length"> - 
+                                        <span class="btn btn-link btn-sm p-0" @click="resetOnly()">Remove Filters</span>
+                                    </span>
+                                </template>
                             </Alert>
 
                         </div>
@@ -382,14 +389,25 @@
             exportToCSV() {
                 // next video
             },
-            resetFilter() {
+            resetOnly() {
+                
+                this.appliedFilters = [];
+
+                this.filterCandidates = [];
+                
+                this.query.page = 1;
+
+                this.applyChange();
+            },
+            resetAndAddOneFilter() {
+                
                 this.appliedFilters = []
 
                 this.filterCandidates = []
 
-                this.forceRerender()
+                this.forceRerender();
 
-                this.addFilter()
+                this.addFilter();
                 
                 this.query.page = 1
                 
@@ -520,13 +538,16 @@
                 return f
             },
             fetch() {
+                
                 this.loading = true
+                
                 const filters = this.getFilters()
 
                 const params = {
                     ...filters,
                     ...this.query
                 }
+                
                 axios.get(this.url, {params: params})
                     .then((res) => {
 

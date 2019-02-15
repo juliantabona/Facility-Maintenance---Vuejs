@@ -28,8 +28,8 @@ trait UserTraits
         $response = json_decode($response->getBody(), true);
 
         return oq_api_notify([
-                    'auth' => $response,            //  API ACCESS TOKEN
-                    'user' => $this->toArray(),      //  NEW REGISTERED USER
+                    'auth' => $response,                                        //  API ACCESS TOKEN
+                    'user' => $this->with('settings')->first()->toArray(),
                 ], 201);
     }
 

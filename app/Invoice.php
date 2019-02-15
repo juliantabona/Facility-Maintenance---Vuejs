@@ -197,8 +197,8 @@ class Invoice extends Model
 
     public function gethasExpiredAttribute()
     {
-        $expiryDate = strtotime($this->expiry_date_value);
-        $now = Carbon::now()->toDateTimeString();
+        $expiryDate = $this->expiry_date_value->getTimestamp();
+        $now = Carbon::now()->getTimestamp();
 
         return ($now > $expiryDate) ? true : false;
     }
@@ -254,50 +254,6 @@ class Invoice extends Model
         } else {
             return 'Draft';
         }
-    }
-
-    /**
-     * Scope a query to only include popular users.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     *
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeIsDraft($query)
-    {
-        return $query->where('status', 'Draft');
-    }
-
-    public function scopeIsApproved($query)
-    {
-        return $query->where('status', 'Approved');
-    }
-
-    public function scopeIsSent($query)
-    {
-        return $query->where('status', 'Sent');
-    }
-
-    public function scopeIsCancelled($query)
-    {
-        return $query->where('status', 'Cancelled');
-    }
-
-    public function scopeIsExpired($query)
-    {
-        $now = Carbon::now()->toDateTimeString();
-
-        return $query->where('status', '!=', 'Paid')->where('expiry_date_value', '<', $now);
-    }
-
-    public function scopeIsPaid($query)
-    {
-        return $query->where('status', 'Paid');
-    }
-
-    public function scopeGetGrandTotalAndCount($query)
-    {
-        return $query->select(DB::raw('SUM(grand_total_value) as grand_total'), DB::raw('count(*) as total_count'))->first()->only('grand_total', 'total_count');
     }
 
     public function getActivityCountAttribute()

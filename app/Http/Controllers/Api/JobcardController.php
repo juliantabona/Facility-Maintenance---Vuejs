@@ -269,7 +269,7 @@ class JobcardController extends Controller
                 return oq_api_notify_error('Query Error', $e->getMessage(), 404);
             }
         } else {
-            return oq_api_notify_error('include resourceType', null, 404);
+            return oq_api_notify_error('Jobcard not found', null, 404);
         }
 
         return oq_api_notify_error('Update Error', null, 404);

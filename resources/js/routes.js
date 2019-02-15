@@ -2,6 +2,12 @@ import VueRouter from 'vue-router';
 import NProgress from 'nprogress';
 
 let routes = [
+    //  Login
+    {
+        path: '/login', name: 'login',
+        meta: { middlewareGuest: true },
+        component: require('./views/auth/login.vue')
+    },
     {
         //  Invoices
         path: '/invoices', name: 'invoices',

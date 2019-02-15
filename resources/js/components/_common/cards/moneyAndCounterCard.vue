@@ -8,9 +8,15 @@
     cursor: pointer;
   }
   
+    .ivu-card.active{
+        border: 1px solid #ededed;
+        border-bottom: 3px solid #2d8cf0;
+        box-shadow: 3px -3px 3px #d6d6d6;
+    }
+
   .ivu-badge >>> .ivu-badge-count {
     position:absolute;
-    top: -60px;
+    top: -65px;
     right:0;
     font-family: inherit !important;
     font-weight: 600 !important;
@@ -22,7 +28,7 @@
 </style>
 <template>
 
-    <Card @click.native="clicked()" :style="cardStyle">
+    <Card @click.native="clicked()" :style="cardStyle" :class="active ? 'active': ''">
         <h3 class="text-center mt-3" :style="{ fontSize: '20px' }">{{ formatPrice(amount, symbol) }}</h3>
         <div style="padding: 0px 15px;">
             <Badge :show-zero="showZero" :count="count" :type="type" style="width:100%;">
@@ -68,6 +74,10 @@
             route: {
                 type: Object,
                 default: null
+            },
+            active:{
+                type: Boolean,
+                default: false
             }
         },
         data(){

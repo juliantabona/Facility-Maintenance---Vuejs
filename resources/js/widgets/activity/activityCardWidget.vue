@@ -11,6 +11,8 @@
                 
                 <moneyAndCounterCard :title="statisticLabels[i]" :amount="statisticGrandTotal[i]" :count="statisticTotalCount[i]" 
                                      :currency="baseCurrency" :showZero="false" class="mb-2" 
+                                     :route="{ name: 'invoices', query: { status: ( statisticLabels[i] ) } }"
+                                     :active="statisticLabels[i] == $route.query.status"
                                      :type="determineType(i)">
                 </moneyAndCounterCard>
             
@@ -43,7 +45,14 @@
             return {
                 isLoading: false,
                 fetchedStats: [],
-                baseCurrency: null
+                baseCurrency: null,
+
+                //  store is a global custom class found in store.js
+                //  We use it to access data accessible globally
+                //  In this case we need to access the data
+                //  allocationType to know whether the user
+                //  wants company/branch related data
+                allocationType: store.allocationType,
             }
         },
         components: { Loader, moneyAndCounterCard },
@@ -91,12 +100,15 @@
                 //  Start loader
                 self.isLoading = true;
 
+                //  The allocationType: Whether to get company/branch specific data
+                var allocationType = this.allocationType ? '&&allocation='+this.allocationType : ''; 
+
                 console.log('Start getting card activity statistics...');
 
                 if( this.url ){
 
                     //  Use the api call() function located in resources/js/api.js
-                    api.call('get', '/api'+this.url)
+                    api.call('get', '/api'+this.url+'?'+allocationType)
                         .then(({data}) => {
                             
                             console.log(data);
@@ -121,8 +133,30 @@
                 }
             }
         },
-        mounted() {
+        created () {
+
+            //  Fetch the statistics
             this.fetch();
+
+            //  Listen for global changes on the allocation type. 
+            //  The reource is used to reflect which data we want to get.
+            //  It may be the users company/branch specific data.
+
+            var self = this;
+
+            Event.$on('updatedAllocationType', function(updatedAllocationType){
+                
+                //  Get the updated allocationType e.g) company/branch
+                self.allocationType = updatedAllocationType;
+
+                //  Fetch the statistics
+                self.fetch();
+                
+            });
+        },
+        beforeDestroy() {
+            //  Stop listening for global changes on the allocation type.
+            Event.$off('updatedAllocationType');
         }
     }
 </script>

@@ -21,10 +21,6 @@ class User extends Authenticatable
         $this->restoreA();
     }
 
-    protected $casts = [
-        'settings' => 'array',
-    ];
-
     /**
      * The attributes that should be mutated to dates.
      *
@@ -71,6 +67,14 @@ class User extends Authenticatable
     public function verification()
     {
         return $this->hasOne('App\VerifyUser');
+    }
+
+    /**
+     * Get the user's settings.
+     */
+    public function settings()
+    {
+        return $this->morphOne('App\Setting', 'trackable');
     }
 
     public function company()

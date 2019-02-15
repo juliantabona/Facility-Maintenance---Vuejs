@@ -179,20 +179,20 @@ class UserController extends Controller
 
     public function updateUserSettings(Request $request)
     {
-        $resourceType = request('resourceType');
+        $allocationType = request('allocationType');
 
-        if (!empty($resourceType)) {
-            $updated = auth()->user()->forceFill([
-                'settings->resourceType' => $resourceType,
-            ])->save();
+        if (!empty($allocationType)) {
+            $updated = auth()->user()->settings()->update([
+                'details->allocationType' => $allocationType,
+            ]);
 
             if ($updated) {
-                $updatedSettings = auth()->user()->fresh()->settings;
+                $updatedSettings = auth()->user()->settings;
 
                 return oq_api_notify($updatedSettings, 200);
             }
         } else {
-            return oq_api_notify_error('include resourceType', null, 404);
+            return oq_api_notify_error('include allocationType', null, 404);
         }
 
         return oq_api_notify_error('Update Error', null, 404);

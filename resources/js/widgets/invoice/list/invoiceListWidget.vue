@@ -1,6 +1,7 @@
 <template>
 
-    <filterableList :tableColumnsData="tableColumns" :filterableData="filterable" @generateURL="">
+    <filterableList :tableColumnsData="tableColumns" :filterableData="filterable" 
+                    :requestUpdate="requestUpdate" @generateURL="generateURL()">
         
         <!-- Heading -->
         <slot name="heading">
@@ -22,6 +23,10 @@
             return {
 
                 moment: moment,
+
+                status: this.$route.query.status,
+
+                requestUpdate: 0,
 
                 // Table columns 
                 tableColumns: [
@@ -154,14 +159,29 @@
                 }
             }
         },
+        watch: {
+            //  Watch for changes on the status
+            '$route.query.status': function (status) {
+                
+                //  Update the status query
+                this.status = status;
+
+                //  Request an update
+                this.requestUpdate = this.requestUpdate + 1;
+
+            }
+        },
         methods: {
             generateURL: function () {
+                
+                //  Get the status e.g) Paid, Sent, e.t.c
+                var status = this.status ? 'status='+this.status : '';
 
                 //  Additional data to eager load along with each company found
-                var connections = 'connections=client';
-                
+                var connections = '&connections=client';
+
                 //  Url generated for the filterable Api call  
-                var url = '/api/invoices?'+connections;
+                var url = '/api/invoices?' + status + connections;
 
                 //  Assign url to the filterable object
                 this.filterable.url = url;

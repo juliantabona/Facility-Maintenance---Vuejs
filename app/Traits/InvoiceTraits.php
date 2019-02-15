@@ -16,6 +16,7 @@ use App\Notifications\InvoicePaid;
 use App\Notifications\InvoicePaymentCancelled;
 //  Other
 use PDF;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 trait InvoiceTraits
 {
@@ -85,20 +86,47 @@ trait InvoiceTraits
             //  Get all and trashed
             if (request('withtrashed') == 1) {
                 //  Run query
-                $invoices = $invoices->withTrashed()->advancedFilter(['order_join' => $order_join]);
+                $invoices = $invoices->withTrashed()->advancedFilter(['order_join' => $order_join, 'paginate' => false]);
             //  Get only trashed
             } elseif (request('onlytrashed') == 1) {
                 //  Run query
-                $invoices = $invoices->onlyTrashed()->advancedFilter(['order_join' => $order_join]);
+                $invoices = $invoices->onlyTrashed()->advancedFilter(['order_join' => $order_join, 'paginate' => false]);
             //  Get all except trashed
             } else {
                 //  Run query
-                $invoices = $invoices->advancedFilter(['order_join' => $order_join]);
+                $invoices = $invoices->advancedFilter(['order_join' => $order_join, 'paginate' => false]);
             }
 
-            //  Eager load other relationships wanted if specified
-            if (request('connections')) {
-                $invoices->load(oq_url_to_array(request('connections')));
+            //  Filter by status if specified
+            if (request('status')) {
+                //  Run query
+                $stat_name = ucwords(request('status'));
+
+                $invoices = $invoices->get();
+
+                //  Eager load other relationships wanted if specified
+                if (request('connections')) {
+                    $invoices->load(oq_url_to_array(request('connections')));
+                }
+
+                $invoices = collect($invoices)->where('current_activity_status', $stat_name);
+
+                $page = request('page', 1);         //  The page number from the pagination list
+                $perPage = request('limit', 10);    //  Pagination limit
+                $invoices = new LengthAwarePaginator(
+                                    collect($invoices->forPage($page, $perPage))->values(),
+                                    $invoices->count(),
+                                    $perPage,
+                                    $page,
+                                    ['path' => url('api/invoices')]
+                                );
+            } else {
+                $invoices = $invoices->advancedFilter(['order_join' => $order_join, 'paginate' => true]);
+
+                //  Eager load other relationships wanted if specified
+                if (request('connections')) {
+                    $invoices->load(oq_url_to_array(request('connections')));
+                }
             }
 
             //  Action was executed successfully
@@ -184,7 +212,6 @@ trait InvoiceTraits
 
         //  Create a template to hold the invoice details
         $template = [
-            'status' => $invoice['status'],
             'heading' => $invoice['heading'],
             'reference_no_title' => $invoice['reference_no_title'],
             'reference_no_value' => $invoice['reference_no_value'],
@@ -240,9 +267,6 @@ trait InvoiceTraits
                 $status = 'created';
                 $invoiceCreatedActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
 
-                //  Update the status of the invoice
-                $invoice->update(['status' => $invoice->current_activity_status]);
-
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $invoice];
             } else {
@@ -281,7 +305,6 @@ trait InvoiceTraits
 
         //  Create a template to hold the invoice details
         $template = [
-            'status' => $invoice['status'],
             'heading' => $invoice['heading'],
             'reference_no_title' => $invoice['reference_no_title'],
             'reference_no_value' => $invoice['reference_no_value'],
@@ -332,9 +355,6 @@ trait InvoiceTraits
                 //  Record activity of invoice updated
                 $status = 'updated';
                 $invoiceUpdatedActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
-
-                //  Update the status of the invoice
-                $invoice->update(['status' => $invoice->current_activity_status]);
 
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $invoice];
@@ -387,9 +407,6 @@ trait InvoiceTraits
                 //  Record activity of invoice approved
                 $status = 'approved';
                 $invoiceApprovedActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
-
-                //  Update the status of the invoice
-                $invoice->update(['status' => $invoice->current_activity_status]);
 
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $invoice];
@@ -473,9 +490,6 @@ trait InvoiceTraits
                 $status = 'sent';
                 $invoiceSentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'mail' => $mail]);
 
-                //  Update the status of the invoice
-                $invoice->update(['status' => $invoice->current_activity_status]);
-
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $invoice];
             } else {
@@ -519,9 +533,6 @@ trait InvoiceTraits
                 //  Record activity of invoice skipped sending
                 $status = 'skip send';
                 $invoiceSkipSendActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
-
-                //  Update the status of the invoice
-                $invoice->update(['status' => $invoice->current_activity_status]);
 
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $invoice];
@@ -604,9 +615,6 @@ trait InvoiceTraits
                 $status = 'sent receipt';
                 $invoiceSentReceiptActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'mail' => $mail]);
 
-                //  Update the status of the invoice
-                $invoice->update(['status' => $invoice->current_activity_status]);
-
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $invoice];
             } else {
@@ -658,9 +666,6 @@ trait InvoiceTraits
                 $status = 'paid';
                 $invoicePaidActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
 
-                //  Update the status of the invoice
-                $invoice->update(['status' => $invoice->current_activity_status]);
-
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $invoice];
             } else {
@@ -711,9 +716,6 @@ trait InvoiceTraits
                 //  Record activity of invoice payment cancelled
                 $status = 'payment cancelled';
                 $invoicePaymentCancelledActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
-
-                //  Update the status of the invoice
-                $invoice->update(['status' => $invoice->current_activity_status]);
 
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $invoice];
@@ -805,9 +807,6 @@ trait InvoiceTraits
                 //  Record activity of invoice updated payment reminders
                 $status = 'payment reminder';
                 $invoicePaymentCancelledActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
-
-                //  Update the status of the invoice
-                $invoice->update(['status' => $invoice->current_activity_status]);
 
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $invoice];
@@ -925,34 +924,99 @@ trait InvoiceTraits
         }
 
         try {
-            //  Get the count of the the various activities in their respective stages
-            //  We need to use "(clone $invoices)" so that we can create new copies of
-            //  the same Invoice instance, otherwise isDraft would filter the results
-            //  to only get the draft invoices, but the collection would be used again
-            //  for when we execute the isApproved, and so on, which would mean that
-            //  by the time we run the isApproved some data would be missing.
-            $draftInvoices = collect((clone $invoices)->isDraft()->getGrandTotalAndCount())->merge(['name' => 'Draft']);
-            $approvedInvoices = collect((clone $invoices)->isApproved()->getGrandTotalAndCount())->merge(['name' => 'Approved']);
-            $sentInvoices = collect((clone $invoices)->isSent()->getGrandTotalAndCount())->merge(['name' => 'Sent']);
-            $cancelledInvoices = collect((clone $invoices)->isCancelled()->getGrandTotalAndCount())->merge(['name' => 'Cancelled']);
-            $expiredInvoices = collect((clone $invoices)->isExpired()->getGrandTotalAndCount())->merge(['name' => 'Expired']);
-            $paidInvoices = collect((clone $invoices)->isPaid()->getGrandTotalAndCount())->merge(['name' => 'Paid']);
+            //  Get all the available invoices so far
+            $invoices = $invoices->get();
+
+            //  From the list of invoices we will group them by their current activity status e.g) Paid, Sent, e.t.c
+            //  After this we will map through each group (Paid, Sent, e.t.c) and get the status name, total sum of
+            //  the grand totals as well as the total count of grouped invoices of that activity.
+            /*
+             *  Example of returned output:
+             *
+                {
+                    "Paid": {
+                        "name": "Paid",
+                        "grand_total": 44520,
+                        "total_count": 5
+                    },
+                    "Sent": {
+                        "name": "Sent",
+                        "grand_total": 14000,
+                        "total_count": 1
+                    }
+                }
+             *
+            */
+
+            $availableStats = collect($invoices)->groupBy('current_activity_status')->map(function ($invoiceGroup, $key) {
+                return [
+                    'name' => $key,  //  e.g) Paid, Expired, Cancelled, Sent, Approved, Draft
+                    'grand_total' => collect($invoiceGroup)->sum('grand_total_value'),  //  35020
+                    'total_count' => collect($invoiceGroup)->count(),                   //  12
+                ];
+            });
+
+            //  This is a list of all the statistics we want returned in their respective order
+            $expectedStats = ['Draft', 'Approved', 'Sent', 'Cancelled', 'Expired', 'Paid'];
+
+            //  From the list of expected stats, we will map through and inspect if the expected stat
+            //  exists in the available stats we have collected. If it does then return back the existing
+            //  stat, otherwise we will create a new array that will hold the expected stat name that does
+            //  not exist, as well as put a grand total sum of zero and a total count of zero
+            /*
+             *  Example of returned output:
+             *
+                [
+                    {
+                        "name": "Draft",
+                        "grand_total": 0,
+                        "total_count": 0
+                    },
+                    {
+                        "name": "Approved",
+                        "grand_total": 0,
+                        "total_count": 0
+                    },
+                    {
+                        "name": "Sent",
+                        "grand_total": 14000,
+                        "total_count": 1
+                    },
+                    {
+                        "name": "Cancelled",
+                        "grand_total": 0,
+                        "total_count": 0
+                    },
+                    {
+                        "name": "Expired",
+                        "grand_total": 0,
+                        "total_count": 0
+                    },
+                    {
+                        "name": "Paid",
+                        "grand_total": 44520,
+                        "total_count": 5
+                    }
+                ]
+             *
+            */
+            $stats = collect($expectedStats)->map(function ($stat_name) use ($availableStats) {
+                if (collect($availableStats)->has($stat_name)) {
+                    return $availableStats[$stat_name];
+                } else {
+                    return [
+                        'name' => $stat_name,         //  e.g) Paid, Expired, Cancelled, Sent, Approved, Draft
+                        'grand_total' => 0,
+                        'total_count' => 0,
+                    ];
+                }
+            });
 
             //  Get the company base currency
             $baseCurrency = collect($auth_user->company->currency_type);
 
-            //  Create an empty collection which we know has the push() method
-            //  We can then push all the statistics into one collection
-            $collection = collect();
-            $collection = $collection->push($draftInvoices);
-            $collection = $collection->push($approvedInvoices);
-            $collection = $collection->push($sentInvoices);
-            $collection = $collection->push($cancelledInvoices);
-            $collection = $collection->push($expiredInvoices);
-            $collection = $collection->push($paidInvoices);
-
             //  Add the company base currency to the collection
-            $data = ['stats' => $collection, 'base_currency' => $baseCurrency];
+            $data = ['stats' => $stats, 'base_currency' => $baseCurrency];
 
             //  Action was executed successfully
             return ['success' => true, 'response' => $data];
@@ -981,7 +1045,7 @@ trait InvoiceTraits
         //  Collect and select table columns
         return collect(
             $this->select(
-                'status', 'heading', 'reference_no_title', 'reference_no_value', 'created_date_title', 'created_date_value',
+                'heading', 'reference_no_title', 'reference_no_value', 'created_date_title', 'created_date_value',
                 'expiry_date_title', 'expiry_date_value', 'sub_total_title', 'sub_total_value', 'grand_total_title', 'grand_total_value',
                 'currency_type', 'calculated_taxes', 'invoice_to_title', 'customized_company_details', 'customized_client_details', 'client_id',
                 'table_columns', 'items', 'notes', 'colors', 'footer', 'quotation_id'

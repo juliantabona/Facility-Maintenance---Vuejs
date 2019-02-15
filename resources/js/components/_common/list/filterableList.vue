@@ -19,13 +19,17 @@
 
     export default {
         props: {
-            'tableColumnsData': {
+            tableColumnsData: {
                 type: Array,
                 default: null
             },
-            'filterableData': {
+            filterableData: {
                 type: Object,
                 default: null
+            },
+            requestUpdate: {
+                type: Number,
+                default: 0
             }
         },
         components: { Filterable },
@@ -34,9 +38,12 @@
                 // Used to re-render the filterable table
                 renderKey: 0,
 
-                // Used to determine whether to get company/branch jobcards. 
-                // We get the result from the global store in auth.js
-                modelType: auth.modelType,
+                //  store is a global custom class found in store.js
+                //  We use it to access data accessible globally
+                //  In this case we need to access the data
+                //  allocationType to know whether the user
+                //  wants company/branch related data
+                allocationType: store.allocationType,
 
                 // Table columns 
                 tableColumns: this.tableColumnsData,
@@ -47,32 +54,41 @@
         },
         methods: {
             generateURL: function(){
+                
                 //  Generate a new url
-                Event.$emit('generateURL');
+                this.$emit('generateURL');
             },
             renderFilterableComponent: function(){
+                
                 //  Re-render the filterable component
                 this.renderKey++;
             },
-            determineResourceType: function(){
-                //  The modelType: Whether to get company/branch specific data
-                var modelType = this.modelType ? '&&model='+this.modelType : ''; 
+            determineAllocationType: function(){
+                //  The allocationType: Whether to get company/branch specific data
+                var allocationType = this.allocationType ? '&&allocation='+this.allocationType : ''; 
 
-                //  Attach the modelType to the Url generated for the filterable Api call
+                //  Attach the allocationType to the Url generated for the filterable Api call
                 //  This will allow the Api to either return company/branch related data
-                this.filterable.url = this.filterable.url + modelType;
+                this.filterable.url = this.filterable.url + allocationType;
+            },
+            reset(){
+                //  Generate a new url
+                this.generateURL();
+
+                //  Whether we want to get the company/branch related data
+                this.determineAllocationType();
+
+                this.renderFilterableComponent();
             }
         },
         watch: {
-            //  When the filterableData changes e.g) jobcard lifecycle step changes the url
-            'filterableData'() {
-                //  Re-render the filterable component to re-run the Api call
-                this.renderFilterableComponent();
-            },
-            //  When the tableColumnsData changes e.g) we add or remove columns
-            'tableColumnsData'() {
-                //  Re-render the filterable component to re-run the Api call
-                this.renderFilterableComponent();
+            requestUpdate: {
+                handler: function (val, oldVal) {
+
+                    // Reset
+                    this.reset();
+
+                }
             }
         },
         created () {
@@ -80,26 +96,24 @@
             this.generateURL();
 
             //  Whether we want to get the company/branch related data
-            this.determineResourceType();
+            this.determineAllocationType();
 
-            //  Listen for global changes on the resource type. 
+            //  Listen for global changes on the allocation type. 
             //  The reource is used to reflect which data we want to get.
             //  It may be the users company/branch specific data.
 
             var self = this;
 
-            Event.$on('updatedResourceType', function(updatedResourceType){
-                //  Get the updated resourceType e.g) company/branch
-                self.modelType = updatedResourceType;
-            
-                self.determineResourceType();
-
-                self.renderFilterableComponent();
+            Event.$on('updatedAllocationType', function(updatedAllocationType){
+                //  Get the updated allocationType e.g) company/branch
+                self.allocationType = updatedAllocationType;
+                
+                self.reset();
             });
         },
         beforeDestroy() {
-            //  Stop listening for global changes on the resource type.
-            Event.$off('updatedResourceType');
+            //  Stop listening for global changes on the allocation type.
+            Event.$off('updatedAllocationType');
         }
     }
 </script>
