@@ -43,7 +43,7 @@
                     v-if="!createMode"
                     :invoice="localInvoice" :editMode="editMode" :createMode="createMode" 
                     @toggleEditMode="toggleEditMode($event)" @approved="updateInvoiceData($event)" 
-                    @sent="updateInvoiceData($event)"
+                    @sent="updateInvoiceData($event)" @skipped="updateInvoiceData($event)"
                     @paid="updateInvoiceData($event)" @cancelled="updateInvoiceData($event)" 
                     @reminderSet="updateInvoiceData($event)">
                 </steps>

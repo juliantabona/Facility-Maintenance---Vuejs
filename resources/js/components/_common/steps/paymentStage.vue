@@ -14,7 +14,7 @@
         <!-- Stage card  -->
         <stagingCard 
             :stageNumber="3" :showHeader="false" 
-            :disabled="isRecordingPayment || isCancelingPayment || isUpdatingReminders || !localInvoice.has_sent" :showVerticalLine="true"
+            :disabled="isRecordingPayment || isCancelingPayment || isUpdatingReminders || (!localInvoice.has_sent && !localInvoice.has_skipped_sending)" :showVerticalLine="true"
             :leftWidth="10" :rightWidth="14">
 
             <!-- Left Content  -->
@@ -32,12 +32,17 @@
                 <animatedCheckmark v-if="localInvoice.has_paid"></animatedCheckmark>
 
                 <!-- Focus Ripple  -->
-                <focusRipple v-if="!localInvoice.has_paid" color="blue" :ripple="localInvoice.has_sent && !localInvoice.has_paid" class="float-right">
+                <focusRipple v-if="!localInvoice.has_paid" color="blue" :ripple="!localInvoice.has_paid" class="float-right">
 
                     <!-- Record Payment Button  -->
-                    <Button v-if="localInvoice.has_sent" type="primary" size="large" @click="recordPayment()">
-                        <span>Record Payment</span>
-                    </Button>
+                    <Poptip confirm title="Are you sure this invoice have been paid?"  width="300"
+                            ok-text="Yes" cancel-text="No" @on-ok="recordPayment()" placement="top">
+                        
+                        <Button v-if="localInvoice.has_sent || localInvoice.has_skipped_sending" type="primary" size="large">
+                            <span>Record Payment</span>
+                        </Button>
+
+                    </Poptip>
 
                 </focusRipple>
 
@@ -62,7 +67,7 @@
             <!-- Extra Content  -->
             <template slot="extraContent">
                 
-                <Row :gutter="20" v-if="localInvoice.has_sent && !localInvoice.has_paid">
+                <Row :gutter="20" v-if="(localInvoice.has_sent || localInvoice.has_skipped_sending) && !localInvoice.has_paid">
 
                     <!-- Explainer Message  -->
                     <Col span="24">

@@ -10,7 +10,7 @@
             </approvingStage>
             
             <!-- Get the stage for sending the invoice -->
-            <sendingStage v-bind="$props" @sent="$emit('sent', $event)"></sendingStage>
+            <sendingStage v-bind="$props" @sent="$emit('sent', $event)" @skipped="$emit('skipped', $event)"></sendingStage>
             
             <!-- Get the stage for recording the invoice payment, setting payment reminders and sending receipts -->
             <paymentStage v-bind="$props" 

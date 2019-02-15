@@ -285,7 +285,9 @@ class Invoice extends Model
 
     public function scopeIsExpired($query)
     {
-        return $query->where('status', 'Expired');
+        $now = Carbon::now()->toDateTimeString();
+
+        return $query->where('status', '!=', 'Paid')->where('expiry_date_value', '<', $now);
     }
 
     public function scopeIsPaid($query)

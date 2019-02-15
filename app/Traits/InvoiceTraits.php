@@ -3,6 +3,7 @@
 namespace App\Traits;
 
 //  Mails
+use Mail;
 use App\Mail\InvoiceMail;
 use App\Mail\InvoiceReceiptMail;
 //  Notifications
@@ -13,6 +14,8 @@ use App\Notifications\InvoiceSent;
 use App\Notifications\InvoiceReceiptSent;
 use App\Notifications\InvoicePaid;
 use App\Notifications\InvoicePaymentCancelled;
+//  Other
+use PDF;
 
 trait InvoiceTraits
 {

@@ -2,13 +2,14 @@
 
     <div>
 
-        <!-- Fade loader - Shows when sending invoice  -->
+        <!-- Fade loader - Shows when sending/skipping to send the invoice  -->
         <fadeLoader :loading="isSendingInvoice" msg="Sending, please wait..."></fadeLoader>
+        <fadeLoader :loading="isSkippingSendingInvoice" msg="Skipping, please wait..."></fadeLoader>
         
         <!-- Stage card  -->
         <stagingCard 
             :stageNumber="2" :showHeader="false" 
-            :disabled="isSendingInvoice" :showVerticalLine="true">
+            :disabled="!localInvoice.has_approved || isSendingInvoice || isSkippingSendingInvoice" :showVerticalLine="true">
 
             <!-- Left Content  -->
             <template slot="leftContent">
@@ -24,15 +25,15 @@
             </template>
 
             <!-- Right Content  -->
-            <template slot="rightContent">
+            <template v-if="localInvoice.has_approved" slot="rightContent">
                 
                 <!-- Skip Sending Button -->
-                <Button v-if="!localInvoice.has_sent" class="float-right ml-2" type="default" size="large" @click="sendInvoice()">
+                <Button v-if="!localInvoice.has_sent && !localInvoice.has_skipped_sending" class="float-right ml-2" type="default" size="large" @click="skipSendInvoice()">
                     <span>Skip</span>
                 </Button>
 
                 <!-- Focus Ripple  -->
-                <focusRipple color="blue" :ripple="localInvoice.has_approved &&!localInvoice.has_sent" class="float-right">
+                <focusRipple color="blue" :ripple="(localInvoice.has_approved && !localInvoice.has_sent) && !localInvoice.has_skipped_sending" class="float-right">
 
                     <!-- Send/Resend Button -->
                     <Button :type="localInvoice.has_sent ? 'default' : 'primary'" 
@@ -87,6 +88,7 @@
             return {
                 isOpenSendInvoiceModal: false,
                 isSendingInvoice: false,
+                isSkippingSendingInvoice: false,
                 localInvoice: this.invoice
             }
         },
@@ -95,7 +97,7 @@
             //  Watch for changes on the invoice
             invoice: {
                 handler: function (val, oldVal) {
-
+                    
                     //  Update the local invoice value
                     this.localInvoice = val;
 
@@ -125,8 +127,9 @@
                         //  Alert creation success
                         self.$Message.success('Invoice sent sucessfully!');
 
+                        //  Notify parent on updates
                         //  NOTE that "data = updated invoice"
-                        self.updateParent(updatedInvoice);
+                        self.$emit('skipped', data);
 
                     })         
                     .catch(response => { 
@@ -137,9 +140,39 @@
                         console.log(response);
                     });
             },
-            updateParent(updatedInvoice){
-                //  Alert parent and pass updated invoice data
-                this.$emit('sent', updatedInvoice);
+            skipSendInvoice(){
+
+                var self = this;
+
+                //  Start loader
+                self.isSkippingSendingInvoice = true;
+
+                console.log('Attempt to skip sending of invoice...');
+
+                //  Use the api call() function located in resources/js/api.js
+                api.call('post', '/api/invoices/'+self.localInvoice.id+'/skip-send')
+                    .then(({ data }) => {
+
+                        console.log(data);
+
+                        //  Stop loader
+                        self.isSkippingSendingInvoice = false;
+                        
+                        //  Alert skip success
+                        self.$Message.success('Step skipped sucessfully!');
+
+                        //  Notify parent on updates
+                        //  NOTE that "data = updated invoice"
+                        self.$emit('skipped', data);
+
+                    })         
+                    .catch(response => { 
+                        //  Stop loader
+                        self.isSkippingSendingInvoice = false;
+
+                        console.log('invoiceSummaryWidget.vue - Error skipping of invoice...');
+                        console.log(response);
+                    });
             }
 
         }

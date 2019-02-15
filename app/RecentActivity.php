@@ -96,6 +96,9 @@ class RecentActivity extends Model
             $title = 'Sent';
             $description = 'Invoice was sent to "'.$emailReceipient.'"';
             $description .= $emailSubject ? ' with the subject "'.$emailSubject.'"' : '';
+        } elseif ($this->type == 'skip send' && $this->trackable_type == 'invoice') {
+            $title = 'Skipped Sending';
+            $description = 'Invoice was not sent via email/sms';
         } elseif ($this->type == 'sent receipt' && $this->trackable_type == 'invoice') {
             //  Mail information
             $emailReceipient = (($this->activity ?? [])['mail'] ?? [])['email'] ?? 'unknown';
