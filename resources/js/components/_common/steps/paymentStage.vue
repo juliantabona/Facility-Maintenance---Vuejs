@@ -32,8 +32,10 @@
                 <animatedCheckmark v-if="localInvoice.has_paid"></animatedCheckmark>
 
                 <!-- Focus Ripple  -->
-                <focusRipple v-if="!localInvoice.has_paid" color="blue" :ripple="!localInvoice.has_paid" class="float-right">
-
+                
+                <focusRipple v-if="!localInvoice.has_paid && (localInvoice.has_sent || localInvoice.has_skipped_sending)" 
+                            :ripple="localInvoice.has_sent || localInvoice.has_skipped_sending" color="blue" class="float-right">
+                    
                     <!-- Record Payment Button  -->
                     <Poptip confirm title="Are you sure this invoice have been paid?"  width="300"
                             ok-text="Yes" cancel-text="No" @on-ok="recordPayment()" placement="top">
@@ -45,10 +47,10 @@
                     </Poptip>
 
                 </focusRipple>
-
+                
                 <!-- Send Receipt Button  -->
                 <focusRipple v-if="localInvoice.has_paid" color="blue" :ripple="!localInvoice.has_sent_receipt" class="float-right mt-2 ml-1 mr-2">
-
+                    
                     <!-- Send/Resend Button -->
                     <Button :type="localInvoice.has_sent_receipt ? 'default' : 'primary'" 
                             size="large" @click="isOpenSendInvoiceReceiptModal = true">

@@ -54,7 +54,7 @@
             v-if="isOpenSendInvoiceModal" 
             :invoice="localInvoice" 
             @visibility="isOpenSendInvoiceModal = $event"
-            @sent="updateParent($event)">
+            @sent="$emit('sent', $event)">
         </sendInvoiceModal>
 
     </div>
@@ -106,40 +106,6 @@
             }
         },
         methods: {
-            sendInvoice(){
-
-                var self = this;
-
-                //  Start loader
-                self.isSendingInvoice = true;
-
-                console.log('Attempt to send invoice...');
-
-                //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/invoices/'+self.localInvoice.id+'/send')
-                    .then(({ data }) => {
-
-                        console.log(data);
-
-                        //  Stop loader
-                        self.isSendingInvoice = false;
-                        
-                        //  Alert creation success
-                        self.$Message.success('Invoice sent sucessfully!');
-
-                        //  Notify parent on updates
-                        //  NOTE that "data = updated invoice"
-                        self.$emit('skipped', data);
-
-                    })         
-                    .catch(response => { 
-                        //  Stop loader
-                        self.isSendingInvoice = false;
-
-                        console.log('invoiceSummaryWidget.vue - Error sending invoice...');
-                        console.log(response);
-                    });
-            },
             skipSendInvoice(){
 
                 var self = this;

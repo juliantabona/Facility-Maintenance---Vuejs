@@ -6,13 +6,27 @@
         <Loader v-if="isLoading" :loading="isLoading" type="text" :style="{ marginTop:'40px' }">Loading stats...</Loader>
 
         <!-- Activity Number Card -->
-        <Row v-else :gutter="20">
-            <Col :span="24/(statisticLabels.length)" v-for="(item, i) in statisticLabels" :key="i">
+        <Row v-if="!isLoading" :gutter="20">
+            <Col :span="24/(overallStatLabels.length)" v-for="(item, i) in overallStatLabels" :key="i">
                 
-                <moneyAndCounterCard :title="statisticLabels[i]" :amount="statisticGrandTotal[i]" :count="statisticTotalCount[i]" 
+                <moneyAndCounterCard :title="overallStatLabels[i]" :amount="overallStatGrandTotal[i]" :count="overallStatTotalCount[i]" 
                                      :currency="baseCurrency" :showZero="false" class="mb-2" 
-                                     :route="{ name: 'invoices', query: { status: ( statisticLabels[i] ) } }"
-                                     :active="statisticLabels[i] == $route.query.status"
+                                     :route="{ name: 'invoices', query: { status: ( overallStatLabels[i] ), location: 'top' } }"
+                                     :active="overallStatLabels[i] == $route.query.status && $route.query.location == 'top'"
+                                     type="normal">
+                </moneyAndCounterCard>
+            
+            </Col>
+        </Row>
+
+        <!-- Activity Number Card -->
+        <Row v-if="!isLoading" :gutter="20">
+            <Col :span="24/(statLabels.length)" v-for="(item, i) in statLabels" :key="i">
+                
+                <moneyAndCounterCard :title="statLabels[i]" :amount="statGrandTotal[i]" :count="statTotalCount[i]" 
+                                     :currency="baseCurrency" :showZero="false" class="mb-2" 
+                                     :route="{ name: 'invoices', query: { status: ( statLabels[i] ), location: 'bottom' } }"
+                                     :active="statLabels[i] == $route.query.status && $route.query.location == 'bottom'"
                                      :type="determineType(i)">
                 </moneyAndCounterCard>
             
@@ -45,6 +59,7 @@
             return {
                 isLoading: false,
                 fetchedStats: [],
+                fetchedOverallStats: [],
                 baseCurrency: null,
 
                 //  store is a global custom class found in store.js
@@ -57,7 +72,7 @@
         },
         components: { Loader, moneyAndCounterCard },
         computed: {
-            statisticLabels: function(){
+            statLabels: function(){
                 if( (this.fetchedStats || {}).length){
                     return this.fetchedStats.map(stat => stat.name);
                 }
@@ -65,7 +80,7 @@
                 return [];
                 
             },
-            statisticTotalCount: function(){
+            statTotalCount: function(){
                 if( (this.fetchedStats || {}).length){
                     return this.fetchedStats.map(stat => stat.total_count);
                 }
@@ -73,9 +88,33 @@
                 return [];
 
             },
-            statisticGrandTotal: function(){
+            statGrandTotal: function(){
                 if( (this.fetchedStats || {}).length){
                     return this.fetchedStats.map(stat => stat.grand_total);
+                }
+
+                return [];
+
+            },
+            overallStatLabels: function(){
+                if( (this.fetchedOverallStats || {}).length){
+                    return this.fetchedOverallStats.map(stat => stat.name);
+                }
+
+                return [];
+                
+            },
+            overallStatTotalCount: function(){
+                if( (this.fetchedOverallStats || {}).length){
+                    return this.fetchedOverallStats.map(stat => stat.total_count);
+                }
+
+                return [];
+
+            },
+            overallStatGrandTotal: function(){
+                if( (this.fetchedOverallStats || {}).length){
+                    return this.fetchedOverallStats.map(stat => stat.grand_total);
                 }
 
                 return [];
@@ -84,11 +123,11 @@
         },
         methods: {
             determineType(i){
-                if( this.statisticLabels[i] == 'Paid' ){
+                if( this.statLabels[i] == 'Paid' ){
                     return 'success';
-                }else if( this.statisticLabels[i] == 'Expired' ){
+                }else if( this.statLabels[i] == 'Expired' ){
                     return 'error';
-                }else if( this.statisticLabels[i] == 'Cancelled' ){
+                }else if( this.statLabels[i] == 'Cancelled' ){
                     return 'warning';
                 }else{
                     return 'normal';
@@ -118,6 +157,7 @@
                             
                             //  Get the data
                             self.fetchedStats = data['stats'];
+                            self.fetchedOverallStats = data['overview_stats'];
                             self.baseCurrency = data['base_currency'];
 
                         })         

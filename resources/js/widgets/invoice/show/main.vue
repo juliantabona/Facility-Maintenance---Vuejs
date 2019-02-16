@@ -9,7 +9,7 @@
 <template>
 
     <div id="invoice-widget">
-        
+
         <!-- Get the summary header to display the invoice #, status, due date, amount due and menu options -->
         <overview 
             v-if="!createMode && localInvoice.has_approved"
@@ -17,8 +17,317 @@
             @toggleEditMode="toggleEditMode($event)">
         </overview>
         
-        
         <Row :gutter="20">
+            <Col :span="24">
+
+                <!-- Save changes button -->
+                <saveInvoiceBtn  v-if="!createMode && invoiceHasChanged" 
+                                 class="float-right p-2 mb-2" :style="{ position:'relative' }"
+                                 type="success" size="small" 
+                                 :ripple="true"
+                                 @click.native="saveInvoice()">
+                </saveInvoiceBtn>
+
+
+                <!-- Make recurring switch -->
+                <toggleSwitch v-bind:toggleValue.sync="localInvoice.isRecurring" 
+                    @update:toggleValue="updateReccuring($event)"
+                    :ripple="false" :showIcon="true" onIcon="ios-eye-off-outline" offIcon="ios-eye-outline" 
+                    title="Make Recurring:" onText="Yes" offText="No" poptipMsg="Turn on to make recurring"
+                    class="float-right p-2 mb-2">
+                </toggleSwitch>
+
+                    <!-- Make recurring settings -->
+                    <Row v-show="localInvoice.isRecurring && showRecurringSettings" class="mb-3">
+                        <Col span="24">
+                            <div style="background:#eee;padding: 20px">
+                                <Card :bordered="false">
+                                    <Row>
+                                        <Col span="24" class="mb-3">
+                                            <h6>
+                                                <Icon type="ios-information-circle-outline" :size="24" :style="{ marginTop:'-3px' }" />
+                                                <span class="font-weight-bold">Recurring Settings:</span>
+                                                <Alert class="mt-2 mb-1" :style="{ zIndex:'1' }">
+                                                    Schedule how your invoices will be sent to your customer over time.
+                                                </Alert>
+                                            </h6>
+                                        </Col>
+
+                                        <!-- Reminders - Before Due Date  -->
+                                        <Col span="24">
+                                        
+                                            <!-- Reminder method Selector -->
+                                            <span class="float-left d-block mr-1 mb-3">Repeat this invoice</span>
+
+                                            <!-- Timeline Options -->
+                                            <Select v-model="schedule" :style="{ width:'150px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select frequency">
+                                                <Option value="daily">Daily</Option>
+                                                <Option value="weekly">Weekly</Option>
+                                                <Option value="monthly">Monthly</Option>
+                                                <Option value="yearly">Yearly</Option>
+                                                <Option value="custom">Custom</Option>
+                                            </Select>
+
+                                            <!-- If Weekly -->
+                                            <span v-show="schedule == 'weekly'" class="mb-3">
+                                                <span class="float-left d-block ml-1 mr-1">every</span>
+                                                <Select :style="{ width:'150px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day of week">
+                                                    <Option value="monday">Monday</Option>
+                                                    <Option value="tuesday">Tuesday</Option>
+                                                    <Option value="wednesday">Wednesday</Option>
+                                                    <Option value="thursday">Thursday</Option>
+                                                    <Option value="friday">Friday</Option>
+                                                    <Option value="saturday">Saturday</Option>
+                                                    <Option value="sunday">Sunday</Option>
+                                                </Select>
+                                            </span>
+                                            
+                                            <!-- If Monthly -->
+                                            <span v-show="schedule == 'monthly'" class="mb-3">
+                                                <span class="float-left d-block ml-1 mr-1">on the</span>
+                                                <Select :style="{ width:'150px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day">
+                                                    <Option value="1st">1st</Option>
+                                                    <Option value="2nd">2nd</Option>
+                                                    <Option value="3rd">3rd</Option>
+                                                    <Option value=4th>4th</Option>
+                                                    <Option value="5th">5th</Option>
+                                                    <Option value="6th">6th</Option>
+                                                    <Option value="7th">7th</Option>
+                                                    <Option value="8th">8th</Option>
+                                                    <Option value="9th">9th</Option>
+                                                    <Option value="10th">10th</Option>
+                                                    <Option value="11th">11th</Option>
+                                                    <Option value="12th">12th</Option>
+                                                    <Option value="13th">13th</Option>
+                                                    <Option value="14th">14th</Option>
+                                                    <Option value="15th">15th</Option>
+                                                    <Option value="16th">16th</Option>
+                                                    <Option value="17th">17th</Option>
+                                                    <Option value="18th">18th</Option>
+                                                    <Option value="19th">19th</Option>
+                                                    <Option value="20th">20th</Option>
+                                                    <Option value="21st">21st</Option>
+                                                    <Option value="22nd">22nd</Option>
+                                                    <Option value="23rd">23rd</Option>
+                                                    <Option value="24th">24th</Option>
+                                                    <Option value="25th">25th</Option>
+                                                    <Option value="26th">26th</Option>
+                                                    <Option value="27th">27th</Option>
+                                                    <Option value="28th">28th</Option>
+                                                    <Option value="29th">29th</Option>
+                                                    <Option value="30th">30th</Option>
+                                                    <Option value="31st">31st</Option>
+                                                </Select>
+                                                <span class="float-left d-block ml-1 mr-1">day of every month</span>
+                                            </span>
+
+                                            <!-- If Yearly -->
+                                            <span v-show="schedule == 'yearly'" class="mb-3">
+                                                <span class="float-left d-block ml-1 mr-1">every</span>
+                                                <Select :style="{ width:'150px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day of week">
+                                                    <Option value="1st">January</Option>
+                                                    <Option value="2nd">February</Option>
+                                                    <Option value="3rd">March</Option>
+                                                    <Option value=4th>April</Option>
+                                                    <Option value="5th">May</Option>
+                                                    <Option value="6th">June</Option>
+                                                    <Option value="7th">July</Option>
+                                                    <Option value="8th">August</Option>
+                                                    <Option value="9th">September</Option>
+                                                    <Option value="10th">October</Option>
+                                                    <Option value="11th">November</Option>
+                                                    <Option value="12th">December</Option>
+                                                </Select>
+                                                <span class="float-left d-block ml-1 mr-1">on the</span>
+                                                <Select :style="{ width:'150px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day">
+                                                    <Option value="1st">1st</Option>
+                                                    <Option value="2nd">2nd</Option>
+                                                    <Option value="3rd">3rd</Option>
+                                                    <Option value=4th>4th</Option>
+                                                    <Option value="5th">5th</Option>
+                                                    <Option value="6th">6th</Option>
+                                                    <Option value="7th">7th</Option>
+                                                    <Option value="8th">8th</Option>
+                                                    <Option value="9th">9th</Option>
+                                                    <Option value="10th">10th</Option>
+                                                    <Option value="11th">11th</Option>
+                                                    <Option value="12th">12th</Option>
+                                                    <Option value="13th">13th</Option>
+                                                    <Option value="14th">14th</Option>
+                                                    <Option value="15th">15th</Option>
+                                                    <Option value="16th">16th</Option>
+                                                    <Option value="17th">17th</Option>
+                                                    <Option value="18th">18th</Option>
+                                                    <Option value="19th">19th</Option>
+                                                    <Option value="20th">20th</Option>
+                                                    <Option value="21st">21st</Option>
+                                                    <Option value="22nd">22nd</Option>
+                                                    <Option value="23rd">23rd</Option>
+                                                    <Option value="24th">24th</Option>
+                                                    <Option value="25th">25th</Option>
+                                                    <Option value="26th">26th</Option>
+                                                    <Option value="27th">27th</Option>
+                                                    <Option value="28th">28th</Option>
+                                                    <Option value="29th">29th</Option>
+                                                    <Option value="30th">30th</Option>
+                                                    <Option value="31st">31st</Option>
+                                                </Select>
+                                            </span>
+
+                                            <!-- If Custom -->
+                                            <span v-show="schedule == 'custom'" class="mb-3">
+                                                <span class="float-left d-block ml-1 mr-1 mb-3">every</span>
+                                                <el-input placeholder="E.g) 6" size="mini" class="float-left d-block mr-1 mb-3" :style="{ maxWidth:'80px', marginTop:'-3px' }"></el-input>
+                                                <Select v-model="customSchedule" :style="{ width:'150px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day of week">
+                                                    <Option value="days">Day(s)</Option>
+                                                    <Option value="weeks">Week(s)</Option>
+                                                    <Option value="months">Month(s)</Option>
+                                                    <Option value="years">Year(s)</Option>
+                                                </Select>
+
+                                                <!-- If weeks -->
+                                                <span v-show="customSchedule == 'weeks'">
+                                                    <span class="float-left d-block ml-1 mr-1 mb-3">on every</span>
+                                                    <Select :style="{ width:'150px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day of week">
+                                                        <Option value="monday">Monday</Option>
+                                                        <Option value="tuesday">Tuesday</Option>
+                                                        <Option value="wednesday">Wednesday</Option>
+                                                        <Option value="thursday">Thursday</Option>
+                                                        <Option value="friday">Friday</Option>
+                                                        <Option value="saturday">Saturday</Option>
+                                                        <Option value="sunday">Sunday</Option>
+                                                    </Select>
+                                                </span>
+                                                
+                                                <!-- If months -->
+                                                <span v-show="customSchedule == 'months'">
+                                                    <span class="float-left d-block ml-1 mr-1 mb-3">on the</span>
+                                                    <Select :style="{ width:'150px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day">
+                                                        <Option value="1st">1st</Option>
+                                                        <Option value="2nd">2nd</Option>
+                                                        <Option value="3rd">3rd</Option>
+                                                        <Option value=4th>4th</Option>
+                                                        <Option value="5th">5th</Option>
+                                                        <Option value="6th">6th</Option>
+                                                        <Option value="7th">7th</Option>
+                                                        <Option value="8th">8th</Option>
+                                                        <Option value="9th">9th</Option>
+                                                        <Option value="10th">10th</Option>
+                                                        <Option value="11th">11th</Option>
+                                                        <Option value="12th">12th</Option>
+                                                        <Option value="13th">13th</Option>
+                                                        <Option value="14th">14th</Option>
+                                                        <Option value="15th">15th</Option>
+                                                        <Option value="16th">16th</Option>
+                                                        <Option value="17th">17th</Option>
+                                                        <Option value="18th">18th</Option>
+                                                        <Option value="19th">19th</Option>
+                                                        <Option value="20th">20th</Option>
+                                                        <Option value="21st">21st</Option>
+                                                        <Option value="22nd">22nd</Option>
+                                                        <Option value="23rd">23rd</Option>
+                                                        <Option value="24th">24th</Option>
+                                                        <Option value="25th">25th</Option>
+                                                        <Option value="26th">26th</Option>
+                                                        <Option value="27th">27th</Option>
+                                                        <Option value="28th">28th</Option>
+                                                        <Option value="29th">29th</Option>
+                                                        <Option value="30th">30th</Option>
+                                                        <Option value="31st">31st</Option>
+                                                    </Select>
+                                                    <span class="float-left d-block ml-1 mr-1 mb-3">day of every month</span>
+                                                </span>
+
+                                                <!-- If years -->
+                                                <span v-show="customSchedule == 'years'">
+                                                    <span class="float-left d-block ml-1 mr-1 mb-3">on every</span>
+                                                    <Select :style="{ width:'150px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day of week">
+                                                        <Option value="1st">January</Option>
+                                                        <Option value="2nd">February</Option>
+                                                        <Option value="3rd">March</Option>
+                                                        <Option value=4th>April</Option>
+                                                        <Option value="5th">May</Option>
+                                                        <Option value="6th">June</Option>
+                                                        <Option value="7th">July</Option>
+                                                        <Option value="8th">August</Option>
+                                                        <Option value="9th">September</Option>
+                                                        <Option value="10th">October</Option>
+                                                        <Option value="11th">November</Option>
+                                                        <Option value="12th">December</Option>
+                                                    </Select>
+                                                    <span class="float-left d-block ml-1 mr-1 mb-3">on the</span>
+                                                    <Select :style="{ width:'150px' }" class="float-left d-block" placeholder="Select day">
+                                                        <Option value="1st">1st</Option>
+                                                        <Option value="2nd">2nd</Option>
+                                                        <Option value="3rd">3rd</Option>
+                                                        <Option value=4th>4th</Option>
+                                                        <Option value="5th">5th</Option>
+                                                        <Option value="6th">6th</Option>
+                                                        <Option value="7th">7th</Option>
+                                                        <Option value="8th">8th</Option>
+                                                        <Option value="9th">9th</Option>
+                                                        <Option value="10th">10th</Option>
+                                                        <Option value="11th">11th</Option>
+                                                        <Option value="12th">12th</Option>
+                                                        <Option value="13th">13th</Option>
+                                                        <Option value="14th">14th</Option>
+                                                        <Option value="15th">15th</Option>
+                                                        <Option value="16th">16th</Option>
+                                                        <Option value="17th">17th</Option>
+                                                        <Option value="18th">18th</Option>
+                                                        <Option value="19th">19th</Option>
+                                                        <Option value="20th">20th</Option>
+                                                        <Option value="21st">21st</Option>
+                                                        <Option value="22nd">22nd</Option>
+                                                        <Option value="23rd">23rd</Option>
+                                                        <Option value="24th">24th</Option>
+                                                        <Option value="25th">25th</Option>
+                                                        <Option value="26th">26th</Option>
+                                                        <Option value="27th">27th</Option>
+                                                        <Option value="28th">28th</Option>
+                                                        <Option value="29th">29th</Option>
+                                                        <Option value="30th">30th</Option>
+                                                        <Option value="31st">31st</Option>
+                                                    </Select>
+                                                </span>
+                                            </span>
+                                        </Col>
+
+                                        <!-- Reminders - Before Due Date  -->
+                                        <Col span="24" class="border-top pt-3">
+                                        
+                                            <!-- Text for when to create first invoice -->
+                                            <span class="float-left d-block mr-1 mb-3">Create first invoice on</span>
+
+                                            <!-- First Invoice - Start Date -->
+                                            <el-date-picker v-model="recurringStartDate" type="date" placeholder="e.g) January 1, 2018" size="mini" class="float-left mb-2" :style="{ maxWidth:'135px', marginTop:'-3px' }"
+                                                format="MMM dd yyyy" value-format="yyyy-MM-dd">
+                                            </el-date-picker>
+
+                                            <!-- Text for when to end -->
+                                            <span class="float-left d-block mr-1 ml-1 mb-3">and end</span>
+
+                                            <!-- Text for when to end -->
+                                            <Select v-model="recurringEndDate" :style="{ width:'150px', marginTop:'-5px' }" class="float-left mb-3" placeholder="Select day of week">
+                                                <Option value="after">After</Option>
+                                                <Option value="on">On</Option>
+                                                <Option value="never">Never</Option>
+                                            </Select>
+                                            <el-input v-show="recurringEndDate == 'after'" placeholder="E.g) 3" size="mini" class="float-left mr-1 ml-1 mb-3" :style="{ maxWidth:'80px', marginTop:'-3px' }"></el-input>
+                                            <el-date-picker v-show="recurringEndDate == 'on'" type="date" placeholder="e.g) January 1, 2018" size="mini" class="float-left mr-1 ml-1 mb-3" :style="{ maxWidth:'135px', marginTop:'-3px' }"
+                                                format="MMM dd yyyy" value-format="yyyy-MM-dd">
+                                            </el-date-picker>
+
+                                        </Col>
+
+                                    </Row>
+                                </Card>
+                            </div>
+                        </Col>
+                    </Row>
+
+            </Col>
+
             <Col v-if="localInvoice.has_approved" :span="5">
             
                 <!-- Activity Number Card -->
@@ -226,6 +535,7 @@
     import saveInvoiceBtn from './../../../components/_common/buttons/saveInvoiceBtn.vue';
 
     /*  Switches  */
+    import toggleSwitch from './../../../components/_common/switches/toggleSwitch.vue';
     import editModeSwitch from './../../../components/_common/switches/editModeSwitch.vue';
 
     /*  Loaders  */
@@ -249,7 +559,7 @@
             overview, steps, mainHeader, 
             mainTitle, companyOrIndividualDetails, summaryDetails, toolbar,
             items, totalBreakDown, notes, mainFooter,
-            createInvoiceBtn, saveInvoiceBtn, editModeSwitch,
+            createInvoiceBtn, saveInvoiceBtn, toggleSwitch, editModeSwitch,
             Loader, imageUploader, clientSelector, IconAndCounterCard
         },
         props: {
@@ -305,6 +615,13 @@
         },
         data(){
             return {
+
+                schedule: '',
+                customSchedule: '',
+                recurringStartDate:'',
+                recurringEndDate:'',
+                showRecurringSettings: false,
+
                 user: auth.user,
 
                 //  Modes
@@ -369,7 +686,12 @@
                 // to cancel scrolling you can call the returned function
                 //cancelScroll()
             },
-
+            updateReccuring(val){
+                
+                this.localInvoice.isRecurring = val ? 1 : 0;
+                
+                this.showRecurringSettings = !this.showRecurringSettings
+            },
             changeClient(newClient){
 
                 if(newClient.model_type == 'user'){

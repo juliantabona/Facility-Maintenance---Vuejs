@@ -41,6 +41,7 @@
 
             <!-- Dashboard Aside -->
             <oq-Aside :isCollapsed="isCollapsed"></oq-Aside>
+
             <Layout :style="{marginTop: '75px', padding: '20px'}">
 
                 <!-- Dashboard content -->
@@ -62,13 +63,13 @@
 
                 </Content>
 
+                <Footer class="layout-footer-center" :style="{ background: '#e0e6e8' }">
+                    <span class="text-center d-block m-auto">2018 &copy; Optimum Q - Technology Driven Solutions</span>
+                </Footer>
+
             </Layout>
 
           </Layout>
-
-          <Footer class="layout-footer-center" :style="{ background: '#e0e6e8' }">
-              <span class="text-center d-block m-auto">2018 &copy; Optimum Q - Technology Driven Solutions</span>
-          </Footer>
 
       </Layout>
   </div>

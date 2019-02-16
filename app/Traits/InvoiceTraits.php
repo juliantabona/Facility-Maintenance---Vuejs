@@ -109,7 +109,15 @@ trait InvoiceTraits
                     $invoices->load(oq_url_to_array(request('connections')));
                 }
 
-                $invoices = collect($invoices)->where('current_activity_status', $stat_name);
+                //  If we have a special case to display outstanding invoices, we need to
+                //  Select invoices with statuses of 'Draft', 'Approved', 'Sent', 'Expired'
+                if ($stat_name == 'Outstanding') {
+                    //  List of statuses considered as outstanding
+                    $outstanding = ['Draft', 'Approved', 'Sent', 'Expired'];
+                    $invoices = collect($invoices)->whereIn('current_activity_status', $outstanding);
+                } else {
+                    $invoices = collect($invoices)->where('current_activity_status', $stat_name);
+                }
 
                 $page = request('page', 1);         //  The page number from the pagination list
                 $perPage = request('limit', 10);    //  Pagination limit
@@ -946,7 +954,7 @@ trait InvoiceTraits
                     }
                 }
              *
-            */
+             */
 
             $availableStats = collect($invoices)->groupBy('current_activity_status')->map(function ($invoiceGroup, $key) {
                 return [
@@ -999,24 +1007,41 @@ trait InvoiceTraits
                     }
                 ]
              *
-            */
+             */
             $stats = collect($expectedStats)->map(function ($stat_name) use ($availableStats) {
                 if (collect($availableStats)->has($stat_name)) {
                     return $availableStats[$stat_name];
                 } else {
                     return [
-                        'name' => $stat_name,         //  e.g) Paid, Expired, Cancelled, Sent, Approved, Draft
-                        'grand_total' => 0,
-                        'total_count' => 0,
-                    ];
+                                'name' => $stat_name,         //  e.g) Paid, Expired, Cancelled, Sent, Approved, Draft
+                                'grand_total' => 0,
+                                'total_count' => 0,
+                            ];
                 }
             });
+
+            //  Calculate the overall stats e.g) Total Paid & Total Outstanding
+            $totalPaid = ['name' => 'Paid', 'grand_total' => 0, 'total_count' => 0];
+            $totalOutstanding = ['name' => 'Outstanding', 'grand_total' => 0, 'total_count' => 0];
+
+            foreach ($stats as $stat) {
+                if (in_array($stat['name'], ['Draft', 'Approved', 'Sent', 'Expired'])) {
+                    $totalOutstanding['grand_total'] += $stat['grand_total'];
+                    $totalOutstanding['total_count'] += $stat['total_count'];
+                } elseif (in_array($stat['name'], ['Paid'])) {
+                    $totalPaid['grand_total'] += $stat['grand_total'];
+                    $totalPaid['total_count'] += $stat['total_count'];
+                }
+            }
 
             //  Get the company base currency
             $baseCurrency = collect($auth_user->company->currency_type);
 
-            //  Add the company base currency to the collection
-            $data = ['stats' => $stats, 'base_currency' => $baseCurrency];
+            //  Merge the overview stats, stats and base currency into one collection
+            $data = [
+                    'overview_stats' => [$totalOutstanding, $totalPaid],
+                    'stats' => $stats,
+                    'base_currency' => $baseCurrency, ];
 
             //  Action was executed successfully
             return ['success' => true, 'response' => $data];
