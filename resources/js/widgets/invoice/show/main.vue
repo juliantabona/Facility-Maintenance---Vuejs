@@ -4,11 +4,26 @@
         position: relative;
     }
 
+    .fade-enter,
+    .fade-leave-active {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    .fade-leave-active {
+        position: absolute;
+    }
+ 
+    .animated {
+        transition: all 0.5s;
+        display: flex;
+        width: 100%;
+    }
+
 </style>
 
 <template>
 
-    <div id="invoice-widget">
+    <div id="invoice-widget" style="overflow:hidden;">
 
         <!-- Get the summary header to display the invoice #, status, due date, amount due and menu options -->
         <overview 
@@ -16,29 +31,52 @@
             :invoice="localInvoice" :editMode="editMode" :createMode="createMode"
             @toggleEditMode="toggleEditMode($event)">
         </overview>
-        
-        <Row :gutter="20">
+
+        <!-- Loaders for creating/saving invoice -->
+        <Row>
             <Col :span="24">
+                <div v-if="isCreatingInvoice" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Creating, please wait...</div>
+                <div v-if="isSavingInvoice" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Saving, please wait...</div>
+            </Col>
+        </Row>
 
-                <!-- Save changes button -->
-                <saveInvoiceBtn  v-if="!createMode && invoiceHasChanged" 
-                                 class="float-right p-2 mb-2" :style="{ position:'relative' }"
-                                 type="success" size="small" 
-                                 :ripple="true"
-                                 @click.native="saveInvoice()">
-                </saveInvoiceBtn>
+        <transition-group name="fade">
+            
+            <Row :gutter="20" key="recurring_details" class="animated">
 
+                <!-- Recurring toggle switch, Recurring settings toolbox, Save changes button -->
+                <Col :span="24">
 
-                <!-- Make recurring switch -->
-                <toggleSwitch v-bind:toggleValue.sync="localInvoice.isRecurring" 
-                    @update:toggleValue="updateReccuring($event)"
-                    :ripple="false" :showIcon="true" onIcon="ios-eye-off-outline" offIcon="ios-eye-outline" 
-                    title="Make Recurring:" onText="Yes" offText="No" poptipMsg="Turn on to make recurring"
-                    class="float-right p-2 mb-2">
-                </toggleSwitch>
+                    <!-- Save changes button -->
+                    <saveInvoiceBtn  v-if="!createMode && invoiceHasChanged" 
+                                    class="float-right pt-2 ml-4" :style="{ position:'relative' }"
+                                    type="success" size="small" 
+                                    :ripple="true"
+                                    @click.native="saveInvoice()">
+                    </saveInvoiceBtn>
+
+                    <!-- Recurring Settings Icon Button -->
+                    <span class="float-right d-block pt-2">
+                        <div @click="showRecurringSettings = !showRecurringSettings" :style="{ position: 'relative', zIndex: '1' }">
+                            <Icon :style="showRecurringSettings ? { fontSize: '20px',height: '33px',color: '#2d8cf0',background: '#eee',borderRadius: '50% 50% 0 0',padding: '3px 6px',marginTop: '-3px',boxShadow: '#c8c8c8 1px 1px 1px inset',cursor: 'pointer' }: { cursor: 'pointer' }"
+                                type="ios-settings-outline" :size="20" />
+                        </div>
+                    </span>
+
+                    <!-- Make recurring switch -->
+                    <toggleSwitch v-bind:toggleValue.sync="localInvoice.isRecurring" 
+                        @update:toggleValue="updateReccuring($event)"
+                        :ripple="false" :showIcon="true" onIcon="ios-eye-off-outline" offIcon="ios-eye-outline" 
+                        title="Make Recurring:" onText="Yes" offText="No" poptipMsg="Turn on to make recurring"
+                        class="float-right p-2">
+                    </toggleSwitch>
 
                     <!-- Make recurring settings -->
-                    <Row v-show="localInvoice.isRecurring && showRecurringSettings" class="mb-3">
+                    <Row v-show="showRecurringSettings" key="dynamic" class="animated mb-3">
+
+                        <!-- White overlay when creating/saving invoice -->
+                        <Spin size="large" fix v-if="isSavingInvoice || isCreatingInvoice"></Spin>
+
                         <Col span="24">
                             <div style="background:#eee;padding: 20px">
                                 <Card :bordered="false">
@@ -60,36 +98,36 @@
                                             <span class="float-left d-block mr-1 mb-3">Repeat this invoice</span>
 
                                             <!-- Timeline Options -->
-                                            <Select v-model="schedule" :style="{ width:'150px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select frequency">
-                                                <Option value="daily">Daily</Option>
-                                                <Option value="weekly">Weekly</Option>
-                                                <Option value="monthly">Monthly</Option>
-                                                <Option value="yearly">Yearly</Option>
-                                                <Option value="custom">Custom</Option>
+                                            <Select v-model="localInvoice.recurringSchedule.chosen" :style="{ width:'100px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select frequency">
+                                                <Option value="Daily">Daily</Option>
+                                                <Option value="Weekly">Weekly</Option>
+                                                <Option value="Monthly">Monthly</Option>
+                                                <Option value="Yearly">Yearly</Option>
+                                                <Option value="Custom">Custom</Option>
                                             </Select>
 
                                             <!-- If Weekly -->
-                                            <span v-show="schedule == 'weekly'" class="mb-3">
+                                            <span v-show="localInvoice.recurringSchedule.chosen == 'Weekly'" class="mb-3">
                                                 <span class="float-left d-block ml-1 mr-1">every</span>
-                                                <Select :style="{ width:'150px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day of week">
-                                                    <Option value="monday">Monday</Option>
-                                                    <Option value="tuesday">Tuesday</Option>
-                                                    <Option value="wednesday">Wednesday</Option>
-                                                    <Option value="thursday">Thursday</Option>
-                                                    <Option value="friday">Friday</Option>
-                                                    <Option value="saturday">Saturday</Option>
-                                                    <Option value="sunday">Sunday</Option>
+                                                <Select v-model="localInvoice.recurringSchedule.weekly" :style="{ width:'120px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day of week">
+                                                    <Option value="Monday">Monday</Option>
+                                                    <Option value="Tuesday">Tuesday</Option>
+                                                    <Option value="Wednesday">Wednesday</Option>
+                                                    <Option value="Thursday">Thursday</Option>
+                                                    <Option value="Friday">Friday</Option>
+                                                    <Option value="Saturday">Saturday</Option>
+                                                    <Option value="Sunday">Sunday</Option>
                                                 </Select>
                                             </span>
                                             
                                             <!-- If Monthly -->
-                                            <span v-show="schedule == 'monthly'" class="mb-3">
+                                            <span v-show="localInvoice.recurringSchedule.chosen == 'Monthly'" class="mb-3">
                                                 <span class="float-left d-block ml-1 mr-1">on the</span>
-                                                <Select :style="{ width:'150px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day">
+                                                <Select v-model="localInvoice.recurringSchedule.monthly" :style="{ width:'60px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day">
                                                     <Option value="1st">1st</Option>
                                                     <Option value="2nd">2nd</Option>
                                                     <Option value="3rd">3rd</Option>
-                                                    <Option value=4th>4th</Option>
+                                                    <Option value="4th">4th</Option>
                                                     <Option value="5th">5th</Option>
                                                     <Option value="6th">6th</Option>
                                                     <Option value="7th">7th</Option>
@@ -122,28 +160,29 @@
                                             </span>
 
                                             <!-- If Yearly -->
-                                            <span v-show="schedule == 'yearly'" class="mb-3">
+                                            <span v-show="localInvoice.recurringSchedule.chosen == 'Yearly'" class="mb-3">
                                                 <span class="float-left d-block ml-1 mr-1">every</span>
-                                                <Select :style="{ width:'150px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day of week">
-                                                    <Option value="1st">January</Option>
-                                                    <Option value="2nd">February</Option>
-                                                    <Option value="3rd">March</Option>
-                                                    <Option value=4th>April</Option>
-                                                    <Option value="5th">May</Option>
-                                                    <Option value="6th">June</Option>
-                                                    <Option value="7th">July</Option>
-                                                    <Option value="8th">August</Option>
-                                                    <Option value="9th">September</Option>
-                                                    <Option value="10th">October</Option>
-                                                    <Option value="11th">November</Option>
-                                                    <Option value="12th">December</Option>
+                                                <Select v-model="localInvoice.recurringSchedule.yearly.month" :style="{ width:'120px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day of week">
+                                                    <Option value="January">January</Option>
+                                                    <Option value="February">February</Option>
+                                                    <Option value="March">March</Option>
+                                                    <Option value="April">April</Option>
+                                                    <Option value="May">May</Option>
+                                                    <Option value="June">June</Option>
+                                                    <Option value="July">July</Option>
+                                                    <Option value="August">August</Option>
+                                                    <Option value="September">September</Option>
+                                                    <Option value="October">October</Option>
+                                                    <Option value="November">November</Option>
+                                                    <Option value="December">December</Option>
                                                 </Select>
+                                                
                                                 <span class="float-left d-block ml-1 mr-1">on the</span>
-                                                <Select :style="{ width:'150px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day">
+                                                <Select v-model="localInvoice.recurringSchedule.yearly.day" :style="{ width:'60px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day">
                                                     <Option value="1st">1st</Option>
                                                     <Option value="2nd">2nd</Option>
                                                     <Option value="3rd">3rd</Option>
-                                                    <Option value=4th>4th</Option>
+                                                    <Option value="4th">4th</Option>
                                                     <Option value="5th">5th</Option>
                                                     <Option value="6th">6th</Option>
                                                     <Option value="7th">7th</Option>
@@ -175,92 +214,92 @@
                                             </span>
 
                                             <!-- If Custom -->
-                                            <span v-show="schedule == 'custom'" class="mb-3">
+                                            <span v-show="localInvoice.recurringSchedule.chosen == 'Custom'" class="mb-3">
                                                 <span class="float-left d-block ml-1 mr-1 mb-3">every</span>
-                                                <el-input placeholder="E.g) 6" size="mini" class="float-left d-block mr-1 mb-3" :style="{ maxWidth:'80px', marginTop:'-3px' }"></el-input>
-                                                <Select v-model="customSchedule" :style="{ width:'150px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day of week">
-                                                    <Option value="days">Day(s)</Option>
-                                                    <Option value="weeks">Week(s)</Option>
-                                                    <Option value="months">Month(s)</Option>
-                                                    <Option value="years">Year(s)</Option>
+                                                <el-input v-model="localInvoice.recurringSchedule.custom.count" placeholder="E.g) 6" size="mini" class="float-left d-block mr-1 mb-3" :style="{ maxWidth:'60px', marginTop:'-3px' }"></el-input>
+                                                <Select v-model="localInvoice.recurringSchedule.custom.chosen" :style="{ width:'100px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day of week">
+                                                    <Option value="Days">Day(s)</Option>
+                                                    <Option value="Weeks">Week(s)</Option>
+                                                    <Option value="Months">Month(s)</Option>
+                                                    <Option value="Years">Year(s)</Option>
                                                 </Select>
 
                                                 <!-- If weeks -->
-                                                <span v-show="customSchedule == 'weeks'">
+                                                <span v-show="localInvoice.recurringSchedule.custom.chosen == 'Weeks'">
                                                     <span class="float-left d-block ml-1 mr-1 mb-3">on every</span>
-                                                    <Select :style="{ width:'150px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day of week">
-                                                        <Option value="monday">Monday</Option>
-                                                        <Option value="tuesday">Tuesday</Option>
-                                                        <Option value="wednesday">Wednesday</Option>
-                                                        <Option value="thursday">Thursday</Option>
-                                                        <Option value="friday">Friday</Option>
-                                                        <Option value="saturday">Saturday</Option>
-                                                        <Option value="sunday">Sunday</Option>
+                                                    <Select v-model="localInvoice.recurringSchedule.custom.weeks" :style="{ width:'120px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day of week">
+                                                        <Option value="Monday">Monday</Option>
+                                                        <Option value="Tuesday">Tuesday</Option>
+                                                        <Option value="Wednesday">Wednesday</Option>
+                                                        <Option value="Thursday">Thursday</Option>
+                                                        <Option value="Friday">Friday</Option>
+                                                        <Option value="Saturday">Saturday</Option>
+                                                        <Option value="Sunday">Sunday</Option>
                                                     </Select>
                                                 </span>
                                                 
                                                 <!-- If months -->
-                                                <span v-show="customSchedule == 'months'">
+                                                <span v-show="localInvoice.recurringSchedule.custom.chosen == 'Months'">
                                                     <span class="float-left d-block ml-1 mr-1 mb-3">on the</span>
-                                                    <Select :style="{ width:'150px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day">
-                                                        <Option value="1st">1st</Option>
-                                                        <Option value="2nd">2nd</Option>
-                                                        <Option value="3rd">3rd</Option>
-                                                        <Option value=4th>4th</Option>
-                                                        <Option value="5th">5th</Option>
-                                                        <Option value="6th">6th</Option>
-                                                        <Option value="7th">7th</Option>
-                                                        <Option value="8th">8th</Option>
-                                                        <Option value="9th">9th</Option>
-                                                        <Option value="10th">10th</Option>
-                                                        <Option value="11th">11th</Option>
-                                                        <Option value="12th">12th</Option>
-                                                        <Option value="13th">13th</Option>
-                                                        <Option value="14th">14th</Option>
-                                                        <Option value="15th">15th</Option>
-                                                        <Option value="16th">16th</Option>
-                                                        <Option value="17th">17th</Option>
-                                                        <Option value="18th">18th</Option>
-                                                        <Option value="19th">19th</Option>
-                                                        <Option value="20th">20th</Option>
-                                                        <Option value="21st">21st</Option>
-                                                        <Option value="22nd">22nd</Option>
-                                                        <Option value="23rd">23rd</Option>
-                                                        <Option value="24th">24th</Option>
-                                                        <Option value="25th">25th</Option>
-                                                        <Option value="26th">26th</Option>
-                                                        <Option value="27th">27th</Option>
-                                                        <Option value="28th">28th</Option>
-                                                        <Option value="29th">29th</Option>
-                                                        <Option value="30th">30th</Option>
-                                                        <Option value="31st">31st</Option>
+                                                        <Select v-model="localInvoice.recurringSchedule.custom.months" :style="{ width:'60px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day">
+                                                            <Option value="1st">1st</Option>
+                                                            <Option value="2nd">2nd</Option>
+                                                            <Option value="3rd">3rd</Option>
+                                                            <Option value="4th">4th</Option>
+                                                            <Option value="5th">5th</Option>
+                                                            <Option value="6th">6th</Option>
+                                                            <Option value="7th">7th</Option>
+                                                            <Option value="8th">8th</Option>
+                                                            <Option value="9th">9th</Option>
+                                                            <Option value="10th">10th</Option>
+                                                            <Option value="11th">11th</Option>
+                                                            <Option value="12th">12th</Option>
+                                                            <Option value="13th">13th</Option>
+                                                            <Option value="14th">14th</Option>
+                                                            <Option value="15th">15th</Option>
+                                                            <Option value="16th">16th</Option>
+                                                            <Option value="17th">17th</Option>
+                                                            <Option value="18th">18th</Option>
+                                                            <Option value="19th">19th</Option>
+                                                            <Option value="20th">20th</Option>
+                                                            <Option value="21st">21st</Option>
+                                                            <Option value="22nd">22nd</Option>
+                                                            <Option value="23rd">23rd</Option>
+                                                            <Option value="24th">24th</Option>
+                                                            <Option value="25th">25th</Option>
+                                                            <Option value="26th">26th</Option>
+                                                            <Option value="27th">27th</Option>
+                                                            <Option value="28th">28th</Option>
+                                                            <Option value="29th">29th</Option>
+                                                            <Option value="30th">30th</Option>
+                                                            <Option value="31st">31st</Option>
                                                     </Select>
                                                     <span class="float-left d-block ml-1 mr-1 mb-3">day of every month</span>
                                                 </span>
 
                                                 <!-- If years -->
-                                                <span v-show="customSchedule == 'years'">
+                                                <span v-show="localInvoice.recurringSchedule.custom.chosen == 'Years'">
                                                     <span class="float-left d-block ml-1 mr-1 mb-3">on every</span>
-                                                    <Select :style="{ width:'150px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day of week">
-                                                        <Option value="1st">January</Option>
-                                                        <Option value="2nd">February</Option>
-                                                        <Option value="3rd">March</Option>
-                                                        <Option value=4th>April</Option>
-                                                        <Option value="5th">May</Option>
-                                                        <Option value="6th">June</Option>
-                                                        <Option value="7th">July</Option>
-                                                        <Option value="8th">August</Option>
-                                                        <Option value="9th">September</Option>
-                                                        <Option value="10th">October</Option>
-                                                        <Option value="11th">November</Option>
-                                                        <Option value="12th">December</Option>
+                                                    <Select v-model="localInvoice.recurringSchedule.custom.years.month" :style="{ width:'120px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day of week">
+                                                        <Option value="January">January</Option>
+                                                        <Option value="February">February</Option>
+                                                        <Option value="March">March</Option>
+                                                        <Option value="April">April</Option>
+                                                        <Option value="May">May</Option>
+                                                        <Option value="June">June</Option>
+                                                        <Option value="July">July</Option>
+                                                        <Option value="August">August</Option>
+                                                        <Option value="September">September</Option>
+                                                        <Option value="October">October</Option>
+                                                        <Option value="November">November</Option>
+                                                        <Option value="December">December</Option>
                                                     </Select>
                                                     <span class="float-left d-block ml-1 mr-1 mb-3">on the</span>
-                                                    <Select :style="{ width:'150px' }" class="float-left d-block" placeholder="Select day">
+                                                    <Select v-model="localInvoice.recurringSchedule.custom.years.day" :style="{ width:'60px', marginTop:'-5px' }" class="float-left mb-3" placeholder="Select day">
                                                         <Option value="1st">1st</Option>
                                                         <Option value="2nd">2nd</Option>
                                                         <Option value="3rd">3rd</Option>
-                                                        <Option value=4th>4th</Option>
+                                                        <Option value="4th">4th</Option>
                                                         <Option value="5th">5th</Option>
                                                         <Option value="6th">6th</Option>
                                                         <Option value="7th">7th</Option>
@@ -300,7 +339,7 @@
                                             <span class="float-left d-block mr-1 mb-3">Create first invoice on</span>
 
                                             <!-- First Invoice - Start Date -->
-                                            <el-date-picker v-model="recurringStartDate" type="date" placeholder="e.g) January 1, 2018" size="mini" class="float-left mb-2" :style="{ maxWidth:'135px', marginTop:'-3px' }"
+                                            <el-date-picker v-model="localInvoice.recurringSchedule.start" type="date" :clearable="false" placeholder="e.g) January 1, 2018" size="mini" class="float-left mb-2" :style="{ maxWidth:'135px', marginTop:'-3px' }"
                                                 format="MMM dd yyyy" value-format="yyyy-MM-dd">
                                             </el-date-picker>
 
@@ -308,13 +347,13 @@
                                             <span class="float-left d-block mr-1 ml-1 mb-3">and end</span>
 
                                             <!-- Text for when to end -->
-                                            <Select v-model="recurringEndDate" :style="{ width:'150px', marginTop:'-5px' }" class="float-left mb-3" placeholder="Select day of week">
-                                                <Option value="after">After</Option>
-                                                <Option value="on">On</Option>
-                                                <Option value="never">Never</Option>
+                                            <Select v-model="localInvoice.recurringSchedule.stop.chosen" :style="{ width:'100px', marginTop:'-5px' }" class="float-left mb-3" placeholder="Select day of week">
+                                                <Option value="After">After</Option>
+                                                <Option value="On">On</Option>
+                                                <Option value="Never">Never</Option>
                                             </Select>
-                                            <el-input v-show="recurringEndDate == 'after'" placeholder="E.g) 3" size="mini" class="float-left mr-1 ml-1 mb-3" :style="{ maxWidth:'80px', marginTop:'-3px' }"></el-input>
-                                            <el-date-picker v-show="recurringEndDate == 'on'" type="date" placeholder="e.g) January 1, 2018" size="mini" class="float-left mr-1 ml-1 mb-3" :style="{ maxWidth:'135px', marginTop:'-3px' }"
+                                            <el-input v-show="localInvoice.recurringSchedule.stop.chosen == 'After'" v-model="localInvoice.recurringSchedule.stop.count" placeholder="E.g) 3" size="mini" class="float-left mr-1 ml-1 mb-3" :style="{ maxWidth:'80px', marginTop:'-3px' }"></el-input>
+                                            <el-date-picker v-show="localInvoice.recurringSchedule.stop.chosen == 'On'" v-model="localInvoice.recurringSchedule.stop.day" type="date" :clearable="false" placeholder="e.g) January 1, 2018" size="mini" class="float-left mr-1 ml-1 mb-3" :style="{ maxWidth:'135px', marginTop:'-3px' }"
                                                 format="MMM dd yyyy" value-format="yyyy-MM-dd">
                                             </el-date-picker>
 
@@ -326,190 +365,203 @@
                         </Col>
                     </Row>
 
-            </Col>
+                </Col>
 
-            <Col v-if="localInvoice.has_approved" :span="5">
-            
-                <!-- Activity Number Card -->
-                <IconAndCounterCard title="Activity" icon="ios-pulse-outline" :count="localInvoice.activity_count.total" class="mb-2" type="success"
-                                    :route="{ name: 'show-invoice-activities', params: { id: localInvoice.id } }">
-                </IconAndCounterCard>
+            </Row>
 
-                <!-- Sent Incoices Number Card -->
-                <IconAndCounterCard title="Sent Invoices" icon="ios-send-outline" :count="localInvoice.sent_invoice_activity_count.total" class="mb-2"
-                                    :route="{ name: 'show-invoice-activities', params: { id: localInvoice.id } , query: { activity_type: 'sent' } }">
-                </IconAndCounterCard>
+            <!-- Activity cards & Invoice Steps -->
+            <Row :gutter="20" key="activity_n_steps" class="animated">
+                <!-- White overlay when creating/saving invoice -->
+                <Spin size="large" fix v-if="isSavingInvoice || isCreatingInvoice"></Spin>
 
-                <!-- Sent Recipts Number Card -->
-                <IconAndCounterCard title="Sent Receipts" icon="ios-paper-outline" :count="localInvoice.sent_receipt_activity_count.total" class="mb-2"
-                                    :route="{ name: 'show-invoice-activities', params: { id: localInvoice.id } , query: { activity_type: 'sent_receipt' } }">
-                </IconAndCounterCard>
-            
-            </Col>
-            <Col :span="localInvoice.has_approved ? 19 : 24">
-                <!-- Get the staging toolbar to display the invoice approved, sent/re-send and record payment stages -->
-                <steps 
-                    v-if="!createMode"
-                    :invoice="localInvoice" :editMode="editMode" :createMode="createMode" 
-                    @toggleEditMode="toggleEditMode($event)" @approved="updateInvoiceData($event)" 
-                    @sent="updateInvoiceData($event)" @skipped="updateInvoiceData($event)"
-                    @paid="updateInvoiceData($event)" @cancelled="updateInvoiceData($event)" 
-                    @reminderSet="updateInvoiceData($event)">
-                </steps>
-            </Col>
-        </Row>
+                <!-- Acitvity cards for showing summary of activities, sent invoices, and sent receipt -->
+                <Col v-if="localInvoice.has_approved" :span="5">
+                
+                    <!-- Activity Number Card -->
+                    <IconAndCounterCard title="Activity" icon="ios-pulse-outline" :count="localInvoice.activity_count.total" class="mb-2" type="success"
+                                        :route="{ name: 'show-invoice-activities', params: { id: localInvoice.id } }">
+                    </IconAndCounterCard>
 
-        <!-- Loaders for creating/saving invoice -->
-        <Row>
-            <Col :span="24">
-                <div v-if="isCreatingInvoice" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Creating, please wait...</div>
-                <div v-if="isSavingInvoice" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Saving, please wait...</div>
-            </Col>
-        </Row>
+                    <!-- Sent Incoices Number Card -->
+                    <IconAndCounterCard title="Sent Invoices" icon="ios-send-outline" :count="localInvoice.sent_invoice_activity_count.total" class="mb-2"
+                                        :route="{ name: 'show-invoice-activities', params: { id: localInvoice.id } , query: { activity_type: 'sent' } }">
+                    </IconAndCounterCard>
 
-        <!-- Invoice View/Editor -->
-        <Row id="invoice-summary-1">
-            <Col :span="24">
-                <Card :style="{ width: '100%' }">
-                    
-                    <!-- White overlay when creating/saving invoice -->
-                    <Spin size="large" fix v-if="isSavingInvoice || isCreatingInvoice"></Spin>
+                    <!-- Sent Recipts Number Card -->
+                    <IconAndCounterCard title="Sent Receipts" icon="ios-paper-outline" :count="localInvoice.sent_receipt_activity_count.total" class="mb-2"
+                                        :route="{ name: 'show-invoice-activities', params: { id: localInvoice.id } , query: { activity_type: 'sent_receipt' } }">
+                    </IconAndCounterCard>
+                
+                </Col>
 
-                    <!-- Main header -->
-                    <div slot="title">
-                        <h5>Invoice Summary</h5>
-                    </div>
+                <!-- Invoice steps, Approval step, Sending step and Payment step -->
+                <Col :span="localInvoice.has_approved ? 19 : 24">
+                    <!-- Get the staging toolbar to display the invoice approved, sent/re-send and record payment stages -->
+                    <steps 
+                        v-if="!createMode"
+                        :invoice="localInvoice" :editMode="editMode" :createMode="createMode" 
+                        @toggleEditMode="toggleEditMode($event)" @approved="updateInvoiceData($event)" 
+                        @sent="updateInvoiceData($event)" @skipped="updateInvoiceData($event)"
+                        @paid="updateInvoiceData($event)" @cancelled="updateInvoiceData($event)" 
+                        @reminderSet="updateInvoiceData($event)">
+                    </steps>
+                </Col>
 
-                    <!-- Invoice options -->
-                    <div slot="extra" v-if="showMenuBtn && !createMode">
+            </Row>
+
+            <!-- Loaders for creating/saving invoice -->
+            <Row key="create_n_save_loaders" class="animated">
+                <Col :span="24">
+                    <div v-if="isCreatingInvoice" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Creating, please wait...</div>
+                    <div v-if="isSavingInvoice" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Saving, please wait...</div>
+                </Col>
+            </Row>
+
+            <!-- Invoice View/Editor -->
+            <Row id="invoice-summary-1"  key="invoice_template" class="animated">
+                <Col :span="24">
+                    <Card :style="{ width: '100%' }">
                         
-                        <mainHeader :invoice="localInvoice" :editMode="editMode" @toggleEditMode="toggleEditMode($event)"></mainHeader>
+                        <!-- White overlay when creating/saving invoice -->
+                        <Spin size="large" fix v-if="isSavingInvoice || isCreatingInvoice"></Spin>
 
-                    </div>
+                        <!-- Main header -->
+                        <div slot="title">
+                            <h5>Invoice Summary</h5>
+                        </div>
 
-                    <Row>
-
-                        <Col span="24" class="pr-4">
-
-                            <!-- Create button -->
-                            <createInvoiceBtn v-if="createMode" 
-                                              class="float-right mb-2 ml-3" 
-                                              type="success" size="small" 
-                                              :ripple="true"
-                                              @click.native="createInvoice()">
-                            </createInvoiceBtn>
-
-                            <!-- Save changes button -->
-                            <saveInvoiceBtn  v-if="!createMode && invoiceHasChanged" 
-                                             class="float-right mb-2 ml-3" :style="{ position:'relative' }"
-                                             type="success" size="small" 
-                                             :ripple="true"
-                                             @click.native="saveInvoice()">
-                            </saveInvoiceBtn>
-
-                            <!-- Edit mode switch -->
-                            <editModeSwitch v-bind:editMode.sync="editMode" :ripple="false" class="float-right mb-2"></editModeSwitch>
-
-                            <div class="clearfix"></div>
-
-                        </Col>
-
-                        <Col span="12">
-
-                            <!-- Company logo -->
-                            <imageUploader 
-                                uploadMsg="Upload or change logo"
-                                :thumbnailStyle="{ width:'200px', height:'auto' }"
-                                :allowUpload="editMode"
-                                :multiple="false"
-                                :imageList="
-                                    [{
-                                        'name': 'Company Logo',
-                                        'url': 'https://wave-prod-accounting.s3.amazonaws.com/uploads/invoices/business_logos/7cac2c58-4cc1-471b-a7ff-7055296fffbc.png'
-                                    }]">
-                            </imageUploader>
-                        </Col>
-
-                        <Col v-if="company" span="12" class="pr-4">
+                        <!-- Invoice options -->
+                        <div slot="extra" v-if="showMenuBtn && !createMode">
                             
-                            <!-- Invoice Title -->
-                            <mainTitle :invoice="localInvoice" :editMode="editMode"></mainTitle>
+                            <mainHeader :invoice="localInvoice" :editMode="editMode" @toggleEditMode="toggleEditMode($event)"></mainHeader>
+
+                        </div>
+
+                        <Row>
+
+                            <Col span="24" class="pr-4">
+
+                                <!-- Create button -->
+                                <createInvoiceBtn v-if="createMode" 
+                                                class="float-right mb-2 ml-3" 
+                                                type="success" size="small" 
+                                                :ripple="true"
+                                                @click.native="createInvoice()">
+                                </createInvoiceBtn>
+
+                                <!-- Save changes button -->
+                                <saveInvoiceBtn  v-if="!createMode && invoiceHasChanged" 
+                                                class="float-right mb-2 ml-3" :style="{ position:'relative' }"
+                                                type="success" size="small" 
+                                                :ripple="true"
+                                                @click.native="saveInvoice()">
+                                </saveInvoiceBtn>
+
+                                <!-- Edit mode switch -->
+                                <editModeSwitch v-bind:editMode.sync="editMode" :ripple="false" class="float-right mb-2"></editModeSwitch>
+
+                                <div class="clearfix"></div>
+
+                            </Col>
+
+                            <Col span="12">
+
+                                <!-- Company logo -->
+                                <imageUploader 
+                                    uploadMsg="Upload or change logo"
+                                    :thumbnailStyle="{ width:'200px', height:'auto' }"
+                                    :allowUpload="editMode"
+                                    :multiple="false"
+                                    :imageList="
+                                        [{
+                                            'name': 'Company Logo',
+                                            'url': 'https://wave-prod-accounting.s3.amazonaws.com/uploads/invoices/business_logos/7cac2c58-4cc1-471b-a7ff-7055296fffbc.png'
+                                        }]">
+                                </imageUploader>
+                            </Col>
+
+                            <Col v-if="company" span="12" class="pr-4">
+                                
+                                <!-- Invoice Title -->
+                                <mainTitle :invoice="localInvoice" :editMode="editMode"></mainTitle>
+                                
+                                <!-- Company information -->
+                                <companyOrIndividualDetails 
+                                    :client="localInvoice.customized_company_details" :editMode="editMode" align="right"
+                                    :showCompanyOrUserSelector="false"
+                                    :showClientOrSupplierSelector="false"
+                                    @updated:companyOrIndividual="updateCompany($event)"
+                                    @updated:phones="updatePhoneChanges(localInvoice.customized_company_details, $event)"
+                                    @reUpdateParent="storeOriginalInvoice()">
+                                </companyOrIndividualDetails>
+
+                            </Col>
+
+                        </Row>
+
+                        <Divider dashed class="mt-3 mb-3" />
+
+                        <Row>
+                            <Col span="12" class="pl-2">
+                                <h3 v-if="!editMode" class="text-dark mb-3">{{ localInvoice.invoice_to_title ? localInvoice.invoice_to_title+':' : '' }}</h3>
+                                <el-input v-if="editMode" placeholder="Invoice heading" v-model="localInvoice.invoice_to_title" size="large" class="mb-2" :style="{ maxWidth:'250px' }"></el-input>
+
+                                <!-- Client information -->
+                                <companyOrIndividualDetails 
+                                    :client="localInvoice.customized_client_details" :editMode="editMode"
+                                    :showCompanyOrUserSelector="false"
+                                    :showClientOrSupplierSelector="true"
+                                    @updated:companyOrIndividual="updateClient($event)"
+                                    @updated:phones="updatePhoneChanges(localInvoice.customized_client_details, $event)"
+                                    @reUpdateParent="storeOriginalInvoice()">
+                                </companyOrIndividualDetails>
+
+                                <!-- Client selector -->
+                                <clientSelector :style="{maxWidth: '250px'}" class="mt-2"
+                                    @updated="changeClient($event)">
+                                </clientSelector>
+
+                            </Col>
                             
-                            <!-- Company information -->
-                            <companyOrIndividualDetails 
-                                :client="localInvoice.customized_company_details" :editMode="editMode" align="right"
-                                :showCompanyOrUserSelector="false"
-                                :showClientOrSupplierSelector="false"
-                                @updated:companyOrIndividual="updateCompany($event)"
-                                @updated:phones="updatePhoneChanges(localInvoice.customized_company_details, $event)"
-                                @reUpdateParent="storeOriginalInvoice()">
-                            </companyOrIndividualDetails>
-
-                        </Col>
-
-                    </Row>
-
-                    <Divider dashed class="mt-3 mb-3" />
-
-                    <Row>
-                        <Col span="12" class="pl-2">
-                            <h3 v-if="!editMode" class="text-dark mb-3">{{ localInvoice.invoice_to_title ? localInvoice.invoice_to_title+':' : '' }}</h3>
-                            <el-input v-if="editMode" placeholder="Invoice heading" v-model="localInvoice.invoice_to_title" size="large" class="mb-2" :style="{ maxWidth:'250px' }"></el-input>
-
-                            <!-- Client information -->
-                            <companyOrIndividualDetails 
-                                :client="localInvoice.customized_client_details" :editMode="editMode"
-                                :showCompanyOrUserSelector="false"
-                                :showClientOrSupplierSelector="true"
-                                @updated:companyOrIndividual="updateClient($event)"
-                                @updated:phones="updatePhoneChanges(localInvoice.customized_client_details, $event)"
-                                @reUpdateParent="storeOriginalInvoice()">
-                            </companyOrIndividualDetails>
-
-                            <!-- Client selector -->
-                            <clientSelector :style="{maxWidth: '250px'}" class="mt-2"
-                                @updated="changeClient($event)">
-                            </clientSelector>
-
-                        </Col>
+                            <Col span="12">
+                                <!-- Invoice details e.g) Reference #, created date, due date, grand total -->
+                                <summaryDetails :invoice="localInvoice" :editMode="editMode" :createMode="createMode"></summaryDetails>
+                            </Col>
                         
-                        <Col span="12">
-                            <!-- Invoice details e.g) Reference #, created date, due date, grand total -->
-                            <summaryDetails :invoice="localInvoice" :editMode="editMode" :createMode="createMode"></summaryDetails>
-                        </Col>
-                    
-                        <Col span="24">
-                            <!-- Edit mode toolbar e.g) Currency selector, primary/secondary color picker -->
-                            <toolbar v-if="editMode" :invoice="localInvoice" :editMode="editMode" class="mt-2"></toolbar>
-                        </Col>
+                            <Col span="24">
+                                <!-- Edit mode toolbar e.g) Currency selector, primary/secondary color picker -->
+                                <toolbar v-if="editMode" :invoice="localInvoice" :editMode="editMode" class="mt-2"></toolbar>
+                            </Col>
 
-                        <!-- Invoice list items (products/services) -->
-                        <Col span="24">
-                            <items :invoice="localInvoice" :editMode="editMode"></items>
-                        </Col>
+                            <!-- Invoice list items (products/services) -->
+                            <Col span="24">
+                                <items :invoice="localInvoice" :editMode="editMode"></items>
+                            </Col>
 
-                    </Row>
+                        </Row>
 
-                    <Divider dashed class="mt-0 mb-4" />
+                        <Divider dashed class="mt-0 mb-4" />
 
-                    <!-- Total details e.g) Sub/grand total and tax amounts -->
-                    <Row>
-                        <Col span="12" offset="12" class="pr-4">
-                            <totalBreakDown :invoice="localInvoice" :editMode="editMode"></totalBreakDown>
-                        </Col>
-                        <Col span="24">
-                            <!-- Invoice footer notes e.g) For noting payment details/terms and conditions -->
-                            <notes :invoice="localInvoice" :editMode="editMode"></notes>
-                        </Col>
+                        <!-- Total details e.g) Sub/grand total and tax amounts -->
+                        <Row>
+                            <Col span="12" offset="12" class="pr-4">
+                                <totalBreakDown :invoice="localInvoice" :editMode="editMode"></totalBreakDown>
+                            </Col>
+                            <Col span="24">
+                                <!-- Invoice footer notes e.g) For noting payment details/terms and conditions -->
+                                <notes :invoice="localInvoice" :editMode="editMode"></notes>
+                            </Col>
 
-                    </Row>
+                        </Row>
 
-                    <!-- Invoice page footer -->
-                    <mainFooter :invoice="localInvoice" :editMode="editMode"></mainFooter>
+                        <!-- Invoice page footer -->
+                        <mainFooter :invoice="localInvoice" :editMode="editMode"></mainFooter>
 
-                </Card>
-            </Col>
-        </Row>
+                    </Card>
+                </Col>
+            </Row>
+
+        </transition-group>
 
     </div>
 
@@ -616,10 +668,6 @@
         data(){
             return {
 
-                schedule: '',
-                customSchedule: '',
-                recurringStartDate:'',
-                recurringEndDate:'',
                 showRecurringSettings: false,
 
                 user: auth.user,
@@ -690,7 +738,8 @@
                 
                 this.localInvoice.isRecurring = val ? 1 : 0;
                 
-                this.showRecurringSettings = !this.showRecurringSettings
+                this.showRecurringSettings = val;
+                
             },
             changeClient(newClient){
 

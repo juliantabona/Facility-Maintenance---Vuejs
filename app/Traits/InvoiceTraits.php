@@ -303,6 +303,11 @@ trait InvoiceTraits
         //  Current authenticated user
         $auth_user = auth('api')->user();
 
+        /*
+         *  The $invoice is a collection of the invoice to be stored.
+         */
+        $invoice = request('invoice');
+
         /*******************************************************
          *   CHECK IF USER HAS PERMISSION TO UPDATE INVOICE    *
          ******************************************************/
@@ -324,17 +329,19 @@ trait InvoiceTraits
             'sub_total_value' => $invoice['sub_total_value'],
             'grand_total_title' => $invoice['grand_total_title'],
             'grand_total_value' => $invoice['grand_total_value'],
-            'currency_type' => json_encode($invoice['currency_type'], JSON_FORCE_OBJECT),
-            'calculated_taxes' => json_encode($invoice['calculated_taxes'], JSON_FORCE_OBJECT),
+            'currency_type' => $invoice['currency_type'],
+            'calculated_taxes' => $invoice['calculated_taxes'],
             'invoice_to_title' => $invoice['invoice_to_title'],
-            'customized_company_details' => json_encode($invoice['customized_company_details'], JSON_FORCE_OBJECT),
-            'customized_client_details' => json_encode($invoice['customized_client_details'], JSON_FORCE_OBJECT),
+            'customized_company_details' => $invoice['customized_company_details'],
+            'customized_client_details' => $invoice['customized_client_details'],
             'client_id' => $invoice['customized_client_details']['id'],
-            'table_columns' => json_encode($invoice['table_columns'], JSON_FORCE_OBJECT),
-            'items' => json_encode($invoice['items'], JSON_FORCE_OBJECT),
-            'notes' => json_encode($invoice['notes'], JSON_FORCE_OBJECT),
-            'colors' => json_encode($invoice['colors'], JSON_FORCE_OBJECT),
+            'table_columns' => $invoice['table_columns'],
+            'items' => $invoice['items'],
+            'notes' => $invoice['notes'],
+            'colors' => $invoice['colors'],
             'footer' => $invoice['footer'],
+            'isRecurring' => $invoice['isRecurring'],
+            'recurringSchedule' => $invoice['recurringSchedule'],
             'trackable_type' => 'invoice',
             'trackable_id' => $invoice_id,
             'company_branch_id' => $auth_user->company_branch_id,
@@ -343,12 +350,12 @@ trait InvoiceTraits
 
         try {
             //  Update the invoice
-            $invoice = $this->update($template);
+            $invoice = $this->where('id', $invoice_id)->first()->update($template);
 
             //  If the invoice was updated successfully
             if ($invoice) {
                 //  re-retrieve the instance to get all of the fields in the table.
-                $invoice = $invoice->fresh();
+                $invoice = $this->where('id', $invoice_id)->first();
 
                 /*****************************
                  *   SEND NOTIFICATIONS      *

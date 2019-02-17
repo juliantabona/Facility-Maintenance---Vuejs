@@ -32,13 +32,13 @@
 
             <!-- Invoice Created Date Value -->  
             <p v-if="!localEditMode" class="text-dark">{{ localInvoice.created_date_value | moment('MMM DD YYYY') || '___' }}</p>
-            <el-date-picker v-if="localEditMode" v-model="localInvoice.created_date_value" type="date" placeholder="e.g) January 1, 2018" size="mini" class="mb-2" :style="{ maxWidth:'135px', float:'right' }"
+            <el-date-picker v-if="localEditMode" v-model="localInvoice.created_date_value" type="date" :clearable="false" placeholder="e.g) January 1, 2018" size="mini" class="mb-2" :style="{ maxWidth:'135px', float:'right' }"
                 format="MMM dd yyyy" value-format="yyyy-MM-dd">
             </el-date-picker>
 
             <!-- Invoice Expiry Date Value -->
             <p v-if="!localEditMode" class="text-dark">{{ localInvoice.expiry_date_value | moment('MMM DD YYYY') || '___' }}</p>
-            <el-date-picker v-if="localEditMode" v-model="localInvoice.expiry_date_value" type="date" placeholder="e.g) January 7, 2018" size="mini" class="mb-2" :style="{ maxWidth:'135px', float:'right' }"
+            <el-date-picker v-if="localEditMode" v-model="localInvoice.expiry_date_value" type="date" :clearable="false" placeholder="e.g) January 7, 2018" size="mini" class="mb-2" :style="{ maxWidth:'135px', float:'right' }"
                 format="MMM dd yyyy" value-format="yyyy-MM-dd">
             </el-date-picker>
 

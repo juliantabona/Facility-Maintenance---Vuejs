@@ -32,6 +32,7 @@ class Invoice extends Model
         'items' => 'array',
         'notes' => 'array',
         'colors' => 'array',
+        'recurringSchedule' => 'array',
     ];
 
     protected $dates = ['created_date_value', 'expiry_date_value'];
@@ -47,7 +48,7 @@ class Invoice extends Model
         'status', 'heading', 'reference_no_title', 'reference_no_value', 'created_date_title', 'created_date_value',
         'expiry_date_title', 'expiry_date_value', 'sub_total_title', 'sub_total_value', 'grand_total_title', 'grand_total_value',
         'currency_type', 'calculated_taxes', 'invoice_to_title', 'customized_company_details', 'customized_client_details', 'client_id',
-        'table_columns', 'items', 'notes', 'colors', 'footer', 'quotation_id', 'trackable_id', 'trackable_type', 'company_branch_id', 'company_id',
+        'table_columns', 'items', 'notes', 'colors', 'footer', 'isRecurring', 'recurringSchedule', 'quotation_id', 'trackable_id', 'trackable_type', 'company_branch_id', 'company_id',
     ];
 
     /**
