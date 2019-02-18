@@ -348,12 +348,12 @@
 
                                             <!-- Text for when to end -->
                                             <Select v-model="localInvoice.recurringSchedule.stop.chosen" :style="{ width:'100px', marginTop:'-5px' }" class="float-left mb-3" placeholder="Select day of week">
-                                                <Option value="After">After</Option>
-                                                <Option value="On">On</Option>
+                                                <Option value="Count">After</Option>
+                                                <Option value="Date">On</Option>
                                                 <Option value="Never">Never</Option>
                                             </Select>
-                                            <el-input v-show="localInvoice.recurringSchedule.stop.chosen == 'After'" v-model="localInvoice.recurringSchedule.stop.count" placeholder="E.g) 3" size="mini" class="float-left mr-1 ml-1 mb-3" :style="{ maxWidth:'80px', marginTop:'-3px' }"></el-input>
-                                            <el-date-picker v-show="localInvoice.recurringSchedule.stop.chosen == 'On'" v-model="localInvoice.recurringSchedule.stop.day" type="date" :clearable="false" placeholder="e.g) January 1, 2018" size="mini" class="float-left mr-1 ml-1 mb-3" :style="{ maxWidth:'135px', marginTop:'-3px' }"
+                                            <el-input v-show="localInvoice.recurringSchedule.stop.chosen == 'Count'" v-model="localInvoice.recurringSchedule.stop.count" placeholder="E.g) 3" size="mini" class="float-left mr-1 ml-1 mb-3" :style="{ maxWidth:'80px', marginTop:'-3px' }"></el-input>
+                                            <el-date-picker v-show="localInvoice.recurringSchedule.stop.chosen == 'Date'" v-model="localInvoice.recurringSchedule.stop.date" type="date" :clearable="false" placeholder="e.g) January 1, 2018" size="mini" class="float-left mr-1 ml-1 mb-3" :style="{ maxWidth:'135px', marginTop:'-3px' }"
                                                 format="MMM dd yyyy" value-format="yyyy-MM-dd">
                                             </el-date-picker>
 

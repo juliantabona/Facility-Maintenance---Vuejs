@@ -48,7 +48,7 @@ class Invoice extends Model
         'status', 'heading', 'reference_no_title', 'reference_no_value', 'created_date_title', 'created_date_value',
         'expiry_date_title', 'expiry_date_value', 'sub_total_title', 'sub_total_value', 'grand_total_title', 'grand_total_value',
         'currency_type', 'calculated_taxes', 'invoice_to_title', 'customized_company_details', 'customized_client_details', 'client_id',
-        'table_columns', 'items', 'notes', 'colors', 'footer', 'isRecurring', 'recurringSchedule', 'quotation_id', 'trackable_id', 'trackable_type', 'company_branch_id', 'company_id',
+        'table_columns', 'items', 'notes', 'colors', 'footer', 'isRecurring', 'recurringSchedule', 'invoice_parent_id', 'quotation_id', 'trackable_id', 'trackable_type', 'company_branch_id', 'company_id',
     ];
 
     /**
@@ -87,6 +87,11 @@ class Invoice extends Model
     public function quotation()
     {
         return $this->belongsTo('App\Quotation', 'quotation_id');
+    }
+
+    public function childInvoices()
+    {
+        return $this->hasMany('App\Invoice', 'invoice_parent_id');
     }
 
     public function recentActivities()
