@@ -14,9 +14,12 @@ use App\Notifications\InvoiceSent;
 use App\Notifications\InvoiceReceiptSent;
 use App\Notifications\InvoicePaid;
 use App\Notifications\InvoicePaymentCancelled;
+use App\Notifications\RecurringInvoiceSmsSent;
+use App\Notifications\RecurringInvoiceTestSmsSent;
 //  Other
 use PDF;
 use Carbon\Carbon;
+use Twilio as Twilio;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 trait InvoiceTraits
@@ -1059,6 +1062,78 @@ trait InvoiceTraits
                 //  Record activity of invoice updated payment reminders
                 $status = 'payment reminder';
                 $invoicePaymentCancelledActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
+
+                //  Action was executed successfully
+                return ['success' => true, 'response' => $invoice];
+            } else {
+                //  No resource found
+                return ['success' => false, 'response' => oq_api_notify_no_resource()];
+            }
+        } catch (\Exception $e) {
+            //  Log the error
+            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+            //  Return the error response
+            return ['success' => false, 'response' => $response];
+        }
+    }
+
+    public function initiateSendRecurringInvoiceSms($invoice_id)
+    {
+        //  Current authenticated user
+        $auth_user = auth('api')->user();
+
+        /*
+         *  The $sms is a collection of the sms details to be sent.
+         */
+
+        /****************************************************************
+         *   CHECK IF USER HAS PERMISSION TO RECORD INVOICE PAYMENT     *
+         ****************************************************************/
+
+        try {
+            //  Get the invoice
+            $invoice = $this->where('id', $invoice_id)->first();
+
+            //  Check if we have an invoice
+            if ($invoice) {
+                /*****************************
+                 *   SEND NOTIFICATIONS      *
+                 *****************************/
+
+                if ($auth_user) {
+                    if (request('test') == 1) {
+                        $status = 'recurring sms test';
+                        $auth_user->notify(new RecurringInvoiceTestSmsSent($invoice));
+                    } else {
+                        $status = 'recurring sms';
+                        $auth_user->notify(new RecurringInvoiceSmsSent($invoice));
+                    }
+                }
+
+                /******************************
+                 *   SEND INVOICE VIA SMS    *
+                 *****************************/
+                $callingCode = '+'.request('phoneNumber')['calling_code']['calling_code'];
+                $phoneNumber = request('phoneNumber')['number'];
+                $message = request('message');
+
+                //return ['success' => true, 'response' => $callingCode.(int) $phoneNumber];
+
+                Twilio::message($callingCode.$phoneNumber, $message);
+
+                /*****************************
+                 *   RECORD ACTIVITY         *
+                 *****************************/
+
+                //  Structure sms template
+                $smsTemplate = ['phone' => request('phoneNumber'), 'message' => $message];
+
+                //  Record activity of invoice sent receipt
+                $invoiceSentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'mail' => $smsTemplate]);
+
+                //  re-retrieve the instance to get all of the fields in the table.
+                $invoice = $invoice->fresh();
 
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $invoice];

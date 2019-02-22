@@ -45,10 +45,10 @@
                     </Col>
 
                     <Col :span="24" class="mt-2" v-if="!isLoadingCallingCodes && fetchedCallingCodes.length">
-
                         <!-- Phone Type Selector -->
-                        <Select v-model="localPhone.type" :style="{ width:'100%' }" placeholder="Select Phone Type" not-found-text="No phone types found" filterable>
-                            <Option v-for="(item, index) in phoneType"  :value="item.value"  :label="item.name" :key="index">
+                        <Select v-model="localSelectedType" @on-change="localPhone.type = $event" :style="{ width:'100%' }" placeholder="Select Phone Type" not-found-text="No phone types found" filterable>
+                            <Option v-for="(item, index) in phoneType"  :value="item.value"  :label="item.name" :key="index"
+                                    :disabled="disabledTypes.includes(item.name)">
                                 {{ item.name }}
                             </Option>
                         </Select>
@@ -88,11 +88,20 @@
             modelType: {
                 type: String,
                 default: null,  
+            },
+            selectedType: {
+                type: String,
+                default: null, 
+            },
+            disabledTypes:{
+                type: Array,
+                default: () => { return [] },  
             }
         },
         data(){
             return {
                 localPhone: this.currentPhone(),
+                localSelectedType: this.selectedType,
                 _localPhoneBeforeChange: this.storedPhone(),
                 phoneType: [
                     { name: 'Telephone', value: 'tel' }, 
@@ -237,7 +246,7 @@
                 }
             },
             saveChanges() {
-                if(this.editablePhone){
+                if(this.editablePhone && this.modelType){
 
                     const self = this;
 
@@ -280,6 +289,16 @@
         
                         });
 
+                }else{
+                    
+                    //  Alert parent and pass phone data
+
+                    //  Close modal
+                    this.$emit('updated',  this.localPhone);
+
+                    //  Close modal
+                    this.closeModal();
+
                 }
             },
             closeModal(){
@@ -290,6 +309,12 @@
             }
         },
         created(){
+            for(var x=0; x < this.phoneType.length; x++){
+                if( this.phoneType[x].name == this.selectedType ){
+                    this.localPhone.type = [ this.phoneType[x] ];
+                }
+            }
+            
             this.fetchCallingCodes();
         }
     };

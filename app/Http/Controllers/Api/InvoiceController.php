@@ -287,6 +287,26 @@ class InvoiceController extends Controller
         return $response;
     }
 
+    public function sendRecurringInvoiceSms($invoice_id)
+    {
+        //  Invoice Instance
+        $data = ( new Invoice() )->initiateSendRecurringInvoiceSms($invoice_id);
+        $success = $data['success'];
+        $response = $data['response'];
+
+        //  If the recurring invoice sms was sent successfully
+        if ($success) {
+            //  If this is a success then we have the invoice
+            $invoice = $response;
+
+            //  Action was executed successfully
+            return oq_api_notify($invoice, 200);
+        }
+
+        //  If the data was not a success then return the response
+        return $response;
+    }
+
     public function getEstimatedStats()
     {
         //  Start creating the invoice

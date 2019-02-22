@@ -48,7 +48,8 @@
                 </Alert>
                 
                 <!-- Add phone button -->
-                <Button class="mt-1 ml-1" icon="ios-add" type="dashed" size="small" @click="isOpenAddPhoneModal = true">Add Phone</Button>
+                <Button v-if="(numberLimit == 0) || (((localPhones || {}).length || 0) < numberLimit)" 
+                    class="mt-1 ml-1" icon="ios-add" type="dashed" size="small" @click="isOpenAddPhoneModal = true">Add Phone</Button>
             </Col>
         </Row>
 
@@ -59,6 +60,8 @@
             v-if="isOpenAddPhoneModal"
             :modelId="modelId"         
             :modelType="modelType"
+            :selectedType="selectedType"
+            :disabledTypes="disabledTypes"
             :editablePhone="editablePhone"
             @visibility="closeModal($event)"
             @created="storeCreated($event)"
@@ -110,6 +113,18 @@
             editable: {
                 type: Boolean,
                 default: false,
+            },
+            numberLimit: {
+                type: Number,
+                default: 0,
+            },
+            selectedType: {
+                type: String,
+                default: null, 
+            },
+            disabledTypes:{
+                type: Array,
+                default: () => { return [] },  
             }
         },
         data(){

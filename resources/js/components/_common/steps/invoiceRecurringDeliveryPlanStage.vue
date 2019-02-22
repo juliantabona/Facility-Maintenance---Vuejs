@@ -87,20 +87,18 @@
                                                       size="mini" class="mb-1">
                                             </el-input>
 
-                                            <span class="d-block mt-2 mb-1">
-                                                <b>SMS Message</b>
-                                            </span>
-                                            <el-input type="textarea" placeholder="Write sms message" 
-                                                    v-model="localInvoice.recurringSettings.deliveryPlan.phone.message" 
-                                                    class="input-fix-append mb-1">
-                                            </el-input>
-
-                                            <b class="d-block mt-3">Example Message:</b>
+                                            <b class="d-block mt-3">Delivery Message:</b>
                                             <p :style="{ padding: '20px', boxShadow: 'inset 1px 1px 5px 1px #d6d6d6' }">
                                                 {{ smsMessageCompiled }}
                                             </p>
-                                            <span class="btn btn-link float-right">Some text</span>
-                                            <p :class="(smsMessageCompiled.length <= 160 ? 'text-success': 'text-danger') + ' text-right'">Characters {{ smsMessageCompiled.length }}/160</p>
+
+                                            <span :class="(smsMessageCompiled.length <= 160 ? 'text-success': 'text-danger') + ' text-right float-right mt-2'">Sms Characters {{ smsMessageCompiled.length }}/160</span>
+                                            <span class="btn btn-link float-right">Edit Message</span>
+                                            <div class="clearfix"></div>
+                                            <Button type="primary" class="float-right mt-2" @click="isOpenSendTestSmsModal = !isOpenSendTestSmsModal">
+                                                <span>Send Test SMS</span>
+                                                <Icon type="ios-send-outline" :size="24" :style="{ marginTop: '-4px' }"/>
+                                            </Button>
                                         </Col>
                                     </Row>
                                 </TabPane>
@@ -199,6 +197,17 @@
             
         </stagingCard>
 
+        <!-- 
+            MODAL TO SEND TEST SMS
+        -->
+        <sendTestSmsModal 
+            v-if="isOpenSendTestSmsModal" 
+            :message="smsMessageCompiled" 
+            :url="'/api/invoices/'+localInvoice.id+'/recurring/send/sms?test=1'"
+            @visibility="isOpenSendTestSmsModal = $event"
+            @sent="$emit('sent', $event)">
+        </sendTestSmsModal>
+
     </div>
 
 </template>
@@ -227,8 +236,11 @@
     /*  Ripples  */
     import focusRipple from './../wavyRipples/focusRipple.vue';
 
+    /*  Modals  */
+    import sendTestSmsModal from './../modals/sendTestSmsModal.vue';
+
     export default {
-        components: { fadeLoader, stagingCard, shortCodeSelector, toggleSwitch, focusRipple, froalaEditor },
+        components: { fadeLoader, stagingCard, shortCodeSelector, toggleSwitch, focusRipple, froalaEditor, sendTestSmsModal },
         props: {
             invoice: {
                 type: Object,
@@ -239,7 +251,8 @@
             return {
                 moment: moment,
 
-                
+                isOpenSendTestSmsModal: false,
+
                 isSavingRecurringDeliveryPlan: false,
                 localInvoice: this.invoice,
                 isEditingDeliveryPlan: (this.invoice.recurringSettings.editing.deliveryPlan == 'true'),
@@ -269,7 +282,42 @@
         computed: {
             smsMessageCompiled: function(){
 
-                var compiledMsg = this.localInvoice.recurringSettings.deliveryPlan.phone.message;
+                var referenceNo = this.invoice.reference_no_value;
+                var items = '';
+                var currency = (((this.invoice || {}).currency_type || {}).currency || {}).symbol || '';
+                var grand_total = this.formatPrice( (this.invoice.grand_total_value || 0), currency);
+                var expiry_date = moment(this.invoice.expiry_date_value).format('MMM DD YYYY');
+                var client = ((this.invoice || {}).customized_client_details || {});
+                var company = ((this.invoice || {}).customized_company_details || {});
+
+                for( var x = 0; x < this.invoice.items.length; x++  ){
+                    x == 0 ? items += '' : items +=' ';
+                    items += ( (this.invoice.items[x].quantity) +'x '+(this.invoice.items[x].name) );
+                }
+
+                var characterLimit = 160;
+                //  Company info text limit = 23
+                var companyName = this.truncate(company.name.trim(), 21) + ( company.name.length <= 21 ? ':' : '' );       //  Optimum Quality: 
+                //  Reference text limit = 16
+                var reference = 'Invoice #'+referenceNo;                        //  Invoice #002
+                //  Amount text limit = 20
+                var amount = 'Amount ' + grand_total;                           //  Amount P350.00
+                //  Due date text limit = 21
+                var dueDate = ' due '+expiry_date;                              //  due on 15 Feb 2018
+                //  Reply for payment text limit = 32
+                var replyWith = '.Reply with '+referenceNo+'#<pin> to pay';     //  Reply with 002#<pin> to pay
+                
+                //  items text limit = 49
+                var charLeft = (characterLimit - (companyName+reference+amount+dueDate+replyWith).length);
+                var items = this.truncate(' for ' + items + ( items.length <= charLeft ? '.' : '' ) , charLeft);    //  for 1x Basic Website, 1x Web Hosting, 5x Emails. 
+
+                var message = companyName+reference+items+amount+dueDate+replyWith;
+
+                return message;
+            },
+            emailMessageCompiled: function(){
+
+                var compiledMsg = this.localInvoice.recurringSettings.deliveryPlan.mail.message;
 
                 var shortCodeSymbols = Object.keys(this.shortCodes);
                 var shortCodeValues = Object.values(this.shortCodes);
@@ -288,6 +336,9 @@
             }   
         },
         methods: {
+            truncate(string, limit){
+                return (string.length > limit) ? string.substring(0, limit - 3)+'...' : string;
+            },
             limitCharacters(){
                 if(this.smsMessageCompiled >= 160){
                     this.localInvoice.recurringSettings.deliveryPlan.phone.message = 
