@@ -18,8 +18,8 @@ class CreateRecentActivitiesTable extends Migration
             $table->unsignedInteger('trackable_id');
             $table->string('trackable_type');
             $table->unsignedInteger('created_by')->nullable();
-            $table->unsignedInteger('company_branch_id');
-            $table->unsignedInteger('company_id');
+            $table->unsignedInteger('company_branch_id')->nullable();
+            $table->unsignedInteger('company_id')->nullable();
             $table->timestamps();
         });
     }

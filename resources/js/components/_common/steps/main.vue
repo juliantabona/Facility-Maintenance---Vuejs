@@ -103,8 +103,13 @@
                 <Col :span="leftWidth">
                     
                     <!-- Step Number  -->
-                    <div class="invoice-step-badge">
-                        <div class="invoice-step-badge-inner">{{ stageNumber }}</div>
+                    <div v-if="showStageNumber" class="invoice-step-badge">
+
+                        <!-- Animated checkmark  -->
+                        <animatedCheckmark v-if="showCheckMark"></animatedCheckmark>
+
+                        <div v-else class="invoice-step-badge-inner">{{ stageNumber }}</div>
+
                     </div>
 
                     <!-- Content  -->
@@ -135,7 +140,10 @@
 
 <script type="text/javascript">
 
+    import animatedCheckmark from './../animatedIcons/animatedCheckmark.vue';
+
     export default {
+        components: { animatedCheckmark },
         props: {
             showHeader: {
                 type: Boolean,
@@ -144,6 +152,14 @@
             showVerticalLine: {
                 type: Boolean,
                 default: false    
+            },
+            showCheckMark:{
+                type: Boolean,
+                default: false    
+            },
+            showStageNumber:{
+                type: Boolean,
+                default: true    
             },
             stageNumber: {
                 type: Number,

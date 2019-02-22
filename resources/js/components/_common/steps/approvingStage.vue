@@ -8,7 +8,8 @@
         <!-- Stage card  -->
         <stagingCard 
             :stageNumber="1" :showHeader="!localInvoice.has_approved" 
-            :disabled="isApprovingInvoice" :showVerticalLine="true">
+            :disabled="isApprovingInvoice" :showVerticalLine="true"
+            :leftWidth="18" :rightWidth="6">
 
             <!-- Header  -->
             <template slot="header">
@@ -22,7 +23,7 @@
             <template slot="leftContent">
 
                 <h4 v-if="" class="text-secondary">{{ localInvoice.has_approved ? 'Invoice Approved' : 'Approve Invoice' }}</h4>
-                <Poptip word-wrap width="200" trigger="hover" :content="localInvoice.created_date_value | moment('DD MMM YYYY, H:mmA') || '___'">
+                <Poptip word-wrap width="200" trigger="hover" :content="localInvoice.created_at | moment('DD MMM YYYY, H:mmA') || '___'">
                     <p class="mt-2 mb-2">
                         <span class="font-weight-bold">Created:</span> {{ localInvoice.created_at | moment("from", "now") | capitalize }} from <a href="#"><span class="font-weight-bold">Estimate #87</span></a>
                     </p>

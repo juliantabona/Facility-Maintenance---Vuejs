@@ -32,7 +32,7 @@ class Invoice extends Model
         'items' => 'array',
         'notes' => 'array',
         'colors' => 'array',
-        'recurringSchedule' => 'array',
+        'recurringSettings' => 'array',
     ];
 
     protected $dates = ['created_date_value', 'expiry_date_value'];
@@ -48,7 +48,8 @@ class Invoice extends Model
         'status', 'heading', 'reference_no_title', 'reference_no_value', 'created_date_title', 'created_date_value',
         'expiry_date_title', 'expiry_date_value', 'sub_total_title', 'sub_total_value', 'grand_total_title', 'grand_total_value',
         'currency_type', 'calculated_taxes', 'invoice_to_title', 'customized_company_details', 'customized_client_details', 'client_id',
-        'table_columns', 'items', 'notes', 'colors', 'footer', 'isRecurring', 'recurringSchedule', 'invoice_parent_id', 'quotation_id', 'trackable_id', 'trackable_type', 'company_branch_id', 'company_id',
+        'table_columns', 'items', 'notes', 'colors', 'footer', 'isRecurring', 'recurringSettings', 'invoice_parent_id', 'quotation_id',
+        'trackable_id', 'trackable_type', 'company_branch_id', 'company_id',
     ];
 
     /**
@@ -143,39 +144,58 @@ class Invoice extends Model
         return $this->morphMany('App\Reminder', 'trackable');
     }
 
-    protected $appends = ['last_approved_activity', 'last_sent_activity', 'last_skipped_sending_activity', 'last_sent_receipt_activity', 'last_paid_activity', 'last_payment_cancelled_activity',
-                          'has_paid', 'has_expired', 'has_cancelled', 'has_sent', 'has_skipped_sending', 'has_sent_receipt', 'has_approved', 'current_activity_status',
-                          'activity_count', 'sent_invoice_activity_count', 'sent_receipt_activity_count',
+    protected $appends = ['last_approved_activity', 'last_sent_activity', 'last_skipped_sending_activity', 'last_sent_receipt_activity',
+                          'last_paid_activity', 'last_payment_cancelled_activity', 'last_recurring_schedule_plan_activity',
+                          'last_recurring_delivery_plan_activity', 'last_recurring_payment_plan_activity',
+
+                          'has_paid', 'has_expired', 'has_cancelled', 'has_sent', 'has_skipped_sending', 'has_sent_receipt', 'has_approved',
+                          'has_set_recurring_schedule_plan', 'has_set_recurring_delivery_plan', 'has_set_recurring_payment_plan',
+                          'current_activity_status', 'activity_count', 'sent_invoice_activity_count', 'sent_receipt_activity_count',
                         ];
 
     public function getLastApprovedActivityAttribute()
     {
-        return $this->recentActivities->where('type', 'approved')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'approved')->first();
     }
 
     public function getLastSentActivityAttribute()
     {
-        return $this->recentActivities->where('type', 'sent')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'sent')->first();
     }
 
     public function getLastSkippedSendingActivityAttribute()
     {
-        return $this->recentActivities->where('type', 'skip send')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'skip send')->first();
     }
 
     public function getLastSentReceiptActivityAttribute()
     {
-        return $this->recentActivities->where('type', 'sent receipt')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'sent receipt')->first();
     }
 
     public function getLastPaidActivityAttribute()
     {
-        return $this->recentActivities->where('type', 'paid')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'paid')->first();
     }
 
     public function getLastPaymentCancelledActivityAttribute()
     {
-        return $this->recentActivities->where('type', 'payment cancelled')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'payment cancelled')->first();
+    }
+
+    public function getLastRecurringSchedulePlanActivityAttribute()
+    {
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'updated recurring schedule')->first();
+    }
+
+    public function getLastRecurringDeliveryPlanActivityAttribute()
+    {
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'updated recurring delivery')->first();
+    }
+
+    public function getLastRecurringPaymentPlanActivityAttribute()
+    {
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'updated recurring payment')->first();
     }
 
     public function getHasPaidAttribute()
@@ -232,6 +252,21 @@ class Invoice extends Model
     public function gethasApprovedAttribute()
     {
         return $this->last_approved_activity ? true : false;
+    }
+
+    public function gethasSetRecurringSchedulePlanAttribute()
+    {
+        return $this->last_recurring_schedule_plan_activity ? true : false;
+    }
+
+    public function gethasSetRecurringDeliveryPlanAttribute()
+    {
+        return $this->last_recurring_delivery_plan_activity ? true : false;
+    }
+
+    public function gethasSetRecurringPaymentPlanAttribute()
+    {
+        return $this->last_recurring_payment_plan_activity ? true : false;
     }
 
     public function getCurrentActivityStatusAttribute()

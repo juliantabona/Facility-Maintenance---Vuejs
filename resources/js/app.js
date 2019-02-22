@@ -105,7 +105,7 @@ Vue.use(Vue2Filters);
 
 var VueScrollTo = require('vue-scrollto');
 
-Vue.use(VueScrollTo)
+Vue.use(VueScrollTo);
 
 // Imports Froala Editor for wysiwyg functionality
 require('froala-editor/js/froala_editor.pkgd.min')

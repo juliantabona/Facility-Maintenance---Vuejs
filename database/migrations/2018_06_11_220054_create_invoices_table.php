@@ -37,7 +37,7 @@ class CreateInvoicesTable extends Migration
             $table->json('colors')->nullable();
             $table->string('footer')->nullable();
             $table->boolean('isRecurring')->default(0);
-            $table->json('recurringSchedule')->nullable();
+            $table->json('recurringSettings')->nullable();
             $table->unsignedInteger('quotation_id')->nullable();
             $table->unsignedInteger('invoice_parent_id')->nullable();
             $table->unsignedInteger('trackable_id')->nullable();

@@ -1,5 +1,6 @@
 <?php
 
+use Twilio as Twilio;
 use Illuminate\Http\Request;
 
 /*
@@ -140,6 +141,9 @@ Route::post('invoices/{invoice_id}/payment', 'Api\InvoiceController@recordPaymen
 Route::post('invoices/{invoice_id}/cancel-payment', 'Api\InvoiceController@cancelPayment');
 Route::post('invoices/{invoice_id}/reminders', 'Api\InvoiceController@updateReminders');
 Route::post('invoices/{invoice_id}/receipts/send', 'Api\InvoiceController@sendReceipt');
+Route::post('invoices/{invoice_id}/recurring/update-schedule-plan', 'Api\InvoiceController@updateRecurringSettingsSchedulePlan');
+Route::post('invoices/{invoice_id}/recurring/update-delivery-plan', 'Api\InvoiceController@updateRecurringSettingsDeliveryPlan');
+Route::post('invoices/{invoice_id}/recurring/update-payment-plan', 'Api\InvoiceController@updateRecurringSettingsPaymentPlan');
 
 /*   PRODUCT/SERVICE RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
@@ -189,4 +193,9 @@ Route::get('download/quotations/{quotation_id}', 'Api\DownloadController@downloa
  *  TEST ROUTES - DELETE EVERYTHING BELOW HERE
  */
 
- Route::get('send-email', 'Api\TestController@sendEmail');
+Route::get('send-email', 'Api\TestController@sendEmail');
+Route::get('send-sms', function () {
+    Twilio::message('+26775993221', 'Hi julian, how are you');
+
+    return 'Message Sent!';
+});

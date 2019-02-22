@@ -167,6 +167,66 @@ class InvoiceController extends Controller
         return $response;
     }
 
+    public function updateRecurringSettingsSchedulePlan($invoice_id)
+    {
+        //  Invoice Instance
+        $data = ( new Invoice() )->initiateUpdateRecurringSettingsSchedulePlan($invoice_id);
+        $success = $data['success'];
+        $response = $data['response'];
+
+        //  If the invoice schedule  plan was updated successfully
+        if ($success) {
+            //  If this is a success then we have the invoice
+            $invoice = $response;
+
+            //  Action was executed successfully
+            return oq_api_notify($invoice, 200);
+        }
+
+        //  If the data was not a success then return the response
+        return $response;
+    }
+
+    public function updateRecurringSettingsDeliveryPlan($invoice_id)
+    {
+        //  Invoice Instance
+        $data = ( new Invoice() )->initiateUpdateRecurringSettingsDeliveryPlan($invoice_id);
+        $success = $data['success'];
+        $response = $data['response'];
+
+        //  If the invoice schedule sending plan was updated successfully
+        if ($success) {
+            //  If this is a success then we have the invoice
+            $invoice = $response;
+
+            //  Action was executed successfully
+            return oq_api_notify($invoice, 200);
+        }
+
+        //  If the data was not a success then return the response
+        return $response;
+    }
+
+    public function updateRecurringSettingsPaymentPlan($invoice_id)
+    {
+        //  Invoice Instance
+        $data = ( new Invoice() )->initiateUpdateRecurringSettingsPaymentPlan($invoice_id);
+        $success = $data['success'];
+        $response = $data['response'];
+
+        //  If the invoice schedule payment plan was updated successfully
+        if ($success) {
+            //  If this is a success then we have the invoice
+            $invoice = $response;
+
+            //  Action was executed successfully
+            return oq_api_notify($invoice, 200);
+        }
+
+        //  If the data was not a success then return the response
+        return $response;
+    }
+
     public function recordPayment($invoice_id)
     {
         //  Invoice Instance

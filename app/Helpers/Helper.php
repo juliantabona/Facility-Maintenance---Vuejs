@@ -210,7 +210,7 @@ function oq_saveActivity($model, $user, $status, $customDetails = false)
             'activity' => $details,
             'created_by' => !empty($user) ? $user->id : null,
             'company_branch_id' => !empty($user) ? $user->company_branch_id : null,
-            'company_id' => !empty($user) ? $user->companyBranch->company->id : null,
+            'company_id' => !empty($user) ? $user->company_id : null,
         ]);
     } else {
         $update = \App\RecentActivity::create([
@@ -218,7 +218,7 @@ function oq_saveActivity($model, $user, $status, $customDetails = false)
             'activity' => '',
             'created_by' => !empty($user) ? $user->id : null,
             'company_branch_id' => !empty($user) ? $user->company_branch_id : null,
-            'company_id' => !empty($user) ? $user->companyBranch->company->id : null,
+            'company_id' => !empty($user) ? $user->company_id : null,
         ]);
     }
 
@@ -520,7 +520,7 @@ function oq_createOrUpdateCompany($request, $currCompany, $user)
 function oq_addCompanyToDirectory($company, $type, $user)
 {
     $owningBranch_id = $user->companyBranch->id;
-    $owningCompany_id = $user->companyBranch->company->id;
+    $owningCompany_id = $user->company_id;
 
     //  Let us add the company to the owning company as type of client/supplier
     $addedToDirectory = $company->companyDirectory()->attach($owningCompany_id, ['type' => $type, 'owning_branch_id' => $owningBranch_id]);

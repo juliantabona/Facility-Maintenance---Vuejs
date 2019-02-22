@@ -46,15 +46,15 @@ class SendRecurringInvoices extends Command
 
         //  Foreach invoice
         foreach ($invoices as $invoice) {
-            $recurringSchedule = $invoice['recurringSchedule'];
+            $recurringSettings = $invoice['recurringSettings'];
 
             //  Get the total number of recurring child invoices
             $recurringInvoiceCount = $invoice->childInvoices->count();
 
             //  If we have set to stop sending based on the count e.g) "Count" 3 invoices sent
-            if ($recurringSchedule['stop']['chosen'] == 'Count') {
+            if ($recurringSettings['stop']['chosen'] == 'Count') {
                 //  Get the number of invoices until we need to stop sending
-                $stopOnCount = $recurringSchedule['stop']['count'];
+                $stopOnCount = $recurringSettings['stop']['count'];
 
                 //  If we have reached or exceeded the limit we will stop here
                 if ($stopOnCount >= $recurringInvoiceCount) {
@@ -67,9 +67,9 @@ class SendRecurringInvoices extends Command
 
                     return true;
                 }
-            } elseif ($recurringSchedule['stop']['chosen'] == 'Date') {
+            } elseif ($recurringSettings['stop']['chosen'] == 'Date') {
                 //  Get the date until we need to stop sending
-                $stopDate = $recurringSchedule['stop']['date'];
+                $stopDate = $recurringSettings['stop']['date'];
                 $stopDateTimestamp = (new Carbon($stopDate) )->getTimestamp();   //   make sure its relative to timezone
 
                 //  If we have reached or exceeded the limit we will stop here
@@ -86,13 +86,13 @@ class SendRecurringInvoices extends Command
             }
 
             //  Get the start sending date
-            $startSendDate = $recurringSchedule['startDate'];
+            $startSendDate = $recurringSettings['startDate'];
 
             //  Get the next sending date
-            $nextSendDate = $recurringSchedule['nextDate'];
+            $nextSendDate = $recurringSettings['nextDate'];
 
             //  Get the stop sending date
-            $stopSendDate = $recurringSchedule['stop']['date'];
+            $stopSendDate = $recurringSettings['stop']['date'];
 
             //  Check if we are sending this for the first time
             if (!empty($nextSendDate)) {
@@ -107,22 +107,24 @@ class SendRecurringInvoices extends Command
 
             //  If the time to send is less than or equal to the now time then we can send
             if ($sendDateTimestamp <= $nowTimestamp) {
-                //  Lets set the next schedule time
-                $chosenSchedule = $recurringSchedule['chosen'];           //  Daily, Weekly, Monthly, Yearly, Custom
-                $weekly = $recurringSchedule['weekly'];                   //  Monday
-                $monthly = $recurringSchedule['monthly'];                 //  4th
-                $yearlyMonth = $recurringSchedule['yearly']['month'];     //  June
-                $yearlyDay = $recurringSchedule['yearly']['day'];         //  8th
+                /*********************************************************************
+                 *   SET THE NEXT SCHEDULE TIME ACCORDING TO RECURRING SCHEDULE      *
+                 *********************************************************************/
+                $chosenSchedule = $recurringSettings['chosen'];           //  Daily, Weekly, Monthly, Yearly, Custom
+                $weekly = $recurringSettings['weekly'];                   //  Monday
+                $monthly = $recurringSettings['monthly'];                 //  4th
+                $yearlyMonth = $recurringSettings['yearly']['month'];     //  June
+                $yearlyDay = $recurringSettings['yearly']['day'];         //  8th
 
                 //  If chose custom from the $chosenSchedule
-                $customCount = $recurringSchedule['custom']['count'];             //  2
-                $chosenCustom = $recurringSchedule['custom']['chosen'];           //  Days, Weeks, Months, Years
-                $weekly = $recurringSchedule['custom']['weeks'];                  //  Tuesday
-                $monthly = $recurringSchedule['custom']['months'];                //  8th
-                $yearlyMonth = $recurringSchedule['custom']['years']['month'];    //  July
-                $yearlyDay = $recurringSchedule['custom']['years']['day'];        //  10th
+                $customCount = $recurringSettings['custom']['count'];             //  2
+                $chosenCustom = $recurringSettings['custom']['chosen'];           //  Days, Weeks, Months, Years
+                $weekly = $recurringSettings['custom']['weeks'];                  //  Tuesday
+                $monthly = $recurringSettings['custom']['months'];                //  8th
+                $yearlyMonth = $recurringSettings['custom']['years']['month'];    //  July
+                $yearlyDay = $recurringSettings['custom']['years']['day'];        //  10th
 
-                //  Get the current  send date
+                //  Get the current send date
                 $currentDate = Carbon::createFromFormat('Y-m-d H:i:s', $sendDate);
 
                 //  Format the next schedule according to user specifications
@@ -155,14 +157,46 @@ class SendRecurringInvoices extends Command
                 }
 
                 //  Now update scheduled time for next sending
-                $schedule = $invoice->recurringSchedule;
+                $schedule = $invoice->recurringSettings;
                 $schedule['nextDate'] = (new Carbon($newDate))->format('Y-m-d H:i:s');
 
-                $invoice->update(['recurringSchedule' => $schedule]);
+                $invoice->update(['recurringSettings' => $schedule]);
 
                 //  Record next estimated recurring activity
 
                 //  Notify the users
+
+                /*******************************************************
+                 *   MAKE A CHILD INVOICE AND SEND TO THE CLIENT       *
+                 ******************************************************/
+
+                // We will deep copy the parent and edit to make the child copy
+                $childInvoice = $invoice->replicate();
+                //  Set the recurring status to be off
+                $childInvoice->isRecurring = 0;
+                $childInvoice->recurringSettings = null;
+                //  Link this child invoice to the parent
+                $childInvoice->invoice_parent_id = $invoice->id;
+                //  Update the invoice created date
+                $childInvoice->created_date_value = (new Carbon($currentDate))->format('Y-m-d');
+                //  Update the invoice expiry date according to the parent days apart between created and expiry dates
+                $daysApart = (new Carbon($invoice->created_date_value) )->diffInDays((new Carbon($invoice->expiry_date_value) ));
+                $childInvoice->expiry_date_value = (new Carbon($currentDate) )->addDays($daysApart);
+                //  Save the child invoice
+                $childInvoice->save();
+
+                //  Email details
+
+                $email = $invoice->recurringSettings['mail']['email'];
+                $subject = $invoice->recurringSettings['mail']['subject'];
+                $message = $invoice->recurringSettings['mail']['message'];
+
+                $status = 'automated sending';
+
+                //  Send invoice via mail
+                $childInvoice->sendInvoiceAsMail($email, $subject, $message, $childInvoice, $status);
+
+                $this->info('New child invoice created! - days apart: '.$daysApart);
             }
         }
 

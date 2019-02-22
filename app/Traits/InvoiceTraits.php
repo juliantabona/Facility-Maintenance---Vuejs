@@ -16,6 +16,7 @@ use App\Notifications\InvoicePaid;
 use App\Notifications\InvoicePaymentCancelled;
 //  Other
 use PDF;
+use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 trait InvoiceTraits
@@ -341,7 +342,7 @@ trait InvoiceTraits
             'colors' => $invoice['colors'],
             'footer' => $invoice['footer'],
             'isRecurring' => $invoice['isRecurring'],
-            'recurringSchedule' => $invoice['recurringSchedule'],
+            'recurringSettings' => $invoice['recurringSettings'],
             'trackable_type' => 'invoice',
             'trackable_id' => $invoice_id,
             'company_branch_id' => $auth_user->company_branch_id,
@@ -461,49 +462,18 @@ trait InvoiceTraits
 
             //  Check if we have an invoice
             if ($invoice) {
-                /*****************************
-                 *   SEND NOTIFICATIONS      *
-                 *****************************/
-
-                $auth_user->notify(new InvoiceSent($invoice));
-
-                /*****************************
-                 *   SEND INVOICE VIA EMAIL  *
-                 *****************************/
+                /***************************************************************
+                 *   SEND INVOICE VIA EMAIL - RECORD NOTIFICATIONS & ACTIVITY  *
+                 ***************************************************************/
 
                 //  Email details
+
                 $email = request('email');
                 $subject = request('subject');
                 $message = request('message');
 
-                //  Invoice PDF
-                $invoicePDF = PDF::loadView('pdf.invoice', array('invoice' => $invoice));
-
-                //  Get invoice name
-                if (!empty($invoice->details['heading']) && !empty($invoice['reference_no_value'])) {
-                    //  Get the invoice name from heading, reference and date
-                    $pdfName = $invoice->details['heading'].' - '.
-                               $invoice->details['reference_no_value'].' - '.
-                               \Carbon\Carbon::parse($invoice['created_date_value'])->format('M d Y').
-                               '.pdf';
-                } else {
-                    //  Otherwise get invoice name from the invoice id
-                    $pdfName = 'Invoice - '.$invoice->id.'.pdf';
-                }
-
-                //  Send email
-                Mail::to($email)->send(new InvoiceMail($subject, $message, $invoicePDF, $pdfName));
-
-                /*****************************
-                 *   RECORD ACTIVITY         *
-                 *****************************/
-
-                //  Structure mail template
-                $mail = ['email' => $email, 'subject' => $subject, 'message' => $message];
-
-                //  Record activity of invoice sent receipt
-                $status = 'sent';
-                $invoiceSentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'mail' => $mail]);
+                //  Send invoice via mail
+                $this->sendInvoiceAsMail($email, $subject, $message, $invoice, 'sent');
 
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $invoice];
@@ -518,6 +488,81 @@ trait InvoiceTraits
             //  Return the error response
             return ['success' => false, 'response' => $response];
         }
+    }
+
+    public function sendInvoiceAsMail($email, $subject, $message, $invoice, $status = 'sent')
+    {
+        //  Current authenticated user
+        $auth_user = auth('api')->user();
+
+        /*****************************
+         *   SEND NOTIFICATIONS      *
+         *****************************/
+
+        if ($auth_user) {
+            $auth_user->notify(new InvoiceSent($invoice));
+        }
+
+        //  Invoice PDF
+        $invoicePDF = PDF::loadView('pdf.invoice', array('invoice' => $invoice));
+
+        //  Get invoice name
+        if (!empty($invoice->details['heading']) && !empty($invoice['reference_no_value'])) {
+            //  Get the invoice name from heading, reference and date
+            $pdfName = $invoice->details['heading'].' - '.
+                       $invoice->details['reference_no_value'].' - '.
+                       Carbon::parse($invoice['created_date_value'])->format('M d Y').
+                       '.pdf';
+        } else {
+            //  Otherwise get invoice name from the invoice id
+            $pdfName = 'Invoice - '.$invoice->id.'.pdf';
+        }
+
+        /******************************
+         *   SEND INVOICE VIA MAIL    *
+         *****************************/
+        $client = $invoice->customized_client_details;
+        $my_company = $invoice->customized_company_details;
+        $currency = $invoice->currency_type['currency']['symbol'] ?? '';
+        $sub_total = $currency.number_format($invoice->sub_total_value, 2, ',', '.');
+        $grand_total = $currency.number_format($invoice->grand_total_value, 2, ',', '.');
+
+        //  Custom Variables
+        $customFields = [
+            '[invoice_heading]' => $invoice->heading,
+            '[invoice_reference_no]' => '#'.$invoice->reference_no_value,
+            '[created_date]' => (new Carbon($invoice->created_date_value))->format('M d Y'),
+            '[expiry_date]' => (new Carbon($invoice->expiry_date_value))->format('M d Y'),
+            '[sub_total]' => $invoice->sub_total,
+            '[grand_total]' => $grand_total,
+            '[currency]' => $currency,
+            '[client_company_name]' => $client['name'] ?? '',
+            '[client_first_name]' => $client['first_name'] ?? '',
+            '[client_last_name]' => $client['last_name'] ?? '',
+            '[client_full_name]' => $client['full_name'] ?? '',
+            '[client_email]' => $client['email'],
+            '[my_company_name]' => $my_company['name'],
+            '[my_company_email]' => $my_company['email'],
+        ];
+
+        $search = array_keys($customFields);
+        $replace = array_values($customFields);
+
+        $message = str_replace($search, $replace, $message);
+        $subject = str_replace($search, $replace, $subject);
+
+        //  Send email
+        Mail::to($email)->send(new InvoiceMail($subject, $message, $invoicePDF, $pdfName));
+
+        /*****************************
+         *   RECORD ACTIVITY         *
+         *****************************/
+
+        //  Structure mail template
+        $mail = ['email' => $email, 'subject' => $subject, 'message' => $message];
+
+        //  Record activity of invoice sent receipt
+        $invoiceSentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'mail' => $mail]);
     }
 
     /*  initiateSkipSend() method:
@@ -609,7 +654,7 @@ trait InvoiceTraits
                     //  Get the invoice receipt name from heading, reference and date
                     $pdfName = 'Receipt - '.
                                $invoice->details['reference_no_value'].' - '.
-                               \Carbon\Carbon::parse($invoice['created_date_value'])->format('M d Y').
+                               Carbon::parse($invoice['created_date_value'])->format('M d Y').
                                '.pdf';
                 } else {
                     //  Otherwise get invoice name from the invoice id
@@ -629,6 +674,198 @@ trait InvoiceTraits
                 //  Record activity of invoice sent receipt
                 $status = 'sent receipt';
                 $invoiceSentReceiptActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'mail' => $mail]);
+
+                //  Action was executed successfully
+                return ['success' => true, 'response' => $invoice];
+            } else {
+                //  No resource found
+                return ['success' => false, 'response' => oq_api_notify_no_resource()];
+            }
+        } catch (\Exception $e) {
+            //  Log the error
+            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+            //  Return the error response
+            return ['success' => false, 'response' => $response];
+        }
+    }
+
+    public function initiateUpdateRecurringSettingsSchedulePlan($invoice_id)
+    {
+        //  Current authenticated user
+        $auth_user = auth('api')->user();
+
+        /*
+         *  The $invoice is a collection of the invoice to be stored.
+         */
+        $invoice = request('invoice');
+
+        /**************************************************************************
+         *   CHECK IF USER HAS PERMISSION TO SAVE RECURRING INVOICE SCHEDULES     *
+         *************************************************************************/
+
+        /*********************************************
+         *   VALIDATE INVOICE INFORMATION            *
+         ********************************************/
+
+        //  Create a template to hold the invoice details
+        $invoice['recurringSettings']['editing']['schedulePlan'] = 'false';
+
+        $template = [
+            'isRecurring' => 1,
+            'recurringSettings' => $invoice['recurringSettings'],
+        ];
+
+        try {
+            //  Update the invoice
+            $invoice = $this->where('id', $invoice_id)->first()->update($template);
+
+            //  If the invoice was updated successfully
+            if ($invoice) {
+                //  re-retrieve the instance to get all of the fields in the table.
+                $invoice = $this->where('id', $invoice_id)->first();
+
+                /*****************************
+                 *   SEND NOTIFICATIONS      *
+                 *****************************/
+
+                $auth_user->notify(new InvoiceUpdated($invoice));
+
+                /*****************************
+                 *   RECORD ACTIVITY         *
+                 *****************************/
+
+                //  Record activity of recurring schedule plan updated
+                $status = 'updated recurring schedule';
+                $invoiceUpdatedActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
+
+                //  Action was executed successfully
+                return ['success' => true, 'response' => $invoice];
+            } else {
+                //  No resource found
+                return ['success' => false, 'response' => oq_api_notify_no_resource()];
+            }
+        } catch (\Exception $e) {
+            //  Log the error
+            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+            //  Return the error response
+            return ['success' => false, 'response' => $response];
+        }
+    }
+
+    public function initiateUpdateRecurringSettingsDeliveryPlan($invoice_id)
+    {
+        //  Current authenticated user
+        $auth_user = auth('api')->user();
+
+        /*
+         *  The $invoice is a collection of the invoice to be stored.
+         */
+        $invoice = request('invoice');
+
+        /**************************************************************************
+         *   CHECK IF USER HAS PERMISSION TO SAVE RECURRING INVOICE SCHEDULES     *
+         *************************************************************************/
+
+        /*********************************************
+         *   VALIDATE INVOICE INFORMATION            *
+         ********************************************/
+
+        //  Create a template to hold the invoice details
+        $invoice['recurringSettings']['editing']['deliveryPlan'] = false;
+
+        $template = [
+            'isRecurring' => 1,
+            'recurringSettings' => $invoice['recurringSettings'],
+        ];
+
+        try {
+            //  Update the invoice
+            $invoice = $this->where('id', $invoice_id)->first()->update($template);
+
+            //  If the invoice was updated successfully
+            if ($invoice) {
+                //  re-retrieve the instance to get all of the fields in the table.
+                $invoice = $this->where('id', $invoice_id)->first();
+
+                /*****************************
+                 *   SEND NOTIFICATIONS      *
+                 *****************************/
+
+                $auth_user->notify(new InvoiceUpdated($invoice));
+
+                /*****************************
+                 *   RECORD ACTIVITY         *
+                 *****************************/
+
+                //  Record activity of recurring delivery plan updated
+                $status = 'updated recurring delivery';
+                $invoiceUpdatedActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
+
+                //  Action was executed successfully
+                return ['success' => true, 'response' => $invoice];
+            } else {
+                //  No resource found
+                return ['success' => false, 'response' => oq_api_notify_no_resource()];
+            }
+        } catch (\Exception $e) {
+            //  Log the error
+            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+            //  Return the error response
+            return ['success' => false, 'response' => $response];
+        }
+    }
+
+    public function initiateUpdateRecurringSettingsPaymentPlan($invoice_id)
+    {
+        //  Current authenticated user
+        $auth_user = auth('api')->user();
+
+        /*
+         *  The $invoice is a collection of the invoice to be stored.
+         */
+        $invoice = request('invoice');
+
+        /**************************************************************************
+         *   CHECK IF USER HAS PERMISSION TO SAVE RECURRING INVOICE SCHEDULES     *
+         *************************************************************************/
+
+        /*********************************************
+         *   VALIDATE INVOICE INFORMATION            *
+         ********************************************/
+
+        //  Create a template to hold the invoice details
+        $invoice['recurringSettings']['editing']['paymentPlan'] = false;
+
+        $template = [
+            'isRecurring' => 1,
+            'recurringSettings' => $invoice['recurringSettings'],
+        ];
+
+        try {
+            //  Update the invoice
+            $invoice = $this->where('id', $invoice_id)->first()->update($template);
+
+            //  If the invoice was updated successfully
+            if ($invoice) {
+                //  re-retrieve the instance to get all of the fields in the table.
+                $invoice = $this->where('id', $invoice_id)->first();
+
+                /*****************************
+                 *   SEND NOTIFICATIONS      *
+                 *****************************/
+
+                $auth_user->notify(new InvoiceUpdated($invoice));
+
+                /*****************************
+                 *   RECORD ACTIVITY         *
+                 *****************************/
+
+                //  Record activity of recurring schedule timing updated
+                $status = 'updated recurring payment';
+                $invoiceUpdatedActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
 
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $invoice];
