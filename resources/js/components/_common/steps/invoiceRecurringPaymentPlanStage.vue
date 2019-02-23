@@ -17,6 +17,10 @@
         margin-right: 20px !important;
     }
 
+    .password_input >>> .el-input-group__prepend{
+        padding: 0 10px;
+    }
+
 </style>
 
 <template>
@@ -112,7 +116,9 @@
                                                 </phoneInput>
 
                                                 <b class="d-block mt-2 mb-1">Pin (4 digits):</b>
-                                                <el-input type="password" :maxlength="4" size="mini" class="mb-1" placeholder="Enter Orange Money Pin"></el-input>
+                                                <el-input type="password" :maxlength="4" size="mini" class="password_input mb-1" placeholder="Enter Orange Money Pin">
+                                                    <Icon slot="prepend" type="ios-lock-outline" :size="20"/>
+                                                </el-input>
                                                 <Button type="primary" class="float-right mt-2">
                                                     <span>Connect</span>
                                                     <Icon type="ios-repeat" :size="24" :style="{ marginTop: '-4px' }"/>
@@ -157,7 +163,9 @@
                                                 </phoneInput>
 
                                                 <b class="d-block mt-2 mb-1">Pin (4 digits):</b>
-                                                <el-input type="password" :maxlength="4" size="mini" class="mb-1" placeholder="Enter MyZaka Pin"></el-input>
+                                                <el-input type="password" :maxlength="4" size="mini" class="password_input mb-1" placeholder="Enter MyZaka Pin">
+                                                    <Icon slot="prepend" type="ios-lock-outline" :size="20"/>
+                                                </el-input>
                                                 <Button type="primary" class="float-right mt-2">
                                                     <span>Connect</span>
                                                     <Icon type="ios-repeat" :size="24" :style="{ marginTop: '-4px' }"/>
@@ -175,6 +183,12 @@
 
                     </Row>
                     
+                    <Alert v-else show-icon :style="{ padding: '18px 65px', boxShadow: '#cedee7 1px 1px 3px 1px inset' }">
+                        Manual Payment
+                        <Icon type="ios-bulb-outline" slot="icon"></Icon>
+                        <template slot="desc">Notify me on each invoice due, but i will be responsible to collect the money and record payments manually</template>
+                    </Alert>
+
                 </div>
 
                 <div v-if="!localInvoice.has_set_recurring_schedule_plan && !isEditingPaymentPlan" class="mt-3">
