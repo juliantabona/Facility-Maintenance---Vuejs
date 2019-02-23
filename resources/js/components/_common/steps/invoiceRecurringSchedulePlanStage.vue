@@ -9,7 +9,8 @@
         <stagingCard 
             :stageNumber="1" :showCheckMark="localInvoice.has_set_recurring_schedule_plan && !isEditingSchedulePlan" 
             :showHeader="!localInvoice.has_approved_recurring_schedule" 
-            :disabled="false" :showVerticalLine="true" :leftWidth="24">
+            :disabled="false" :showVerticalLine="true" :leftWidth="24"
+            :isSaving="isSavingRecurringSchedulePlan">
 
             <!-- Header  -->
             <template slot="header">

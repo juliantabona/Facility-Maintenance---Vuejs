@@ -29,7 +29,8 @@
         <!-- Stage card  -->
         <stagingCard 
             :stageNumber="3" :showCheckMark="localInvoice.has_set_recurring_delivery_plan && !isEditingDeliveryPlan" :showHeader="false" 
-            :disabled="!localInvoice.has_set_recurring_payment_plan" :showVerticalLine="true" :leftWidth="24">
+            :disabled="!localInvoice.has_set_recurring_payment_plan" :showVerticalLine="true" :leftWidth="24"
+            :isSaving="isSavingRecurringDeliveryPlan">
 
             <template slot="leftContent">
 
@@ -48,13 +49,13 @@
                         <b>{{ localInvoice.recurringSettings.deliveryPlan.automatic ? 'Automatic': 'Manual' }} Sending:</b> 
                         {{ localInvoice.recurringSettings.deliveryPlan.automatic ? 'The system will send each invoice to my customer.': 'Notify me on each invoice due, but i will be responsible to send it manually' }}
                     </p>
-                    <p><b>Sending Methods:</b> Email & Sms</p>
+                    <p><b>Delivery Methods:</b> Email & Sms</p>
                     <p><b>Alerts:</b> Notify me via Email and Sms when each invoice is sent.</p>
                 </div>
 
                 <div v-if="localInvoice.has_set_recurring_payment_plan && isEditingDeliveryPlan" class="d-inline-block mt-2 mb-2" :style="{ width: '100%' }">
 
-                    <!-- Sending settings -->
+                    <!-- Delivery settings -->
                     <Row v-if="localInvoice.recurringSettings.deliveryPlan.automatic" class="mt-2"
                         :style="{ padding: '30px', boxShadow: 'inset 1px 1px 5px 1px #d6d6d6' }">
 
@@ -176,7 +177,7 @@
                 <div v-if="!localInvoice.has_set_recurring_payment_plan && !isEditingDeliveryPlan" class="mt-3">
                     <Alert show-icon>
                         <Icon type="ios-bulb-outline" slot="icon"></Icon>
-                        <template slot="desc">Make sending invoices easy. Setup your invoices to be sent manually/automatically via email/sms and get notified on delivery.</template>
+                        <template slot="desc">Make delivering invoices easy. Setup your invoices to be sent manually/automatically via email/sms and get notified on delivery.</template>
                     </Alert>
                 </div>
 
@@ -293,7 +294,7 @@
                     //  Update the local invoice value
                     this.localInvoice = val;
 
-                    //  Update the editing sending shortcut
+                    //  Update the editing delivery shortcut
                     this.isEditingDeliveryPlan = (val.recurringSettings.editing.deliveryPlan == 'true')
 
                 },

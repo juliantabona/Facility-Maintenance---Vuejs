@@ -87,7 +87,7 @@
     <div>
         <!-- Card  -->
         <Card :bordered="false" :class="'invoice-steps is-highlighted' + (disabled ? ' disabled': '')">
-            
+
             <!-- Header Content  -->
             <Row v-if="showHeader" :gutter="20" class="invoice-header">
                 <Col span="24">
@@ -95,6 +95,9 @@
                     <slot name="header"></slot>
                 </Col>
             </Row>
+
+            <!-- White overlay when creating/saving invoice -->
+            <Spin size="large" fix v-if="isSaving"></Spin>
 
             <!-- Center Content  -->
             <Row :gutter="20">
@@ -168,6 +171,10 @@
             disabled: {
                 type: Boolean,
                 default: false     
+            },
+            isSaving:{
+                type: Boolean,
+                default: false    
             },
             leftWidth: {
                 type: Number,

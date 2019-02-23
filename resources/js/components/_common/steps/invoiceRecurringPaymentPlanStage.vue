@@ -33,7 +33,8 @@
         <!-- Stage card  -->
         <stagingCard 
             :stageNumber="2" :showCheckMark="localInvoice.has_set_recurring_payment_plan && !isEditingPaymentPlan" :showHeader="false" 
-            :disabled="!localInvoice.has_set_recurring_schedule_plan" :showVerticalLine="true" :leftWidth="24">
+            :disabled="!localInvoice.has_set_recurring_schedule_plan" :showVerticalLine="true" :leftWidth="24"
+            :isSaving="isSavingRecurringPaymentPlan">
 
             <template slot="leftContent">
 
@@ -41,16 +42,16 @@
 
                 <!-- Manual/Automatic Toggle switch -->
                 <toggleSwitch v-if="localInvoice.has_set_recurring_schedule_plan && isEditingPaymentPlan"
-                    v-bind:toggleValue.sync="localInvoice.recurringSettings.paymentPlan.automatic == 'true' ? true : false"
-                    @update:toggleValue="localInvoice.recurringSettings.paymentPlan.automatic = ($event) ? true : false"
+                    v-bind:toggleValue.sync="(localInvoice.recurringSettings.paymentPlan.automatic == 'true') ? true : false"
+                    @update:toggleValue="localInvoice.recurringSettings.paymentPlan.automatic = (($event) ? 'true' : 'false'))"
                     :ripple="false" :showIcon="true" onIcon="ios-cash-outline" offIcon="ios-cash-outline" 
                     title="Automatic Payment:" onText="Yes" offText="No" poptipMsg="Turn on for the system to allow customers to pay using credit cards/mobile phones">
                 </toggleSwitch>
 
                 <div v-if="!isEditingPaymentPlan" class="d-inline-block mt-2" :style="{ lineHeight: '1.6em' }">
                     <p>
-                        <b>{{ localInvoice.recurringSettings.paymentPlan.automatic ? 'Automatic': 'Manual' }} Payment:</b> 
-                        {{ localInvoice.recurringSettings.paymentPlan.automatic ? 'The system will allow each invoice to be conveniently paid using mobile money/credit cards.': 'Notify me on each invoice due, but i will be responsible to collect the money and record payments manually' }}
+                        <b>{{ localInvoice.recurringSettings.paymentPlan.automatic == 'true' ? 'Automatic': 'Manual' }} Payment:</b> 
+                        {{ localInvoice.recurringSettings.paymentPlan.automatic == 'true' ? 'The system will allow each invoice to be conveniently paid using mobile money/credit cards.': 'Notify me on each invoice due, but i will be responsible to collect the money and record payments manually' }}
                     </p>
                     <p><b>Payment Methods:</b> Orange Money & MyZaka</p>
                     <p><b>Alerts:</b> Notify me via Email and Sms when each invoice is paid.</p>
@@ -59,7 +60,7 @@
                 <div v-if="localInvoice.has_set_recurring_schedule_plan && isEditingPaymentPlan" class="d-inline-block mt-2 mb-2" :style="{ width: '100%' }">
 
                     <!-- Payment settings -->
-                    <Row v-if="localInvoice.recurringSettings.paymentPlan.automatic" class="mt-2"
+                    <Row v-if="localInvoice.recurringSettings.paymentPlan.automatic == 'true'" class="mt-2"
                         :style="{ padding: '30px', boxShadow: 'inset 1px 1px 5px 1px #d6d6d6' }">
 
                         <!-- Payment Methods e.g) Orange Money, MyZaka, e.t.c  -->
@@ -93,7 +94,7 @@
                                         <Col :span="18">
                                             <Alert show-icon>
                                                 <Icon type="ios-bulb-outline" slot="icon"></Icon>
-                                                <template slot="desc">Enter your orange money mobile number and pin to activate payment using Orange Money directly your account.</template>
+                                                <template slot="desc">Enter your orange money mobile number and pin to activate payment using Orange Money directly to your account.</template>
                                             </Alert>
                                             
                                             <div :style="{ padding: '30px', boxShadow: 'inset 1px 1px 5px 1px #d6d6d6' }">
@@ -140,7 +141,7 @@
                                         <Col :span="18">
                                             <Alert show-icon>
                                                 <Icon type="ios-bulb-outline" slot="icon"></Icon>
-                                                <template slot="desc">Enter your Mascom mobile number and MyZaka pin to activate payment using MyZaka directly your account.</template>
+                                                <template slot="desc">Enter your Mascom mobile number and MyZaka pin to activate payment using MyZaka directly to your account.</template>
                                             </Alert>
                                             
                                             <div :style="{ padding: '30px', boxShadow: 'inset 1px 1px 5px 1px #d6d6d6' }">
@@ -152,7 +153,8 @@
                                                             :phones="[]" 
                                                             :numberLimit="1"
                                                             selectedType="mobile"
-                                                            :disabledTypes="['Telephone', 'Fax']"                                                        :deletable="false"
+                                                            :disabledTypes="['Telephone', 'Fax']"                                                        
+                                                            :deletable="false"
                                                             :hidedable="true"
                                                             :editable="true"
                                                             :showIcon="true" 
