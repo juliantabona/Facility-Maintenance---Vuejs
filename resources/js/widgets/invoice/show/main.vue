@@ -66,7 +66,7 @@
                     <!-- Make recurring switch -->
                     <toggleSwitch v-bind:toggleValue.sync="localInvoice.isRecurring" 
                         @update:toggleValue="updateReccuring($event)"
-                        :ripple="false" :showIcon="true" onIcon="ios-eye-off-outline" offIcon="ios-eye-outline" 
+                        :ripple="false" :showIcon="true" onIcon="ios-repeat" offIcon="ios-repeat" 
                         title="Make Recurring:" onText="Yes" offText="No" poptipMsg="Turn on to make recurring"
                         class="float-right p-2">
                     </toggleSwitch>

@@ -42,8 +42,8 @@
 
                 <!-- Manual/Automatic Toggle switch -->
                 <toggleSwitch v-if="localInvoice.has_set_recurring_schedule_plan && isEditingPaymentPlan"
-                    v-bind:toggleValue.sync="(localInvoice.recurringSettings.paymentPlan.automatic == 'true') ? true : false"
-                    @update:toggleValue="localInvoice.recurringSettings.paymentPlan.automatic = (($event) ? 'true' : 'false'))"
+                    v-bind:toggleValue.sync="localInvoice.recurringSettings.paymentPlan.automatic == 'true'"
+                    @update:toggleValue="localInvoice.recurringSettings.paymentPlan.automatic = ($event ? 'true' : 'false')"
                     :ripple="false" :showIcon="true" onIcon="ios-cash-outline" offIcon="ios-cash-outline" 
                     title="Automatic Payment:" onText="Yes" offText="No" poptipMsg="Turn on for the system to allow customers to pay using credit cards/mobile phones">
                 </toggleSwitch>
@@ -122,7 +122,7 @@
                                                 </el-input>
                                                 <Button type="primary" class="float-right mt-2">
                                                     <span>Connect</span>
-                                                    <Icon type="ios-repeat" :size="24" :style="{ marginTop: '-4px' }"/>
+                                                    <Icon type="ios-log-in" :size="24" :style="{ marginTop: '-4px' }"/>
                                                 </Button>
                                                 <div class="clearfix"></div>
                                             </div>
@@ -170,7 +170,7 @@
                                                 </el-input>
                                                 <Button type="primary" class="float-right mt-2">
                                                     <span>Connect</span>
-                                                    <Icon type="ios-repeat" :size="24" :style="{ marginTop: '-4px' }"/>
+                                                    <Icon type="ios-log-in" :size="24" :style="{ marginTop: '-4px' }"/>
                                                 </Button>
                                                 <div class="clearfix"></div>
                                             </div>
