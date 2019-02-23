@@ -23,24 +23,24 @@
 
     <div>
 
-        <!-- Fade loader - Shows when approving recurring schedule  -->
+        <!-- Fade loader - Shows when saving the recurring invoice delivery plan  -->
         <fadeLoader :loading="isSavingRecurringDeliveryPlan" msg="Saving delivery plan, please wait..."></fadeLoader>
         
         <!-- Stage card  -->
         <stagingCard 
-            :stageNumber="2" :showCheckMark="localInvoice.has_set_recurring_delivery_plan && !isEditingDeliveryPlan" :showHeader="false" 
-            :disabled="!localInvoice.has_set_recurring_schedule_plan" :showVerticalLine="true" :leftWidth="24">
+            :stageNumber="3" :showCheckMark="localInvoice.has_set_recurring_delivery_plan && !isEditingDeliveryPlan" :showHeader="false" 
+            :disabled="!localInvoice.has_set_recurring_payment_plan" :showVerticalLine="true" :leftWidth="24">
 
             <template slot="leftContent">
 
                 <h4 :class="'text-secondary' + ( isEditingDeliveryPlan ? ' mt-3 mb-2': '')">Delivery Plan:</h4>
 
                 <!-- Manual/Automatic Toggle switch -->
-                <toggleSwitch v-if="localInvoice.has_set_recurring_schedule_plan && isEditingDeliveryPlan"
+                <toggleSwitch v-if="localInvoice.has_set_recurring_payment_plan && isEditingDeliveryPlan"
                     v-bind:toggleValue.sync="localInvoice.recurringSettings.deliveryPlan.automatic == 'true' ? true : false"
                     @update:toggleValue="localInvoice.recurringSettings.deliveryPlan.automatic = ($event) ? true : false"
                     :ripple="false" :showIcon="true" onIcon="ios-send-outline" offIcon="ios-eye-outline" 
-                    title="Send Automatically:" onText="Yes" offText="No" poptipMsg="Turn on for the system to send email/smsautomatically">
+                    title="Send Automatically:" onText="Yes" offText="No" poptipMsg="Turn on for the system to send email/sms automatically">
                 </toggleSwitch>
 
                 <div v-if="!isEditingDeliveryPlan" class="d-inline-block mt-2" :style="{ lineHeight: '1.6em' }">
@@ -52,7 +52,7 @@
                     <p><b>Alerts:</b> Notify me via Email and Sms when each invoice is sent.</p>
                 </div>
 
-                <div v-if="localInvoice.has_set_recurring_schedule_plan && isEditingDeliveryPlan" class="d-inline-block mt-2 mb-2" :style="{ width: '100%' }">
+                <div v-if="localInvoice.has_set_recurring_payment_plan && isEditingDeliveryPlan" class="d-inline-block mt-2 mb-2" :style="{ width: '100%' }">
 
                     <!-- Sending settings -->
                     <Row v-if="localInvoice.recurringSettings.deliveryPlan.automatic" class="mt-2"
@@ -79,13 +79,26 @@
                                         <Col :span="14">
                                             <Alert show-icon>
                                                 <Icon type="ios-bulb-outline" slot="icon"></Icon>
-                                                <template slot="desc">Enter the receipient phone number and sms message. When the invoice is due it will be sent to that receipient. Use Dynamic content for areas that require the system to figure out.</template>
+                                                <template slot="desc">Enter the client mobile number(s) and sms message. When the invoice is due it will be sent to all active numbers.</template>
                                             </Alert>
-
-                                            <b>Phone Number</b>
-                                            <el-input placeholder="Enter phone number" v-model="localInvoice.recurringSettings.deliveryPlan.phone.number" 
-                                                      size="mini" class="mb-1">
-                                            </el-input>
+                                            {{ getAvailableMobileNumber.map(phone => { return {id:phone.id, number:phone.number} } ) }}
+                                            <b>Client Mobile Number(s)</b>
+                                            <!-- Client Phones editor -->
+                                            <phoneInput class="mb-2"  
+                                                        :modelId="localInvoice.customized_client_details.id" 
+                                                        :modelType="localInvoice.customized_client_details.model_type" 
+                                                        :phones="getAvailableMobileNumber" 
+                                                        :numberLimit="3"
+                                                        selectedType="mobile"
+                                                        :disabledTypes="['Telephone', 'Fax']"                                                        :deletable="false"
+                                                        :hidedable="true"
+                                                        :editable="true"
+                                                        :showIcon="true" 
+                                                        onIcon="ios-checkmark" offIcon="" 
+                                                        title="Active:" onText="Yes" offText="No" 
+                                                        poptipMsg="Turn on to send the sms to this number"
+                                                        @updated="localInvoice.recurringSettings.deliveryPlan.sms.phones = $event">
+                                            </phoneInput>
 
                                             <b class="d-block mt-3">Delivery Message:</b>
                                             <p :style="{ padding: '20px', boxShadow: 'inset 1px 1px 5px 1px #d6d6d6' }">
@@ -160,7 +173,7 @@
                     </Alert>
                 </div>
 
-                <div v-if="!localInvoice.has_set_recurring_schedule_plan && !isEditingDeliveryPlan" class="mt-3">
+                <div v-if="!localInvoice.has_set_recurring_payment_plan && !isEditingDeliveryPlan" class="mt-3">
                     <Alert show-icon>
                         <Icon type="ios-bulb-outline" slot="icon"></Icon>
                         <template slot="desc">Make sending invoices easy. Setup your invoices to be sent manually/automatically via email/sms and get notified on delivery.</template>
@@ -170,7 +183,7 @@
             </template>
 
             <!-- Extra Content  -->
-            <template v-if="localInvoice.has_set_recurring_schedule_plan" slot="extraContent">
+            <template v-if="localInvoice.has_set_recurring_payment_plan" slot="extraContent">
 
                 <Row>
 
@@ -179,8 +192,8 @@
                             <Col span="24">
 
                                 <!-- Final Step Button -->
-                                <Button v-if="isEditingDeliveryPlan" class="float-right" type="primary" size="large" @click="saveSchedule()">
-                                    <span>{{ localInvoice.has_set_recurring_delivery_plan ? 'Save Changes': 'Final Step' }}</span>
+                                <Button v-if="isEditingDeliveryPlan" class="float-right" type="primary" size="large" @click="saveDeliveryPlan()">
+                                    <span>{{ localInvoice.has_set_recurring_delivery_plan ? 'Save Changes': 'Done' }}</span>
                                 </Button>
                                 <Button v-else class="float-right" type="default" size="large" @click="activateEditMode()">
                                     <span>Edit Delivery</span>
@@ -239,8 +252,16 @@
     /*  Modals  */
     import sendTestSmsModal from './../modals/sendTestSmsModal.vue';
 
+    /*  Inputs   */
+    import phoneInput from './../inputs/phoneInput.vue'; 
+
+    import lodash from 'lodash';
+    Event.prototype._ = lodash;
+
     export default {
-        components: { fadeLoader, stagingCard, shortCodeSelector, toggleSwitch, focusRipple, froalaEditor, sendTestSmsModal },
+        components: { fadeLoader, stagingCard, shortCodeSelector, toggleSwitch, focusRipple, froalaEditor, sendTestSmsModal,
+                      phoneInput 
+        },
         props: {
             invoice: {
                 type: Object,
@@ -280,6 +301,64 @@
             }
         },
         computed: {
+            getAvailableMobileNumber: function(){
+                //  Get all of the clients mobile phone numbers they have
+                var clientMobleNumbers = this.invoice.customized_client_details.phones.filter(phone => ['mobile'].includes(phone.type));
+                var deliveryPlanMobileNumbers = this.invoice.recurringSettings.deliveryPlan.sms.phones;
+
+
+                console.log('..................................................................');
+                console.log('_.size(clientMobleNumbers): ' + _.size(clientMobleNumbers));
+                console.log('(clientMobleNumbers).length: ' + (clientMobleNumbers).length);
+                console.log(clientMobleNumbers);
+
+                console.log('_.size(deliveryPlanMobileNumbers): ' + _.size(deliveryPlanMobileNumbers));
+                console.log('(deliveryPlanMobileNumbers).length: ' + (deliveryPlanMobileNumbers).length);
+                console.log(deliveryPlanMobileNumbers);
+
+                console.log('..................................................................');
+
+                if(deliveryPlanMobileNumbers.length){
+                    var obj = _.cloneDeep(deliveryPlanMobileNumbers);
+                }else{
+                    var obj = clientMobleNumbers.length ? _.cloneDeep(clientMobleNumbers) : [];
+                }
+
+                for ( var x=0; x < clientMobleNumbers.length; x++ ){
+                    var missing = false;
+                    for ( var y=0; y < deliveryPlanMobileNumbers.length; y++ ){
+                        //  If the client number is equal to the delivery plan number
+                        if( clientMobleNumbers[x].id == deliveryPlanMobileNumbers[y].id ){
+                            //  This is not a missing number
+                            missing = true;
+
+                console.log('..................................................................');
+                console.log('Missing');
+                console.log('..................................................................');
+
+                        }else{
+                console.log('..................................................................');
+                console.log('Not Missing');
+                console.log('..................................................................');
+
+                        }
+                    }
+
+                    //  Add the missing number to the object of available numbers
+                    if(missing){
+                        var missingPhone = Object({}, clientMobleNumbers[x]);
+                        obj.push(clientMobleNumbers[x]);
+                    }
+
+                }
+
+                if(!_.isEqual(this.invoice.recurringSettings.deliveryPlan.sms.phones, obj)){
+                    this.invoice.recurringSettings.deliveryPlan.sms.phones = obj;
+                }
+
+                return obj;
+
+            },
             smsMessageCompiled: function(){
 
                 var referenceNo = this.invoice.reference_no_value;
@@ -339,13 +418,6 @@
             truncate(string, limit){
                 return (string.length > limit) ? string.substring(0, limit - 3)+'...' : string;
             },
-            limitCharacters(){
-                if(this.smsMessageCompiled >= 160){
-                    this.localInvoice.recurringSettings.deliveryPlan.phone.message = 
-                    this.localInvoice.recurringSettings.deliveryPlan.phone.message.substring(0, 
-                    this.localInvoice.recurringSettings.deliveryPlan.phone.message.length - 1);
-                }
-            },
             getShotCodes(){
 
                 var money = this.invoice.grand_total_value || 0;
@@ -394,7 +466,7 @@
                 var editingDeliveryPlan = ( this.localInvoice.recurringSettings.editing.deliveryPlan == 'true' );
                 var editingPaymentPlan = ( this.localInvoice.recurringSettings.editing.paymentPlan == 'true' );
 
-                //  If we are still editing the delivery/payment plan 
+                //  If we are still editing the schedule/payment plan 
                 if( editingSchedulePlan || editingPaymentPlan ){
                     //  Tell the user to save first before editing
                     this.$Notice.warning({
@@ -406,7 +478,7 @@
                     this.isEditingDeliveryPlan = true;
                 }
             },
-            saveSchedule(){
+            saveDeliveryPlan(){
 
                 var self = this;
 

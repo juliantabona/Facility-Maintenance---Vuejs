@@ -4,12 +4,17 @@
         
         <Col :span="24">
             
-            <!-- Get the stage for setting the recurring schedule -->
+            <!-- Get the stage for setting the recurring schedule plan -->
             <invoiceRecurringSchedulePlanStage v-bind="$props" 
                 @approved="$emit('approved', $event)">
             </invoiceRecurringSchedulePlanStage>
-            
-            <!-- Get the stage for setting the recurring schedule -->
+
+            <!-- Get the stage for setting the recurring payment plan -->
+            <invoiceRecurringPaymentPlanStage v-bind="$props" 
+                @approved="$emit('approved', $event)">
+            </invoiceRecurringPaymentPlanStage>
+
+            <!-- Get the stage for setting the recurring delivery plan -->
             <invoiceRecurringDeliveryPlanStage v-bind="$props" 
                 @approved="$emit('approved', $event)">
             </invoiceRecurringDeliveryPlanStage>
@@ -22,6 +27,7 @@
 <script type="text/javascript">
 
     import invoiceRecurringSchedulePlanStage from './../../../components/_common/steps/invoiceRecurringSchedulePlanStage.vue'; 
+    import invoiceRecurringPaymentPlanStage from './../../../components/_common/steps/invoiceRecurringPaymentPlanStage.vue'; 
     import invoiceRecurringDeliveryPlanStage from './../../../components/_common/steps/invoiceRecurringDeliveryPlanStage.vue'; 
 
     export default {
@@ -31,6 +37,6 @@
                 default: null
             }
         },
-        components: { invoiceRecurringSchedulePlanStage, invoiceRecurringDeliveryPlanStage }
+        components: { invoiceRecurringSchedulePlanStage, invoiceRecurringPaymentPlanStage, invoiceRecurringDeliveryPlanStage }
     }
 </script>

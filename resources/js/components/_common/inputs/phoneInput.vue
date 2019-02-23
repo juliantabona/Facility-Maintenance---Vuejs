@@ -18,10 +18,14 @@
                     <template v-if="deletable || hidedable || editable" slot="append">
                         
                         <!-- Show mode switch -->
-                        <showModeSwitch v-if="hidedable" v-bind:showMode.sync="localPhones[i].show"
-                                        @update:showMode="runUpdate()"
-                                        :showIcon="true" :ripple="false" class="mr-2"/>
-                        </showModeSwitch>
+                        <toggleSwitch 
+                            v-if="hidedable"
+                            v-bind:toggleValue.sync="localPhones[i].show"
+                            @update:toggleValue="runUpdate()"
+                            :ripple="false" :showIcon="showIcon" :onIcon="onIcon" :offIcon="offIcon" 
+                            :title="title" :onText="onText" :offText="offText" :poptipMsg="poptipMsg"
+                            class="mr-2">
+                        </toggleSwitch>
 
                         <!-- Delete button -->
                         <Poptip v-if="deletable" confirm title="Are you sure you want to delete this phone number?"
@@ -77,7 +81,7 @@
     import Loader from './../loaders/Loader.vue'; 
 
     /*  Switches   */
-    import showModeSwitch from './../switches/showModeSwitch.vue'; 
+    import toggleSwitch from './../switches/toggleSwitch.vue'; 
 
     /*  Modals   */
     import createPhoneModal from './../modals/createPhoneModal.vue'; 
@@ -87,9 +91,10 @@
 
     export default {
         components: { 
-            Loader, createPhoneModal, showModeSwitch
+            Loader, createPhoneModal, toggleSwitch
         },
         props:{
+            //  For the modal
             modelId: {
                 type: Number,
                 default: null,  
@@ -125,6 +130,36 @@
             disabledTypes:{
                 type: Array,
                 default: () => { return [] },  
+            },
+
+            //  For the toggle switch
+            showIcon:{
+                type: Boolean,
+                default: true                
+            },
+            onIcon:{
+                type: String,
+                default: 'ios-eye-off-outline'    
+            },
+            offIcon:{
+                type: String,
+                default: 'ios-eye-outline'    
+            },
+            title:{
+                type: String,
+                default: 'Show:'                
+            },
+            onText:{
+                type: String,
+                default: 'Yes'    
+            },
+            offText:{
+                type: String,
+                default: 'No'    
+            },
+            poptipMsg:{
+                type: String,
+                default: 'Turn on to show'    
             }
         },
         data(){

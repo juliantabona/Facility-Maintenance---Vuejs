@@ -33,13 +33,13 @@
             <div class="clearfix mt-1"></div>
 
             <!-- Client Address -->
-            <p v-if="!localEditMode && localClient.address" class="mt-1"><strong>{{ localClient.address }}</strong></p>
+            <p v-if="!localEditMode && localClient.address" class="mt-1">{{ localClient.address }}</p>
 
             <!-- Client City -->
-            <p v-if="!localEditMode && localClient.city" class="mt-1"><strong>{{ localClient.city }}</strong></p>
+            <p v-if="!localEditMode && localClient.city" class="mt-1">{{ localClient.city }}</p>
 
             <!-- Client Country -->
-            <p v-if="!localEditMode && localClient.country" class="mt-1"><strong>{{ localClient.country }}</strong></p>
+            <p v-if="!localEditMode && localClient.country" class="mt-1">{{ localClient.country }}</p>
 
             <div class="clearfix"></div>
             

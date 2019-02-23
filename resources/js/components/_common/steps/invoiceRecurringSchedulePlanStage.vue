@@ -2,7 +2,7 @@
 
     <div>
 
-        <!-- Fade loader - Shows when approving recurring schedule  -->
+        <!-- Fade loader - Shows when saving the recurring invoice schedule plan  -->
         <fadeLoader :loading="isSavingRecurringSchedulePlan" msg="Saving schedule plan, please wait..."></fadeLoader>
         
         <!-- Stage card  -->
@@ -312,7 +312,7 @@
                         <Row>
                             <Col span="24">
                                 <!-- Next Button -->
-                                <Button v-if="isEditingSchedulePlan" class="float-right" type="primary" size="large" @click="saveSchedule()">
+                                <Button v-if="isEditingSchedulePlan" class="float-right" type="primary" size="large" @click="saveSchedulePlan()">
                                     <span>{{ localInvoice.has_set_recurring_schedule_plan ? 'Save Changes': 'Next Step' }}</span>
                                 </Button>
                                 <Button v-else class="float-right" type="default" size="large" @click="activateEditMode()">
@@ -393,7 +393,7 @@
                     this.isEditingSchedulePlan = true;
                 }
             },
-            saveSchedule(){
+            saveSchedulePlan(){
 
                 var self = this;
 

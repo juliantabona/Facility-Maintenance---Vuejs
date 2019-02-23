@@ -8,7 +8,7 @@
             <focusRipple :ripple="ripple" :waveStyle="{ left:'auto', right:'16%' }">
 
                 <!-- Icon  -->
-               <Icon v-if="!showIcon" :type="toggleValue ? onIcon : offIcon" :size="24" />
+               <Icon v-if="showIcon" :type="toggleValue ? onIcon : offIcon" :size="24" />
 
                 <!-- Text  -->
                 <strong v-if="title">{{ title }}</strong>

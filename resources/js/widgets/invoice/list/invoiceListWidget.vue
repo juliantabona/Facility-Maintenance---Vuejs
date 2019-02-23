@@ -43,7 +43,10 @@
                         title: 'Client',
                         sortable: true,
                         render: (h, params) => {
-                            return h('span', (params.row.client || {}).name);
+                            return h('span', ( (params.row.customized_client_details || {}).model_type == 'user' 
+                                        ? (params.row.customized_client_details || {}).full_name
+                                        : (params.row.customized_client_details || {}).name) 
+                                    );
                         }
                     },
                     {
@@ -51,7 +54,7 @@
                         title: 'Email',
                         sortable: true,
                         render: (h, params) => {
-                            return h('span', (params.row.client || {}).email);
+                            return h('span', (params.row.customized_client_details || {}).email);
                         }
                     },
                     {

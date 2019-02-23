@@ -15,10 +15,10 @@
             <template slot="leftContent">
 
                 <h4 class="text-secondary">{{ localInvoice.has_sent ? 'Invoice Sent' : 'Send Invoice' }}</h4>
-                <Poptip word-wrap width="200" trigger="hover" :content="(localInvoice.last_sent_activity || {}).created_at.date | moment('DD MMM YYYY, H:mmA') || '___'">
+                <Poptip word-wrap width="200" trigger="hover" :content="(localInvoice.last_sent_activity || {}).created_at | moment('DD MMM YYYY, H:mmA') || '___'">
                     <p class="mt-2 mb-2">
                         <span v-if="!localInvoice.has_sent" class="font-weight-bold">Last Sent: Never</span>
-                        <span v-if="localInvoice.has_sent" class="font-weight-bold">Last Sent:</span> {{ (localInvoice.last_sent_activity || {}).created_at.date | moment("from", "now") }}
+                        <span v-if="localInvoice.has_sent" class="font-weight-bold">Last Sent:</span> {{ (localInvoice.last_sent_activity || {}).created_at | moment("from", "now") }}
                     </p>
                 </Poptip>
 

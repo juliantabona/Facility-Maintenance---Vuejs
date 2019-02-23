@@ -16,7 +16,7 @@
         <!-- Invoice Client  -->
         <Col span="6">
             <h6 class="text-secondary">Customer</h6>
-            <h5><a href="#">{{ localInvoice.customized_client_details.name }}</a></h5>            
+            <h5><a href="#">{{ customerName }}</a></h5>            
         </Col>
 
         <!-- Invoice Amount  -->
@@ -83,6 +83,15 @@
                 handler: function (val, oldVal) {
                     //  Update the edit mode value
                     this.localEditMode = val;
+                }
+            }
+        },
+        computed:{
+            customerName: function(){
+                if(this.localInvoice.customized_client_details.model_type == 'user'){
+                    return this.localInvoice.customized_client_details.full_name;
+                }else if(this.localInvoice.customized_client_details.model_type == 'company'){
+                    return this.localInvoice.customized_client_details.name;
                 }
             }
         },
