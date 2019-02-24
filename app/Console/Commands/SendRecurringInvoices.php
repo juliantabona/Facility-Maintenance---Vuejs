@@ -119,10 +119,10 @@ class SendRecurringInvoices extends Command
                 //  If chose custom from the $chosenSchedule
                 $customCount = $recurringSettings['custom']['count'];             //  2
                 $chosenCustom = $recurringSettings['custom']['chosen'];           //  Days, Weeks, Months, Years
-                $weekly = $recurringSettings['custom']['weeks'];                  //  Tuesday
-                $monthly = $recurringSettings['custom']['months'];                //  8th
-                $yearlyMonth = $recurringSettings['custom']['years']['month'];    //  July
-                $yearlyDay = $recurringSettings['custom']['years']['day'];        //  10th
+                $weeks = $recurringSettings['custom']['weeks'];                  //  Tuesday
+                $months = $recurringSettings['custom']['months'];                //  8th
+                $yearsMonth = $recurringSettings['custom']['years']['month'];    //  July
+                $yearsDay = $recurringSettings['custom']['years']['day'];        //  10th
 
                 //  Get the current send date
                 $currentDate = Carbon::createFromFormat('Y-m-d H:i:s', $sendDate);

@@ -24,8 +24,8 @@
 
                 <h4 :class="'text-secondary' + ( isEditingSchedulePlan ? ' mt-3 mb-4': '')">Schedule Plan:</h4>
                 <div v-if="!isEditingSchedulePlan" class="d-inline-block mt-2" :style="{ lineHeight: '1.6em' }">
-                    <p><b>Repeat weekly:</b> Every Tuesday</p>
-                    <p><b>Dates:</b> Create first invoice on February 19th 2019,end after 2 invoices</p>
+                    <p><b>Repeat {{ localInvoice.recurringSettings.schedulePlan.chosen }}:</b> {{ scheduleSummaryInWords }}</p>
+                    <p><b>Dates:</b> {{ scheduleStartAndStopDatesInWords }}</p>
                     <p><b>Time zone:</b> Africa/Gaborone</p>
                 </div>
 
@@ -36,15 +36,17 @@
 
                 <!-- Schedule settings -->
                 <Row v-if="isEditingSchedulePlan">
-
+                    
                     <!-- Schedule Frequency e.g) Daily, Weekly, Monthly, Yearly or Custom  -->
                     <Col span="24">
-                    
+
                         <!-- Reminder method Selector -->
                         <span class="float-left d-block mr-1 mb-3">Repeat this invoice</span>
 
                         <!-- Timeline Options -->
-                        <Select v-model="localInvoice.recurringSettings.schedulePlan.chosen" :style="{ width:'100px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select frequency">
+                        <Select v-model="localInvoice.recurringSettings.schedulePlan.chosen" 
+                                :style="{ width:'100px', marginTop:'-5px',position:'relative',zIndex:'1' }" class="float-left d-block mb-3" placeholder="Select frequency"
+                                @on-change="calculateTheFirstSendingDate()">
                             <Option value="Daily">Daily</Option>
                             <Option value="Weekly">Weekly</Option>
                             <Option value="Monthly">Monthly</Option>
@@ -55,52 +57,54 @@
                         <!-- If Weekly -->
                         <span v-show="localInvoice.recurringSettings.schedulePlan.chosen == 'Weekly'" class="mb-3">
                             <span class="float-left d-block ml-1 mr-1">every</span>
-                            <Select v-model="localInvoice.recurringSettings.schedulePlan.weekly" :style="{ width:'120px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day of week">
-                                <Option value="Monday">Monday</Option>
-                                <Option value="Tuesday">Tuesday</Option>
-                                <Option value="Wednesday">Wednesday</Option>
-                                <Option value="Thursday">Thursday</Option>
-                                <Option value="Friday">Friday</Option>
-                                <Option value="Saturday">Saturday</Option>
-                                <Option value="Sunday">Sunday</Option>
+                            <Select v-model="localInvoice.recurringSettings.schedulePlan.weekly" :style="{ width:'120px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day of week"
+                                    @on-change="calculateTheFirstSendingDate()">
+                                <Option value="1">Monday</Option>
+                                <Option value="2">Tuesday</Option>
+                                <Option value="3">Wednesday</Option>
+                                <Option value="4">Thursday</Option>
+                                <Option value="5">Friday</Option>
+                                <Option value="6">Saturday</Option>
+                                <Option value="0">Sunday</Option>
                             </Select>
                         </span>
                         
                         <!-- If Monthly -->
                         <span v-show="localInvoice.recurringSettings.schedulePlan.chosen == 'Monthly'" class="mb-3">
                             <span class="float-left d-block ml-1 mr-1">on the</span>
-                            <Select v-model="localInvoice.recurringSettings.schedulePlan.monthly" :style="{ width:'60px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day">
-                                <Option value="1st">1st</Option>
-                                <Option value="2nd">2nd</Option>
-                                <Option value="3rd">3rd</Option>
-                                <Option value="4th">4th</Option>
-                                <Option value="5th">5th</Option>
-                                <Option value="6th">6th</Option>
-                                <Option value="7th">7th</Option>
-                                <Option value="8th">8th</Option>
-                                <Option value="9th">9th</Option>
-                                <Option value="10th">10th</Option>
-                                <Option value="11th">11th</Option>
-                                <Option value="12th">12th</Option>
-                                <Option value="13th">13th</Option>
-                                <Option value="14th">14th</Option>
-                                <Option value="15th">15th</Option>
-                                <Option value="16th">16th</Option>
-                                <Option value="17th">17th</Option>
-                                <Option value="18th">18th</Option>
-                                <Option value="19th">19th</Option>
-                                <Option value="20th">20th</Option>
-                                <Option value="21st">21st</Option>
-                                <Option value="22nd">22nd</Option>
-                                <Option value="23rd">23rd</Option>
-                                <Option value="24th">24th</Option>
-                                <Option value="25th">25th</Option>
-                                <Option value="26th">26th</Option>
-                                <Option value="27th">27th</Option>
-                                <Option value="28th">28th</Option>
-                                <Option value="29th">29th</Option>
-                                <Option value="30th">30th</Option>
-                                <Option value="31st">31st</Option>
+                            <Select v-model="localInvoice.recurringSettings.schedulePlan.monthly" :style="{ width:'60px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day"
+                                    @on-change="calculateTheFirstSendingDate()">
+                                <Option value="1">1st</Option>
+                                <Option value="2">2nd</Option>
+                                <Option value="3">3rd</Option>
+                                <Option value="4">4th</Option>
+                                <Option value="5">5th</Option>
+                                <Option value="6">6th</Option>
+                                <Option value="7">7th</Option>
+                                <Option value="8">8th</Option>
+                                <Option value="9">9th</Option>
+                                <Option value="10">10th</Option>
+                                <Option value="11">11th</Option>
+                                <Option value="12">12th</Option>
+                                <Option value="13">13th</Option>
+                                <Option value="14">14th</Option>
+                                <Option value="15">15th</Option>
+                                <Option value="16">16th</Option>
+                                <Option value="17">17th</Option>
+                                <Option value="18">18th</Option>
+                                <Option value="19">19th</Option>
+                                <Option value="20">20th</Option>
+                                <Option value="21">21st</Option>
+                                <Option value="22">22nd</Option>
+                                <Option value="23">23rd</Option>
+                                <Option value="24">24th</Option>
+                                <Option value="25">25th</Option>
+                                <Option value="26">26th</Option>
+                                <Option value="27">27th</Option>
+                                <Option value="28">28th</Option>
+                                <Option value="29">29th</Option>
+                                <Option value="30">30th</Option>
+                                <Option value="31">31st</Option>
                             </Select>
                             <span class="float-left d-block ml-1 mr-1">day of every month</span>
                         </span>
@@ -108,62 +112,68 @@
                         <!-- If Yearly -->
                         <span v-show="localInvoice.recurringSettings.schedulePlan.chosen == 'Yearly'" class="mb-3">
                             <span class="float-left d-block ml-1 mr-1">every</span>
-                            <Select v-model="localInvoice.recurringSettings.schedulePlan.yearly.month" :style="{ width:'120px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day of week">
-                                <Option value="January">January</Option>
-                                <Option value="February">February</Option>
-                                <Option value="March">March</Option>
-                                <Option value="April">April</Option>
-                                <Option value="May">May</Option>
-                                <Option value="June">June</Option>
-                                <Option value="July">July</Option>
-                                <Option value="August">August</Option>
-                                <Option value="September">September</Option>
-                                <Option value="October">October</Option>
-                                <Option value="November">November</Option>
-                                <Option value="December">December</Option>
+                            <Select v-model="localInvoice.recurringSettings.schedulePlan.yearly.month" :style="{ width:'120px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day of week"
+                                    @on-change="calculateTheFirstSendingDate()">
+                                    <Option value="0">January</Option>
+                                    <Option value="1">February</Option>
+                                    <Option value="2">March</Option>
+                                    <Option value="3">April</Option>
+                                    <Option value="4">May</Option>
+                                    <Option value="5">June</Option>
+                                    <Option value="6">July</Option>
+                                    <Option value="7">August</Option>
+                                    <Option value="8">September</Option>
+                                    <Option value="9">October</Option>
+                                    <Option value="10">November</Option>
+                                    <Option value="11">December</Option>
                             </Select>
                             
                             <span class="float-left d-block ml-1 mr-1">on the</span>
-                            <Select v-model="localInvoice.recurringSettings.schedulePlan.yearly.day" :style="{ width:'60px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day">
-                                <Option value="1st">1st</Option>
-                                <Option value="2nd">2nd</Option>
-                                <Option value="3rd">3rd</Option>
-                                <Option value="4th">4th</Option>
-                                <Option value="5th">5th</Option>
-                                <Option value="6th">6th</Option>
-                                <Option value="7th">7th</Option>
-                                <Option value="8th">8th</Option>
-                                <Option value="9th">9th</Option>
-                                <Option value="10th">10th</Option>
-                                <Option value="11th">11th</Option>
-                                <Option value="12th">12th</Option>
-                                <Option value="13th">13th</Option>
-                                <Option value="14th">14th</Option>
-                                <Option value="15th">15th</Option>
-                                <Option value="16th">16th</Option>
-                                <Option value="17th">17th</Option>
-                                <Option value="18th">18th</Option>
-                                <Option value="19th">19th</Option>
-                                <Option value="20th">20th</Option>
-                                <Option value="21st">21st</Option>
-                                <Option value="22nd">22nd</Option>
-                                <Option value="23rd">23rd</Option>
-                                <Option value="24th">24th</Option>
-                                <Option value="25th">25th</Option>
-                                <Option value="26th">26th</Option>
-                                <Option value="27th">27th</Option>
-                                <Option value="28th">28th</Option>
-                                <Option value="29th">29th</Option>
-                                <Option value="30th">30th</Option>
-                                <Option value="31st">31st</Option>
+                            <Select v-model="localInvoice.recurringSettings.schedulePlan.yearly.day" :style="{ width:'60px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day"
+                                    @on-change="calculateTheFirstSendingDate()">
+                                <Option value="1">1st</Option>
+                                <Option value="2">2nd</Option>
+                                <Option value="3">3rd</Option>
+                                <Option value="4">4th</Option>
+                                <Option value="5">5th</Option>
+                                <Option value="6">6th</Option>
+                                <Option value="7">7th</Option>
+                                <Option value="8">8th</Option>
+                                <Option value="9">9th</Option>
+                                <Option value="10">10th</Option>
+                                <Option value="11">11th</Option>
+                                <Option value="12">12th</Option>
+                                <Option value="13">13th</Option>
+                                <Option value="14">14th</Option>
+                                <Option value="15">15th</Option>
+                                <Option value="16">16th</Option>
+                                <Option value="17">17th</Option>
+                                <Option value="18">18th</Option>
+                                <Option value="19">19th</Option>
+                                <Option value="20">20th</Option>
+                                <Option value="21">21st</Option>
+                                <Option value="22">22nd</Option>
+                                <Option value="23">23rd</Option>
+                                <Option value="24">24th</Option>
+                                <Option value="25">25th</Option>
+                                <Option value="26">26th</Option>
+                                <Option value="27">27th</Option>
+                                <Option value="28">28th</Option>
+                                <Option value="29">29th</Option>
+                                <Option value="30">30th</Option>
+                                <Option value="31">31st</Option>
                             </Select>
                         </span>
 
                         <!-- If Custom -->
                         <span v-show="localInvoice.recurringSettings.schedulePlan.chosen == 'Custom'" class="mb-3">
                             <span class="float-left d-block ml-1 mr-1 mb-3">every</span>
-                            <el-input v-model="localInvoice.recurringSettings.schedulePlan.custom.count" placeholder="E.g) 6" size="mini" class="float-left d-block mr-1 mb-3" :style="{ maxWidth:'60px', marginTop:'-3px' }"></el-input>
-                            <Select v-model="localInvoice.recurringSettings.schedulePlan.custom.chosen" :style="{ width:'100px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day of week">
+                            <el-input v-model="localInvoice.recurringSettings.schedulePlan.custom.count" :maxlength="2" 
+                                      placeholder="E.g) 6" size="mini" class="float-left d-block mr-1 mb-3" :style="{ maxWidth:'60px', marginTop:'-3px' }"
+                                      @input="calculateTheFirstSendingDate()">
+                            </el-input>
+                            <Select v-model="localInvoice.recurringSettings.schedulePlan.custom.chosen" :style="{ width:'100px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day of week"
+                                @on-change="calculateTheFirstSendingDate()">
                                 <Option value="Days">Day(s)</Option>
                                 <Option value="Weeks">Week(s)</Option>
                                 <Option value="Months">Month(s)</Option>
@@ -173,52 +183,54 @@
                             <!-- If weeks -->
                             <span v-show="localInvoice.recurringSettings.schedulePlan.custom.chosen == 'Weeks'">
                                 <span class="float-left d-block ml-1 mr-1 mb-3">on every</span>
-                                <Select v-model="localInvoice.recurringSettings.schedulePlan.custom.weeks" :style="{ width:'120px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day of week">
-                                    <Option value="Monday">Monday</Option>
-                                    <Option value="Tuesday">Tuesday</Option>
-                                    <Option value="Wednesday">Wednesday</Option>
-                                    <Option value="Thursday">Thursday</Option>
-                                    <Option value="Friday">Friday</Option>
-                                    <Option value="Saturday">Saturday</Option>
-                                    <Option value="Sunday">Sunday</Option>
+                                <Select v-model="localInvoice.recurringSettings.schedulePlan.custom.weeks" :style="{ width:'120px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day of week"
+                                    @on-change="calculateTheFirstSendingDate()">
+                                    <Option value="1">Monday</Option>
+                                    <Option value="2">Tuesday</Option>
+                                    <Option value="3">Wednesday</Option>
+                                    <Option value="4">Thursday</Option>
+                                    <Option value="5">Friday</Option>
+                                    <Option value="6">Saturday</Option>
+                                    <Option value="0">Sunday</Option>
                                 </Select>
                             </span>
                             
                             <!-- If months -->
                             <span v-show="localInvoice.recurringSettings.schedulePlan.custom.chosen == 'Months'">
                                 <span class="float-left d-block ml-1 mr-1 mb-3">on the</span>
-                                    <Select v-model="localInvoice.recurringSettings.schedulePlan.custom.months" :style="{ width:'60px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day">
-                                        <Option value="1st">1st</Option>
-                                        <Option value="2nd">2nd</Option>
-                                        <Option value="3rd">3rd</Option>
-                                        <Option value="4th">4th</Option>
-                                        <Option value="5th">5th</Option>
-                                        <Option value="6th">6th</Option>
-                                        <Option value="7th">7th</Option>
-                                        <Option value="8th">8th</Option>
-                                        <Option value="9th">9th</Option>
-                                        <Option value="10th">10th</Option>
-                                        <Option value="11th">11th</Option>
-                                        <Option value="12th">12th</Option>
-                                        <Option value="13th">13th</Option>
-                                        <Option value="14th">14th</Option>
-                                        <Option value="15th">15th</Option>
-                                        <Option value="16th">16th</Option>
-                                        <Option value="17th">17th</Option>
-                                        <Option value="18th">18th</Option>
-                                        <Option value="19th">19th</Option>
-                                        <Option value="20th">20th</Option>
-                                        <Option value="21st">21st</Option>
-                                        <Option value="22nd">22nd</Option>
-                                        <Option value="23rd">23rd</Option>
-                                        <Option value="24th">24th</Option>
-                                        <Option value="25th">25th</Option>
-                                        <Option value="26th">26th</Option>
-                                        <Option value="27th">27th</Option>
-                                        <Option value="28th">28th</Option>
-                                        <Option value="29th">29th</Option>
-                                        <Option value="30th">30th</Option>
-                                        <Option value="31st">31st</Option>
+                                    <Select v-model="localInvoice.recurringSettings.schedulePlan.custom.months" :style="{ width:'60px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day"
+                                            @on-change="calculateTheFirstSendingDate()">
+                                        <Option value="1">1st</Option>
+                                        <Option value="2">2nd</Option>
+                                        <Option value="3">3rd</Option>
+                                        <Option value="4">4th</Option>
+                                        <Option value="5">5th</Option>
+                                        <Option value="6">6th</Option>
+                                        <Option value="7">7th</Option>
+                                        <Option value="8">8th</Option>
+                                        <Option value="9">9th</Option>
+                                        <Option value="10">10th</Option>
+                                        <Option value="11">11th</Option>
+                                        <Option value="12">12th</Option>
+                                        <Option value="13">13th</Option>
+                                        <Option value="14">14th</Option>
+                                        <Option value="15">15th</Option>
+                                        <Option value="16">16th</Option>
+                                        <Option value="17">17th</Option>
+                                        <Option value="18">18th</Option>
+                                        <Option value="19">19th</Option>
+                                        <Option value="20">20th</Option>
+                                        <Option value="21">21st</Option>
+                                        <Option value="22">22nd</Option>
+                                        <Option value="23">23rd</Option>
+                                        <Option value="24">24th</Option>
+                                        <Option value="25">25th</Option>
+                                        <Option value="26">26th</Option>
+                                        <Option value="27">27th</Option>
+                                        <Option value="28">28th</Option>
+                                        <Option value="29">29th</Option>
+                                        <Option value="30">30th</Option>
+                                        <Option value="31">31st</Option>
                                 </Select>
                                 <span class="float-left d-block ml-1 mr-1 mb-3">day of every month</span>
                             </span>
@@ -226,53 +238,55 @@
                             <!-- If years -->
                             <span v-show="localInvoice.recurringSettings.schedulePlan.custom.chosen == 'Years'">
                                 <span class="float-left d-block ml-1 mr-1 mb-3">on every</span>
-                                <Select v-model="localInvoice.recurringSettings.schedulePlan.custom.years.month" :style="{ width:'120px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day of week">
-                                    <Option value="January">January</Option>
-                                    <Option value="February">February</Option>
-                                    <Option value="March">March</Option>
-                                    <Option value="April">April</Option>
-                                    <Option value="May">May</Option>
-                                    <Option value="June">June</Option>
-                                    <Option value="July">July</Option>
-                                    <Option value="August">August</Option>
-                                    <Option value="September">September</Option>
-                                    <Option value="October">October</Option>
-                                    <Option value="November">November</Option>
-                                    <Option value="December">December</Option>
+                                <Select v-model="localInvoice.recurringSettings.schedulePlan.custom.years.month" :style="{ width:'120px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day of week"
+                                    @on-change="calculateTheFirstSendingDate()">
+                                    <Option value="0">January</Option>
+                                    <Option value="1">February</Option>
+                                    <Option value="2">March</Option>
+                                    <Option value="3">April</Option>
+                                    <Option value="4">May</Option>
+                                    <Option value="5">June</Option>
+                                    <Option value="6">July</Option>
+                                    <Option value="7">August</Option>
+                                    <Option value="8">September</Option>
+                                    <Option value="9">October</Option>
+                                    <Option value="10">November</Option>
+                                    <Option value="11">December</Option>
                                 </Select>
                                 <span class="float-left d-block ml-1 mr-1 mb-3">on the</span>
-                                <Select v-model="localInvoice.recurringSettings.schedulePlan.custom.years.day" :style="{ width:'60px', marginTop:'-5px' }" class="float-left mb-3" placeholder="Select day">
-                                    <Option value="1st">1st</Option>
-                                    <Option value="2nd">2nd</Option>
-                                    <Option value="3rd">3rd</Option>
-                                    <Option value="4th">4th</Option>
-                                    <Option value="5th">5th</Option>
-                                    <Option value="6th">6th</Option>
-                                    <Option value="7th">7th</Option>
-                                    <Option value="8th">8th</Option>
-                                    <Option value="9th">9th</Option>
-                                    <Option value="10th">10th</Option>
-                                    <Option value="11th">11th</Option>
-                                    <Option value="12th">12th</Option>
-                                    <Option value="13th">13th</Option>
-                                    <Option value="14th">14th</Option>
-                                    <Option value="15th">15th</Option>
-                                    <Option value="16th">16th</Option>
-                                    <Option value="17th">17th</Option>
-                                    <Option value="18th">18th</Option>
-                                    <Option value="19th">19th</Option>
-                                    <Option value="20th">20th</Option>
-                                    <Option value="21st">21st</Option>
-                                    <Option value="22nd">22nd</Option>
-                                    <Option value="23rd">23rd</Option>
-                                    <Option value="24th">24th</Option>
-                                    <Option value="25th">25th</Option>
-                                    <Option value="26th">26th</Option>
-                                    <Option value="27th">27th</Option>
-                                    <Option value="28th">28th</Option>
-                                    <Option value="29th">29th</Option>
-                                    <Option value="30th">30th</Option>
-                                    <Option value="31st">31st</Option>
+                                <Select v-model="localInvoice.recurringSettings.schedulePlan.custom.years.day" :style="{ width:'60px', marginTop:'-5px' }" class="float-left mb-3" placeholder="Select day"
+                                        @on-change="calculateTheFirstSendingDate()">
+                                    <Option value="1">1st</Option>
+                                    <Option value="2">2nd</Option>
+                                    <Option value="3">3rd</Option>
+                                    <Option value="4">4th</Option>
+                                    <Option value="5">5th</Option>
+                                    <Option value="6">6th</Option>
+                                    <Option value="7">7th</Option>
+                                    <Option value="8">8th</Option>
+                                    <Option value="9">9th</Option>
+                                    <Option value="10">10th</Option>
+                                    <Option value="11">11th</Option>
+                                    <Option value="12">12th</Option>
+                                    <Option value="13">13th</Option>
+                                    <Option value="14">14th</Option>
+                                    <Option value="15">15th</Option>
+                                    <Option value="16">16th</Option>
+                                    <Option value="17">17th</Option>
+                                    <Option value="18">18th</Option>
+                                    <Option value="19">19th</Option>
+                                    <Option value="20">20th</Option>
+                                    <Option value="21">21st</Option>
+                                    <Option value="22">22nd</Option>
+                                    <Option value="23">23rd</Option>
+                                    <Option value="24">24th</Option>
+                                    <Option value="25">25th</Option>
+                                    <Option value="26">26th</Option>
+                                    <Option value="27">27th</Option>
+                                    <Option value="28">28th</Option>
+                                    <Option value="29">29th</Option>
+                                    <Option value="30">30th</Option>
+                                    <Option value="31">31st</Option>
                                 </Select>
                             </span>
                         </span>
@@ -280,27 +294,37 @@
 
                     <!-- Schedule Start and End period  -->
                     <Col span="24" class="border-top pt-3">
-                    
+                        
                         <!-- Text for when to create first invoice -->
                         <span class="float-left d-block mr-1 mb-3">Create first invoice on</span>
 
                         <!-- First Invoice - Start Date -->
-                        <el-date-picker v-model="localInvoice.recurringSettings.schedulePlan.start" type="date" :clearable="false" placeholder="e.g) January 1, 2018" size="mini" class="float-left mb-2" :style="{ maxWidth:'135px', marginTop:'-3px' }"
-                            format="MMM dd yyyy" value-format="yyyy-MM-dd">
+                        <el-date-picker v-model="localInvoice.recurringSettings.schedulePlan.startDate" type="date" 
+                            :clearable="false" placeholder="e.g) January 1, 2018" size="mini" 
+                            class="float-left mb-2" :style="{ maxWidth:'135px', marginTop:'-3px' }"
+                            format="MMM dd yyyy" value-format="yyyy-MM-dd"
+                            :picker-options="pickerOptions"
+                            @change="updateScheduleInWords()">
                         </el-date-picker>
 
                         <!-- Text for when to end -->
                         <span class="float-left d-block mr-1 ml-1 mb-3">and end</span>
 
                         <!-- Text for when to end -->
-                        <Select v-model="localInvoice.recurringSettings.schedulePlan.stop.chosen" :style="{ width:'100px', marginTop:'-5px' }" class="float-left mb-3" placeholder="Select day of week">
+                        <Select v-model="localInvoice.recurringSettings.schedulePlan.stop.chosen" :style="{ width:'100px', marginTop:'-5px' }" class="float-left mb-3" placeholder="Select day of week"
+                            @on-change="updateScheduleInWords()">
                             <Option value="Count">After</Option>
                             <Option value="Date">On</Option>
                             <Option value="Never">Never</Option>
                         </Select>
-                        <el-input v-show="localInvoice.recurringSettings.schedulePlan.stop.chosen == 'Count'" v-model="localInvoice.recurringSettings.schedulePlan.stop.count" placeholder="E.g) 3" size="mini" class="float-left mr-1 ml-1 mb-3" :style="{ maxWidth:'80px', marginTop:'-3px' }"></el-input>
+                        <el-input v-show="localInvoice.recurringSettings.schedulePlan.stop.chosen == 'Count'" :maxlength="2" v-model="localInvoice.recurringSettings.schedulePlan.stop.count" placeholder="E.g) 3" size="mini" class="float-left mr-1 ml-1 mb-3" :style="{ maxWidth:'80px', marginTop:'-3px' }"
+                            @input="updateScheduleInWords()">
+                        </el-input>
+                        <!-- Text for when to end -->
+                        <span v-if="localInvoice.recurringSettings.schedulePlan.stop.chosen == 'Count'" class="float-left d-block mr-1 ml-1 mb-3">invoice(s) have been sent</span>
                         <el-date-picker v-show="localInvoice.recurringSettings.schedulePlan.stop.chosen == 'Date'" v-model="localInvoice.recurringSettings.schedulePlan.stop.date" type="date" :clearable="false" placeholder="e.g) January 1, 2018" size="mini" class="float-left mr-1 ml-1 mb-3" :style="{ maxWidth:'135px', marginTop:'-3px' }"
-                            format="MMM dd yyyy" value-format="yyyy-MM-dd">
+                            format="MMM dd yyyy" value-format="yyyy-MM-dd"
+                            @change="updateScheduleInWords()">
                         </el-date-picker>
 
                     </Col>
@@ -342,19 +366,91 @@
     /*  Ripples  */
     import focusRipple from './../wavyRipples/focusRipple.vue';
 
+    import moment from 'moment';
+
     export default {
         components: { fadeLoader, stagingCard, focusRipple },
         props: {
             invoice: {
+                moment: moment,
+
                 type: Object,
                 default: null
             }
         },
         data(){
+            var vm = this;
             return {
                 isSavingRecurringSchedulePlan: false,
                 localInvoice: this.invoice,
-                isEditingSchedulePlan: (this.invoice.recurringSettings.editing.schedulePlan == 'true')
+                isEditingSchedulePlan: (this.invoice.recurringSettings.editing.schedulePlan == 'true'),
+                scheduleSummaryInWords:'',
+                scheduleStartAndStopDatesInWords: '',
+                pickerOptions: {
+                    disabledDate(time) {
+                        var schedulePlan = vm.localInvoice.recurringSettings.schedulePlan;
+                        var chosenSchedule = schedulePlan.chosen;             //  Daily, Weekly, Monthly, Yearly, Custom
+
+                        var weekly = schedulePlan.weekly;                     //  0, 1, 2, 3, 4, 5, 6
+                        var monthly = schedulePlan.monthly;                   //  0, 1, 2, 3,... 31
+                        var yearlyMonth = schedulePlan.yearly.month;          //  0, 1, 2,... 11
+                        var yearlyDay = schedulePlan.yearly.day;              //  0, 1, 2, 3,... 31
+
+                        //  If chose custom from the $chosenSchedule
+                        var customCount = schedulePlan.custom.count;          //  2
+                        var chosenCustom = schedulePlan.custom.chosen;        //  Days, Weeks, Months, Years
+                        var weeks = schedulePlan.custom.weeks;                //  0, 1, 2, 3, 4, 5, 6
+                        var months = schedulePlan.custom.months;              //  0, 1, 2, 3,... 31
+                        var yearsMonth = schedulePlan.custom.years.month;     //  0, 1, 2,... 11
+                        var yearsDay = schedulePlan.custom.years.day;         //  0, 1, 2, 3,... 31
+                    
+                        if( moment(time) < moment(vm.localInvoice.recurringSettings.schedulePlan.startDate) 
+                            && (chosenSchedule != 'Custom') ){
+                            //  If the time is less than the scheduled start date then it must be disabled
+                            return true;
+                        }else{
+
+                            //  Format the next schedule according to user specifications
+                            if( moment(time) < moment() ){
+                                return true;
+                            }else if(chosenSchedule == 'Weekly'){
+                                return parseInt(weekly) != moment(time).weekday();
+
+                            }else if(chosenSchedule == 'Monthly'){
+                                return parseInt(monthly) != moment(time).date();
+                                
+                            }else if(chosenSchedule == 'Yearly'){
+                                var todaysYear = moment().get('year');
+                                var scheduledYear = moment(time).get('year'); 
+
+                                return ( parseInt(yearlyDay) != moment(time).date() || 
+                                         parseInt(yearlyMonth) != moment(time).get('month') ) || 
+                                         (scheduledYear < todaysYear)
+                            }else if(chosenSchedule == 'Custom'){
+                                if( moment(time) < moment() ){
+                                    return true;
+                                }else{
+                                    if(chosenCustom == 'Weeks'){
+                                        return parseInt(weeks) != moment(time).weekday();
+
+                                    }else if(chosenCustom == 'Months'){
+                                        return parseInt(months) != moment(time).date();
+                                        
+                                    }else if(chosenCustom == 'Years'){
+                                        var todaysYear = moment().get('year');
+                                        var scheduledYear = moment(time).get('year'); 
+
+                                        return ( parseInt(yearsDay) != moment(time).date() || 
+                                                    parseInt(yearsMonth) != moment(time).get('month') ) || 
+                                                    (scheduledYear < todaysYear)
+                                    }
+                                }
+                            }
+
+                        }
+                        
+                    },
+                }
             }
         },
         watch: {
@@ -374,6 +470,172 @@
             }
         },
         methods: {
+            calculateTheFirstSendingDate(){
+                var schedulePlan = this.localInvoice.recurringSettings.schedulePlan;
+                
+                /*********************************************************************
+                 *   SET THE NEXT SCHEDULE TIME ACCORDING TO RECURRING SCHEDULE      *
+                 *********************************************************************/
+                var chosenSchedule = schedulePlan.chosen;             //  Daily, Weekly, Monthly, Yearly, Custom
+                var weekly = schedulePlan.weekly;                     //  0, 1, 2, 3, 4, 5, 6
+                var monthly = schedulePlan.monthly;                   //  0, 1, 2, 3,... 31
+                var yearlyMonth = schedulePlan.yearly.month;          //  01, 02, 03,... 12
+                var yearlyDay = schedulePlan.yearly.day;              //  0, 1, 2, 3, 4, 5, 6
+
+                //  If chose custom from the $chosenSchedule
+                var customCount = schedulePlan.custom.count;          //  2
+                var chosenCustom = schedulePlan.custom.chosen;        //  Days, Weeks, Months, Years
+                var weeks = schedulePlan.custom.weeks;                //  0, 1, 2, 3, 4, 5, 6
+                var months = schedulePlan.custom.months;              //  0, 1, 2, 3,... 31
+                var yearsMonth = schedulePlan.custom.years.month;     //  01, 02, 03,... 12
+                var yearsDay = schedulePlan.custom.years.day;         //  0, 1, 2, 3,... 31
+
+                var chosenStopMethod = schedulePlan.stop.chosen       //  Count, Date, Never
+                
+                //  Get the current send date
+                var currentDate = moment().format('yyyy-MM-dd');
+                
+                //  Format the next schedule according to user specifications
+                if (chosenSchedule == 'Daily') {
+                    var today = moment().isoWeekday();  // Number
+                    var tommorrow = today + 1;          // Number
+                    var newStartDate = moment().isoWeekday(tommorrow);
+                    
+                    //  Assumed to end after 7 days
+                    var newEndDate = moment(newStartDate).add(7, 'days');
+                    
+                    //  Explain in words
+                    this.scheduleSummaryInWords = 'Everyday';
+
+                }else if(chosenSchedule == 'Weekly'){
+                    var newStartDate = moment().day( parseInt(weekly) );
+                    
+                    //  Assumed to end after 4 weeks
+                    var newEndDate = moment(newStartDate).add(4, 'weeks');
+
+                    //  Explain in words 
+                    this.scheduleSummaryInWords = 'Every Week on ' + moment(newStartDate).format('dddd');
+
+                }else if(chosenSchedule == 'Monthly'){
+                    var today = moment();
+                    var setDate = moment().set('date', parseInt(monthly) );
+
+                    if(today >= setDate){
+                        var newStartDate = setDate.add(1, 'months');
+                    }else{
+                        var newStartDate = setDate;
+                    }
+                
+                    //  Assumed to end after 12 months
+                    var newEndDate = moment(newStartDate).add(12, 'months');
+
+                    //  Explain in words
+                    this.scheduleSummaryInWords = 'Every Month on the ' + moment(newStartDate).format('Do');
+
+                }else if(chosenSchedule == 'Yearly'){
+                    var today = moment();
+                    var todaysYear = today.get('year');
+                    var setDate = moment(todaysYear+'-'+(parseInt(yearlyMonth)+1)+'-'+parseInt(yearlyDay),'YYYY-MM-DD');  
+
+                    if(today >= setDate){
+                        var newStartDate = setDate.add(1, 'years');
+                    }else{
+                        var newStartDate = setDate;
+                    }
+
+                    //  Assumed to end after 3 years
+                    var newEndDate = moment(newStartDate).add(3, 'years');
+
+                    //  Explain in words
+                    this.scheduleSummaryInWords = 'Every Year on the ' + moment(newStartDate).format('Do') +' of ' + moment(newStartDate).format('MMMM');
+
+                }else if(chosenSchedule == 'Custom'){
+
+                    if(chosenCustom == 'Days'){  
+                        
+                        var newStartDate = moment().add(customCount, 'days');
+
+                        //  Assumed to end after 3 cycles
+                        var newEndDate = moment(newStartDate).add(customCount*3, 'days');
+
+                        //  Explain in words
+                        this.scheduleSummaryInWords = 'Every ' + customCount + (customCount == 1 ? ' Day': ' Days');
+
+                    }else if(chosenCustom == 'Weeks'){  
+                        
+                        var newStartDate = moment().day( parseInt(weeks) ).add(customCount, 'weeks');
+                        //  Assumed to end after 3 cycles
+                        var newEndDate = moment(newStartDate).add(customCount*3, 'weeks');
+
+                        //  Explain in words
+                        this.scheduleSummaryInWords = 'Every ' + customCount + (customCount == 1 ? ' Week': ' Weeks') + ' on ' + moment(newStartDate).format('dddd');
+
+                    }else if(chosenCustom == 'Months'){
+                        var today = moment();
+                        var setDate = moment().set('date', parseInt(months) ).add(customCount, 'months');
+
+                        if(today >= setDate){
+                            var newStartDate = setDate.add(1, 'months');
+                        }else{
+                            var newStartDate = setDate;
+                        }
+
+                        //  Assumed to end after 3 cycles
+                        var newEndDate = moment(newStartDate).add(customCount*3, 'months');
+
+                        //  Explain in words
+                        this.scheduleSummaryInWords = 'Every ' + customCount + (customCount == 1 ? ' Month': ' Months') + ' on the ' + moment(newStartDate).format('Do');
+                            
+                    }else if(chosenCustom == 'Years'){
+                        var today = moment();
+                        var todaysYear = today.get('year');
+                        var setDate = moment(todaysYear+'-'+(parseInt(yearsMonth)+1)+'-'+parseInt(yearsDay),'YYYY-MM-DD')
+                                            .add(customCount, 'years');  
+
+                        if(today >= setDate){
+                            var newStartDate = setDate.add(1, 'years');
+                        }else{
+                            var newStartDate = setDate;
+                        }
+
+                        //  Assumed to end after 3 cycles
+                        var newEndDate = moment(newStartDate).add(customCount*3, 'years');
+
+                        //  Explain in words
+                        this.scheduleSummaryInWords = 'Every ' + customCount + (customCount == 1 ? ' Year': ' Years') + ' on the ' + moment(newStartDate).format('Do') +' of ' + moment(newStartDate).format('MMMM');
+
+                    }
+
+                }
+
+                if(newStartDate){
+
+                    var updatedStartDate = newStartDate.format('YYYY-MM-DD');
+                    var updatedEndDate = newEndDate.format('YYYY-MM-DD');
+
+                    this.$set(this.localInvoice.recurringSettings.schedulePlan, 'startDate', updatedStartDate);
+                    this.$set(this.localInvoice.recurringSettings.schedulePlan.stop, 'date', updatedEndDate);
+
+                    this.updateScheduleInWords();
+                }
+
+
+            },
+            updateScheduleInWords(){
+                
+                    //  Explain in words
+                    var currStartDate = this.localInvoice.recurringSettings.schedulePlan.startDate;
+                    var currStopDate = this.localInvoice.recurringSettings.schedulePlan.stop.date;
+                    var customCount = this.localInvoice.recurringSettings.schedulePlan.custom.count;          //  2
+                    var chosenStopMethod = this.localInvoice.recurringSettings.schedulePlan.stop.chosen       //  Count, Date, Never
+
+                    var startDateInWods = 'Create first invoice on ' + moment(currStartDate).format('MMM Do YYYY');
+                    var stopDate = ' and send the last on '+moment(currStopDate).format('MMM Do YYYY');
+                    var stopCount = ' and stop after ' + (customCount) + (customCount == 1 ? ' invoice has': ' invoices have')+' been sent';
+                    var stopNever = ' and never stop sending';
+
+                    this.scheduleStartAndStopDatesInWords = startDateInWods + (chosenStopMethod == 'Date' ? stopDate  : ( chosenStopMethod == 'Count' ? stopCount : stopNever) );  
+            },
             activateEditMode(){
                 //  Get all the plans and their edit state
                 //  JSON.parse converts the 'true/false' string to Boolean
@@ -429,6 +691,9 @@
                         console.log(response);
                     });
             }
+        },
+        created(){
+            this.calculateTheFirstSendingDate();
         }
     }
 </script>

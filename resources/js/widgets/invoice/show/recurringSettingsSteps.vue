@@ -5,17 +5,17 @@
         <Col :span="24">
             
             <!-- Get the stage for setting the recurring schedule plan -->
-            <invoiceRecurringSchedulePlanStage v-bind="$props" 
+            <invoiceRecurringSchedulePlanStage v-bind="$props" :style="{ position:'relative', zIndex: 3 }" 
                 @approved="$emit('approved', $event)">
             </invoiceRecurringSchedulePlanStage>
 
             <!-- Get the stage for setting the recurring payment plan -->
-            <invoiceRecurringPaymentPlanStage v-bind="$props" 
+            <invoiceRecurringPaymentPlanStage v-bind="$props" :style="{ position:'relative', zIndex: 2 }" 
                 @approved="$emit('approved', $event)">
             </invoiceRecurringPaymentPlanStage>
 
             <!-- Get the stage for setting the recurring delivery plan -->
-            <invoiceRecurringDeliveryPlanStage v-bind="$props" 
+            <invoiceRecurringDeliveryPlanStage v-bind="$props" :style="{ position:'relative', zIndex: 1 }" 
                 @approved="$emit('approved', $event)">
             </invoiceRecurringDeliveryPlanStage>
 

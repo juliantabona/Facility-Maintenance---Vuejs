@@ -14,8 +14,6 @@
 </template>
 <script type="text/javascript">
 
-    import moment from 'moment';
-
     export default {
         props:{
             invoice: {
