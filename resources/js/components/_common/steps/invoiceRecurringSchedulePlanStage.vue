@@ -622,16 +622,16 @@
 
             },
             updateScheduleInWords(){
-                
+
                     //  Explain in words
                     var currStartDate = this.localInvoice.recurringSettings.schedulePlan.startDate;
                     var currStopDate = this.localInvoice.recurringSettings.schedulePlan.stop.date;
-                    var customCount = this.localInvoice.recurringSettings.schedulePlan.custom.count;          //  2
+                    var currStopCount = this.localInvoice.recurringSettings.schedulePlan.stop.count;          //  2
                     var chosenStopMethod = this.localInvoice.recurringSettings.schedulePlan.stop.chosen       //  Count, Date, Never
 
                     var startDateInWods = 'Create first invoice on ' + moment(currStartDate).format('MMM Do YYYY');
                     var stopDate = ' and send the last on '+moment(currStopDate).format('MMM Do YYYY');
-                    var stopCount = ' and stop after ' + (customCount) + (customCount == 1 ? ' invoice has': ' invoices have')+' been sent';
+                    var stopCount = ' and stop after ' + (currStopCount) + (currStopCount == 1 ? ' invoice has': ' invoices have')+' been sent';
                     var stopNever = ' and never stop sending';
 
                     this.scheduleStartAndStopDatesInWords = startDateInWods + (chosenStopMethod == 'Date' ? stopDate  : ( chosenStopMethod == 'Count' ? stopCount : stopNever) );  
