@@ -45,6 +45,7 @@
                     <td colspan="1" class="p-2">
                         <span v-if="!editMode">{{ item.quantity || '___' }}</span>
                         <el-input v-if="editMode" placeholder="e.g) 2" 
+                                type="number" min="1"
                                 v-model="localInvoice.items[i].quantity" 
                                 @input.native="updateSubAndGrandTotal()"
                                 size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
@@ -52,13 +53,14 @@
                     <td colspan="1" class="p-2">
                         <span v-if="!editMode">{{ item.unitPrice | currency(currencySymbol) || '___' }}</span>
                         <el-input v-if="editMode" placeholder="e.g) 2,500.00" 
+                                type="text"  @keypress.native="isNumber($event)" :maxlength="10"
                                 v-model="localInvoice.items[i].unitPrice" 
                                 @input.native="updateSubAndGrandTotal()"
                                 size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                     </td>
                     <td colspan="1" class="p-2">
                         <span v-if="!editMode">{{ item.totalPrice | currency(currencySymbol) || '___' }}</span>
-                        <el-input v-if="editMode" placeholder="e.g) 5,000.00" :value="getItemTotal(localInvoice.items[i])" size="mini" class="p-1" :style="{ maxWidth:'100%' }" disabled></el-input>
+                        <el-input v-if="editMode" placeholder="e.g) 5,000.00" :value="getItemTotal(localInvoice.items[i]) | currency(currencySymbol)" size="mini" class="p-1" :style="{ maxWidth:'100%' }" disabled></el-input>
                     </td>
                     <td v-if="editMode" class="p-2">
                         <Loader v-if="isLoadingTaxes" :loading="isLoadingTaxes" type="text" :style="{ marginTop:'40px' }">Loading taxes...</Loader>
@@ -196,6 +198,15 @@
             }
         },
         methods: {
+            isNumber: function(evt) {
+                evt = (evt) ? evt : window.event;
+                var charCode = (evt.which) ? evt.which : evt.keyCode;
+                if ((charCode > 31 && (charCode < 48 || charCode > 57)) && charCode !== 46) {
+                    evt.preventDefault();;
+                } else {
+                    return true;
+                }
+            },
             fetchTaxes() {
                 const self = this;
 

@@ -142,6 +142,11 @@ class Company extends Model
                     ->orderBy('created_at', 'desc');
     }
 
+    public function wallets()
+    {
+        return $this->phones()->has('mobileMoneyAccount')->with('mobileMoneyAccount', 'createdBy');
+    }
+
     /**
      * Get the companies settings.
      */

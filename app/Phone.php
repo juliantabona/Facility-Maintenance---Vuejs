@@ -43,6 +43,11 @@ class Phone extends Model
         return $this->belongsTo('App\User', 'created_by');
     }
 
+    public function mobileMoneyAccount()
+    {
+        return $this->hasOne('App\Wallet', 'phone_id');
+    }
+
     public function recentActivities()
     {
         return $this->morphMany('App\RecentActivity', 'trackable')

@@ -64,7 +64,7 @@
                 </Content>
 
                 <Footer class="layout-footer-center" :style="{ background: '#e0e6e8' }">
-                    <span class="text-center d-block m-auto">2018 &copy; Optimum Q - Technology Driven Solutions</span>
+                    <span class="text-center d-block m-auto">{{ moment().year() }} &copy; Optimum Q - Technology Driven Solutions</span>
                 </Footer>
 
             </Layout>
@@ -79,9 +79,12 @@
 
 <script>
 
+  import moment from 'moment';
+
   export default {
     data(){
       return {
+        moment: moment,
         isCollapsed: false
       }
     }

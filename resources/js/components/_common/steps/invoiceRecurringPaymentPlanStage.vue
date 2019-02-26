@@ -92,40 +92,20 @@
                                             <img style="width: 100%;" src="/images/samples/orange_money_logo.png">
                                         </Col>
                                         <Col :span="18">
-                                            <Alert show-icon>
-                                                <Icon type="ios-bulb-outline" slot="icon"></Icon>
-                                                <template slot="desc">Enter your orange money mobile number and pin to activate payment using Orange Money directly to your account.</template>
-                                            </Alert>
-                                            
-                                            <div :style="{ padding: '30px', boxShadow: 'inset 1px 1px 5px 1px #d6d6d6' }">
-                                                <b>Phone Number</b>
-                                                <!-- Orange Money Phone Number editor -->
-                                                <phoneInput class="mb-2"  
-                                                            :modelId="localInvoice.customized_client_details.id" 
-                                                            :modelType="localInvoice.customized_client_details.model_type" 
-                                                            :phones="[]" 
-                                                            :numberLimit="1"
-                                                            selectedType="mobile"
-                                                            :disabledTypes="['Telephone', 'Fax']"                                                        :deletable="false"
-                                                            :hidedable="true"
-                                                            :editable="true"
-                                                            :showIcon="true" 
-                                                            onIcon="ios-checkmark" offIcon="" 
-                                                            title="Active:" onText="Yes" offText="No" 
-                                                            poptipMsg="Turn on to send the sms to this number"
-                                                            @updated="localInvoice.recurringSettings.deliveryPlan.sms.phones = $event">
-                                                </phoneInput>
 
-                                                <b class="d-block mt-2 mb-1">Pin (4 digits):</b>
-                                                <el-input type="password" :maxlength="4" size="mini" class="password_input mb-1" placeholder="Enter Orange Money Pin">
-                                                    <Icon slot="prepend" type="ios-lock-outline" :size="20"/>
-                                                </el-input>
-                                                <Button type="primary" class="float-right mt-2">
-                                                    <span>Connect</span>
-                                                    <Icon type="ios-log-in" :size="24" :style="{ marginTop: '-4px' }"/>
-                                                </Button>
-                                                <div class="clearfix"></div>
-                                            </div>
+                                            <Alert type="success" show-icon class="mb-0">
+                                                <i slot="icon" class="icon-wallet icons d-block" :style="{ fontSize:'25px',margin:'10px 0 0 -5px',color:'#ffffff',background:'#ff6600',borderRadius:'50%',padding:'8px' }"></i>
+                                                <h4 class="mb-2" :style="{ marginLeft:'45px' }">Account Details</h4> 
+                                                <template slot="desc">
+                                                    <p><b>Name:</b> Julian B Tabona</p>
+                                                    <p><b>Number:</b> (+267) 75993221</p>
+                                                    <p><b>Status:</b> Active</p>
+                                                </template>
+                                            </Alert>
+                                            <span class="btn btn-link" @click="isOpenChangeMobileMoneyAccountModal = !isOpenChangeMobileMoneyAccountModal">
+                                                Change Account
+                                            </span>
+                                     
                                         </Col>
                                     </Row>
 
@@ -139,41 +119,20 @@
                                             <img style="width: 100%;" src="/images/samples/myzaka_logo.png">
                                         </Col>
                                         <Col :span="18">
-                                            <Alert show-icon>
-                                                <Icon type="ios-bulb-outline" slot="icon"></Icon>
-                                                <template slot="desc">Enter your Mascom mobile number and MyZaka pin to activate payment using MyZaka directly to your account.</template>
-                                            </Alert>
-                                            
-                                            <div :style="{ padding: '30px', boxShadow: 'inset 1px 1px 5px 1px #d6d6d6' }">
-                                                <b>Phone Number</b>
-                                                <!-- Mascom Phone Number editor -->
-                                                <phoneInput class="mb-2"  
-                                                            :modelId="localInvoice.customized_client_details.id" 
-                                                            :modelType="localInvoice.customized_client_details.model_type" 
-                                                            :phones="[]" 
-                                                            :numberLimit="1"
-                                                            selectedType="mobile"
-                                                            :disabledTypes="['Telephone', 'Fax']"                                                        
-                                                            :deletable="false"
-                                                            :hidedable="true"
-                                                            :editable="true"
-                                                            :showIcon="true" 
-                                                            onIcon="ios-checkmark" offIcon="" 
-                                                            title="Active:" onText="Yes" offText="No" 
-                                                            poptipMsg="Turn on to send the sms to this number"
-                                                            @updated="localInvoice.recurringSettings.deliveryPlan.sms.phones = $event">
-                                                </phoneInput>
 
-                                                <b class="d-block mt-2 mb-1">Pin (4 digits):</b>
-                                                <el-input type="password" :maxlength="4" size="mini" class="password_input mb-1" placeholder="Enter MyZaka Pin">
-                                                    <Icon slot="prepend" type="ios-lock-outline" :size="20"/>
-                                                </el-input>
-                                                <Button type="primary" class="float-right mt-2">
-                                                    <span>Connect</span>
-                                                    <Icon type="ios-log-in" :size="24" :style="{ marginTop: '-4px' }"/>
-                                                </Button>
-                                                <div class="clearfix"></div>
-                                            </div>
+                                            <Alert type="success" show-icon class="mb-0">
+                                                <i slot="icon" class="icon-wallet icons d-block" :style="{ fontSize:'25px',margin:'10px 0 0 -5px',color:'rgb(238, 29, 35)',background:'#fee600',borderRadius:'50%',padding:'8px' }"></i>
+                                                <h4 class="mb-2" :style="{ marginLeft:'45px' }">Account Details</h4> 
+                                                <template slot="desc">
+                                                    <p><b>Name:</b> Bonolo P Sesiane</p>
+                                                    <p><b>Number:</b> (+267) 74647644</p>
+                                                    <p><b>Status:</b> Active</p>
+                                                </template>
+                                            </Alert>
+                                            <span class="btn btn-link" @click="isOpenChangeMobileMoneyAccountModal = !isOpenChangeMobileMoneyAccountModal">
+                                                Change Account
+                                            </span>
+                                     
                                         </Col>
                                     </Row>
 
@@ -230,6 +189,16 @@
             
         </stagingCard>
 
+        <!-- 
+            MODAL TO CHANGE MOBILE MONEY ACCOUNT - VIA EMAIL
+        -->
+        <changeMobileMoneyAccountModal 
+            v-if="isOpenChangeMobileMoneyAccountModal" 
+            :invoice="localInvoice" 
+            @visibility="isOpenChangeMobileMoneyAccountModal = $event"
+            @sent="$emit('sent', $event)">
+        </changeMobileMoneyAccountModal>
+
     </div>
 
 </template>
@@ -244,6 +213,9 @@
     /*  Switches  */
     import toggleSwitch from './../../../components/_common/switches/toggleSwitch.vue';
 
+    /*  Modals  */
+    import changeMobileMoneyAccountModal from './../../../components/_common/modals/changeMobileMoneyAccountModal.vue';
+
     /*  Inputs   */
     import phoneInput from './../inputs/phoneInput.vue'; 
 
@@ -251,7 +223,7 @@
     Event.prototype._ = lodash;
 
     export default {
-        components: { fadeLoader, stagingCard, toggleSwitch, phoneInput },
+        components: { fadeLoader, stagingCard, toggleSwitch, phoneInput, changeMobileMoneyAccountModal },
         props: {
             invoice: {
                 type: Object,
@@ -261,6 +233,7 @@
         data(){
             return {
                 isSavingRecurringPaymentPlan: false,
+                isOpenChangeMobileMoneyAccountModal: false,
                 localInvoice: this.invoice,
                 isEditingPaymentPlan: (this.invoice.recurringSettings.editing.paymentPlan == 'true'),
             }

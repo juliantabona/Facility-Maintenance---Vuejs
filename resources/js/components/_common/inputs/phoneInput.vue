@@ -67,6 +67,8 @@
             :selectedType="selectedType"
             :disabledTypes="disabledTypes"
             :editablePhone="editablePhone"
+            :selectedServiceProvider="selectedServiceProvider"
+            :disabledServiceProviders="disabledServiceProviders"  
             @visibility="closeModal($event)"
             @created="storeCreated($event)"
             @updated="updateChanges($event)">
@@ -128,6 +130,14 @@
                 default: null, 
             },
             disabledTypes:{
+                type: Array,
+                default: () => { return [] },  
+            },
+            selectedServiceProvider: {
+                type: String,
+                default: null, 
+            },
+            disabledServiceProviders:{
                 type: Array,
                 default: () => { return [] },  
             },

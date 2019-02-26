@@ -54,11 +54,20 @@
                         </Select>
 
                     </Col>
+                    <Col v-if="!isLoadingCallingCodes && fetchedCallingCodes.length && localSelectedType == 'mobile'" :span="24" class="mt-2" >
+                        <!-- Service Provider Selector -->
+                        <Select v-model="localSelectedServiceProvider" @on-change="localPhone.provider = $event" :style="{ width:'100%' }" placeholder="Select Service Provider" not-found-text="No service providers found" filterable>
+                            <Option v-for="(item, index) in serviceProviders"  :value="item"  :label="item" :key="index"
+                                    :disabled="disabledServiceProviders.includes(item)">
+                                {{ item }}
+                            </Option>
+                        </Select>
 
+                    </Col>
                     <Col :span="24" class="mt-2" v-if="!isLoadingCallingCodes && fetchedCallingCodes.length">
                         
                         <!-- Phone Number -->
-                        <el-input v-model="localPhone.number" size="small" style="width:100%" placeholder="Enter phone number"></el-input>
+                        <el-input type="text" v-model="localPhone.number" @keypress.native="isNumber($event)" :maxlength="8" size="small" style="width:100%" placeholder="Enter phone number"></el-input>
                     
                     </Col>
                 </Row>
@@ -96,7 +105,15 @@
             disabledTypes:{
                 type: Array,
                 default: () => { return [] },  
-            }
+            },
+            selectedServiceProvider: {
+                type: String,
+                default: null, 
+            },
+            disabledServiceProviders:{
+                type: Array,
+                default: () => { return [] },  
+            },
         },
         data(){
             return {
@@ -108,6 +125,8 @@
                     { name: 'Mobile', value: 'mobile' },
                     { name: 'Fax', value: 'fax' }
                 ],
+                localSelectedServiceProvider: this.selectedServiceProvider,
+                serviceProviders: ['Orange', 'Mascom', 'BeMobile'],
                 fetchedCallingCodes: [],
 
                 isLoadingCallingCodes: false,
@@ -116,6 +135,15 @@
             }
         },
         methods: {
+            isNumber: function(evt) {
+                evt = (evt) ? evt : window.event;
+                var charCode = (evt.which) ? evt.which : evt.keyCode;
+                if ((charCode > 31 && (charCode < 48 || charCode > 57)) && charCode !== 46) {
+                    evt.preventDefault();;
+                } else {
+                    return true;
+                }
+            },
             currentPhone(){
                 //  If we have an editable phone we need to use Object.assign because
                 //  the object is still reactive to the parent. So when we edit the 

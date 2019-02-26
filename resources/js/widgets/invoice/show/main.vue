@@ -144,7 +144,7 @@
             </Row>
 
             <!-- Invoice View/Editor -->
-            <Row id="invoice-summary-1"  key="invoice_template" class="animated">
+            <Row id="invoice-summary"  key="invoice_template" class="animated mb-5">
                 <Col :span="24">
                     <Card :style="{ width: '100%' }">
                         
@@ -453,10 +453,10 @@
                         y: true
                     }
 
-                //var cancelScroll = VueScrollTo.scrollTo('invoice-summary-1', 500, options)
+                //var cancelScroll = VueScrollTo.scrollTo('invoice-summary', 500, options)
 
                 // or alternatively inside your components you can use
-                var cancelScroll = this.$scrollTo('#invoice-summary-1', 1000, options);
+                var cancelScroll = this.$scrollTo('#invoice-summary', 1000, options);
 
                 // to cancel scrolling you can call the returned function
                 //cancelScroll()

@@ -303,6 +303,28 @@ class CompanyController extends Controller
         }
     }
 
+    public function getWallets(Request $request, $company_id)
+    {
+        try {
+            //  Get the associated company
+            $company = Company::where('id', $company_id)->first();
+
+            //  If we have any company so far
+            if (count($company)) {
+                //  Get the company wallets
+                $wallets = $company->wallets;
+
+                //  Action was executed successfully
+                return oq_api_notify($wallets, 200);
+            }
+        } catch (\Exception $e) {
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+
+        //  No resource found
+        return oq_api_notify_no_resource();
+    }
+
     public function delete($company_id)
     {
     }

@@ -73,6 +73,7 @@ Route::post('companies', 'Api\CompanyController@store');
 Route::get('companies/{company_id}', 'Api\CompanyController@show');
 Route::post('companies/{company_id}', 'Api\CompanyController@update');
 Route::get('companies/{company_id}/settings', 'Api\CompanyController@settings');
+Route::get('companies/{company_id}/wallets', 'Api\CompanyController@getWallets');
 
 /*   PROCESS FORM RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
