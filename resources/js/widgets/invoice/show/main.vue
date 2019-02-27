@@ -84,7 +84,7 @@
                                      configure payment methods aswell as automated/manual sending stages -->
                                 <recurringSettingsSteps v-if="!createMode"
                                     :invoice="localInvoice" 
-                                    @approved="updateInvoiceData($event)">
+                                    @saved="updateInvoiceData($event)">
                                 </recurringSettingsSteps>
                                 
                             </div>

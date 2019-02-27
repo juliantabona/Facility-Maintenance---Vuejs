@@ -701,7 +701,7 @@ trait InvoiceTraits
         /*
          *  The $invoice is a collection of the invoice to be stored.
          */
-        $invoice = request('invoice');
+        $invoiceData = request('invoice');
 
         /**************************************************************************
          *   CHECK IF USER HAS PERMISSION TO SAVE RECURRING INVOICE SCHEDULES     *
@@ -711,17 +711,24 @@ trait InvoiceTraits
          *   VALIDATE INVOICE INFORMATION            *
          ********************************************/
 
-        //  Create a template to hold the invoice details
-        $invoice['recurringSettings']['editing']['schedulePlan'] = 'false';
-
-        $template = [
-            'isRecurring' => 1,
-            'recurringSettings' => $invoice['recurringSettings'],
-        ];
-
         try {
+            //  Get the invoice
+            $invoice = $this->where('id', $invoice_id)->first();
+
+            //  Create a template to hold the invoice details
+            $invoiceData['recurringSettings']['editing']['schedulePlan'] = false;
+
+            if (!$invoice->has_set_recurring_payment_plan) {
+                $invoiceData['recurringSettings']['editing']['paymentPlan'] = true;
+            }
+
+            $template = [
+                'isRecurring' => 1,
+                'recurringSettings' => $invoiceData['recurringSettings'],
+            ];
+
             //  Update the invoice
-            $invoice = $this->where('id', $invoice_id)->first()->update($template);
+            $invoice = $invoice->update($template);
 
             //  If the invoice was updated successfully
             if ($invoice) {
@@ -757,70 +764,6 @@ trait InvoiceTraits
         }
     }
 
-    public function initiateUpdateRecurringSettingsDeliveryPlan($invoice_id)
-    {
-        //  Current authenticated user
-        $auth_user = auth('api')->user();
-
-        /*
-         *  The $invoice is a collection of the invoice to be stored.
-         */
-        $invoice = request('invoice');
-
-        /**************************************************************************
-         *   CHECK IF USER HAS PERMISSION TO SAVE RECURRING INVOICE SCHEDULES     *
-         *************************************************************************/
-
-        /*********************************************
-         *   VALIDATE INVOICE INFORMATION            *
-         ********************************************/
-
-        //  Create a template to hold the invoice details
-        $invoice['recurringSettings']['editing']['deliveryPlan'] = false;
-
-        $template = [
-            'isRecurring' => 1,
-            'recurringSettings' => $invoice['recurringSettings'],
-        ];
-
-        try {
-            //  Update the invoice
-            $invoice = $this->where('id', $invoice_id)->first()->update($template);
-
-            //  If the invoice was updated successfully
-            if ($invoice) {
-                //  re-retrieve the instance to get all of the fields in the table.
-                $invoice = $this->where('id', $invoice_id)->first();
-
-                /*****************************
-                 *   SEND NOTIFICATIONS      *
-                 *****************************/
-
-                $auth_user->notify(new InvoiceUpdated($invoice));
-
-                /*****************************
-                 *   RECORD ACTIVITY         *
-                 *****************************/
-
-                //  Record activity of recurring delivery plan updated
-                $status = 'updated recurring delivery';
-                $invoiceUpdatedActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
-
-                //  Action was executed successfully
-                return ['success' => true, 'response' => $invoice];
-            } else {
-                //  No resource found
-                return ['success' => false, 'response' => oq_api_notify_no_resource()];
-            }
-        } catch (\Exception $e) {
-            //  Log the error
-            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
-
-            //  Return the error response
-            return ['success' => false, 'response' => $response];
-        }
-    }
-
     public function initiateUpdateRecurringSettingsPaymentPlan($invoice_id)
     {
         //  Current authenticated user
@@ -829,7 +772,7 @@ trait InvoiceTraits
         /*
          *  The $invoice is a collection of the invoice to be stored.
          */
-        $invoice = request('invoice');
+        $invoiceData = request('invoice');
 
         /**************************************************************************
          *   CHECK IF USER HAS PERMISSION TO SAVE RECURRING INVOICE SCHEDULES     *
@@ -839,17 +782,25 @@ trait InvoiceTraits
          *   VALIDATE INVOICE INFORMATION            *
          ********************************************/
 
-        //  Create a template to hold the invoice details
-        $invoice['recurringSettings']['editing']['paymentPlan'] = false;
-
-        $template = [
-            'isRecurring' => 1,
-            'recurringSettings' => $invoice['recurringSettings'],
-        ];
-
         try {
+            //  Get the invoice
+            $invoice = $this->where('id', $invoice_id)->first();
+
+            //  Create a template to hold the invoice details
+            $invoiceData['recurringSettings']['editing']['schedulePlan'] = false;
+            $invoiceData['recurringSettings']['editing']['paymentPlan'] = false;
+
+            if (!$invoice->has_set_recurring_delivery_plan) {
+                $invoiceData['recurringSettings']['editing']['deliveryPlan'] = true;
+            }
+
+            $template = [
+                'isRecurring' => 1,
+                'recurringSettings' => $invoiceData['recurringSettings'],
+            ];
+
             //  Update the invoice
-            $invoice = $this->where('id', $invoice_id)->first()->update($template);
+            $invoice = $invoice->update($template);
 
             //  If the invoice was updated successfully
             if ($invoice) {
@@ -868,6 +819,75 @@ trait InvoiceTraits
 
                 //  Record activity of recurring schedule timing updated
                 $status = 'updated recurring payment';
+                $invoiceUpdatedActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
+
+                //  Action was executed successfully
+                return ['success' => true, 'response' => $invoice];
+            } else {
+                //  No resource found
+                return ['success' => false, 'response' => oq_api_notify_no_resource()];
+            }
+        } catch (\Exception $e) {
+            //  Log the error
+            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+            //  Return the error response
+            return ['success' => false, 'response' => $response];
+        }
+    }
+
+    public function initiateUpdateRecurringSettingsDeliveryPlan($invoice_id)
+    {
+        //  Current authenticated user
+        $auth_user = auth('api')->user();
+
+        /*
+         *  The $invoice is a collection of the invoice to be stored.
+         */
+        $invoiceData = request('invoice');
+
+        /**************************************************************************
+         *   CHECK IF USER HAS PERMISSION TO SAVE RECURRING INVOICE SCHEDULES     *
+         *************************************************************************/
+
+        /*********************************************
+         *   VALIDATE INVOICE INFORMATION            *
+         ********************************************/
+
+        try {
+            //  Get the invoice
+            $invoice = $this->where('id', $invoice_id)->first();
+
+            //  Create a template to hold the invoice details
+            $invoiceData['recurringSettings']['editing']['schedulePlan'] = false;
+            $invoiceData['recurringSettings']['editing']['paymentPlan'] = false;
+            $invoiceData['recurringSettings']['editing']['deliveryPlan'] = false;
+
+            $template = [
+                'isRecurring' => 1,
+                'recurringSettings' => $invoiceData['recurringSettings'],
+            ];
+
+            //  Update the invoice
+            $invoice = $invoice->update($template);
+
+            //  If the invoice was updated successfully
+            if ($invoice) {
+                //  re-retrieve the instance to get all of the fields in the table.
+                $invoice = $this->where('id', $invoice_id)->first();
+
+                /*****************************
+                 *   SEND NOTIFICATIONS      *
+                 *****************************/
+
+                $auth_user->notify(new InvoiceUpdated($invoice));
+
+                /*****************************
+                 *   RECORD ACTIVITY         *
+                 *****************************/
+
+                //  Record activity of recurring delivery plan updated
+                $status = 'updated recurring delivery';
                 $invoiceUpdatedActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
 
                 //  Action was executed successfully

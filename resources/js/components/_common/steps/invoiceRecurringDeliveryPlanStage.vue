@@ -38,7 +38,7 @@
 
                 <!-- Manual/Automatic Toggle switch -->
                 <toggleSwitch v-if="localInvoice.has_set_recurring_payment_plan && isEditingDeliveryPlan"
-                    v-bind:toggleValue.sync="localInvoice.recurringSettings.deliveryPlan.automatic == 'true' ? true : false"
+                    v-bind:toggleValue.sync="localInvoice.recurringSettings.deliveryPlan.automatic"
                     @update:toggleValue="localInvoice.recurringSettings.deliveryPlan.automatic = ($event) ? true : false"
                     :ripple="false" :showIcon="true" onIcon="ios-send-outline" offIcon="ios-eye-outline" 
                     title="Send Automatically:" onText="Yes" offText="No" poptipMsg="Turn on for the system to send email/sms automatically">
@@ -273,11 +273,17 @@
             return {
                 moment: moment,
 
-                isOpenSendTestSmsModal: false,
+                /*
+                    We are using cloneDeep to create a coplete copy of the javascript object without
+                    having reactivity to the main invoice. This is so that whatever changes we make to 
+                    the localInvoice, they must not affect the parent "invoice". We will only update
+                    the parent when we save the changes to the database.
+                */
+                localInvoice: _.cloneDeep(this.invoice),
+                isEditingDeliveryPlan: (_.cloneDeep(this.invoice).recurringSettings.editing.deliveryPlan),
 
+                isOpenSendTestSmsModal: false,
                 isSavingRecurringDeliveryPlan: false,
-                localInvoice: this.invoice,
-                isEditingDeliveryPlan: (this.invoice.recurringSettings.editing.deliveryPlan == 'true'),
 
                 shortCodes: this.getShotCodes(),
                 subjectShortCode: '',
@@ -290,12 +296,12 @@
             //  Watch for changes on the invoice
             invoice: {
                 handler: function (val, oldVal) {
-
+                    
                     //  Update the local invoice value
-                    this.localInvoice = val;
+                    this.localInvoice = _.cloneDeep(val);
 
-                    //  Update the editing delivery shortcut
-                    this.isEditingDeliveryPlan = (val.recurringSettings.editing.deliveryPlan == 'true')
+                    //  Update the editing payment shortcut
+                    this.isEditingDeliveryPlan = (_.cloneDeep(val).recurringSettings.editing.deliveryPlan);
 
                 },
                 deep: true
@@ -461,11 +467,9 @@
             },
             activateEditMode(){
                 //  Get all the plans and their edit state
-                //  JSON.parse converts the 'true/false' string to Boolean
-                
-                var editingSchedulePlan = ( this.localInvoice.recurringSettings.editing.schedulePlan == 'true' );
-                var editingDeliveryPlan = ( this.localInvoice.recurringSettings.editing.deliveryPlan == 'true' );
-                var editingPaymentPlan = ( this.localInvoice.recurringSettings.editing.paymentPlan == 'true' );
+                var editingSchedulePlan = ( this.localInvoice.recurringSettings.editing.schedulePlan );
+                var editingDeliveryPlan = ( this.localInvoice.recurringSettings.editing.deliveryPlan );
+                var editingPaymentPlan = ( this.localInvoice.recurringSettings.editing.paymentPlan );
 
                 //  If we are still editing the schedule/payment plan 
                 if( editingSchedulePlan || editingPaymentPlan ){
@@ -475,7 +479,7 @@
                         desc: 'Save your '+(editingSchedulePlan ? 'Schedule Plans': 'Payment Plans')+' first before editing your Schedule Plans',
                     });
                 }else{
-                    this.localInvoice.recurringSettings.editing.deliveryPlan = 'true';
+                    this.localInvoice.recurringSettings.editing.deliveryPlan = true;
                     this.isEditingDeliveryPlan = true;
                 }
             },
@@ -503,7 +507,7 @@
                         //  Alert creation success
                         self.$Message.success('Delivery plan saved sucessfully!');
 
-                        self.$emit('approved', data);
+                        self.$emit('saved', data);
 
                     })         
                     .catch(response => { 

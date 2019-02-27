@@ -49,9 +49,18 @@
                         :modelId="localClient.id" 
                         :modelType="localClient.type" 
                         :phones="localClient.phones" 
+                        :numberLimit="5"
+                        selectedType="mobile"
+                        :disabledTypes="[]"   
+                        selectedServiceProvider="Orange"
+                        :disabledServiceProviders="[]"  
                         :deletable="false"
                         :hidedable="true"
                         :editable="false"
+                        :showIcon="true" 
+                        onIcon="ios-eye-outline" offIcon="ios-eye-off-outline" 
+                        title="Show:" onText="Yes" offText="No" 
+                        poptipMsg="Turn on to show"
                         @updated="updatePhoneChanges($event)">
             </phoneInput>
 
