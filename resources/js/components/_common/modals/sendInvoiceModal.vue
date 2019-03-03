@@ -3,42 +3,31 @@
         <!-- Modal -->
         <mainModal 
             v-bind="$props" 
+            :width="650"
             :isSaving="isSending" 
             :hideModal="hideModal"
-            title="Send Invoice (Via Email)"
-            okText="Send" cancelText="Cancel"
+            title="Send Invoice"
+            :okText="(stage == 1) ? '' : 'Send'" 
+            :cancelText="(stage == 1) ? '' : 'Cancel'"
             @on-ok="sendEmail()" 
             @visibility="$emit('visibility', $event)">
 
             <template slot="content">
-
-                <!-- Email Subject -->
-                <Row :gutter="20">
-                    <Col :span="4">
-                        <span class="text-right d-block font-weight-bold">Subject:</span>
-                    </Col>
-                    <Col :span="20">
-                        <el-input placeholder="Email Subject" v-model="localSubject" size="mini" class="mb-1"></el-input>
-                    </Col>
-                </Row>
-
-                <!-- Email Address -->
-                <Row :gutter="20">
-                    <Col :span="4">
-                        <span class="text-right d-block font-weight-bold">Email:</span>
-                    </Col>
-                    <Col :span="20">
-                        <el-input placeholder="Recipient email e.g) example@gmail.com" v-model="localEmail" size="mini" class="mb-2"></el-input>
-                    </Col>
-                </Row>
                 
-                <!-- Email Message -->
-                <Row :gutter="20">
-                    <Col :span="24">
-                        <span class="d-block font-weight-bold mt-2 mb-2">Message:</span>
-                        <froalaEditor :content.sync="localMessage" ></froalaEditor>                    
-                    </Col>
-                </Row>
+                <deliveryWidget 
+                    :deliveryMethods="['Sms' /*, Email */]"
+                    :clientDetails="localInvoice.customized_client_details"
+                    :deliveryPhones="localInvoice.customized_client_details.phones"
+                    :deliveryMailAddress="localDeliveryMailAddress"
+                    :deliveryMailSubject="localDeliveryMailSubject"
+                    :deliveryMailMessage="localDeliveryMailMessage"
+                    :deliverySmsMessage="smsMessageCompiled"
+                    :testSmsUrl="'/api/invoices/'+localInvoice.id+'/recurring/send/sms?test=1'"
+                    :shortcodes="shortcodes"
+                    @updatedDeliveryMethods="getDeliveryMethodsInWords()"
+                    :showSmsPhoneImg="false"
+                    @currentStage="stage = $event">
+                </deliveryWidget>
 
             </template>
             
@@ -51,6 +40,7 @@
     import mainModal from './main.vue';
     import froalaEditor from './../wiziwigEditors/froalaEditor.vue'; 
     import Loader from './../loaders/Loader.vue';
+    import deliveryWidget from './../../../widgets/delivery/show/main.vue';
 
     export default {
         props:{
@@ -71,20 +61,59 @@
                 default: ''
             }
         },
-        components: { mainModal, froalaEditor, Loader },
+        components: { mainModal, froalaEditor, Loader, deliveryWidget },
         data(){
             return{
                 moment: moment,
                 
-
-                localInvoice: this.invoice,
-                localSubject: this.subject || 'Invoice #'+this.invoice['reference_no_value'],
-                localEmail: this.invoice.customized_client_details.email,
-                localMessage: this.emailMsg(),
+                localInvoice: _.cloneDeep(this.invoice),
+                localDeliveryMailSubject: this.subject || 'Invoice #'+this.invoice['reference_no_value'],
+                localDeliveryMailAddress: this.invoice.customized_client_details.email,
+                localDeliveryMailMessage: this.emailMsg(),
+                shortcodes: this.getShotCodes(),
                 
                 hideModal: false,
                 isLoading: false,
-                isSending: false
+                isSending: false,
+                stage: 1
+            }
+        },
+        computed: {
+            smsMessageCompiled: function(){
+
+                var referenceNo = this.invoice.reference_no_value;
+                var items = '';
+                var currency = (((this.invoice || {}).currency_type || {}).currency || {}).symbol || '';
+                var grand_total = this.formatPrice( (this.invoice.grand_total_value || 0), currency);
+                var expiry_date = moment(this.invoice.expiry_date_value).format('MMM DD YYYY');
+                var client = ((this.invoice || {}).customized_client_details || {});
+                var company = ((this.invoice || {}).customized_company_details || {});
+
+                for( var x = 0; x < this.invoice.items.length; x++  ){
+                    x == 0 ? items += '' : items +=' ';
+                    items += ( (this.invoice.items[x].quantity) +'x '+(this.invoice.items[x].name) );
+                }
+
+                var characterLimit = 160;
+                //  Company info text limit = 23
+                var companyName = this.truncate(company.name.trim(), 21) + ( company.name.length <= 21 ? ':' : '' );       //  Optimum Quality: 
+                //  Reference text limit = 16
+                var reference = 'Invoice #'+referenceNo;                        //  Invoice #002
+                //  Amount text limit = 20
+                var amount = 'Amount ' + grand_total;                           //  Amount P350.00
+                //  Due date text limit = 21
+                var dueDate = ' due '+expiry_date;                              //  due on 15 Feb 2018
+                //  Reply for payment text limit = 32
+                var replyWith = '.Reply with '+referenceNo+'#<pin> to pay';     //  Reply with 002#<pin> to pay
+                
+                //  items text limit = 49
+                var charLeft = (characterLimit - (companyName+reference+amount+dueDate+replyWith).length);
+                var items = this.truncate(' for ' + items + ( items.length <= charLeft ? '.' : '' ) , charLeft);    //  for 1x Basic Website, 1x Web Hosting, 5x Emails. 
+
+                var message = companyName+reference+items+amount+dueDate+replyWith;
+
+                //  Return the compiled message
+                return message;
             }
         },
         methods: {
@@ -123,6 +152,45 @@
                 let val = (money/1).toFixed(2).replace(',', '.');
                 return symbol + val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             },
+            truncate(string, limit){
+                return (string.length > limit) ? string.substring(0, limit - 3)+'...' : string;
+            },
+            getShotCodes(){
+
+                var money = this.invoice.grand_total_value || 0;
+                var currency = (((this.invoice || {}).currency_type || {}).currency || {}).symbol || '';
+                var sub_total = this.formatPrice( (this.invoice.sub_total_value || 0), currency);
+                var grand_total = this.formatPrice( (this.invoice.grand_total_value || 0), currency);
+                var client = ((this.invoice || {}).customized_client_details || {});
+                var company = ((this.invoice || {}).customized_company_details || {});
+
+                var shortcodes = {
+                    '[invoice_heading]': this.invoice.heading,
+                    '[invoice_reference_no]': '#'+this.invoice.reference_no_value,
+                    '[created_date]': moment(this.invoice.created_date_value).format('MMM DD YYYY'),
+                    '[expiry_date]': moment(this.invoice.expiry_date_value).format('MMM DD YYYY'),
+                    '[sub_total]': sub_total,
+                    '[grand_total]': grand_total,
+                    '[currency]': currency,
+                    '[client_company_name]': client.name,
+                    '[client_first_name]': client.first_name,
+                    '[client_last_name]': client.last_name,
+                    '[client_full_name]': client.full_name,
+                    '[client_email]': client.email,
+                    '[my_company_name]': company.name,
+                    '[my_company_email]': company.email,
+                };
+
+                if( client.model_type == 'user' ){
+                    delete shortcodes['[client_company_name]']; 
+                }else if( client.model_type == 'company' ){
+                    delete shortcodes['[client_first_name]'];                     
+                    delete shortcodes['[client_last_name]'];                     
+                    delete shortcodes['[client_full_name]'];                        
+                }
+
+                return shortcodes;
+            },
             sendEmail(){
 
                 var self = this;
@@ -133,9 +201,9 @@
                 console.log('Attempt to send invoice...');
 
                 var emailData = {
-                        email: this.localEmail,
-                        subject: this.localSubject,
-                        message: this.localMessage,
+                        email: this.localDeliveryMailAddress,
+                        subject: this.localDeliveryMailSubject,
+                        message: this.localDeliveryMailMessage,
                     }
 
                 //  Use the api call() function located in resources/js/api.js

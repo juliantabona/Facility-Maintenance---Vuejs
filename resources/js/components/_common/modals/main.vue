@@ -1,7 +1,8 @@
 <template>
     <div>
         <!-- Modal -->
-        <Modal :title="title" v-model="modalVisible" :mask-closable="true" 
+        <Modal :width="width" :title="title" v-model="modalVisible" :mask-closable="true" 
+               :footer-hide="!okText && !cancelText"
                @on-visible-change="detectClose">
 
             <!-- White overlay when loading -->
@@ -10,7 +11,7 @@
             <slot name="content"></slot>
 
             <!-- Ok/Cancel Buttons -->
-            <span slot="footer" class="dialog-footer">
+            <span v-if="okText || cancelText" slot="footer" class="dialog-footer">
                 <el-button v-if="cancelText" size="small" @click="cancel()">{{ cancelText }}</el-button>
                 <el-button v-if="okText" size="small" type="primary" @click="$emit('on-ok')" :loading="isSaving">{{ okText }}</el-button>
             </span>
@@ -22,6 +23,10 @@
 
     export default {
         props:{
+            width:{
+                type: Number,
+                default: null
+            },
             hideModal: {
                 type: Boolean,
                 default: false,
@@ -35,12 +40,12 @@
                 default: '',
             },
             okText:{
-                type: String,
-                default: 'Save Changes',               
+                type: String,   
+                default: null,           
             },
             cancelText:{
-                type: String,
-                default: 'Cancel',               
+                type: String,   
+                default: null,             
             }
         },
         data(){

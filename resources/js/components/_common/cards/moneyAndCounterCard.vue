@@ -35,12 +35,16 @@
                 <p class="text-center" style="padding-top:5px;">{{ title }}</p>
             </Badge>
         </div>
-
+        <!-- Animated checkmark  -->
+        <animatedCheckmark v-if="showCheckMark" :style="{ width: '30px', height: 'auto' }"></animatedCheckmark>
     </Card>
 
 </template>
 
 <script>
+
+    import animatedCheckmark from './../animatedIcons/animatedCheckmark.vue';
+
     export default {
         props: {
             cardStyle: {
@@ -78,8 +82,13 @@
             active:{
                 type: Boolean,
                 default: false
+            },
+            showCheckMark: {
+                type: Boolean,
+                default: false
             }
         },
+        components: { animatedCheckmark },
         data(){
             return {
                 symbol: ((this.currency || {}).currency || {}).symbol || ''
