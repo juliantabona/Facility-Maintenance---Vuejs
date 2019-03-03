@@ -5,12 +5,12 @@
         <Col :span="24">
         
             <!-- Get the stage for setting the recurring schedule plan -->
-            <invoiceRecurringSchedulePlanStage :invoice="localInvoice" :style="{ position:'relative', zIndex: 3 }" 
+            <invoiceRecurringSchedulePlanStage :invoice="localInvoice" :style="{ position:'relative', zIndex: 4 }" 
                 @saved="$emit('saved', $event)">
             </invoiceRecurringSchedulePlanStage>
 
             <!-- Get the stage for setting the recurring payment plan -->
-            <invoiceRecurringPaymentPlanStage :invoice="localInvoice" :style="{ position:'relative', zIndex: 2 }" 
+            <invoiceRecurringPaymentPlanStage :invoice="localInvoice" :style="{ position:'relative', zIndex: 3 }" 
                 @saved="$emit('saved', $event)">
             </invoiceRecurringPaymentPlanStage>
 
@@ -18,6 +18,11 @@
             <invoiceRecurringDeliveryPlanStage :invoice="localInvoice" :style="{ position:'relative', zIndex: 1 }" 
                 @saved="$emit('saved', $event)">
             </invoiceRecurringDeliveryPlanStage>
+
+            <!-- Get the stage for setting the recurring delivery plan -->
+            <invoiceRecurringApprovalStage :invoice="localInvoice" :style="{ position:'relative', zIndex: 2 }" 
+                @saved="$emit('saved', $event)">
+            </invoiceRecurringApprovalStage>
 
         </Col>
 
@@ -29,6 +34,7 @@
     import invoiceRecurringSchedulePlanStage from './../../../components/_common/steps/invoiceRecurringSchedulePlanStage.vue'; 
     import invoiceRecurringPaymentPlanStage from './../../../components/_common/steps/invoiceRecurringPaymentPlanStage.vue'; 
     import invoiceRecurringDeliveryPlanStage from './../../../components/_common/steps/invoiceRecurringDeliveryPlanStage.vue'; 
+    import invoiceRecurringApprovalStage from './../../../components/_common/steps/invoiceRecurringApprovalStage.vue'; 
 
     export default {
         props: {
@@ -37,7 +43,7 @@
                 default: null
             }
         },
-        components: { invoiceRecurringSchedulePlanStage, invoiceRecurringPaymentPlanStage, invoiceRecurringDeliveryPlanStage },
+        components: { invoiceRecurringSchedulePlanStage, invoiceRecurringPaymentPlanStage, invoiceRecurringDeliveryPlanStage, invoiceRecurringApprovalStage },
         data(){
             var vm = this;
             return {

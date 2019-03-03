@@ -11,8 +11,8 @@
 
             <!-- Ok/Cancel Buttons -->
             <span slot="footer" class="dialog-footer">
-                <el-button size="small" @click="cancel()">{{ cancelText }}</el-button>
-                <el-button size="small" type="primary" @click="$emit('on-ok')" :loading="isSaving">{{ okText }}</el-button>
+                <el-button v-if="cancelText" size="small" @click="cancel()">{{ cancelText }}</el-button>
+                <el-button v-if="okText" size="small" type="primary" @click="$emit('on-ok')" :loading="isSaving">{{ okText }}</el-button>
             </span>
 
         </Modal>    

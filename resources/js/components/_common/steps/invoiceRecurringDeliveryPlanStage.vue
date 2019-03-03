@@ -25,7 +25,7 @@
 
         <!-- Fade loader - Shows when saving the recurring invoice delivery plan  -->
         <fadeLoader :loading="isSavingRecurringDeliveryPlan" msg="Saving delivery plan, please wait..."></fadeLoader>
-        
+
         <!-- Stage card  -->
         <stagingCard 
             :stageNumber="3" :showCheckMark="localInvoice.has_set_recurring_delivery_plan && !isEditingDeliveryPlan" :showHeader="false" 
@@ -39,18 +39,17 @@
                 <!-- Manual/Automatic Toggle switch -->
                 <toggleSwitch v-if="localInvoice.has_set_recurring_payment_plan && isEditingDeliveryPlan"
                     v-bind:toggleValue.sync="localInvoice.recurringSettings.deliveryPlan.automatic"
-                    @update:toggleValue="localInvoice.recurringSettings.deliveryPlan.automatic = ($event) ? true : false"
+                    @update:toggleValue="updateToggleChanges($event)"
                     :ripple="false" :showIcon="true" onIcon="ios-send-outline" offIcon="ios-eye-outline" 
                     title="Send Automatically:" onText="Yes" offText="No" poptipMsg="Turn on for the system to send email/sms automatically">
                 </toggleSwitch>
 
-                <div v-if="!isEditingDeliveryPlan" class="d-inline-block mt-2" :style="{ lineHeight: '1.6em' }">
+                <div v-if="!isEditingDeliveryPlan" class="d-inline-block mt-2" :style="{ maxWidth: '80%',lineHeight: '1.6em' }">
                     <p>
                         <b>{{ localInvoice.recurringSettings.deliveryPlan.automatic ? 'Automatic': 'Manual' }} Sending:</b> 
-                        {{ localInvoice.recurringSettings.deliveryPlan.automatic ? 'The system will send each invoice to my customer.': 'Notify me on each invoice due, but i will be responsible to send it manually' }}
+                        {{ localInvoice.recurringSettings.deliveryPlan.automatic ? 'Automatically send each invoice to my customer.': 'Notify me on each invoice due, but i will be responsible to send it manually' }}
                     </p>
-                    <p><b>Delivery Methods:</b> Email & Sms</p>
-                    <p><b>Alerts:</b> Notify me via Email and Sms when each invoice is sent.</p>
+                    <p v-if="localInvoice.recurringSettings.deliveryPlan.automatic"><b>Delivery Methods:</b> {{ deliveryMethodsInWords }}</p>
                 </div>
 
                 <div v-if="localInvoice.has_set_recurring_payment_plan && isEditingDeliveryPlan" class="d-inline-block mt-2 mb-2" :style="{ width: '100%' }">
@@ -64,7 +63,8 @@
                             <span>
                                 <span class="d-inline-block">Delivery Methods:</span>
                                 <span class="d-inline-block">
-                                    <CheckboxGroup v-model="localInvoice.recurringSettings.deliveryPlan.methods">
+                                    <CheckboxGroup v-model="localInvoice.recurringSettings.deliveryPlan.methods"
+                                        @on-change="getDeliveryMethodsInWords()">
                                         <Checkbox label="Email" :disabled="localInvoice.recurringSettings.deliveryPlan.methods.length == 1 && localInvoice.recurringSettings.deliveryPlan.methods[0] == 'Email'"></Checkbox>
                                         <Checkbox label="Sms" :disabled="localInvoice.recurringSettings.deliveryPlan.methods.length == 1 && localInvoice.recurringSettings.deliveryPlan.methods[0] == 'Sms'"></Checkbox>
                                     </CheckboxGroup>
@@ -72,7 +72,8 @@
                             </span>
                             <Tabs :animated="false" class="delivery-nav-tabs pt-3" :key="localInvoice.recurringSettings.deliveryPlan.methods.length">
 
-                                <TabPane v-if="localInvoice.recurringSettings.deliveryPlan.methods.includes('Sms')" label="SMS Delivery" icon="ios-phone-portrait">
+                                <TabPane v-if="localInvoice.recurringSettings.deliveryPlan.methods.includes('Sms')" label="SMS Delivery" 
+                                         icon="ios-phone-portrait" class="mt-4">
                                     <Row :gutter="20">
                                         <Col :span="10">
                                             <img style="width: 100%;" src="/images/samples/phone_animation.png">
@@ -80,20 +81,23 @@
                                         <Col :span="14">
                                             <Alert show-icon>
                                                 <Icon type="ios-bulb-outline" slot="icon"></Icon>
-                                                <template slot="desc">Enter the client mobile number(s) and sms message. When the invoice is due it will be sent to all active numbers.</template>
+                                                <template slot="desc">Enter the client mobile number(s). When the invoice is due it will be sent to all active numbers via SMS. Only numbers set to "Active" will receive the sms.</template>
                                             </Alert>
-                                            {{ getAvailableMobileNumber.map(phone => { return {id:phone.id, number:phone.number} } ) }}
+                                            
                                             <b>Client Mobile Number(s)</b>
                                             <!-- Client Phones editor -->
                                             <phoneInput class="mb-2"  
                                                         :modelId="localInvoice.customized_client_details.id" 
                                                         :modelType="localInvoice.customized_client_details.model_type" 
-                                                        :phones="getAvailableMobileNumber" 
+                                                        :phones="localInvoice.recurringSettings.deliveryPlan.sms.phones" 
                                                         :numberLimit="3"
                                                         selectedType="mobile"
-                                                        :disabledTypes="['Telephone', 'Fax']"                                                        :deletable="false"
+                                                        :disabledTypes="['tel', 'fax']"                                                        
+                                                        :removable="true"
+                                                        :deletable="false"
                                                         :hidedable="true"
                                                         :editable="true"
+                                                        :removeDuplicates="true"
                                                         :showIcon="true" 
                                                         onIcon="ios-checkmark" offIcon="" 
                                                         title="Active:" onText="Yes" offText="No" 
@@ -117,45 +121,45 @@
                                     </Row>
                                 </TabPane>
 
-                                <TabPane v-if="localInvoice.recurringSettings.deliveryPlan.methods.includes('Email')" label="Email Delivery" icon="ios-mail-outline">
+                                <TabPane v-if="localInvoice.recurringSettings.deliveryPlan.methods.includes('Email')" label="Email Delivery" 
+                                         icon="ios-mail-outline" class="mt-4">
                                     
+
+                                    <!-- Email Address -->
+                                    <Row :gutter="20" class="mt-1">
+                                        <Col :span="24">
+                                            <span class="d-block font-weight-bold mb-1">Send to:</span>
+                                            <el-input placeholder="Recipient email e.g) example@gmail.com" v-model="localInvoice.recurringSettings.deliveryPlan.mail.email" size="mini" class="mb-1"></el-input>
+                                        </Col>
+                                    </Row>
+
                                     <!-- Email Subject -->
                                     <Row :gutter="20">
-                                        <Col :span="4">
-                                            <span class="text-right d-block font-weight-bold">Subject:</span>
-                                        </Col>
-                                        <Col :span="20">
-
+                                        
+                                        <Col :span="24">
+                                            <span class="d-block font-weight-bold mt-2 mb-1">Subject:</span>
                                             <el-input placeholder="Email Subject" v-model="localInvoice.recurringSettings.deliveryPlan.mail.subject" 
                                                     size="mini" class="input-fix-append mb-1">
                                                 <shortCodeSelector slot="append"
+                                                    :style="{ marginLeft: '5px' }"
                                                     :shortCodes="shortCodes" @selected="localInvoice.recurringSettings.deliveryPlan.mail.subject += $event">
                                                 </shortCodeSelector>
                                             </el-input>
 
                                         </Col>
                                     </Row>
-
-                                    <!-- Email Address -->
-                                    <Row :gutter="20" class="mt-1">
-                                        <Col :span="4">
-                                            <span class="text-right d-block font-weight-bold">Email:</span>
-                                        </Col>
-                                        <Col :span="20">
-                                            <el-input placeholder="Recipient email e.g) example@gmail.com" v-model="localInvoice.recurringSettings.deliveryPlan.mail.email" size="mini" class="mb-1"></el-input>
-                                        </Col>
-                                    </Row>
                                     
                                     <!-- Email Message -->
                                     <Row :gutter="20">
                                         <Col :span="24">
-                                            <span class="d-inline-block font-weight-bold mt-2 mb-2">
+                                            <span class="d-inline-block font-weight-bold mt-3 mb-2">
                                                 Message:
                                             </span>
                                             <shortCodeSelector
                                                 :shortCodes="shortCodes" @selected="localInvoice.recurringSettings.deliveryPlan.mail.message += $event">
                                             </shortCodeSelector>
-                                            <froalaEditor :content.sync="localInvoice.recurringSettings.deliveryPlan.mail.message" ></froalaEditor>                    
+                                            <froalaEditor :content.sync="localInvoice.recurringSettings.deliveryPlan.mail.message" 
+                                                          :height="200" :heightMax="300"></froalaEditor>                    
                                         </Col>
                                     </Row>
 
@@ -284,12 +288,13 @@
 
                 isOpenSendTestSmsModal: false,
                 isSavingRecurringDeliveryPlan: false,
+                deliveryMethodsInWords: '',
 
                 shortCodes: this.getShotCodes(),
                 subjectShortCode: '',
                 messageShortCode: '',
     
-            }
+            } 
         },
         watch: {
 
@@ -308,63 +313,8 @@
             }
         },
         computed: {
-            getAvailableMobileNumber: function(){
-                //  Get all of the clients mobile phone numbers they have
-                var clientMobleNumbers = this.invoice.customized_client_details.phones.filter(phone => ['mobile'].includes(phone.type));
-                var deliveryPlanMobileNumbers = this.invoice.recurringSettings.deliveryPlan.sms.phones;
-
-
-                console.log('..................................................................');
-                console.log('_.size(clientMobleNumbers): ' + _.size(clientMobleNumbers));
-                console.log('(clientMobleNumbers).length: ' + (clientMobleNumbers).length);
-                console.log(clientMobleNumbers);
-
-                console.log('_.size(deliveryPlanMobileNumbers): ' + _.size(deliveryPlanMobileNumbers));
-                console.log('(deliveryPlanMobileNumbers).length: ' + (deliveryPlanMobileNumbers).length);
-                console.log(deliveryPlanMobileNumbers);
-
-                console.log('..................................................................');
-
-                if(deliveryPlanMobileNumbers.length){
-                    var obj = _.cloneDeep(deliveryPlanMobileNumbers);
-                }else{
-                    var obj = clientMobleNumbers.length ? _.cloneDeep(clientMobleNumbers) : [];
-                }
-
-                for ( var x=0; x < clientMobleNumbers.length; x++ ){
-                    var missing = false;
-                    for ( var y=0; y < deliveryPlanMobileNumbers.length; y++ ){
-                        //  If the client number is equal to the delivery plan number
-                        if( clientMobleNumbers[x].id == deliveryPlanMobileNumbers[y].id ){
-                            //  This is not a missing number
-                            missing = true;
-
-                console.log('..................................................................');
-                console.log('Missing');
-                console.log('..................................................................');
-
-                        }else{
-                console.log('..................................................................');
-                console.log('Not Missing');
-                console.log('..................................................................');
-
-                        }
-                    }
-
-                    //  Add the missing number to the object of available numbers
-                    if(missing){
-                        var missingPhone = Object({}, clientMobleNumbers[x]);
-                        obj.push(clientMobleNumbers[x]);
-                    }
-
-                }
-
-                if(!_.isEqual(this.invoice.recurringSettings.deliveryPlan.sms.phones, obj)){
-                    this.invoice.recurringSettings.deliveryPlan.sms.phones = obj;
-                }
-
-                return obj;
-
+            getSelectedPhone(newPhone){
+                this.localInvoice.recurringSettings.deliveryPlan.sms.phones.push(newPhone)
             },
             smsMessageCompiled: function(){
 
@@ -399,11 +349,15 @@
 
                 var message = companyName+reference+items+amount+dueDate+replyWith;
 
+                //  Update the local invoice message
+                this.localInvoice.recurringSettings.deliveryPlan.sms.message = message;
+
+                //  Return the compiled message
                 return message;
             },
             emailMessageCompiled: function(){
 
-                var compiledMsg = this.localInvoice.recurringSettings.deliveryPlan.mail.message;
+                var message = this.localInvoice.recurringSettings.deliveryPlan.mail.message;
 
                 var shortCodeSymbols = Object.keys(this.shortCodes);
                 var shortCodeValues = Object.values(this.shortCodes);
@@ -414,14 +368,37 @@
 
                     replaceThis = shortCodeSymbols[x]; 
                     withThis = shortCodeValues[x];    
-                    compiledMsg = compiledMsg.split(replaceThis).join(withThis);
+                    message = message.split(replaceThis).join(withThis);
 
                 }
 
-                return compiledMsg;
+                //  Update the local invoice message
+                this.localInvoice.recurringSettings.deliveryPlan.mail.message = message;
+
+                //  Return the compiled message
+                return message;
             }   
         },
         methods: {
+            updateToggleChanges(newVal){
+                this.localInvoice.recurringSettings.deliveryPlan.automatic = newVal;
+                this.getDeliveryMethodsInWords();
+            },
+            getDeliveryMethodsInWords(){
+                var devliveryMethods = this.localInvoice.recurringSettings.deliveryPlan.methods;
+                var inWords = '';
+
+                for(var x=0; x < devliveryMethods.length; x++){
+                    inWords+= devliveryMethods[x];
+
+                    if(x == (devliveryMethods.length - 2)){
+                        inWords+=' & '; 
+                    }else if( x < (devliveryMethods.length - 1) ){
+                        inWords+=', ';
+                    }
+                }
+                this.deliveryMethodsInWords = inWords;
+            },
             truncate(string, limit){
                 return (string.length > limit) ? string.substring(0, limit - 3)+'...' : string;
             },
@@ -470,6 +447,8 @@
                 var editingSchedulePlan = ( this.localInvoice.recurringSettings.editing.schedulePlan );
                 var editingDeliveryPlan = ( this.localInvoice.recurringSettings.editing.deliveryPlan );
                 var editingPaymentPlan = ( this.localInvoice.recurringSettings.editing.paymentPlan );
+                console.log('************************************************************* ');
+                console.log('editingDeliveryPlan1: ' + this.isEditingDeliveryPlan);
 
                 //  If we are still editing the schedule/payment plan 
                 if( editingSchedulePlan || editingPaymentPlan ){
@@ -482,6 +461,10 @@
                     this.localInvoice.recurringSettings.editing.deliveryPlan = true;
                     this.isEditingDeliveryPlan = true;
                 }
+
+                console.log('************************************************************* ');
+                console.log('editingDeliveryPlan2: ' + this.isEditingDeliveryPlan);
+
             },
             saveDeliveryPlan(){
 
@@ -518,6 +501,35 @@
                         console.log(response);
                     });
             }
+        },
+        created(){
+            this.getDeliveryMethodsInWords();
+
+            this.localInvoice.recurringSettings.deliveryPlan.mail.subject = 'Invoice [invoice_reference_no]';
+            this.localInvoice.recurringSettings.deliveryPlan.mail.email = this.localInvoice.customized_client_details.email;
+            this.localInvoice.recurringSettings.deliveryPlan.mail.message = 
+                '<p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:12px;font-family:arial, \'helvetica neue\', helvetica, sans-serif;line-height:18px;color:#000000;">  \
+                    Good day,  \
+                </p> \
+                <br> \
+                <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:12px;font-family:arial, \'helvetica neue\', helvetica, sans-serif;line-height:18px;color:#000000;">  \
+                    Please find attached <strong>Invoice [invoice_reference_no]</strong> \
+                    created on your account for services rendered. Payment regarding the&nbsp;balance of  \
+                    <strong>[grand_total] </strong> \
+                    must be settled by the  \
+                    <strong>[expiry_date]</strong>  \
+                    or earlier. \
+                </p> \
+                <br> \
+                <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:12px;font-family:arial, \'helvetica neue\', helvetica, sans-serif;line-height:18px;color:#000000;">  \
+                    We look forward to conducting future business with you. \
+                </p> \
+                <br> \
+                <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:12px;font-family:arial, \'helvetica neue\', helvetica, sans-serif;line-height:18px;color:#000000;">  \
+                    Regards, \
+                    <br> \
+                    [my_company_name] \
+                </p>';
         }
     }
 </script>

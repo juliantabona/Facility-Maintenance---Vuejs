@@ -4,6 +4,64 @@ namespace App\Traits;
 
 trait PhoneTraits
 {
+    public function initiateGet()
+    {
+        //  Current authenticated user
+        $user = auth('api')->user();
+
+        //  Query data
+        $modelId = request('modelId');                      //  The id of the associated model
+        $modelType = request('modelType');                  //  Associated model e.g) user, company
+
+        /*******************************************************
+         *   CHECK IF USER HAS PERMISSION TO GET PHONES        *
+         ******************************************************/
+
+        if (!$modelType) {
+            //  Model type not specified - Log the error
+            $response = oq_api_notify_error('Include model type e.g) user, company, e.t.c', null, 404);
+
+            //  Return the error response
+            return ['success' => false, 'response' => $response];
+        } elseif (!$modelId) {
+            //  Model id not specified - Log the error
+            $response = oq_api_notify_error('Include associated model id e.g) 1, 2, 3 e.t.c', null, 404);
+
+            //  Return the error response
+            return ['success' => false, 'response' => $response];
+        } else {
+            //  Create the dynamic model
+
+            $dynamicModel = $this->generateDynamicModel($modelType);
+
+            //  Check if this is a valid dynamic class
+            if (class_exists($dynamicModel)) {
+                //  Find the associated record by model id
+                try {
+                    $dynamicModel = $dynamicModel::find($modelId);
+
+                    //  Get associated phones
+                    $phones = $dynamicModel->phones()->get();
+
+                    //  Action was executed successfully
+                    return ['success' => true, 'response' => $phones];
+                } catch (\Exception $e) {
+                    //  Log the error
+                    $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+                    //  Return the error response
+                    return ['success' => false, 'response' => $response];
+                }
+            } else {
+                //  Model class does not exist - Log the error
+                $response = oq_api_notify_error('Invalid model - e.g) must be company/user', null, 404);
+
+                //  Return the error response
+                return ['success' => false, 'response' => $response];
+            }
+        }
+    }
+
     public function initiateCreate()
     {
         //  Current authenticated user

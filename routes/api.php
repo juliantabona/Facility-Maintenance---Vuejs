@@ -145,6 +145,7 @@ Route::post('invoices/{invoice_id}/receipts/send', 'Api\InvoiceController@sendRe
 Route::post('invoices/{invoice_id}/recurring/update-schedule-plan', 'Api\InvoiceController@updateRecurringSettingsSchedulePlan');
 Route::post('invoices/{invoice_id}/recurring/update-delivery-plan', 'Api\InvoiceController@updateRecurringSettingsDeliveryPlan');
 Route::post('invoices/{invoice_id}/recurring/update-payment-plan', 'Api\InvoiceController@updateRecurringSettingsPaymentPlan');
+Route::post('invoices/{invoice_id}/recurring/approve', 'Api\InvoiceController@approveRecurringSettings');
 Route::post('invoices/{invoice_id}/recurring/send/sms', 'Api\InvoiceController@sendRecurringInvoiceSms');
 
 /*   PRODUCT/SERVICE RESOURCE ROUTES
@@ -160,6 +161,7 @@ Route::get('taxes', 'Api\TaxController@index');
 /*   PHONE RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
 */
+Route::get('phones', 'Api\PhoneController@index');
 Route::post('phones', 'Api\PhoneController@store');
 Route::post('phones/{phone_id}', 'Api\PhoneController@update');
 Route::delete('phones/{phone_id}', 'Api\PhoneController@delete');

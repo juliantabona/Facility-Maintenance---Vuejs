@@ -1,7 +1,7 @@
 <template>
 
     <div>
-        isEditingSchedulePlan: {{ typeof isEditingSchedulePlan }}
+        
         <!-- Fade loader - Shows when saving the recurring invoice schedule plan  -->
         <fadeLoader :loading="isSavingRecurringSchedulePlan" msg="Saving schedule plan, please wait..."></fadeLoader>
 

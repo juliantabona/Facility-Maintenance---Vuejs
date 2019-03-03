@@ -227,6 +227,26 @@ class InvoiceController extends Controller
         return $response;
     }
 
+    public function approveRecurringSettings($invoice_id)
+    {
+        //  Invoice Instance
+        $data = ( new Invoice() )->initiateApproveRecurringSettings($invoice_id);
+        $success = $data['success'];
+        $response = $data['response'];
+
+        //  If the invoice was approved successfully
+        if ($success) {
+            //  If this is a success then we have the invoice
+            $invoice = $response;
+
+            //  Action was executed successfully
+            return oq_api_notify($invoice, 200);
+        }
+
+        //  If the data was not a success then return the response
+        return $response;
+    }
+
     public function recordPayment($invoice_id)
     {
         //  Invoice Instance

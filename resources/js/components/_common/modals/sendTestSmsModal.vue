@@ -17,27 +17,39 @@
                     <Col :span="24">
                         <Alert show-icon>
                             <Icon type="ios-bulb-outline" slot="icon"></Icon>
-                            <template slot="desc">You can send a test sms to any number of you want. This is so that you can see how your sms will look like for your customers ;)</template>
+                            <template slot="desc">You can send a test sms to any number you want. This is so that you can see how your sms will look like for your customers ;)</template>
                         </Alert>
                     </Col>
                     
                     <Col :span="24">
                         <p class="mb-1"><b>Phone Number:</b></p>
+
                         <phoneInput class="mb-2"  
+                                    :modelId="user.id" 
+                                    :modelType="user.model_type" 
+                                    :phones="testPhoneNumber" 
+                                    :numberLimit="1"
+                                    selectedType="mobile"
+                                    :disabledTypes="['tel', 'fax']"                                                        
+                                    :removable="true"
                                     :deletable="false"
                                     :hidedable="false"
                                     :editable="true"
-                                    :numberLimit="1"
-                                    selectedType="mobile"
-                                    :disabledTypes="['Telephone', 'Fax']"
+                                    :removeDuplicates="true"
+                                    :showIcon="false" 
+                                    onIcon="" offIcon="" 
+                                    title="" onText="" offText="" 
+                                    poptipMsg=""
                                     @updated="testPhoneNumber = $event">
                         </phoneInput>
+
                     </Col>
                 </Row>
                 
                 <!-- Email Message -->
                 <Row :gutter="20">
                     <Col :span="24">
+                        <b class="d-block mt-1 mb-1">Delivery Message:</b>
                         <p :style="{ padding: '20px', boxShadow: 'inset 1px 1px 5px 1px #d6d6d6' }">
                             {{ locaMessage }}
                         </p>                   
@@ -74,8 +86,9 @@
         components: { mainModal, Loader, phoneInput },
         data(){
             return{
+                user: auth.user,
                 locaMessage: this.message,
-                testPhoneNumber: '',
+                testPhoneNumber: [],
                 hideModal: false,
                 isSending: false
             }

@@ -16,6 +16,10 @@ use App\Notifications\InvoicePaid;
 use App\Notifications\InvoicePaymentCancelled;
 use App\Notifications\RecurringInvoiceSmsSent;
 use App\Notifications\RecurringInvoiceTestSmsSent;
+use App\Notifications\InvoiceRecurringSettingsSchedulePlanUpdated;
+use App\Notifications\InvoiceRecurringSettingsPaymentPlanUpdated;
+use App\Notifications\InvoiceRecurringSettingsDeliveryPlanUpdated;
+use App\Notifications\InvoiceRecurringSettingsApproved;
 //  Other
 use PDF;
 use Carbon\Carbon;
@@ -739,7 +743,7 @@ trait InvoiceTraits
                  *   SEND NOTIFICATIONS      *
                  *****************************/
 
-                $auth_user->notify(new InvoiceUpdated($invoice));
+                $auth_user->notify(new InvoiceRecurringSettingsSchedulePlanUpdated($invoice));
 
                 /*****************************
                  *   RECORD ACTIVITY         *
@@ -811,7 +815,7 @@ trait InvoiceTraits
                  *   SEND NOTIFICATIONS      *
                  *****************************/
 
-                $auth_user->notify(new InvoiceUpdated($invoice));
+                $auth_user->notify(new InvoiceRecurringSettingsPaymentPlanUpdated($invoice));
 
                 /*****************************
                  *   RECORD ACTIVITY         *
@@ -880,7 +884,7 @@ trait InvoiceTraits
                  *   SEND NOTIFICATIONS      *
                  *****************************/
 
-                $auth_user->notify(new InvoiceUpdated($invoice));
+                $auth_user->notify(new InvoiceRecurringSettingsDeliveryPlanUpdated($invoice));
 
                 /*****************************
                  *   RECORD ACTIVITY         *
@@ -888,6 +892,69 @@ trait InvoiceTraits
 
                 //  Record activity of recurring delivery plan updated
                 $status = 'updated recurring delivery';
+                $invoiceUpdatedActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
+
+                //  Action was executed successfully
+                return ['success' => true, 'response' => $invoice];
+            } else {
+                //  No resource found
+                return ['success' => false, 'response' => oq_api_notify_no_resource()];
+            }
+        } catch (\Exception $e) {
+            //  Log the error
+            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+            //  Return the error response
+            return ['success' => false, 'response' => $response];
+        }
+    }
+
+    public function initiateApproveRecurringSettings($invoice_id)
+    {
+        //  Current authenticated user
+        $auth_user = auth('api')->user();
+
+        /**************************************************************************
+         *   CHECK IF USER HAS PERMISSION TO APPROVE RECURRING INVOICE            *
+         *************************************************************************/
+
+        /*
+         *  The $invoice is a collection of the invoice to be stored.
+         */
+        $invoiceData = request('invoice');
+
+        /*********************************************
+         *   VALIDATE INVOICE INFORMATION            *
+         ********************************************/
+
+        try {
+            //  Get the invoice
+            $invoice = $this->where('id', $invoice_id)->first();
+
+            $template = [
+                'recurringSettings' => $invoiceData['recurringSettings'],
+            ];
+
+            //  Update the invoice
+            $invoice = $invoice->update($template);
+
+            //  If the invoice was updated successfully
+            if ($invoice) {
+                //  re-retrieve the instance to get all of the fields in the table.
+                $invoice = $this->where('id', $invoice_id)->first();
+
+                /*****************************
+                 *   SEND NOTIFICATIONS      *
+                 *****************************/
+
+                $auth_user->notify(new InvoiceRecurringSettingsApproved($invoice));
+
+                /*****************************
+                 *   RECORD ACTIVITY         *
+                 *****************************/
+
+                //  Record activity of recurring delivery plan updated
+                $status = 'approved recurring settings';
                 $invoiceUpdatedActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
 
                 //  Action was executed successfully

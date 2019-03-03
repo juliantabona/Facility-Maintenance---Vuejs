@@ -18,6 +18,14 @@
 
     export default {
         props: {
+            height: {
+                type: Number,
+                default: null
+            },
+            heightMax: {
+                type: Number,
+                default: null
+            },
             config: {  
                 type: Object,
                 default: () => { 
@@ -59,6 +67,17 @@
                 }
             }
 
+        },
+        created(){
+            
+            if( this.height ){
+                this.config.height = this.height;
+            }
+
+            if( this.heightMax ){
+                this.config.heightMax = this.heightMax;
+            }
+            
         }
     }
 </script>

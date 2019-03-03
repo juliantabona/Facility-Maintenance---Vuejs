@@ -44,7 +44,7 @@
                                                 :phones="[]" 
                                                 :numberLimit="1"
                                                 selectedType="mobile"
-                                                :disabledTypes="['Telephone', 'Fax']"   
+                                                :disabledTypes="['tel', 'fax']"   
                                                 selectedServiceProvider="Orange"
                                                 :disabledServiceProviders="['BeMobile']"                                                     
                                                 :deletable="false"

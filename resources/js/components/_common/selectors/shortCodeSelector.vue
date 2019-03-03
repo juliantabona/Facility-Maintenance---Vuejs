@@ -3,8 +3,8 @@
     <!-- Short Code  Selector -->
 
     <Poptip slot="append" word-wrap width="200" trigger="hover" :content="shortCodeExample ? shortCodeExample : 'Hover for examples...'">
-        <Select v-model="selectedShortCode" :key="shortCodeRenderKey" size="small" style="width:150px"
-                placeholder="+ Dynamic Content">
+        <Select v-model="selectedShortCode" :key="shortCodeRenderKey" size="small" style="width:180px"
+                placeholder="+ Add Dynamic Content">
             <Option v-for="(shortcode, shortcode_notation) in localShortCodes" :key="shortcode_notation" :value="shortcode" 
                     @click.native="handleSelection(shortcode_notation)"
                     @mouseover.native="shortCodeExample = shortcode"

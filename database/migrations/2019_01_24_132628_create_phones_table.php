@@ -16,6 +16,7 @@ class CreatePhonesTable extends Migration
             $table->string('type')->nullable();
             $table->json('calling_code')->nullable();
             $table->unsignedInteger('number');
+            $table->string('provider')->nullable();
             $table->unsignedInteger('trackable_id');
             $table->string('trackable_type');
             $table->unsignedInteger('created_by')->nullable();

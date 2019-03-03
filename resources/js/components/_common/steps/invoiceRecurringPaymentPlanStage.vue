@@ -26,7 +26,6 @@
 <template>
 
     <div>
-        isEditingPaymentPlan: {{ isEditingPaymentPlan }}
         <!-- Fade loader - Shows when saving the recurring invoice payment plan  -->
         <fadeLoader :loading="isSavingRecurringPaymentPlan" msg="Saving payment plan, please wait..."></fadeLoader>
         
@@ -43,18 +42,17 @@
                 <!-- Manual/Automatic Toggle switch -->
                 <toggleSwitch v-if="localInvoice.has_set_recurring_schedule_plan && isEditingPaymentPlan"
                     v-bind:toggleValue.sync="localInvoice.recurringSettings.paymentPlan.automatic"
-                    @update:toggleValue="localInvoice.recurringSettings.paymentPlan.automatic = $event; getPaymentMethodsInWords()"
+                    @update:toggleValue="updateToggleChanges($event)"
                     :ripple="false" :showIcon="true" onIcon="ios-cash-outline" offIcon="ios-cash-outline" 
                     title="Automatic Payment:" onText="Yes" offText="No" poptipMsg="Turn on for the system to allow customers to pay using credit cards/mobile phones">
                 </toggleSwitch>
 
-                <div v-if="!isEditingPaymentPlan" class="d-inline-block mt-2" :style="{ lineHeight: '1.6em' }">
+                <div v-if="!isEditingPaymentPlan" class="d-inline-block mt-2" :style="{ maxWidth: '80%',lineHeight: '1.6em' }">
                     <p>
                         <b>{{ localInvoice.recurringSettings.paymentPlan.automatic ? 'Automatic': 'Manual' }} Payment:</b> 
-                        {{ localInvoice.recurringSettings.paymentPlan.automatic ? 'The system will allow each invoice to be conveniently paid using mobile money/credit cards.': 'Notify me on each invoice due, but i will be responsible to collect the money and record payments manually' }}
+                        {{ localInvoice.recurringSettings.paymentPlan.automatic ? 'Allow each invoice to be conveniently paid using mobile money.': 'Notify me on each invoice due, but i will be responsible to collect the money and record payments manually' }}
                     </p>
-                    <p><b>Payment Methods:</b> {{ paymentMethodsInWords }}</p>
-                    <p><b>Alerts:</b> {{ paymentAlertsInWords }}</p>
+                    <p v-if="localInvoice.recurringSettings.paymentPlan.automatic"><b>Payment Methods:</b> {{ paymentMethodsInWords }}</p>
                 </div>
 
                 <div v-if="localInvoice.has_set_recurring_schedule_plan && isEditingPaymentPlan" class="d-inline-block mt-2 mb-2" :style="{ width: '100%' }">
@@ -69,7 +67,7 @@
                                 <span class="d-inline-block">Customer can pay using:</span>
                                 <span class="d-inline-block">
                                     <CheckboxGroup v-model="localInvoice.recurringSettings.paymentPlan.methods"
-                                            @change="getPaymentMethodsInWords()">
+                                            @on-change="getPaymentMethodsInWords()">
                                         <Checkbox label="OrangeMoney" 
                                                   :disabled="localInvoice.recurringSettings.paymentPlan.methods.length == 1 && 
                                                             localInvoice.recurringSettings.paymentPlan.methods[0] == 'OrangeMoney'">
@@ -253,8 +251,7 @@
                 isSavingRecurringPaymentPlan: false,
                 isOpenChangeMobileMoneyAccountModal: false,
 
-                paymentMethodsInWords: '',
-                paymentAlertsInWords: ''
+                paymentMethodsInWords: ''
             }
         },
         watch: {
@@ -274,6 +271,10 @@
             }
         },
         methods: {
+            updateToggleChanges(newVal){
+                this.localInvoice.recurringSettings.paymentPlan.automatic = newVal;
+                this.getPaymentMethodsInWords();
+            },
             getPaymentMethodsInWords(){
                 var paymentMethods = this.localInvoice.recurringSettings.paymentPlan.methods;
                 var inWords = '';
@@ -282,12 +283,12 @@
                     inWords+= paymentMethods[x];
 
                     if(x == (paymentMethods.length - 2)){
-                        inWords+='& '; 
+                        inWords+=' & '; 
                     }else if( x < (paymentMethods.length - 1) ){
                         inWords+=', ';
-                    }   
+                    }
                 }
-                return inWords;
+                this.paymentMethodsInWords = inWords;
             },
             activateEditMode(){
                 //  Get all the plans and their edit state
@@ -342,6 +343,9 @@
                         console.log(response);
                     });
             }
+        },
+        created(){
+            this.getPaymentMethodsInWords();
         }
     }
 </script>

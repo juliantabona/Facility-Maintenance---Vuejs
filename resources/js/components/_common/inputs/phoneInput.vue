@@ -29,7 +29,7 @@
 
                         <!-- Delete button -->
                         <Poptip v-if="deletable" confirm title="Are you sure you want to delete this phone number?"
-                                ok-text="Yes" cancel-text="No" @on-ok="removePhone(localPhones[i], i)" placement="left-start">
+                                ok-text="Yes" cancel-text="No" @on-ok="deletePhone(localPhones[i], i)" placement="left-start">
                                 <Icon class="field-icon mr-2" type="ios-trash-outline" :size="20"/>
                         </Poptip>
 
@@ -37,6 +37,14 @@
                         <Poptip v-if="editable" trigger="hover" content="Edit this phone number?">
                             <Icon class="field-icon" type="ios-create-outline" :size="20" @click="editPhone(localPhones[i])"/>
                         </Poptip>
+
+                        <!-- Remove button -->
+                        <Poptip v-if="removable" confirm title="Are you sure you want to remove this phone number?"
+                                ok-text="Yes" cancel-text="No" @on-ok="removePhone(localPhones[i], i)" placement="left-start">
+                                <Icon class="field-icon" type="ios-close" :size="20" 
+                                      :style="{ fontSize: '16px',background: '#ed4014', border: '3px solid #e4e9f1',color: '#fff',borderRadius: '100%' }"/>
+                        </Poptip>
+
                     </template>
                 
                 </el-input>
@@ -70,8 +78,9 @@
             :selectedServiceProvider="selectedServiceProvider"
             :disabledServiceProviders="disabledServiceProviders"  
             @visibility="closeModal($event)"
-            @created="storeCreated($event)"
-            @updated="updateChanges($event)">
+            @created="handleCreatedPhone($event)"
+            @updated="handleUpdatedPhone($event)"
+            @selected="handleSelectedPhone($event)">
         </createPhoneModal>
 
     </div>
@@ -108,6 +117,10 @@
             phones: {
                 type: Array,
                 default: null,
+            },
+            removable: {
+                type: Boolean,
+                default: false,
             },
             deletable: {
                 type: Boolean,
@@ -170,6 +183,10 @@
             poptipMsg:{
                 type: String,
                 default: 'Turn on to show'    
+            },
+            removeDuplicates: {
+                type: Boolean,
+                default: false 
             }
         },
         data(){
@@ -196,6 +213,21 @@
                 this.isOpenAddPhoneModal = true;
             },
             removePhone(phone, index){
+                
+                if(phone){
+
+                    //  Remove phone from list
+                    this.localPhones.splice(index, 1);
+
+                    //  Update parent
+                    this.runUpdate();
+
+                    //  Alert creation success
+                    this.$Message.success('Phone removed sucessfully!');
+
+                }
+            },
+            deletePhone(phone, index){
                 console.log('delete');
                 console.log(phone);
                 if(phone){
@@ -221,7 +253,7 @@
                             self.runUpdate();
 
                             //  Alert creation success
-                            self.$Message.success('Phone details removed sucessfully!');
+                            self.$Message.success('Phone deleted sucessfully!');
 
                         })         
                         .catch(response => { 
@@ -235,19 +267,12 @@
 
                 }
             },
-            storeCreated(newPhone){
-                //  Incase the localPhones is null and not an array
-                //  make sure to force it to be an array so that we
-                //  don't get an error when using the push() method
-                //  which requires the object to be an array
-                if( !(this.localPhones || {}).length ){
-                    this.localPhones = [];
-                }
-                this.localPhones.push(newPhone);
+            handleCreatedPhone(newPhone){
+                this.addToPhones(newPhone)
                 this.runUpdate();
-                this.closeModal();               
+                this.closeModal();                 
             },
-            updateChanges(newPhone){
+            handleUpdatedPhone(newPhone){
                 for(var x=0; x < this.localPhones.length; x++){
                     if(this.localPhones[x].id == newPhone.id){
                         this.localPhones[x] = newPhone;
@@ -255,6 +280,31 @@
                 }
                 this.runUpdate();
                 this.closeModal();
+            },
+            handleSelectedPhone(newPhone){
+                this.addToPhones(newPhone)
+                this.runUpdate();
+                this.closeModal();   
+            },
+            addToPhones(newPhone){
+                //  Incase the localPhones is null and not an array
+                //  make sure to force it to be an array so that we
+                //  don't get an error when using the push() method
+                //  which requires the object to be an array
+                if( !(this.localPhones || {}).length ){
+                    this.localPhones = [];
+                }
+
+                this.localPhones.push(newPhone);
+
+                if(this.removeDuplicates){
+                    this.removePhoneDuplicates();
+                }
+            },
+            removePhoneDuplicates(){
+                this.localPhones = _.uniqBy(this.localPhones, function (e) {
+                    return e.id;
+                });
             },
             closeModal($visibility){
                 this.isOpenAddPhoneModal = $visibility;

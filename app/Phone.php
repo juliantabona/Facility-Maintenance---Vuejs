@@ -27,7 +27,7 @@ class Phone extends Model
      * @var array
      */
     protected $fillable = [
-        'number', 'calling_code', 'type', 'company_branch_id', 'company_id', 'created_by',
+        'number', 'calling_code', 'type', 'provider', 'company_branch_id', 'company_id', 'created_by',
     ];
 
     /**

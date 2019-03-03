@@ -1,5 +1,15 @@
 <style scoped>
     @import 'https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/2.8.0/css/flag-icon.min.css';
+
+    .phone-content-tabs >>> .ivu-select-dropdown-list{
+        overflow-y: auto;
+        max-height: 150px;
+    }
+
+    .hide-tabs >>> .ivu-tabs-bar{
+        display:none !important;
+    }
+
 </style>
 
 <template>
@@ -10,7 +20,7 @@
             :isSaving="isSaving" 
             :hideModal="hideModal"
             :title="editablePhone ? 'Edit Phone' : 'Add Phone'"
-            :okText="editablePhone ? 'Save Changes' : 'Create'" 
+            :okText="getOkText" 
             cancelText="Cancel"
             @on-ok="handlePhone()" 
             @on-cancel="abortChanges()"
@@ -18,59 +28,85 @@
 
             <template slot="content">
                 
-                <!-- Phone Details -->
-                <Row :gutter="5">
-                    
-                    <Col :span="24">
-                        <!-- Loader -->
-                        <Loader v-if="isLoadingCallingCodes" :loading="isLoadingCallingCodes" type="text" class="text-left">Loading...</Loader>
-                    </Col>
-                    
-                    <Col :span="24" class="mt-2" v-if="!isLoadingCallingCodes && fetchedCallingCodes.length">
-                        
-                        <!-- Calling Code Selector -->
-                        <Select :value="stringifyData(localPhone.calling_code)"
-                                @on-change="updateCallingCode($event)"
-                                :style="{ width:'100%' }" placeholder="Select Country Code" not-found-text="No calling codes found" filterable>
-                            <Option
-                                v-for="(item, index) in fetchedCallingCodes" 
-                                :value="stringifyData(item)" 
-                                :label="'+'+item.calling_code"
-                                :key="index">
-                                <span style="width:30px;" class="mr-1" v-html="item.flag"></span>
-                                <span>{{ item.country }} (+{{ item.calling_code }})</span>
-                            </Option>
-                        </Select>
+                <Tabs :value="selectedTab" :animated="false" :class="'phone-content-tabs'+(editablePhone ? ' hide-tabs': '')" 
+                      :style="{ minHeight: '250px' }"
+                      @on-click="(selectedTab = $event)">
+                
+                    <!-- Select Existing Account -->
+                    <TabPane v-if="!editablePhone" label="Existing Phones" name="existingPhonesTab" :style="{ minHeight: '250px' }">
 
-                    </Col>
+                        <div :style="{ padding: '30px', boxShadow: 'inset 1px 1px 5px 1px #d6d6d6' }">
+                            <existingPhoneSelector
+                                :modelId="modelId"
+                                :modelType="modelType"
+                                :disabledTypes="disabledTypes" 
+                                @addNew="switchToAddPhoneTab()"    
+                                @selected:phone="updateSelectedPhoneChanges($event)">
+                            </existingPhoneSelector>
+                        </div>
 
-                    <Col :span="24" class="mt-2" v-if="!isLoadingCallingCodes && fetchedCallingCodes.length">
-                        <!-- Phone Type Selector -->
-                        <Select v-model="localSelectedType" @on-change="localPhone.type = $event" :style="{ width:'100%' }" placeholder="Select Phone Type" not-found-text="No phone types found" filterable>
-                            <Option v-for="(item, index) in phoneType"  :value="item.value"  :label="item.name" :key="index"
-                                    :disabled="disabledTypes.includes(item.name)">
-                                {{ item.name }}
-                            </Option>
-                        </Select>
+                    </TabPane>
+                
+                    <!-- Select Existing Account -->
+                    <TabPane :label="editablePhone ? '' : 'Add New Phone'" name="addPhoneTab" :style="{ minHeight: '250px' }">
 
-                    </Col>
-                    <Col v-if="!isLoadingCallingCodes && fetchedCallingCodes.length && localSelectedType == 'mobile'" :span="24" class="mt-2" >
-                        <!-- Service Provider Selector -->
-                        <Select v-model="localSelectedServiceProvider" @on-change="localPhone.provider = $event" :style="{ width:'100%' }" placeholder="Select Service Provider" not-found-text="No service providers found" filterable>
-                            <Option v-for="(item, index) in serviceProviders"  :value="item"  :label="item" :key="index"
-                                    :disabled="disabledServiceProviders.includes(item)">
-                                {{ item }}
-                            </Option>
-                        </Select>
+                        <!-- Phone Details -->
+                        <Row :gutter="5">
+                            
+                            <Col :span="24">
+                                <!-- Loader -->
+                                <Loader v-if="isLoadingCallingCodes" :loading="isLoadingCallingCodes" type="text" class="text-left">Loading...</Loader>
+                            </Col>
+                            
+                            <Col :span="24" class="mt-2" v-if="!isLoadingCallingCodes && fetchedCallingCodes.length">
+                                
+                                <!-- Calling Code Selector -->
+                                <Select :value="stringifyData(localPhone.calling_code)"
+                                        @on-change="updateCallingCode($event)"
+                                        :style="{ width:'100%' }" placeholder="Select Country Code" not-found-text="No calling codes found" filterable>
+                                    <Option
+                                        v-for="(item, index) in fetchedCallingCodes" 
+                                        :value="stringifyData(item)" 
+                                        :label="'+'+item.calling_code"
+                                        :key="index">
+                                        <span style="width:30px;" class="mr-1" v-html="item.flag"></span>
+                                        <span>{{ item.country }} (+{{ item.calling_code }})</span>
+                                    </Option>
+                                </Select>
 
-                    </Col>
-                    <Col :span="24" class="mt-2" v-if="!isLoadingCallingCodes && fetchedCallingCodes.length">
-                        
-                        <!-- Phone Number -->
-                        <el-input type="text" v-model="localPhone.number" @keypress.native="isNumber($event)" :maxlength="8" size="small" style="width:100%" placeholder="Enter phone number"></el-input>
-                    
-                    </Col>
-                </Row>
+                            </Col>
+
+                            <Col :span="24" class="mt-2" v-if="!isLoadingCallingCodes && fetchedCallingCodes.length">
+                                <!-- Phone Type Selector -->
+                                <Select v-model="localSelectedType" @on-change="localPhone.type = $event" :style="{ width:'100%' }" placeholder="Select Phone Type" not-found-text="No phone types found" filterable>
+                                    <Option v-for="(item, index) in phoneType"  :value="item.value"  :label="item.name" :key="index"
+                                            :disabled="disabledTypes.includes(item.value)">
+                                        {{ item.name }}
+                                    </Option>
+                                </Select>
+
+                            </Col>
+                            <Col v-if="!isLoadingCallingCodes && fetchedCallingCodes.length && localSelectedType == 'mobile'" :span="24" class="mt-2" >
+                                <!-- Service Provider Selector -->
+                                <Select v-model="localSelectedServiceProvider" @on-change="localPhone.provider = $event" :style="{ width:'100%' }" placeholder="Select Service Provider" not-found-text="No service providers found" filterable>
+                                    <Option v-for="(item, index) in serviceProviders"  :value="item"  :label="item" :key="index"
+                                            :disabled="disabledServiceProviders.includes(item)">
+                                        {{ item }}
+                                    </Option>
+                                </Select>
+
+                            </Col>
+                            <Col :span="24" class="mt-2" v-if="!isLoadingCallingCodes && fetchedCallingCodes.length">
+                                
+                                <!-- Phone Number -->
+                                <el-input type="text" v-model="localPhone.number" @keypress.native="isNumber($event)" :maxlength="8" size="small" style="width:100%" placeholder="Enter phone number"></el-input>
+                            
+                            </Col>
+                        </Row>
+
+                    </TabPane>
+
+                </Tabs>
 
             </template>
             
@@ -83,8 +119,12 @@
     import mainModal from './main.vue'; 
     import Loader from './../loaders/Loader.vue';
 
+    /*  Selectors   */
+    import existingPhoneSelector from './../../../components/_common/selectors/existingPhoneSelector.vue'; 
+
+
     export default {
-        components: { mainModal, Loader },
+        components: { mainModal, Loader, existingPhoneSelector },
         props:{
             editablePhone: {
                 type: Object,
@@ -117,6 +157,7 @@
         },
         data(){
             return {
+                selectedTab: null,
                 localPhone: this.currentPhone(),
                 localSelectedType: this.selectedType,
                 _localPhoneBeforeChange: this.storedPhone(),
@@ -134,7 +175,19 @@
                 isSaving: false,
             }
         },
+        computed:{
+            getOkText: function(){
+                return this.editablePhone ? 'Save Changes' : (this.selectedTab == 'existingPhonesTab' ? '' : 'Create');
+            }
+        },
         methods: {
+            switchToAddPhoneTab(){
+                this.selectedTab = 'addPhoneTab';
+            },
+            updateSelectedPhoneChanges(phone){
+                this.$emit('selected',  phone);
+                this.closeModal();
+            },
             isNumber: function(evt) {
                 evt = (evt) ? evt : window.event;
                 var charCode = (evt.which) ? evt.which : evt.keyCode;
