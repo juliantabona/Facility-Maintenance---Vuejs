@@ -473,14 +473,39 @@ trait InvoiceTraits
                  *   SEND INVOICE VIA EMAIL - RECORD NOTIFICATIONS & ACTIVITY  *
                  ***************************************************************/
 
+                //  Sms details
+
+                $phones = request('sms')['phones'];
+                $smsMessage = request('sms')['message'];
+
                 //  Email details
 
-                $email = request('email');
-                $subject = request('subject');
-                $message = request('message');
+                $primaryEmails = request('mail')['primaryEmails'];
+                $ccEmails = request('mail')['ccEmails'];
+                $bccEmails = request('mail')['bccEmails'];
+                $mailSubject = request('mail')['subject'];
+                $mailMessage = request('mail')['message'];
+
+                //  Accepted Delivery Methods
+                $deliveryMethods = request('deliveryMethods');
+
+                //  Send invoice via sms
+
+                if (in_array('Sms', $deliveryMethods)) {
+                    foreach ($phones as $phone) {
+                        $callingCode = '+'.$phone['calling_code']['calling_code'];
+                        $phoneNumber = $phone['number'];
+
+                        Twilio::message($callingCode.$phoneNumber, $smsMessage);
+                    }
+                }
 
                 //  Send invoice via mail
-                $this->sendInvoiceAsMail($email, $subject, $message, $invoice, 'sent');
+                if (in_array('Email', $deliveryMethods)) {
+                    foreach ($primaryEmails as $primaryEmail) {
+                        $this->sendInvoiceAsMail($primaryEmail, $mailSubject, $mailMessage, $invoice, 'sent');
+                    }
+                }
 
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $invoice];

@@ -154,6 +154,10 @@
                 type: Array,
                 default: () => { return [] },  
             },
+            suggestedPhones: {
+                type: Object,
+                default: () => { return { type: 'mobile', count: 1 } },
+            },
 
             //  For the toggle switch
             showIcon:{
@@ -187,7 +191,11 @@
             removeDuplicates: {
                 type: Boolean,
                 default: false 
-            }
+            },
+            setStatus: {
+                type: Boolean,
+                default: false 
+            },
         },
         data(){
             return {
@@ -268,8 +276,7 @@
                 }
             },
             handleCreatedPhone(newPhone){
-                this.addToPhones(newPhone)
-                this.runUpdate();
+                this.addToPhones(newPhone);
                 this.closeModal();                 
             },
             handleUpdatedPhone(newPhone){
@@ -283,7 +290,6 @@
             },
             handleSelectedPhone(newPhone){
                 this.addToPhones(newPhone)
-                this.runUpdate();
                 this.closeModal();   
             },
             addToPhones(newPhone){
@@ -295,11 +301,24 @@
                     this.localPhones = [];
                 }
 
-                this.localPhones.push(newPhone);
-
+                if( Array.isArray(newPhone) ){
+                    for(var x = 0; x < newPhone.length; x++){
+                        this.localPhones.push(newPhone[x]);
+                    }
+                }else{
+                    this.localPhones.push(newPhone);
+                }
+                
                 if(this.removeDuplicates){
                     this.removePhoneDuplicates();
                 }
+
+                for(var x = 0; x < this.localPhones.length; x++){
+                    this.$set(this.localPhones[x], 'show', this.setStatus);
+                    //this.localPhones[x].$set('show', this.setStatus);
+                }
+
+                this.runUpdate();
             },
             removePhoneDuplicates(){
                 this.localPhones = _.uniqBy(this.localPhones, function (e) {
@@ -317,7 +336,60 @@
             },
             runUpdate(){
                 this.$emit('updated',  this.localPhones);
+            },
+            suggestPhoneNumbers() {
+                const self = this;
+
+                //  Start loader
+                self.isLoading = true;
+
+                console.log('Start getting suggested phones...');
+
+                //  Additional data to eager load along with each phone found
+                var connections = '';
+
+                //  Use the api call() function located in resources/js/api.js
+                api.call('get', '/api/phones?modelId='+this.modelId+'&modelType='+this.modelType)
+                    .then(({data}) => {
+                        
+                        console.log(data);
+
+                        //  Stop loader
+                        self.isLoading = false;
+
+                        //  Filter 
+                        var phones = [];
+
+                        for(var x = 0; x < data.length; x++){
+                            if( phones.length < self.suggestedPhones.count ){
+                                if( data[x].type == self.suggestedPhones.type ){
+                                    phones.push(data[x]);
+                                }
+                            }
+                            
+                        }         
+
+                        //  Get phones
+                        self.addToPhones(phones);
+                    })         
+                    .catch(response => { 
+
+                        //  Stop loader
+                        self.isLoading = false;
+
+                        console.log('phoneInput.vue - Error getting suggested phones...');
+                        console.log(response);    
+                    });
             }
+        },
+        created(){
+
+            if( this.suggestedPhones.count != 0 ){
+
+                this.suggestPhoneNumbers();
+
+            }
+
         }
     };
 </script>

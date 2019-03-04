@@ -13,20 +13,24 @@
             @visibility="$emit('visibility', $event)">
 
             <template slot="content">
-                
+
                 <deliveryWidget 
-                    :deliveryMethods="['Sms' /*, Email */]"
+                    :deliveryMethods="deliveryMethods"
                     :clientDetails="localInvoice.customized_client_details"
-                    :deliveryPhones="localInvoice.customized_client_details.phones"
+                    :deliveryPhones="localDeliveryPhones"
                     :deliveryMailAddress="localDeliveryMailAddress"
                     :deliveryMailSubject="localDeliveryMailSubject"
                     :deliveryMailMessage="localDeliveryMailMessage"
                     :deliverySmsMessage="smsMessageCompiled"
                     :testSmsUrl="'/api/invoices/'+localInvoice.id+'/recurring/send/sms?test=1'"
                     :shortcodes="shortcodes"
-                    @updatedDeliveryMethods="getDeliveryMethodsInWords()"
                     :showSmsPhoneImg="false"
-                    @currentStage="stage = $event">
+                    @updatedDeliveryMethods=""
+                    @updated:stage="stage = $event"
+                    @updated:deliveryPhones="localDeliveryPhones = $event"
+                    @updated:deliveryMailAddress="localDeliveryMailAddress = $event"
+                    @updated:deliveryMailSubject="localDeliveryMailSubject = $event"
+                    @updated:deliveryMailMessage="localDeliveryMailMessage = $event">
                 </deliveryWidget>
 
             </template>
@@ -67,6 +71,8 @@
                 moment: moment,
                 
                 localInvoice: _.cloneDeep(this.invoice),
+                deliveryMethods: ['Sms' /*, Email */],
+                localDeliveryPhones: [],
                 localDeliveryMailSubject: this.subject || 'Invoice #'+this.invoice['reference_no_value'],
                 localDeliveryMailAddress: this.invoice.customized_client_details.email,
                 localDeliveryMailMessage: this.emailMsg(),
@@ -198,16 +204,28 @@
                 //  Start loader
                 self.isSending = true;
 
-                console.log('Attempt to send invoice...');
-
-                var emailData = {
-                        email: this.localDeliveryMailAddress,
-                        subject: this.localDeliveryMailSubject,
-                        message: this.localDeliveryMailMessage,
+                var data = {
+                        sms: {
+                            phones: this.localDeliveryPhones,
+                            message: this.smsMessageCompiled,
+                        },
+                        mail: {
+                            primaryEmails: [
+                                this.localDeliveryMailAddress
+                            ],
+                            ccEmails: [],
+                            bccEmails: [],
+                            subject: this.localDeliveryMailSubject,
+                            message: this.localDeliveryMailMessage
+                        },
+                        deliveryMethods: this.deliveryMethods
                     }
 
+                console.log('Attempt to send delivery data...');
+                console.log(data);
+
                 //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/invoices/'+self.localInvoice.id+'/send', emailData)
+                api.call('post', '/api/invoices/'+self.localInvoice.id+'/send', data)
                     .then(({ data }) => {
 
                         console.log(data);

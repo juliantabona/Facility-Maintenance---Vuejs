@@ -25,17 +25,18 @@
 
         <Row v-show="stage == 1" :gutter="20" type="flex" justify="center">
             <Col :span="24">
-                <p class="mt-2 mb-3 text-center font-weight-bold">How do you want to send?</p>
+                <p class="mt-2 mb-3 text-center font-weight-bold">Select 1 or more ways to send</p>
             </Col>
             <Col :span="10" v-for="(option, i) in mainOptions" :key="option.name" class="mb-2">
 
                 <IconAndCounterCard :title="option.name" :icon="option.icon" class="mb-2" type="success"
-                                    :showCheckMark="localDeliveryMethods.includes(option.name)"
+                                    :showCheckMark="true"
+                                    :checkMarkVisibility="localDeliveryMethods.includes(option.name)"
                                     @click.native="toggleOption(option.name, i)">
                 </IconAndCounterCard>
 
             </Col>
-            <Col :span="16" class="mt-2" :offset="4">
+            <Col :span="16" class="mt-4" :offset="4">
                 <Button type="primary" class="d-block float-right" @click="goToNextStep()">Continue</Button>
             </Col>
         </Row>
@@ -63,17 +64,26 @@
                                 <img style="width: 100%;" src="/images/samples/phone_animation.png">
                             </Col>
                             <Col :span="showSmsPhoneImg ? 14: 24">
+
                                 <Alert show-icon>
                                     <Icon type="ios-bulb-outline" slot="icon"></Icon>
                                     <template slot="desc">Enter the client mobile number(s). When the invoice is due it will be sent to all active numbers via SMS. Only numbers set to "Active" will receive the sms.</template>
                                 </Alert>
-                                
+
+                                <Button type="primary" class="float-right mt-2" @click="isOpenSendTestSmsModal = !isOpenSendTestSmsModal">
+                                    <span>Send Test SMS</span>
+                                    <Icon type="ios-send-outline" :size="24" :style="{ marginTop: '-4px' }"/>
+                                </Button>
+                                <div class="clearfix"></div>
+
                                 <b>Client Mobile Number(s)</b>
                                 <!-- Client Phones editor -->
                                 <phoneInput class="mb-2"  
                                             :modelId="localClientDetails.id" 
                                             :modelType="localClientDetails.model_type" 
                                             :phones="localDeliveryPhones" 
+                                            :suggestedPhones="{ type: 'mobile', count: 1 }"
+                                            :setStatus="true"
                                             :numberLimit="3"
                                             selectedType="mobile"
                                             :disabledTypes="['tel', 'fax']"                                                        
@@ -86,7 +96,7 @@
                                             onIcon="ios-checkmark" offIcon="" 
                                             title="Active:" onText="Yes" offText="No" 
                                             poptipMsg="Turn on to send the sms to this number"
-                                            @updated="localDeliveryPhones = $event">
+                                            @updated="updatePhones($event)">
                                 </phoneInput>
 
                                 <b class="d-block mt-3">Delivery Message:</b>
@@ -97,10 +107,6 @@
                                 <span :class="(localDeliverySmsMessage.length <= 160 ? 'text-success': 'text-danger') + ' text-right float-right mt-2'">Sms Characters {{ localDeliverySmsMessage.length }}/160</span>
                                 <span class="btn btn-link float-right">Edit Message</span>
                                 <div class="clearfix"></div>
-                                <Button type="primary" class="float-right mt-2" @click="isOpenSendTestSmsModal = !isOpenSendTestSmsModal">
-                                    <span>Send Test SMS</span>
-                                    <Icon type="ios-send-outline" :size="24" :style="{ marginTop: '-4px' }"/>
-                                </Button>
                             </Col>
                         </Row>
                     </TabPane>
@@ -109,11 +115,20 @@
                                 icon="ios-mail-outline" class="mt-4">
                         
 
+                        <Button type="primary" class="float-right mt-2" @click="isOpenSendTestSmsModal = !isOpenSendTestSmsModal">
+                            <span>Send Test Email</span>
+                            <Icon type="ios-send-outline" :size="24" :style="{ marginTop: '-4px' }"/>
+                        </Button>
+                        <div class="clearfix"></div>
+
                         <!-- Email Address -->
                         <Row :gutter="20" class="mt-1">
                             <Col :span="24">
                                 <span class="d-block font-weight-bold mb-1">Send to:</span>
-                                <el-input placeholder="Recipient email e.g) example@gmail.com" v-model="localDeliveryMailAddress" size="mini" class="mb-1"></el-input>
+                                <el-input placeholder="Recipient email e.g) example@gmail.com" 
+                                          v-model="localDeliveryMailAddress" size="mini" class="mb-1"
+                                          @input.native="$emit('updated:deliveryMailAddress', $event.target.value)">
+                                </el-input>
                             </Col>
                         </Row>
 
@@ -122,11 +137,12 @@
                             
                             <Col :span="24">
                                 <span class="d-block font-weight-bold mt-2 mb-1">Subject:</span>
-                                <el-input placeholder="Email Subject" v-model="deliveryMailSubject" 
-                                        size="mini" class="input-fix-append mb-1">
+                                <el-input placeholder="Email Subject" v-model="localDeliveryMailSubject" 
+                                        size="mini" class="input-fix-append mb-1"
+                                        @input.native="$emit('updated:deliveryMailSubject', $event.target.value)">
                                     <shortcodeselector slot="append"
                                         :style="{ marginLeft: '5px' }"
-                                        :shortcodes="localshortcodes" @selected="deliveryMailSubject += $event">
+                                        :shortcodes="localshortcodes" @selected="localDeliveryMailSubject += $event">
                                     </shortcodeselector>
                                 </el-input>
 
@@ -140,10 +156,11 @@
                                     Message:
                                 </span>
                                 <shortcodeselector
-                                    :shortcodes="localshortcodes" @selected="deliveryMailMessage += $event">
+                                    :shortcodes="localshortcodes" @selected="localDeliveryMailMessage += $event">
                                 </shortcodeselector>
-                                <froalaEditor :content.sync="deliveryMailMessage" 
-                                                :height="200" :heightMax="300">
+                                <froalaEditor :content.sync="localDeliveryMailMessage" 
+                                              :height="200" :heightMax="300"
+                                              @update:content="$emit('updated:deliveryMailMessage', $event)">
                                 </froalaEditor>                    
                             </Col>
                         </Row>
@@ -253,11 +270,15 @@
             } 
         },
         methods: {
+            updatePhones(phones){
+                this.localDeliveryPhones = phones;
+                this.$emit('updated:deliveryPhones', phones);
+            },
             goToNextStep(){
                 this.stage += 1;
 
                 //  Alert parent on the changes of the stage
-                this.$emit('currentStage', this.stage);
+                this.$emit('updated:stage', this.stage);
             },
             toggleOption(name, index){
                 if( this.localDeliveryMethods.includes(name) ){
@@ -284,7 +305,7 @@
             }
         },
         created(){
-            this.$emit('currentStage', this.stage);
+            this.$emit('updated:stage', this.stage);
         }
     }
 </script>

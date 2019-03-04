@@ -25,7 +25,7 @@
         props:{
             width:{
                 type: Number,
-                default: null
+                default: 520
             },
             hideModal: {
                 type: Boolean,

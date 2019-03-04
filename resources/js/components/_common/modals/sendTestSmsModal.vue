@@ -28,6 +28,7 @@
                                     :modelId="user.id" 
                                     :modelType="user.model_type" 
                                     :phones="testPhoneNumber" 
+                                    :suggestedPhones="{ type: 'mobile', count: 1 }"
                                     :numberLimit="1"
                                     selectedType="mobile"
                                     :disabledTypes="['tel', 'fax']"                                                        

@@ -11,6 +11,17 @@
     z-index: 1 !important;
   }
 
+  .animatedCheckmark{
+    width: 36px;
+    height: 36px;
+    padding: 2px;
+    position: absolute;
+    right: 20px;
+    background: #f5f5f5;
+    border: 1px solid #d4d4d4;
+    border-radius: 50%;
+  }
+
 </style>
 <template>
 
@@ -23,7 +34,9 @@
             </Badge>
         </div>
         <!-- Animated checkmark  -->
-        <animatedCheckmark v-if="showCheckMark" :style="{ width: '30px', height: 'auto' }"></animatedCheckmark>
+        <div :class="showCheckMark ? 'animatedCheckmark' : ''">
+            <animatedCheckmark v-if="checkMarkVisibility" :style="{ width: '30px', height: 'auto' }"></animatedCheckmark>
+        </div>
     </Card>
 
 </template>
@@ -65,7 +78,11 @@
             showCheckMark: {
                 type: Boolean,
                 default: false
-            }
+            },
+            checkMarkVisibility: {
+                type: Boolean,
+                default: false
+            },
         },
         components: { animatedCheckmark },
         methods: {

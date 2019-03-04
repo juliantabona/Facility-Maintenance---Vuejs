@@ -117,7 +117,7 @@
                         deliveryPlan: {
                             automatic: true,
                             methods: [
-                                'Email',
+                                /*'Email',*/
                                 'Sms'
                             ],
                             mail: {

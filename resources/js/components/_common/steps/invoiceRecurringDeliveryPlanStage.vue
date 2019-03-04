@@ -50,7 +50,13 @@
                                 :deliverySmsMessage="smsMessageCompiled"
                                 :testSmsUrl="'/api/invoices/'+localInvoice.id+'/recurring/send/sms?test=1'"
                                 :shortcodes="shortcodes"
-                                @updatedDeliveryMethods="getDeliveryMethodsInWords()">
+                                @updatedDeliveryMethods="getDeliveryMethodsInWords()"
+                                @updated:stage=""
+                                @updated:deliveryPhones="localInvoice.recurringSettings.deliveryPlan.sms.phones = $event"
+                                @updated:deliveryMailAddress="localInvoice.recurringSettings.deliveryPlan.mail.email = $event"
+                                @updated:deliveryMailSubject="localInvoice.recurringSettings.deliveryPlan.mail.subject = $event"
+                                @updated:deliveryMailMessage="localInvoice.recurringSettings.deliveryPlan.mail.message = $event">
+
                             </deliveryWidget>
 
                         </Col>
