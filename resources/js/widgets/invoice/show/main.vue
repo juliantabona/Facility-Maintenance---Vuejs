@@ -39,7 +39,7 @@
                 <div v-if="isSavingInvoice" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Saving, please wait...</div>
             </Col>
         </Row>
-
+        
         <transition-group name="fade">
             
             <Row :gutter="20" key="recurring_details" class="animated">
@@ -56,7 +56,7 @@
                     </saveInvoiceBtn>
 
                     <!-- Recurring Settings Icon Button -->
-                    <span class="float-right d-block pt-2">
+                    <span v-if="localInvoice.isRecurring" class="float-right d-block pt-2">
                         <div @click="showRecurringSettings = !showRecurringSettings" :style="{ position: 'relative', zIndex: '1' }">
                             <Icon :style="showRecurringSettings ? { fontSize: '20px',height: '33px',color: '#2d8cf0',background: '#eee',borderRadius: '50% 50% 0 0',padding: '3px 6px',marginTop: '-3px',boxShadow: '#c8c8c8 1px 1px 1px inset',cursor: 'pointer' }: { cursor: 'pointer' }"
                                 type="ios-settings-outline" :size="20" />
@@ -71,6 +71,17 @@
                         class="float-right p-2">
                     </toggleSwitch>
 
+                    <div class="clearfix"></div>
+
+                    <!-- Next recurring invoice countdown -->
+                    <basicCoutdown 
+                        v-if="localInvoice.has_approved_recurring_settings" 
+                        class="p-3 mb-3 float-right bg-warning"
+                        :date="nextRecurringInvoiceDate"
+                        text="Sending next invoice in: "
+                        textAtZero="Sent the scheduled invoice!">
+                    </basicCoutdown>
+                    
                     <!-- Make recurring settings -->
                     <Row v-show="showRecurringSettings" key="dynamic" class="animated mb-3">
 
@@ -328,7 +339,9 @@
     
     /*  Cards  */
     import IconAndCounterCard from './../../../components/_common/cards/IconAndCounterCard.vue';
-    
+
+    /*  Countdown  */
+    import basicCoutdown from './../../../components/_common/countdowns/basicCoutdown.vue';
 
     import lodash from 'lodash';
     Event.prototype._ = lodash;
@@ -339,7 +352,7 @@
             mainTitle, companyOrIndividualDetails, summaryDetails, toolbar,
             items, totalBreakDown, notes, mainFooter,
             createInvoiceBtn, saveInvoiceBtn, toggleSwitch, editModeSwitch,
-            Loader, imageUploader, clientSelector, IconAndCounterCard
+            Loader, imageUploader, clientSelector, IconAndCounterCard, basicCoutdown
         },
         props: {
             invoice: {
@@ -428,6 +441,19 @@
                     this.invoiceHasChanged = this.checkIfinvoiceHasChanged(val);
                 },
                 deep: true
+            }
+        },
+        computed: {
+            nextRecurringInvoiceDate: function(){
+                if( this.localInvoice.recurringSettings ){
+                    if( this.localInvoice.recurringSettings.schedulePlan.nextDate ){
+                        return this.localInvoice.recurringSettings.schedulePlan.nextDate;
+                    }else{
+                        return this.localInvoice.recurringSettings.schedulePlan.startDate; 
+                    }
+                }
+
+                return null;
             }
         },
         methods: {

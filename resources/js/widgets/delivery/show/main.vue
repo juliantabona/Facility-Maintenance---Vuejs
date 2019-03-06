@@ -48,7 +48,7 @@
                     <span class="d-inline-block">Delivery Methods:</span>
                     <span class="d-inline-block">
                         <CheckboxGroup v-model="localDeliveryMethods"
-                            @on-change="$emit('updatedDeliveryMethods', $event)">
+                            @on-change="$emit('updated:deliveryMethods', $event)">
                             <Checkbox label="Email" :disabled="localDeliveryMethods.length == 1 && localDeliveryMethods[0] == 'Email'"></Checkbox>
                             <Checkbox label="Sms" :disabled="localDeliveryMethods.length == 1 && localDeliveryMethods[0] == 'Sms'"></Checkbox>
                         </CheckboxGroup>

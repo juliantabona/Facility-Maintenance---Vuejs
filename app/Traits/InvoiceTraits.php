@@ -522,6 +522,16 @@ trait InvoiceTraits
         }
     }
 
+    /*  sendInvoiceAsMail() method:
+     *
+     *  This is used to send the invoice via Mail only. It takes the
+     *  email address, subject, message and actual invoice to build a
+     *  pdf to send to the receipient. Notifications will also be used
+     *  to alert any user that needs to be notified on the event. After
+     *  the email is sent, the activity is recorded as a recent activity.
+     *  It will also add any CC or BCC within the mail if provided
+     *
+     */
     public function sendInvoiceAsMail($email, $subject, $message, $invoice, $status = 'sent')
     {
         //  Current authenticated user
@@ -550,16 +560,110 @@ trait InvoiceTraits
             $pdfName = 'Invoice - '.$invoice->id.'.pdf';
         }
 
+        /***********************************************
+         *   REPLACE SHORTCODES WITH ACTUAL CONTENT    *
+         ***********************************************/
+
+        $message = $this->replaceShortcodes($invoice, $message);
+        $subject = $this->replaceShortcodes($invoice, $subject);
+
         /******************************
          *   SEND INVOICE VIA MAIL    *
+         ******************************/
+
+        Mail::to($email)->send(new InvoiceMail($subject, $message, $invoicePDF, $pdfName));
+
+        /*****************************
+         *   RECORD ACTIVITY         *
          *****************************/
+
+        //  Structure mail template
+        $mail = ['email' => $email, 'subject' => $subject, 'message' => $message];
+
+        //  Record activity of invoice sent receipt
+        $invoiceSentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'mail' => $mail]);
+    }
+
+    /*  sendInvoiceReceiptAsMail() method:
+     *
+     *  This is used to send the receipt via Mail only. It takes the
+     *  email address, subject, message and actual invoice to build a
+     *  pdf to send to the receipient. Notifications will also be used
+     *  to alert any user that needs to be notified on the event. After
+     *  the email is sent, the activity is recorded as a recent activity.
+     *  It will also add any CC or BCC within the mail if provided
+     *
+     */
+    public function sendInvoiceReceiptAsMail($email, $subject, $message, $invoice, $status = 'sent receipt')
+    {
+        //  Current authenticated user
+        $auth_user = auth('api')->user();
+
+        /*****************************
+         *   SEND NOTIFICATIONS      *
+         *****************************/
+
+        if ($auth_user) {
+            $auth_user->notify(new InvoiceReceiptSent($invoice));
+        }
+
+        //  Get Receipt PDF
+        $receiptPDF = PDF::loadView('emails.send_invoice_receipt', array('invoice' => $invoice, 'msg' => null));
+
+        //  Get invoice receipt name
+        if (!empty($invoice->details['heading']) && !empty($invoice['reference_no_value'])) {
+            //  Get the invoice receipt name from heading, reference and date
+            $pdfName = 'Receipt - '.
+                        $invoice->details['reference_no_value'].' - '.
+                        Carbon::parse($invoice['created_date_value'])->format('M d Y').
+                        '.pdf';
+        } else {
+            //  Otherwise get invoice name from the invoice id
+            $pdfName = 'Receipt - '.$invoice->id.'.pdf';
+        }
+
+        /***********************************************
+         *   REPLACE SHORTCODES WITH ACTUAL CONTENT    *
+         ***********************************************/
+
+        $message = $this->replaceShortcodes($invoice, $message);
+        $subject = $this->replaceShortcodes($invoice, $subject);
+
+        /**************************************
+         *   SEND INVOICE RECEIPT VIA MAIL    *
+         **************************************/
+
+        Mail::to($email)->send(new InvoiceReceiptMail($subject, $message, $invoice, $receiptPDF, $pdfName));
+
+        /*****************************
+         *   RECORD ACTIVITY         *
+         *****************************/
+
+        //  Structure mail template
+        $mail = ['email' => $email, 'subject' => $subject, 'message' => $message];
+
+        //  Record activity of invoice sent receipt
+        $invoiceSentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'mail' => $mail]);
+    }
+
+    /*  replaceShortcodes() method:
+     *
+     *  This is used to replace all shortcodes within a given message
+     *  The method goes and checks for any shortcode that can be converted
+     *  to actual information used in the invoice. E.g it would replace
+     *  the shortcode [grand_total] with the actual grand total amount
+     *  of the invoice.
+     *
+     */
+    public function replaceShortcodes($invoice, $data)
+    {
         $client = $invoice->customized_client_details;
         $my_company = $invoice->customized_company_details;
         $currency = $invoice->currency_type['currency']['symbol'] ?? '';
         $sub_total = $currency.number_format($invoice->sub_total_value, 2, ',', '.');
         $grand_total = $currency.number_format($invoice->grand_total_value, 2, ',', '.');
 
-        //  Custom Variables
+        //  Custom Invoice Variables - Shortcodes
         $customFields = [
             '[invoice_heading]' => $invoice->heading,
             '[invoice_reference_no]' => '#'.$invoice->reference_no_value,
@@ -580,21 +684,8 @@ trait InvoiceTraits
         $search = array_keys($customFields);
         $replace = array_values($customFields);
 
-        $message = str_replace($search, $replace, $message);
-        $subject = str_replace($search, $replace, $subject);
-
-        //  Send email
-        Mail::to($email)->send(new InvoiceMail($subject, $message, $invoicePDF, $pdfName));
-
-        /*****************************
-         *   RECORD ACTIVITY         *
-         *****************************/
-
-        //  Structure mail template
-        $mail = ['email' => $email, 'subject' => $subject, 'message' => $message];
-
-        //  Record activity of invoice sent receipt
-        $invoiceSentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'mail' => $mail]);
+        //  Return the replaced data - All shortcodes have been replaced with actual content
+        return str_replace($search, $replace, $data);
     }
 
     /*  initiateSkipSend() method:
@@ -653,9 +744,9 @@ trait InvoiceTraits
         //  Current authenticated user
         $auth_user = auth('api')->user();
 
-        /***********************************************************
-         *   CHECK IF USER HAS PERMISSION TO SEND INVOICE RECEIPT  *
-         **********************************************************/
+        /***************************************************************
+         *   CHECK IF USER HAS PERMISSION TO SEND INVOICE RECEIPT      *
+         **************************************************************/
 
         try {
             //  Get the invoice
@@ -663,49 +754,43 @@ trait InvoiceTraits
 
             //  Check if we have an invoice
             if ($invoice) {
-                /*****************************
-                 *   SEND NOTIFICATIONS      *
-                 *****************************/
+                /****************************************************************************
+                 *   SEND INVOICE RECEIPT VIA EMAIL, SMS - RECORD NOTIFICATIONS & ACTIVITY  *
+                 ****************************************************************************/
 
-                $auth_user->notify(new InvoiceReceiptSent($invoice));
+                //  Sms details
 
-                /*****************************
-                 *   SEND INVOICE VIA EMAIL  *
-                 *****************************/
+                $phones = request('sms')['phones'];
+                $smsMessage = request('sms')['message'];
 
                 //  Email details
-                $email = request('email');
-                $subject = request('subject');
-                $message = request('message');
 
-                //  Invoice PDF
-                $receiptPDF = PDF::loadView('emails.send_invoice_receipt', array('invoice' => $invoice, 'msg' => null));
+                $primaryEmails = request('mail')['primaryEmails'];
+                $ccEmails = request('mail')['ccEmails'];
+                $bccEmails = request('mail')['bccEmails'];
+                $mailSubject = request('mail')['subject'];
+                $mailMessage = request('mail')['message'];
 
-                //  Get invoice receipt name
-                if (!empty($invoice->details['heading']) && !empty($invoice['reference_no_value'])) {
-                    //  Get the invoice receipt name from heading, reference and date
-                    $pdfName = 'Receipt - '.
-                               $invoice->details['reference_no_value'].' - '.
-                               Carbon::parse($invoice['created_date_value'])->format('M d Y').
-                               '.pdf';
-                } else {
-                    //  Otherwise get invoice name from the invoice id
-                    $pdfName = 'Receipt - '.$invoice->id.'.pdf';
+                //  Accepted Delivery Methods
+                $deliveryMethods = request('deliveryMethods');
+
+                //  Send invoice via sms
+
+                if (in_array('Sms', $deliveryMethods)) {
+                    foreach ($phones as $phone) {
+                        $callingCode = '+'.$phone['calling_code']['calling_code'];
+                        $phoneNumber = $phone['number'];
+
+                        Twilio::message($callingCode.$phoneNumber, $smsMessage);
+                    }
                 }
 
-                //  Send email
-                Mail::to($email)->send(new InvoiceReceiptMail($subject, $message, $invoice, $receiptPDF, $pdfName));
-
-                /*****************************
-                 *   RECORD ACTIVITY         *
-                 *****************************/
-
-                //  Structure mail template
-                $mail = ['email' => $email, 'subject' => $subject, 'message' => $message];
-
-                //  Record activity of invoice sent receipt
-                $status = 'sent receipt';
-                $invoiceSentReceiptActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'mail' => $mail]);
+                //  Send invoice via mail
+                if (in_array('Email', $deliveryMethods)) {
+                    foreach ($primaryEmails as $primaryEmail) {
+                        $this->sendInvoiceReceiptAsMail($primaryEmail, $mailSubject, $mailMessage, $invoice, 'sent receipt');
+                    }
+                }
 
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $invoice];

@@ -7,9 +7,9 @@
             :isSaving="isSending" 
             :hideModal="hideModal"
             title="Send Invoice"
-            :okText="(stage == 1) ? '' : 'Send'" 
+            :okText="(stage == 1) ? '' : okText" 
             :cancelText="(stage == 1) ? '' : 'Cancel'"
-            @on-ok="sendEmail()" 
+            @on-ok="send()" 
             @visibility="$emit('visibility', $event)">
 
             <template slot="content">
@@ -25,8 +25,8 @@
                     :testSmsUrl="'/api/invoices/'+localInvoice.id+'/recurring/send/sms?test=1'"
                     :shortcodes="shortcodes"
                     :showSmsPhoneImg="false"
-                    @updatedDeliveryMethods=""
                     @updated:stage="stage = $event"
+                    @updated:deliveryMethods="deliveryMethods = $event"
                     @updated:deliveryPhones="localDeliveryPhones = $event"
                     @updated:deliveryMailAddress="localDeliveryMailAddress = $event"
                     @updated:deliveryMailSubject="localDeliveryMailSubject = $event"
@@ -120,6 +120,13 @@
 
                 //  Return the compiled message
                 return message;
+            },
+            okText: function(){
+                var smsText = this.deliveryMethods.includes('Sms') ? 'Sms': '';
+                var emailText = this.deliveryMethods.includes('Email') ? 'Email': '';
+                var andText = this.deliveryMethods.includes('Sms') && this.deliveryMethods.includes('Email') ? ' & ': '';
+                
+                return 'Send '+( smsText )+( andText )+( emailText );
             }
         },
         methods: {
@@ -197,7 +204,7 @@
 
                 return shortcodes;
             },
-            sendEmail(){
+            send(){
 
                 var self = this;
 
@@ -221,7 +228,7 @@
                         deliveryMethods: this.deliveryMethods
                     }
 
-                console.log('Attempt to send delivery data...');
+                console.log('Attempt to send invoice data...');
                 console.log(data);
 
                 //  Use the api call() function located in resources/js/api.js

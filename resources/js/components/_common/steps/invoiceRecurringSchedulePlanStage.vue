@@ -17,7 +17,8 @@
 
                 <Icon type="ios-information-circle-outline" :size="28" style="margin-top: -4px;"/>
                 <span>This recurring schedule is not approved. You can only approve once all 3 steps are completed. <a href="#" class="font-weight-bold">Learn more <Icon type="ios-share-alt-outline" :size="20" style="margin-top: -9px;"/></a></span>
-            
+                <br>
+
             </template>
 
             <template slot="leftContent">
@@ -168,7 +169,7 @@
                         <!-- If Custom -->
                         <span v-show="localInvoice.recurringSettings.schedulePlan.chosen == 'Custom'" class="mb-3">
                             <span class="float-left d-block ml-1 mr-1 mb-3">every</span>
-                            <el-input v-model="localInvoice.recurringSettings.schedulePlan.custom.count" :maxlength="2" 
+                            <el-input v-model="localInvoice.recurringSettings.schedulePlan.custom.count" type="number" min="1" :maxlength="2"
                                       placeholder="E.g) 6" size="mini" class="float-left d-block mr-1 mb-3" :style="{ maxWidth:'60px', marginTop:'-3px' }"
                                       @input="updateSchedulePlans()">
                             </el-input>
@@ -292,6 +293,48 @@
                         </span>
                     </Col>
 
+                    <Col span="24 mb-3">
+                        
+                        <!-- Set the time -->
+                        <span class="mb-3">
+                            <span class="float-left d-block ml-1 mr-1">Always send at</span>
+                            <Select v-model="scheduleTime" :style="{ width:'90px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day"
+                                    @on-change="updateSchedulePlans()">
+
+                                <Option value="0600AM">06:00 AM</Option>
+                                <Option value="0630AM">06:30 AM</Option>
+                                <Option value="0700AM">07:00 AM</Option>
+                                <Option value="0730AM">07:30 AM</Option>
+                                <Option value="0800AM">08:00 AM</Option>
+                                <Option value="0830AM">08:30 AM</Option>
+                                <Option value="0900AM">09:00 AM</Option>
+
+                                <Option value="0930AM">09:30 AM</Option>
+                                <Option value="1000AM">10:00 AM</Option>
+                                <Option value="1030AM">10:30 AM</Option>
+                                <Option value="1100AM">11:00 AM</Option>
+                                <Option value="1130AM">11:30 AM</Option>
+                                <Option value="1200PM">12:00 PM</Option>
+
+                                <Option value="1230PM">12:30 PM</Option>
+                                <Option value="1300PM">13:00 PM</Option>
+                                <Option value="1330PM">13:30 PM</Option>
+                                <Option value="1400PM">14:00 PM</Option>
+                                <Option value="1430PM">14:30 PM</Option>
+                                <Option value="1500PM">15:00 PM</Option>
+
+                                <Option value="1530PM">15:30 PM</Option>
+                                <Option value="1600PM">16:00 PM</Option>
+                                <Option value="1630PM">16:30 PM</Option>
+                                <Option value="1700PM">17:00 PM</Option>
+                                <Option value="1730PM">17:30 PM</Option>
+                                <Option value="1800PM">18:00 PM</Option>
+
+                            </Select>
+                            
+                        </span>
+                    </Col>
+
                     <!-- Schedule Start and End period  -->
                     <Col span="24" class="border-top pt-3">
                         
@@ -317,7 +360,7 @@
                             <Option value="Date">On</Option>
                             <Option value="Never">Never</Option>
                         </Select>
-                        <el-input v-show="localInvoice.recurringSettings.schedulePlan.stop.chosen == 'Count'" :maxlength="2" v-model="localInvoice.recurringSettings.schedulePlan.stop.count" placeholder="E.g) 3" size="mini" class="float-left mr-1 ml-1 mb-3" :style="{ maxWidth:'80px', marginTop:'-3px' }"
+                        <el-input v-show="localInvoice.recurringSettings.schedulePlan.stop.chosen == 'Count'" type="number" min="1" :maxlength="2" v-model="localInvoice.recurringSettings.schedulePlan.stop.count" placeholder="E.g) 3" size="mini" class="float-left mr-1 ml-1 mb-3" :style="{ maxWidth:'80px', marginTop:'-3px' }"
                             @input="updateScheduleInWords()">
                         </el-input>
                         <!-- Text for when to end -->
@@ -400,6 +443,7 @@
                 isSavingRecurringSchedulePlan: false,
                 scheduleSummaryInWords:'',
                 scheduleStartAndStopDatesInWords: '',
+                scheduleTime: '0800AM',
                 pickerOptions: {
                     disabledDate(time) {
                         if( (vm.localInvoice || {}).recurringSettings){
@@ -528,8 +572,18 @@
                     this.scheduleSummaryInWords = 'Everyday';
 
                 }else if(chosenSchedule == 'Weekly'){
-                    var newStartDate = moment().day( parseInt(weekly) );
+                    //  Get the day of the week relative to this current week.
+                    var today = moment();
+                    var newStartDate = moment().day( parseInt(weekly) )
+                                       // Set the time
+                                      .set('hour', this.scheduleTime.substring(0, 2)).set('minute', this.scheduleTime.substring(2, 4)).set('second', '00');
                     
+                    //  If the date is in the past of the current day
+                    if( today > moment(newStartDate) ){
+                        //  Add 7 days to move it to the next week
+                        newStartDate = newStartDate.add(7, 'days');
+                    }
+
                     //  Assumed to end after 4 weeks
                     var newEndDate = moment(newStartDate).add(4, 'weeks');
 
@@ -538,12 +592,13 @@
 
                 }else if(chosenSchedule == 'Monthly'){
                     var today = moment();
-                    var setDate = moment().set('date', parseInt(monthly) );
+                    var newStartDate = moment().set('date', parseInt(monthly) )
+                                       // Set the time
+                                      .set('hour', this.scheduleTime.substring(0, 2)).set('minute', this.scheduleTime.substring(2, 4)).set('second', '00');
+                    
 
-                    if(today >= setDate){
-                        var newStartDate = setDate.add(1, 'months');
-                    }else{
-                        var newStartDate = setDate;
+                    if(today >= newStartDate){
+                        var newStartDate = newStartDate.add(1, 'months');
                     }
                 
                     //  Assumed to end after 12 months
@@ -555,12 +610,13 @@
                 }else if(chosenSchedule == 'Yearly'){
                     var today = moment();
                     var todaysYear = today.get('year');
-                    var setDate = moment(todaysYear+'-'+(parseInt(yearlyMonth)+1)+'-'+parseInt(yearlyDay),'YYYY-MM-DD');  
+                    var newStartDate = moment(todaysYear+'-'+(parseInt(yearlyMonth)+1)+'-'+parseInt(yearlyDay),'YYYY-MM-DD')
+                                       // Set the time
+                                      .set('hour', this.scheduleTime.substring(0, 2)).set('minute', this.scheduleTime.substring(2, 4)).set('second', '00');
+                      
 
-                    if(today >= setDate){
-                        var newStartDate = setDate.add(1, 'years');
-                    }else{
-                        var newStartDate = setDate;
+                    if(today >= newStartDate){
+                        var newStartDate = newStartDate.add(1, 'years');
                     }
 
                     //  Assumed to end after 3 years
@@ -573,7 +629,9 @@
 
                     if(chosenCustom == 'Days'){  
                         
-                        var newStartDate = moment().add(customCount, 'days');
+                        var newStartDate = moment().add(customCount, 'days')
+                                           // Set the time
+                                           .set('hour', this.scheduleTime.substring(0, 2)).set('minute', this.scheduleTime.substring(2, 4)).set('second', '00');
 
                         //  Assumed to end after 3 cycles
                         var newEndDate = moment(newStartDate).add(customCount*3, 'days');
@@ -582,8 +640,10 @@
                         this.scheduleSummaryInWords = 'Every ' + customCount + (customCount == 1 ? ' Day': ' Days');
 
                     }else if(chosenCustom == 'Weeks'){  
-                        
-                        var newStartDate = moment().day( parseInt(weeks) ).add(customCount, 'weeks');
+                        var newStartDate = moment().day( parseInt(weeks) ).add(customCount, 'weeks')
+                                           // Set the time
+                                           .set('hour', this.scheduleTime.substring(0, 2)).set('minute', this.scheduleTime.substring(2, 4)).set('second', '00');
+
                         //  Assumed to end after 3 cycles
                         var newEndDate = moment(newStartDate).add(customCount*3, 'weeks');
 
@@ -592,13 +652,9 @@
 
                     }else if(chosenCustom == 'Months'){
                         var today = moment();
-                        var setDate = moment().set('date', parseInt(months) ).add(customCount, 'months');
-
-                        if(today >= setDate){
-                            var newStartDate = setDate.add(1, 'months');
-                        }else{
-                            var newStartDate = setDate;
-                        }
+                        var setDate = moment().set('date', parseInt(months) ).add(customCount, 'months')
+                                      // Set the time
+                                      .set('hour', this.scheduleTime.substring(0, 2)).set('minute', this.scheduleTime.substring(2, 4)).set('second', '00');
 
                         //  Assumed to end after 3 cycles
                         var newEndDate = moment(newStartDate).add(customCount*3, 'months');
@@ -612,12 +668,6 @@
                         var setDate = moment(todaysYear+'-'+(parseInt(yearsMonth)+1)+'-'+parseInt(yearsDay),'YYYY-MM-DD')
                                             .add(customCount, 'years');  
 
-                        if(today >= setDate){
-                            var newStartDate = setDate.add(1, 'years');
-                        }else{
-                            var newStartDate = setDate;
-                        }
-
                         //  Assumed to end after 3 cycles
                         var newEndDate = moment(newStartDate).add(customCount*3, 'years');
 
@@ -630,8 +680,13 @@
 
                 if(newStartDate){
 
-                    var updatedStartDate = newStartDate.format('YYYY-MM-DD');
-                    var updatedEndDate = newEndDate.format('YYYY-MM-DD');
+                    //  Set the time
+                    newStartDate = newStartDate.set('hour', this.scheduleTime.substring(0, 2)).set('minute', this.scheduleTime.substring(2, 4)).set('second', '00');
+                    newEndDate = newEndDate.set('hour', this.scheduleTime.substring(0, 2)).set('minute', this.scheduleTime.substring(2, 4)).set('second', '00');
+
+                    //  Set the format  
+                    var updatedStartDate = newStartDate.format('YYYY-MM-DD HH:mm:ss');
+                    var updatedEndDate = newEndDate.format('YYYY-MM-DD HH:mm:ss');
 
                     this.$set(this.localInvoice.recurringSettings.schedulePlan, 'startDate', updatedStartDate);
                     this.$set(this.localInvoice.recurringSettings.schedulePlan.stop, 'date', updatedEndDate);
@@ -648,9 +703,10 @@
                     var currStopDate = this.localInvoice.recurringSettings.schedulePlan.stop.date;
                     var currStopCount = this.localInvoice.recurringSettings.schedulePlan.stop.count;          //  2
                     var chosenStopMethod = this.localInvoice.recurringSettings.schedulePlan.stop.chosen       //  Count, Date, Never
+                    var time = this.scheduleTime.substring(0, 2) +':'+ this.scheduleTime.substring(2, 4) + this.scheduleTime.substring(4, 6);
 
-                    var startDateInWods = 'Create first invoice on ' + moment(currStartDate).format('MMM Do YYYY');
-                    var stopDate = ' and send the last on '+moment(currStopDate).format('MMM Do YYYY');
+                    var startDateInWods = 'Create first invoice on ' + moment(currStartDate).format('MMM Do YYYY') + ' at ' + time;
+                    var stopDate = ' and send the last on '+moment(currStopDate).format('MMM Do YYYY') + ' at ' + time;
                     var stopCount = ' and stop after ' + (currStopCount) + (currStopCount == 1 ? ' invoice has': ' invoices have')+' been sent';
                     var stopNever = ' and never stop sending';
 
