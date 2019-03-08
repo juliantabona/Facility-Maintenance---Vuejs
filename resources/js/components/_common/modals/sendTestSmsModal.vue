@@ -17,7 +17,7 @@
                     <Col :span="24">
                         <Alert show-icon>
                             <Icon type="ios-bulb-outline" slot="icon"></Icon>
-                            <template slot="desc">You can send a test sms to any number you want. This is so that you can see how your sms will look like for your customers ;)</template>
+                            <template slot="desc">You can send a test sms to any number you want. This is so that you can see how your sms will look like for your customers :)</template>
                         </Alert>
                     </Col>
                     
@@ -104,18 +104,19 @@
                     //  Start loader
                     self.isSending = true;
 
-                    console.log('Attempt to send recurring invoice test sms...');
-
-                    var smsData = {
-                            phoneNumber: this.testPhoneNumber[0],
-                            message: this.locaMessage,
+                    var data = {
+                            sms: {
+                                phones: [ this.testPhoneNumber[0] ],
+                                message: this.locaMessage,
+                            },
+                            deliveryMethods: ['Sms']
                         }
 
-                    console.log('smsData');
-                    console.log(smsData);
+                    console.log('Attempt to send test sms data...');
+                    console.log(data);
 
                     //  Use the api call() function located in resources/js/api.js
-                    api.call('post', self.url, smsData)
+                    api.call('post', self.url, data)
                     .then(({ data }) => {
 
                         console.log(data);
@@ -138,7 +139,7 @@
                         //  Stop loader
                         self.isSending = false;
 
-                        console.log('sendTestSmsModal.vue - Error sending recurring invoice test sms...');
+                        console.log('sendTestSmsModal.vue - Error sending test sms...');
                         console.log(response);
                     });
                 }

@@ -146,7 +146,6 @@ Route::post('invoices/{invoice_id}/recurring/update-schedule-plan', 'Api\Invoice
 Route::post('invoices/{invoice_id}/recurring/update-delivery-plan', 'Api\InvoiceController@updateRecurringSettingsDeliveryPlan');
 Route::post('invoices/{invoice_id}/recurring/update-payment-plan', 'Api\InvoiceController@updateRecurringSettingsPaymentPlan');
 Route::post('invoices/{invoice_id}/recurring/approve', 'Api\InvoiceController@approveRecurringSettings');
-Route::post('invoices/{invoice_id}/recurring/send/sms', 'Api\InvoiceController@sendRecurringInvoiceSms');
 
 /*   PRODUCT/SERVICE RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete

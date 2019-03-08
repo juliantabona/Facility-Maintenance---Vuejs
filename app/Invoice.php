@@ -113,7 +113,7 @@ class Invoice extends Model
 
     public function skippedSendingActivities()
     {
-        return $this->recentActivities()->where('type', 'skip send');
+        return $this->recentActivities()->where('type', 'skipped sending invoice');
     }
 
     public function sentReceiptActivities()
@@ -128,7 +128,7 @@ class Invoice extends Model
 
     public function paymentCanceledActivities()
     {
-        return $this->recentActivities()->where('type', 'payment cancelled')->limit(1);
+        return $this->recentActivities()->where('type', 'cancelled payment')->limit(1);
     }
 
     public function client()
@@ -166,7 +166,7 @@ class Invoice extends Model
 
     public function getLastSkippedSendingActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'skip send')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'skipped sending invoice')->first();
     }
 
     public function getLastSentReceiptActivityAttribute()
@@ -181,7 +181,7 @@ class Invoice extends Model
 
     public function getLastPaymentCancelledActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'payment cancelled')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'cancelled payment')->first();
     }
 
     public function getLastRecurringSchedulePlanActivityAttribute()

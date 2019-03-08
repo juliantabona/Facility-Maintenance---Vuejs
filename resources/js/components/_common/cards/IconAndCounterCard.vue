@@ -35,7 +35,7 @@
         </div>
         <!-- Animated checkmark  -->
         <div :class="showCheckMark ? 'animatedCheckmark' : ''">
-            <animatedCheckmark v-if="checkMarkVisibility" :style="{ width: '30px', height: 'auto' }"></animatedCheckmark>
+            <animatedCheckmark v-if="checkMarkVisibility" :style="{ width: '30px', height: 'auto' }" :speed="true"></animatedCheckmark>
         </div>
     </Card>
 

@@ -115,7 +115,7 @@
                                 icon="ios-mail-outline" class="mt-4">
                         
 
-                        <Button type="primary" class="float-right mt-2" @click="isOpenSendTestSmsModal = !isOpenSendTestSmsModal">
+                        <Button type="primary" class="float-right mt-2" @click="isOpenSendTestEmailModal = !isOpenSendTestEmailModal">
                             <span>Send Test Email</span>
                             <Icon type="ios-send-outline" :size="24" :style="{ marginTop: '-4px' }"/>
                         </Button>
@@ -137,12 +137,16 @@
                             
                             <Col :span="24">
                                 <span class="d-block font-weight-bold mt-2 mb-1">Subject:</span>
-                                <el-input placeholder="Email Subject" v-model="localDeliveryMailSubject" 
+                                <el-input
+                                        ref="email_subject" 
+                                        placeholder="Email Subject" v-model="localDeliveryMailSubject" 
                                         size="mini" class="input-fix-append mb-1"
+                                        @blur="getCursorPosition($event)"
                                         @input.native="$emit('updated:deliveryMailSubject', $event.target.value)">
                                     <shortcodeselector slot="append"
                                         :style="{ marginLeft: '5px' }"
-                                        :shortcodes="localshortcodes" @selected="localDeliveryMailSubject += $event">
+                                        :shortcodes="localshortcodes" 
+                                        @selected="localDeliveryMailSubject = insertShortCode($refs.email_subject, $event)">
                                     </shortcodeselector>
                                 </el-input>
 
@@ -156,11 +160,18 @@
                                     Message:
                                 </span>
                                 <shortcodeselector
-                                    :shortcodes="localshortcodes" @selected="localDeliveryMailMessage += $event">
+                                    :shortcodes="localshortcodes" 
+                                    :copyToClipboard="true"
+                                    @selected="">
                                 </shortcodeselector>
-                                <froalaEditor :content.sync="localDeliveryMailMessage" 
-                                              :height="200" :heightMax="300"
-                                              @update:content="$emit('updated:deliveryMailMessage', $event)">
+                                <froalaEditor 
+                                            ref="email_message" 
+                                            :content.sync="localDeliveryMailMessage" 
+                                            :height="200" 
+                                            :heightMax="300"
+                                            @onFocus=""
+                                            @onBlur=""
+                                            @update:content="$emit('updated:deliveryMailMessage', $event)">
                                 </froalaEditor>                    
                             </Col>
                         </Row>
@@ -180,6 +191,19 @@
                     @sent="$emit('sent', $event)">
                 </sendTestSmsModal>
 
+                <!-- 
+                    MODAL TO SEND TEST EMAIL
+                -->
+                <sendTestEmailModal 
+                    v-if="isOpenSendTestEmailModal" 
+                    mailAddress="" 
+                    :subject="localDeliveryMailSubject" 
+                    :message="localDeliveryMailMessage" 
+                    :url="localTestEmailUrl"
+                    @visibility="isOpenSendTestEmailModal = $event"
+                    @sent="$emit('sent', $event)">
+                </sendTestEmailModal>
+
             </Col>
 
         </Row>
@@ -196,6 +220,7 @@
 
     /*  Modals  */
     import sendTestSmsModal from './../../../components/_common/modals/sendTestSmsModal.vue';
+    import sendTestEmailModal from './../../../components/_common/modals/sendTestEmailModal.vue';
 
     /*  Inputs   */
     import phoneInput from './../../../components/_common/inputs/phoneInput.vue'; 
@@ -204,7 +229,7 @@
     import IconAndCounterCard from './../../../components/_common/cards/IconAndCounterCard.vue';
 
     export default {
-        components: { shortcodeselector, froalaEditor, sendTestSmsModal, phoneInput, IconAndCounterCard },
+        components: { shortcodeselector, froalaEditor, sendTestSmsModal, sendTestEmailModal, phoneInput, IconAndCounterCard },
         props: {
             deliveryMethods: {
                 type: Array,
@@ -242,6 +267,10 @@
                 type: String,
                 default: ''
             },
+            testEmailUrl: {
+                type: String,
+                default: ''
+            },
             showSmsPhoneImg: {
                 type: Boolean,
                 default: true
@@ -258,8 +287,13 @@
                 localDeliveryMailMessage: this.deliveryMailMessage,
                 localshortcodes: this.shortcodes,
                 localTestSmsUrl: this.testSmsUrl,
+                localTestEmailUrl: this.testEmailUrl,
 
                 isOpenSendTestSmsModal: false,
+                isOpenSendTestEmailModal: false,
+
+                cursorSelectionStart: null,
+                cursorSelectionEnd: null,
 
                 stage: 1,
                 mainOptions: [
@@ -269,7 +303,46 @@
     
             } 
         },
+        watch: {
+
+            //  Watch for changes on the shortcodes
+            shortcodes: {
+                handler: function (val, oldVal) {
+                    
+                    this.localshortcodes = val;
+
+                }
+            }
+        },
         methods: {
+            getCursorPosition(reference){
+                this.cursorSelectionStart = reference.srcElement.selectionStart;
+                this.cursorSelectionEnd = reference.srcElement.selectionEnd; 
+            },
+            insertShortCode(textArea, shortcode){
+
+                // Get cursor's position:
+                var startPosition = this.cursorSelectionStart;
+                var endPosition = this.cursorSelectionEnd;
+                var cursorPosition = startPosition;
+                var currentString = textArea.value;
+
+                if (shortcode != null) {
+
+                    // Move cursor:
+                    setTimeout(() => {
+                        cursorPosition += shortcode.length;
+                        textArea.selectionStart = textArea.selectionEnd = cursorPosition;
+                        textArea.$el.focus();
+                    }, 10);
+
+                    // Insert:
+                    return currentString.substring(0, startPosition) + shortcode + currentString.substring(endPosition, currentString.length);
+                    
+
+                }
+            
+            },
             updatePhones(phones){
                 this.localDeliveryPhones = phones;
                 this.$emit('updated:deliveryPhones', phones);

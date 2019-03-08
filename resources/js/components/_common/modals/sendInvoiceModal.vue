@@ -22,7 +22,8 @@
                     :deliveryMailSubject="localDeliveryMailSubject"
                     :deliveryMailMessage="localDeliveryMailMessage"
                     :deliverySmsMessage="smsMessageCompiled"
-                    :testSmsUrl="'/api/invoices/'+localInvoice.id+'/recurring/send/sms?test=1'"
+                    :testSmsUrl="'/api/invoices/'+localInvoice.id+'/send?test=1'"
+                    :testEmailUrl="'/api/invoices/'+localInvoice.id+'/send?test=1'"
                     :shortcodes="shortcodes"
                     :showSmsPhoneImg="false"
                     @updated:stage="stage = $event"
@@ -169,7 +170,7 @@
                 return (string.length > limit) ? string.substring(0, limit - 3)+'...' : string;
             },
             getShotCodes(){
-
+                
                 var money = this.invoice.grand_total_value || 0;
                 var currency = (((this.invoice || {}).currency_type || {}).currency || {}).symbol || '';
                 var sub_total = this.formatPrice( (this.invoice.sub_total_value || 0), currency);
@@ -201,7 +202,12 @@
                     delete shortcodes['[client_last_name]'];                     
                     delete shortcodes['[client_full_name]'];                        
                 }
-
+                console.log('shortcodes');
+                console.log('shortcodes');
+                console.log('shortcodes');
+                console.log('shortcodes');
+                console.log('shortcodes');
+                console.log(shortcodes);
                 return shortcodes;
             },
             send(){
