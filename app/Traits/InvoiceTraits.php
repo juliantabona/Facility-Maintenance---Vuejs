@@ -573,16 +573,18 @@ trait InvoiceTraits
      *  recorded as a recent activity with the phone and sms saved.
      *
      */
-    public function sendInvoiceAsSMS($invoice)
+    public function sendInvoiceAsSMS($invoice, $phones = null, $smsMessage = null, $user = null)
     {
-        //  Current authenticated user
-        $auth_user = auth('api')->user();
+        //  Provided User Or Current authenticated user
+        $auth_user = $user ?? auth('api')->user();
 
         /***************************
          *   GET SMS DETAILS       *
          ***************************/
-        $phones = request('sms')['phones'];
-        $smsMessage = request('sms')['message'];
+        $phones = $phones ?? request('sms')['phones'];
+        $smsMessage = $smsMessage ?? request('sms')['message'];
+
+        //  Filter and only get the phones set to active
 
         /*****************************
          *   SEND NOTIFICATIONS      *
@@ -596,26 +598,34 @@ trait InvoiceTraits
             $auth_user->notify(new InvoiceSmsSent($invoice));
         }
 
-        //  Foreach phone number provided
-        foreach ($phones as $phone) {
-            //  Get the calling code
-            $callingCode = '+'.$phone['calling_code']['calling_code'];
+        //  If we have phones and a message to send
+        if (!empty($phones) && !empty($smsMessage)) {
+            //  Foreach phone number provided
+            foreach ($phones as $phone) {
+                //  If $phone['show'] = true it is an active phone number
+                //  If $phone['show'] = false it is not an active phone number
+                //  We only send messages to phone numbers set to active
+                if ($phone['show']) {
+                    //  Get the calling code
+                    $callingCode = '+'.$phone['calling_code']['calling_code'];
 
-            //  Get the phone number
-            $phoneNumber = $phone['number'];
+                    //  Get the phone number
+                    $phoneNumber = $phone['number'];
 
-            //  Send the sms message to the given number
-            Twilio::message($callingCode.$phoneNumber, $smsMessage);
+                    //  Send the sms message to the given number
+                    Twilio::message($callingCode.$phoneNumber, $smsMessage);
 
-            /*****************************
-             *   RECORD ACTIVITY         *
-             *****************************/
+                    /*****************************
+                     *   RECORD ACTIVITY         *
+                     *****************************/
 
-            //  Structure mail template
-            $sms = ['phone' => $phone, 'message' => $smsMessage];
+                    //  Structure mail template
+                    $sms = ['phone' => $phone, 'message' => $smsMessage];
 
-            //  Record activity of invoice sent receipt
-            $invoiceSentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'sms' => $sms]);
+                    //  Record activity of invoice sent receipt
+                    $invoiceSentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'sms' => $sms]);
+                }
+            }
         }
     }
 
@@ -629,10 +639,20 @@ trait InvoiceTraits
      *  recorded as a recent activity with the mail details saved.
      *
      */
-    public function sendInvoiceAsMail($invoice)
+    public function sendInvoiceAsMail($invoice, $primaryEmails = null, $ccEmails = null, $bccEmails = null, $subject = null, $message = null)
     {
         //  Current authenticated user
         $auth_user = auth('api')->user();
+
+        /*****************************
+         *   GET EMAIL DETAILS       *
+         *****************************/
+
+        $primaryEmails = $primaryEmails ?? request('mail')['primaryEmails'];
+        $ccEmails = $ccEmails ?? request('mail')['ccEmails'];
+        $bccEmails = $bccEmails ?? request('mail')['bccEmails'];
+        $subject = $subject ?? request('mail')['subject'];
+        $message = $message ?? request('mail')['message'];
 
         /*****************************
          *   SEND NOTIFICATIONS      *
@@ -648,16 +668,6 @@ trait InvoiceTraits
             $status = 'sent invoice email';
             $auth_user->notify(new InvoiceEmailSent($invoice));
         }
-
-        /*****************************
-         *   GET EMAIL DETAILS       *
-         *****************************/
-
-        $primaryEmails = request('mail')['primaryEmails'];
-        $ccEmails = request('mail')['ccEmails'];
-        $bccEmails = request('mail')['bccEmails'];
-        $subject = request('mail')['subject'];
-        $message = request('mail')['message'];
 
         //  Invoice PDF
         $invoicePDF = PDF::loadView('pdf.invoice', array('invoice' => $invoice));
