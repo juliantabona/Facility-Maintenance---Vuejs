@@ -20,11 +20,14 @@ class Kernel extends ConsoleKernel
      * Define the application's command schedule.
      *
      * @param \Illuminate\Console\Scheduling\Schedule $schedule
+     *
+     * Use this link to learn how to do the scheduler using Windows Scheduler for localhost
+     * Link: https://quantizd.com/how-to-use-laravel-task-scheduler-on-windows-10/
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')
-        //          ->hourly();
+        //  Send any due recurring invoices - Run this every 30 minutes
+        $schedule->command('send:recurringInvoices')->everyMinute();
     }
 
     /**

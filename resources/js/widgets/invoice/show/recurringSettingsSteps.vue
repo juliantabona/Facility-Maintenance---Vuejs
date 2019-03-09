@@ -5,6 +5,16 @@
         <Col :span="24">
         
             <!-- Get the stage for setting the recurring schedule plan -->
+            <Poptip confirm title="Reset all the settings back to factory so that you can start over." word-wrap width="300" 
+                    ok-text="Yes" cancel-text="No" @on-ok="resetAllSettings()"
+                    class="float-right mb-1" trigger="hover" placement="left">
+                <Button type="default" size="large">
+                    <span>Reset All</span>
+                </Button>
+            </Poptip>
+            <div class="clearfix"></div>
+
+            <!-- Get the stage for setting the recurring schedule plan -->
             <invoiceRecurringSchedulePlanStage :invoice="localInvoice" :style="{ position:'relative', zIndex: 4 }" 
                 @saved="$emit('saved', $event)">
             </invoiceRecurringSchedulePlanStage>
@@ -76,8 +86,42 @@
             }
         },
         methods: {
+            resetAllSettings(){
+                this.localInvoice.recurringSettings = this.getRecurringSettingsTemplate();
+            
+                //  Alert creation success
+                this.$Message.success('Reset successfully!');
+
+            },
             getRecurringSettingsTemplate(){
                 
+            //  Delivery settings
+            var deliveryMailSubject = 'Invoice [invoice_reference_no]';
+            var deliveryMailAddress = this.localInvoice.customized_client_details.email;
+            var deliveryMailMessage = 
+                '<p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:12px;font-family:arial, \'helvetica neue\', helvetica, sans-serif;line-height:18px;color:#000000;">  \
+                    Good day,  \
+                </p> \
+                <br> \
+                <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:12px;font-family:arial, \'helvetica neue\', helvetica, sans-serif;line-height:18px;color:#000000;">  \
+                    Please find attached <strong>Invoice [invoice_reference_no]</strong> \
+                    created on your account for services rendered. Payment regarding the&nbsp;balance of  \
+                    <strong>[grand_total] </strong> \
+                    must be settled by the  \
+                    <strong>[expiry_date]</strong>  \
+                    or earlier. \
+                </p> \
+                <br> \
+                <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:12px;font-family:arial, \'helvetica neue\', helvetica, sans-serif;line-height:18px;color:#000000;">  \
+                    We look forward to conducting future business with you. \
+                </p> \
+                <br> \
+                <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:12px;font-family:arial, \'helvetica neue\', helvetica, sans-serif;line-height:18px;color:#000000;">  \
+                    Regards, \
+                    <br> \
+                    [my_company_name] \
+                </p>';
+
                 var template = {
                         schedulePlan: {
                             chosen: 'Daily',        //  Daily, Weekly, Monthly, Yearly, Custom
@@ -121,9 +165,9 @@
                                 'Sms'
                             ],
                             mail: {
-                                email: '',
-                                subject: '',
-                                message: ''
+                                email: deliveryMailAddress,
+                                subject: deliveryMailSubject,
+                                message: deliveryMailMessage
                             },
                             sms: {
                                 phones: [],
@@ -139,7 +183,7 @@
                     }
 
                 return template;
-            },
+            }
         },
         created(){
             

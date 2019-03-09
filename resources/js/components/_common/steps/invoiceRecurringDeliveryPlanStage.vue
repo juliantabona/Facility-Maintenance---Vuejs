@@ -374,32 +374,6 @@
         },
         created(){
             this.getDeliveryMethodsInWords();
-
-            this.localInvoice.recurringSettings.deliveryPlan.mail.subject = 'Invoice [invoice_reference_no]';
-            this.localInvoice.recurringSettings.deliveryPlan.mail.email = this.localInvoice.customized_client_details.email;
-            this.localInvoice.recurringSettings.deliveryPlan.mail.message = 
-                '<p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:12px;font-family:arial, \'helvetica neue\', helvetica, sans-serif;line-height:18px;color:#000000;">  \
-                    Good day,  \
-                </p> \
-                <br> \
-                <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:12px;font-family:arial, \'helvetica neue\', helvetica, sans-serif;line-height:18px;color:#000000;">  \
-                    Please find attached <strong>Invoice [invoice_reference_no]</strong> \
-                    created on your account for services rendered. Payment regarding the&nbsp;balance of  \
-                    <strong>[grand_total] </strong> \
-                    must be settled by the  \
-                    <strong>[expiry_date]</strong>  \
-                    or earlier. \
-                </p> \
-                <br> \
-                <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:12px;font-family:arial, \'helvetica neue\', helvetica, sans-serif;line-height:18px;color:#000000;">  \
-                    We look forward to conducting future business with you. \
-                </p> \
-                <br> \
-                <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:12px;font-family:arial, \'helvetica neue\', helvetica, sans-serif;line-height:18px;color:#000000;">  \
-                    Regards, \
-                    <br> \
-                    [my_company_name] \
-                </p>';
         }
     }
 </script>

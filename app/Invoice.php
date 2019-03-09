@@ -131,6 +131,11 @@ class Invoice extends Model
         return $this->recentActivities()->where('type', 'cancelled payment')->limit(1);
     }
 
+    public function createdActivities()
+    {
+        return $this->recentActivities()->where('type', 'created')->first();
+    }
+
     public function client()
     {
         return $this->belongsTo('App\Company', 'client_id');

@@ -582,7 +582,7 @@ trait InvoiceTraits
          *   GET SMS DETAILS       *
          ***************************/
         $phones = $phones ?? request('sms')['phones'];
-        $smsMessage = $smsMessage ?? request('sms')['message'];
+        $smsMessage = $this->getCompiledSmsMessage($invoice);
 
         //  Filter and only get the phones set to active
 
@@ -629,6 +629,47 @@ trait InvoiceTraits
         }
     }
 
+    public function getCompiledSmsMessage($invoice)
+    {
+        $items = '';
+        $referenceNo = $invoice->reference_no_value;
+        $currency = $invoice['currency_type']['currency']['symbol'];
+        $grand_total = $currency.number_format($invoice->grand_total_value, 2, ',', '.');
+        $expiry_date = (new Carbon($invoice->expiry_date_value))->format('M d Y');
+        $client = $invoice->customized_client_details;
+        $company = $invoice->customized_company_details;
+
+        foreach ($invoice->items as $x => $item) {
+            $x == 0 ? $items .= '' : $items .= ' ';
+            $items .= ($item['quantity'].'x '.($item['name']));
+        }
+
+        $characterLimit = 160;
+        //  Company info text limit = 23
+        $companyName = $this->truncateWithDots(trim($company['name']), 21).(strlen($company['name']) <= 21 ? ':' : '');       //  Optimum Quality:
+        //  Reference text limit = 16
+        $reference = 'Invoice #'.$referenceNo;                        //  Invoice #002
+        //  Amount text limit = 20
+        $amount = 'Amount '.$grand_total;                           //  Amount P350.00
+        //  Due date text limit = 21
+        $dueDate = ' due '.$expiry_date;                              //  due on 15 Feb 2018
+        //  Reply for payment text limit = 32
+        $replyWith = '.Reply with '.$referenceNo.'#<pin> to pay';     //  Reply with 002#<pin> to pay
+
+        //  items text limit = 49
+        $charLeft = ($characterLimit - strlen($companyName.$reference.$amount.$dueDate.$replyWith));
+        $items = $this->truncateWithDots(' for '.$items.(strlen($items) <= $charLeft ? '.' : ''), $charLeft);    //  for 1x Basic Website, 1x Web Hosting, 5x Emails.
+
+        $message = $companyName.$reference.$items.$amount.$dueDate.$replyWith;
+
+        return $message;
+    }
+
+    public function truncateWithDots($string, $limit)
+    {
+        return (strlen($string) > $limit) ? substr($string, $limit - 3).'...' : $string;
+    }
+
     /*  sendInvoiceAsMail() method:
      *
      *  This is used to send the invoice via Email only. It takes the
@@ -639,12 +680,13 @@ trait InvoiceTraits
      *  recorded as a recent activity with the mail details saved.
      *
      */
-    public function sendInvoiceAsMail($invoice, $primaryEmails = null, $ccEmails = null, $bccEmails = null, $subject = null, $message = null)
-    {
-        //  Current authenticated user
-        $auth_user = auth('api')->user();
 
-        /*****************************
+    public function sendInvoiceAsMail($invoice, $primaryEmails = null, $ccEmails = null, $bccEmails = null, $subject = null, $message = null, $user = null)
+    {
+        //  Provided User Or Current authenticated user
+        $auth_user = $user ?? auth('api')->user();
+
+        /******************sendInvoiceAsSMS***********
          *   GET EMAIL DETAILS       *
          *****************************/
 
@@ -859,7 +901,7 @@ trait InvoiceTraits
     public function replaceShortcodes($invoice, $data)
     {
         $client = $invoice->customized_client_details;
-        $my_company = $invoice->customized_company_details;
+        $company = $invoice->customized_company_details;
         $currency = $invoice->currency_type['currency']['symbol'] ?? '';
         $sub_total = $currency.number_format($invoice->sub_total_value, 2, ',', '.');
         $grand_total = $currency.number_format($invoice->grand_total_value, 2, ',', '.');
@@ -878,8 +920,8 @@ trait InvoiceTraits
             '[client_last_name]' => $client['last_name'] ?? '',
             '[client_full_name]' => $client['full_name'] ?? '',
             '[client_email]' => $client['email'],
-            '[my_company_name]' => $my_company['name'],
-            '[my_company_email]' => $my_company['email'],
+            '[my_company_name]' => $company['name'],
+            '[my_company_email]' => $company['email'],
         ];
 
         $search = array_keys($customFields);

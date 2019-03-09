@@ -50,12 +50,6 @@ class SendRecurringInvoices extends Command
 
         //  Foreach invoice
         foreach ($invoices as $invoice) {
-            //  Get the user responsible for this invoice
-            $user = $invoice->createdActivities()->createdBy;
-            $this->info($user->first_name);
-
-            return true;
-
             //  Get the recurring settings
             $recurringSettings = $invoice['recurringSettings'];
             $schedulePlan = $recurringSettings['schedulePlan'];
@@ -192,21 +186,22 @@ class SendRecurringInvoices extends Command
                 //  Link this child invoice to the parent
                 $childInvoice->invoice_parent_id = $invoice->id;
                 //  Update the invoice created date
-                $childInvoice->created_date_value = (new Carbon($currentDate))->format('Y-m-d');
+                $childInvoice->created_date_value = (Carbon::now())->format('Y-m-d');
                 //  Update the invoice expiry date according to the parent days apart between created and expiry dates
                 $daysApart = (new Carbon($invoice->created_date_value) )->diffInDays((new Carbon($invoice->expiry_date_value) ));
-                $childInvoice->expiry_date_value = (new Carbon($currentDate) )->addDays($daysApart);
+                $childInvoice->expiry_date_value = (new Carbon($currentDate) )->addDays($daysApart - 1);
                 //  Save the child invoice
                 $childInvoice->save();
+
+                //  Update the reference number
+                $childInvoice->update(['reference_no_value' => $childInvoice->id]);
 
                 /***********************************
                  *   SEND INVOICE VIA EMAIL/SMS    *
                  ***********************************/
-                //  Get the user responsible for this invoice
-                $user = User::find($invoice->createdActivities->createdBy);
-                $this->info($user->first_name);
 
-                return true;
+                //  Get the user responsible for this invoice
+                $user = $invoice->createdActivities()->createdBy;
 
                 $deliveryPlan = $recurringSettings['deliveryPlan'];
 
@@ -223,7 +218,7 @@ class SendRecurringInvoices extends Command
                         $smsMessage = $deliveryPlan['sms']['message'];
 
                         //  Send via sms
-                        $childInvoice->sendInvoiceAsSMS($invoice, $phones, $smsMessage);
+                        ( new Invoice() )->sendInvoiceAsSMS($childInvoice, $phones, $smsMessage, $user);
                     }
 
                     //  If specified to send invoice via mail
@@ -236,7 +231,7 @@ class SendRecurringInvoices extends Command
                         $message = $deliveryPlan['mail']['message'];
 
                         //  send via email
-                        $childInvoice->sendInvoiceAsMail($invoice, $primaryEmails, $ccEmails, $bccEmails, $subject, $message);
+                        ( new Invoice() )->sendInvoiceAsMail($childInvoice, $primaryEmails, $ccEmails, $bccEmails, $subject, $message, $user);
                     }
 
                     //  If this is a manual delivery
