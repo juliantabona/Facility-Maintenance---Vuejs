@@ -47,7 +47,7 @@
             <phoneInput :style="(align == 'right' ? 'float: right; text-align: left;' : '') + 'max-width:360px'"
                         v-if="localEditMode" class="mb-2"  
                         :modelId="localClient.id" 
-                        :modelType="localClient.type" 
+                        :modelType="localClient.model_type" 
                         :phones="localClient.phones" 
                         :numberLimit="5"
                         selectedType="mobile"
@@ -57,6 +57,7 @@
                         :deletable="false"
                         :hidedable="true"
                         :editable="false"
+                        :removeDuplicates="true"
                         :showIcon="true" 
                         onIcon="ios-eye-outline" offIcon="ios-eye-off-outline" 
                         title="Show:" onText="Yes" offText="No" 
@@ -305,7 +306,10 @@
                 
                 this.localClient.phones = [];
 
-                for(var x=0; x<newPhones.length; x++){
+                for(var x=0; x < newPhones.length; x++){
+                    if(x <= 1){
+                        newPhones[x].show = true;
+                    }
                     
                     this.localClient.phones.push(newPhones[x]);
                 }

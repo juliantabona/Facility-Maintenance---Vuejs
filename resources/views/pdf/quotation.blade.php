@@ -223,10 +223,10 @@
             .brr{border-right: 1px solid #dee1e2 !important;}
             .brb{border-bottom: 1px solid #dee1e2 !important;}
 
-            .brt2{border-top: 2px solid #dee1e2 !important;}
-            .brl2{border-left: 2px solid #dee1e2 !important;}
-            .brr2{border-right: 2px solid #dee1e2 !important;}
-            .brb2{border-bottom: 2px solid #dee1e2 !important;}
+            .brt2{border-top: 1px solid #dee1e2 !important;}
+            .brl2{border-left: 1px solid #dee1e2 !important;}
+            .brr2{border-right: 1px solid #dee1e2 !important;}
+            .brb2{border-bottom: 1px solid #dee1e2 !important;}
             
 
         </style>
@@ -235,14 +235,17 @@
     <body>
 
         @php 
+
             $primaryColor = $quotation['colors'][0];
             $secondaryColor = $quotation['colors'][1]; 
             $company = $quotation['customized_company_details'];
             $client = $quotation['customized_client_details'];
+            $clientName = $client['name'] ?? $client['full_name'];
+            $companyPhones = isset($company['phones']) ? collect(array_filter($company['phones'], function($phone){ return $phone['show']; }))->values() : [];
+            $clientPhones = isset($client['phones']) ? collect(array_filter($client['phones'], function($phone){ return $phone['show']; }))->values() : [];
             $currencySymbol = $quotation['currency_type']['currency']['symbol'];
             $notes = $quotation['notes'];
 
-            
         @endphp
 
         <main id="page_1">
@@ -257,34 +260,53 @@
                     <p class="ft0 p2" style="text-align:right;">{{ $quotation['heading'] }}</p>
                     <p class="ft1 p2" style="text-align:right;">{{ $company['name'] }}</p>
                     <p class="ft2 p2">{{ $company['email'] }}</p>
-                    <p class="ft2 p2">{{ $company['phone'] }}</p>
+                    <p class="ft2 p2">
+                        @if(COUNT($companyPhones))
+                            @foreach($companyPhones as $key => $phone){{($key != 0 ? ', ': '') . '(+' . $phone['calling_code']['calling_code'] . ') ' . $phone['number']}} @endforeach
+                        @endif
+                    </p>
                     <br />
-                    @if($company['additionalFields'])
-                        @foreach($company['additionalFields'] as $field)
-                            @if(isset($field['value']))
-                                <p class="ft2 p2">{{ $field['value'] }}</p>
-                            @endif
-                        @endforeach
+                    
+                    @if($company['address'])
+                        <p class="ft2 p2">{{ $company['address'] }}</p>
                     @endif
+                    @if($company['city'])
+                        <p class="ft2 p2">{{ $company['city'] }}</p>
+                    @endif
+                    @if($company['country'])
+                        <p class="ft2 p2">{{ $company['country'] }}</p>
+                    @endif
+
+
                 </div>
 
-                <table cellpadding="0" cellspacing="0" class="pdb0 pdt0 mrt0 mrb0 t0 brt mrt2">
+                <table cellpadding="0" cellspacing="0" class="brt mrb0 mrt1 pdb4" style="width:100%;">
                     <tbody>
                         <tr>
 
-                            <td colspan="8">
-                                <p class="ft18 p4 pdb1">{{ $quotation['quote_to_title'] }}:</p>
-                                <p class="p4 ft6 pdb1">{{ $client['name'] }}</p>
+                            <td colspan="8" class="mrt3">
+                                <p class="ft18 p4 pdb1">{{ $quotation['quotation_to_title'] }}:</p>
+                                <p class="p4 ft6 pdb1">{{ $clientName }}</p>
                                 <p class="p4 ft2">{{ $client['email'] }}</p>
-                                <p class="p4 ft2">{{ $client['phone'] }}</p>
-                                @if($client['additionalFields'])
-                                    @foreach($client['additionalFields'] as $field)
-                                        <p class="p4 ft2">{{ $field['value'] }}</p>
-                                    @endforeach
+                                <p class="p4 ft2">
+                                    @if(COUNT($clientPhones))
+                                        @foreach($clientPhones as $key => $phone){{($key != 0 ? ', ': '') . '(+' . $phone['calling_code']['calling_code'] . ') ' . $phone['number']}} @endforeach
+                                    @endif
+                                </p>
+
+                                @if($client['address'])
+                                    <p class="p4 ft2">{{ $client['address'] }}</p>
                                 @endif
+                                @if($client['city'])
+                                    <p class="p4 ft2">{{ $client['city'] }}</p>
+                                @endif
+                                @if($client['country'])
+                                    <p class="p4 ft2">{{ $client['country'] }}</p>
+                                @endif
+            
                             </td>
 
-                            <td colspan="3" class="tr0 td2">
+                            <td colspan="3" class="tr0 td2 mrt3">
             
                                 <table cellpadding="0" cellspacing="0" class="mrt2">
   
@@ -384,7 +406,7 @@
                                 </tr>
 
                                 <tr style="background-color:{{ ( ($key + 1) % 2 ) ? $secondaryColor . ' !important': '' }} ;">
-                                    <td colspan="7" class="td30 tr0 pdb1">
+                                    <td colspan="7" class="tr0 pdb1">
                                         <p class="ft14 p14" style="line-height:16px;">{{ $item['description'] }}</p>
                                     </td>
                                 </tr>
@@ -461,6 +483,12 @@
         <footer style="background-color:{{ $primaryColor }} !important;">
             <p style="margin-top:2px;">{{ $quotation['footer'] }}</p>
         </footer>
+
+        <script type="text/javascript"> 
+            @if(isset($print) && $print == 1)
+                this.print();
+            @endif 
+        </script> 
 
     </body>
 </html>

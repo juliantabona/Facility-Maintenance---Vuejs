@@ -13,7 +13,7 @@ class CreateQuotationsTable extends Migration
     {
         Schema::create('quotations', function (Blueprint $table) {
             $table->increments('id');
-            $table->json('status')->nullable();
+            $table->string('status')->nullable();
             $table->string('heading')->nullable();
             $table->string('reference_no_title')->nullable();
             $table->unsignedInteger('reference_no_value')->nullable();
@@ -27,7 +27,7 @@ class CreateQuotationsTable extends Migration
             $table->float('grand_total_value')->nullable();
             $table->json('currency_type')->nullable();
             $table->json('calculated_taxes')->nullable();
-            $table->string('quote_to_title')->nullable();
+            $table->string('quotation_to_title')->nullable();
             $table->json('customized_company_details')->nullable();
             $table->json('customized_client_details')->nullable();
             $table->unsignedInteger('client_id')->nullable();
@@ -36,8 +36,6 @@ class CreateQuotationsTable extends Migration
             $table->json('notes')->nullable();
             $table->json('colors')->nullable();
             $table->string('footer')->nullable();
-            $table->unsignedInteger('trackable_id')->nullable();
-            $table->string('trackable_type')->nullable();
             $table->unsignedInteger('company_branch_id');
             $table->unsignedInteger('company_id');
             $table->timestamps();

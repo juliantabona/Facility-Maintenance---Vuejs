@@ -103,14 +103,15 @@ class DownloadController extends Controller
     public function downloadQuotation(Request $request, $quotation_id)
     {
         $user = auth('api')->user();
-        $preview = request('preview');
+        $preview = request('preview', 0);
+        $print = request('print', 0);
 
         $quotation = Quotation::find($quotation_id);
 
-        //return view('pdf.quotation', ['quotation' => $quotation]);
-        $pdf = PDF::loadView('pdf.quotation', array('quotation' => $quotation));
+        //return view('pdf.quotation', ['quotation' => $quotation, 'print' => $print]);
+        $pdf = PDF::loadView('pdf.quotation', array('quotation' => $quotation, 'print' => $print));
 
-        if ($preview) {
+        if ($preview || $print) {
             return $pdf->stream('quotation.pdf');
         } else {
             if (!empty($quotation->details['heading']) && !empty($quotation['reference_no_value'])) {

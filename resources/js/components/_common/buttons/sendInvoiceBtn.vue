@@ -1,7 +1,7 @@
 <template>
 
         <!-- Dropdown button -->
-        <Dropdown class="mr-4" trigger="click" placement="bottom-end">
+        <Dropdown trigger="click" placement="bottom-end">
             <!-- Send button - Dropdown trigger -->
             <Button type="primary" size="small">
                 <span>Send</span>

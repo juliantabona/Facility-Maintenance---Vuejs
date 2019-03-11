@@ -16,6 +16,7 @@ trait RecentActivityTraits
         */
 
         $activityType = str_replace('_', ' ', $activityType);   //  This is to change "sent_receipt" to "sent receipt"
+        $multipleActivityType = explode(',', $activityType);    //  Incase we have more that one activity type
 
         //  Current authenticated user
         $user = auth('api')->user();
@@ -62,7 +63,11 @@ trait RecentActivityTraits
 
             //  Filter by type - If specified
             if ($activityType) {
-                $activities = $activities->where('type', $activityType);
+                if (count($multipleActivityType) > 1) {
+                    $activities = $activities->whereIn('type', $multipleActivityType);
+                } else {
+                    $activities = $activities->where('type', $activityType);
+                }
             }
 
             try {

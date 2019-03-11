@@ -49,7 +49,7 @@ class Invoice extends Model
         'expiry_date_title', 'expiry_date_value', 'sub_total_title', 'sub_total_value', 'grand_total_title', 'grand_total_value',
         'currency_type', 'calculated_taxes', 'invoice_to_title', 'customized_company_details', 'customized_client_details', 'client_id',
         'table_columns', 'items', 'notes', 'colors', 'footer', 'isRecurring', 'recurringSettings', 'invoice_parent_id', 'quotation_id',
-        'trackable_id', 'trackable_type', 'company_branch_id', 'company_id',
+        'company_branch_id', 'company_id',
     ];
 
     /**
@@ -98,42 +98,47 @@ class Invoice extends Model
     public function recentActivities()
     {
         return $this->morphMany('App\RecentActivity', 'trackable')
+                    ->where('trackable_id', $this->id)
                     ->orderBy('created_at', 'desc');
     }
 
     public function approvedActivities()
     {
-        return $this->recentActivities()->where('type', 'approved');
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'approved');
     }
 
     public function sentActivities()
     {
-        return $this->recentActivities()->where('type', 'sent');
+        return $this->recentActivities()->where('trackable_id', $this->id)->where(function ($q) {
+            $q->where('type', 'sent email')->orWhere('type', 'sent sms');
+        });
     }
 
     public function skippedSendingActivities()
     {
-        return $this->recentActivities()->where('type', 'skipped sending invoice');
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'skipped sending invoice');
     }
 
     public function sentReceiptActivities()
     {
-        return $this->recentActivities()->where('type', 'sent receipt');
+        return $this->recentActivities()->where('trackable_id', $this->id)->where(function ($q) {
+            $q->where('type', 'sent invoice receipt email')->orWhere('type', 'sent invoice receipt sms');
+        });
     }
 
     public function paidActivities()
     {
-        return $this->recentActivities()->where('type', 'paid')->limit(1);
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'paid')->limit(1);
     }
 
     public function paymentCanceledActivities()
     {
-        return $this->recentActivities()->where('type', 'cancelled payment')->limit(1);
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'cancelled payment')->limit(1);
     }
 
     public function createdActivities()
     {
-        return $this->recentActivities()->where('type', 'created')->first();
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'created');
     }
 
     public function client()
@@ -161,52 +166,56 @@ class Invoice extends Model
 
     public function getLastApprovedActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'approved')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('type', 'approved')->first();
     }
 
     public function getLastSentActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'sent')->first();
+        return $this->recentActivities()->select('id', 'type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where(function ($q) {
+            $q->where('type', 'sent email')->orWhere('type', 'sent sms');
+        })->first();
     }
 
     public function getLastSkippedSendingActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'skipped sending invoice')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('type', 'skipped sending invoice')->first();
     }
 
     public function getLastSentReceiptActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'sent receipt')->first();
+        return $this->recentActivities()->where('trackable_id', $this->id)->where(function ($q) {
+            $q->where('type', 'sent invoice receipt email')->orWhere('type', 'sent invoice receipt sms');
+        })->first();
     }
 
     public function getLastPaidActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'paid')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('type', 'paid')->first();
     }
 
     public function getLastPaymentCancelledActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'cancelled payment')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('type', 'cancelled payment')->first();
     }
 
     public function getLastRecurringSchedulePlanActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'updated recurring schedule')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('type', 'updated recurring schedule')->first();
     }
 
     public function getLastRecurringDeliveryPlanActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'updated recurring delivery')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('type', 'updated recurring delivery')->first();
     }
 
     public function getLastRecurringPaymentPlanActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'updated recurring payment')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('type', 'updated recurring payment')->first();
     }
 
     public function getlastApprovedRecurringSettingsActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'approved recurring settings')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('type', 'approved recurring settings')->first();
     }
 
     public function getHasPaidAttribute()
@@ -226,9 +235,13 @@ class Invoice extends Model
                     //  Payment record was cancelled
                     return false;
                 }
+            } else {
+                return false;
             }
         } elseif ($this->last_paid_activity) {
             return true;
+        } else {
+            return false;
         }
     }
 
@@ -315,29 +328,33 @@ class Invoice extends Model
 
     public function getActivityCountAttribute()
     {
-        $count = $this->recentActivities()->select(DB::raw('count(*) as total'))
-                                       ->groupBy('trackable_type')
-                                       ->first();
+        $count = $this->recentActivities()->where('trackable_id', $this->id)
+                                          ->select(DB::raw('count(*) as total'))
+                                          ->groupBy('trackable_type')
+                                          ->first();
 
         return $count ? $count->only(['total']) : ['total' => 0];
     }
 
     public function getSentInvoiceActivityCountAttribute()
     {
-        $count = $this->recentActivities()->select(DB::raw('count(*) as total'))
-                                           ->where('type', 'sent')
-                                           ->groupBy('type')
-                                           ->first();
+        $count = $this->recentActivities()->where('trackable_id', $this->id)->where(function ($q) {
+            $q->where('type', 'sent email')->orWhere('type', 'sent sms');
+        })
+                                          ->select(DB::raw('count(*) as total'))
+                                          ->groupBy('type')
+                                          ->first();
 
         return $count ? $count->only(['total']) : ['total' => 0];
     }
 
     public function getSentReceiptActivityCountAttribute()
     {
-        $count = $this->recentActivities()->select(DB::raw('count(*) as total'))
-                                           ->where('type', 'sent receipt')
-                                           ->groupBy('type')
-                                           ->first();
+        $count = $this->recentActivities()->where('trackable_id', $this->id)
+                                          ->select(DB::raw('count(*) as total'))
+                                          ->where('type', 'sent receipt')
+                                          ->groupBy('type')
+                                          ->first();
 
         return $count ? $count->only(['total']) : ['total' => 0];
     }

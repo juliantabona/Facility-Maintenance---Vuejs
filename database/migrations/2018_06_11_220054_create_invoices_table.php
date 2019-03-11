@@ -40,8 +40,6 @@ class CreateInvoicesTable extends Migration
             $table->json('recurringSettings')->nullable();
             $table->unsignedInteger('quotation_id')->nullable();
             $table->unsignedInteger('invoice_parent_id')->nullable();
-            $table->unsignedInteger('trackable_id')->nullable();
-            $table->string('trackable_type')->nullable();
             $table->unsignedInteger('company_branch_id');
             $table->unsignedInteger('company_id');
             $table->timestamps();

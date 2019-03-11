@@ -8,6 +8,9 @@ let routes = [
         meta: { middlewareGuest: true },
         component: require('./views/auth/login.vue')
     },
+        /**************************************
+        *  INVOICES
+        **************************************/  
     {
         //  Invoices
         path: '/invoices', name: 'invoices',
@@ -34,7 +37,37 @@ let routes = [
         meta: { layout: 'Dashboard', middlewareAuth: true },
         component: require('./views/dashboard/invoice/show/activities.vue'),
         props: true
-    }
+    },
+        /**************************************
+        *  QUOTATIONS
+        **************************************/  
+    {
+        //  Quotations
+        path: '/quotations', name: 'quotations',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/quotation/list/main.vue')
+    },
+    {
+        //  Create quotation
+        path: '/quotations/create', name: 'create-quotation',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/quotation/create/main.vue'),
+        props: true
+    },
+    {
+        //  Show one quotation
+        path: '/quotations/:id', name: 'show-quotation',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/quotation/show/main.vue'),
+        props: true
+    },
+    {
+        //  Show quotation activities
+        path: '/quotations/:id/activities', name: 'show-quotation-activities',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/quotation/show/activities.vue'),
+        props: true
+    },
 
 ];
 

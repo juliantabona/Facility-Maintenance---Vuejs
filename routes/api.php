@@ -127,6 +127,19 @@ Route::get('quotations/{quotation_id}', 'Api\QuotationController@show');
 Route::post('quotations/{quotation_id}', 'Api\QuotationController@update');
 Route::post('quotations/{quotation_id}/convert', 'Api\QuotationController@convertToInvoice');
 
+/*   QUOTATION RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::get('quotations', 'Api\QuotationController@index');
+Route::post('quotations', 'Api\QuotationController@store');  //  ok
+Route::get('quotations/stats', 'Api\QuotationController@getEstimatedStats');
+Route::get('quotations/{quotation_id}', 'Api\QuotationController@show');  //  ok
+Route::post('quotations/{quotation_id}', 'Api\QuotationController@update');
+Route::post('quotations/{quotation_id}/approve', 'Api\QuotationController@approve');  //  ok
+Route::post('quotations/{quotation_id}/send', 'Api\QuotationController@send');
+Route::post('quotations/{quotation_id}/skip-send', 'Api\QuotationController@skipSend');
+Route::post('quotations/{quotation_id}/convert', 'Api\QuotationController@convertToInvoice');
+
 /*   INVOICE RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
 */

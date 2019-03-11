@@ -9,7 +9,7 @@
         <stagingCard 
             :stageNumber="1" :showHeader="!localInvoice.has_approved" 
             :disabled="isApprovingInvoice" :showVerticalLine="true"
-            :leftWidth="18" :rightWidth="6">
+            :leftWidth="16" :rightWidth="8">
 
             <!-- Header  -->
             <template slot="header">
@@ -25,7 +25,7 @@
                 <h4 v-if="" class="text-secondary">{{ localInvoice.has_approved ? 'Invoice Approved' : 'Approve Invoice' }}</h4>
                 <Poptip word-wrap width="200" trigger="hover" :content="localInvoice.created_at | moment('DD MMM YYYY, H:mmA') || '___'">
                     <p class="mt-2 mb-2">
-                        <span class="font-weight-bold">Created:</span> {{ localInvoice.created_at | moment("from", "now") | capitalize }} from <a href="#"><span class="font-weight-bold">Estimate #87</span></a>
+                        <span class="font-weight-bold">Created:</span> {{ localInvoice.created_at | moment("from", "now") | capitalize }} <span v-if="localInvoice.quotation_id">from <router-link :to="{ name: 'show-quotation', params: { id: localInvoice.quotation_id } }"><span class="font-weight-bold">Estimate #{{ localInvoice.quotation_id }}</span></router-link></span>
                     </p>
                 </Poptip>
 
@@ -114,6 +114,7 @@
                 self.isApprovingInvoice = true;
 
                 console.log('Attempt to approve invoice...');
+                console.log( self.localInvoice );
 
                 //  Use the api call() function located in resources/js/api.js
                 api.call('post', '/api/invoices/'+self.localInvoice.id+'/approve')

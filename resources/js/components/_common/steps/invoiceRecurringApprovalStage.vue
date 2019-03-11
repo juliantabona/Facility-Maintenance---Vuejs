@@ -9,7 +9,7 @@
         <stagingCard 
             :stageNumber="4" :showCheckMark="localInvoice.has_approved_recurring_settings" :showHeader="false" 
             :disabled="!localInvoice.has_set_recurring_delivery_plan" :showVerticalLine="false"
-            :isSaving="isSavingApproval" :leftWidth="20" :rightWidth="4">
+            :isSaving="isSavingApproval" :leftWidth="16" :rightWidth="8">
 
             <template slot="leftContent">
 

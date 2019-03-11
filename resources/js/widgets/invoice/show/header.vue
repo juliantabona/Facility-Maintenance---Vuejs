@@ -1,20 +1,23 @@
 <template>
 
     <div>
-        <!-- Preview button -->
-        <previewInvoiceBtn></previewInvoiceBtn>
+        <!-- Invoice Menu -->
+        <menuToggle class="float-right" :InvoiceId="localInvoice.id" :editMode="localEditMode" 
+                    @toggleEditMode="$emit('toggleEditMode', $event)">
+        </menuToggle>
 
         <!-- Send dropdown button -->
-        <sendInvoiceBtn :invoice="localInvoice"></sendInvoiceBtn>
-        
-        <!-- Invoice Menu -->
-        <menuToggle style="" :invoiceId="localInvoice.id" :editMode="localEditMode" @toggleEditMode="$emit('toggleEditMode', $event)"></menuToggle>
+        <sendInvoiceBtn :Invoice="localInvoice" class="float-right mr-2"></sendInvoiceBtn>
+
+        <!-- Preview button -->
+        <basicButton @click.native="downloadPDF({ preview: true })" size="small" class="float-right mr-2">Preview</basicButton>
+
     </div>
 
 </template>
 <script type="text/javascript">
 
-    import previewInvoiceBtn from './../../../components/_common/buttons/previewInvoiceBtn.vue';
+    import basicButton from './../../../components/_common/buttons/basicButton.vue';
     import sendInvoiceBtn from './../../../components/_common/buttons/sendInvoiceBtn.vue';
     import menuToggle from './../../../components/_common/dropdowns/invoiceMenuDropdown.vue';
    
@@ -29,7 +32,7 @@
                 default: false
             }
         },
-        components: { previewInvoiceBtn, sendInvoiceBtn, menuToggle },
+        components: { basicButton, sendInvoiceBtn, menuToggle },
         data(){
             return {
                 localInvoice: this.invoice,

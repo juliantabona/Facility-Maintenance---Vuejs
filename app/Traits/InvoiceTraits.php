@@ -213,7 +213,7 @@ trait InvoiceTraits
      *  the invoice.
      *
      */
-    public function initiateCreate()
+    public function initiateCreate($template = null)
     {
         //  Current authenticated user
         $auth_user = auth('api')->user();
@@ -232,7 +232,7 @@ trait InvoiceTraits
          ********************************************/
 
         //  Create a template to hold the invoice details
-        $template = [
+        $template = $template ?? [
             'heading' => $invoice['heading'],
             'reference_no_title' => $invoice['reference_no_title'],
             'reference_no_value' => $invoice['reference_no_value'],
@@ -278,7 +278,7 @@ trait InvoiceTraits
                  *   SEND NOTIFICATIONS      *
                  *****************************/
 
-                $auth_user->notify(new InvoiceCreated($invoice));
+                //$auth_user->notify(new InvoiceCreated($invoice));
 
                 /*****************************
                  *   RECORD ACTIVITY         *
@@ -355,8 +355,6 @@ trait InvoiceTraits
             'footer' => $invoice['footer'],
             'isRecurring' => $invoice['isRecurring'],
             'recurringSettings' => $invoice['recurringSettings'],
-            'trackable_type' => 'invoice',
-            'trackable_id' => $invoice_id,
             'company_branch_id' => $auth_user->company_branch_id,
             'company_id' => $auth_user->company_id,
         ];
@@ -594,7 +592,7 @@ trait InvoiceTraits
             $status = 'sent invoice test sms';
             $auth_user->notify(new InvoiceTestSmsSent($invoice));
         } else {
-            $status = 'sent invoice sms';
+            $status = 'sent sms';
             $auth_user->notify(new InvoiceSmsSent($invoice));
         }
 
@@ -707,7 +705,7 @@ trait InvoiceTraits
 
         //  Otherwise if this is not a test email
         } else {
-            $status = 'sent invoice email';
+            $status = 'sent email';
             $auth_user->notify(new InvoiceEmailSent($invoice));
         }
 

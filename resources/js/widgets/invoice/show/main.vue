@@ -23,7 +23,7 @@
 
 <template>
 
-    <div id="invoice-widget" style="overflow:hidden;">
+    <div id="invoice-widget">
 
         <!-- Get the summary header to display the invoice #, status, due date, amount due and menu options -->
         <overview 
@@ -48,12 +48,13 @@
                 <Col :span="24">
 
                     <!-- Save changes button -->
-                    <saveInvoiceBtn  v-if="!createMode && invoiceHasChanged" 
+                    <basicButton  v-if="!createMode && invoiceHasChanged" 
                                     class="float-right pt-2 ml-4" :style="{ position:'relative' }"
                                     type="success" size="small" 
                                     :ripple="true"
                                     @click.native="saveInvoice()">
-                    </saveInvoiceBtn>
+                        Save Changes
+                    </basicButton>
 
                     <!-- Recurring Settings Icon Button -->
                     <span v-if="localInvoice.isRecurring" class="float-right d-block pt-2">
@@ -179,20 +180,22 @@
                             <Col span="24" class="pr-4">
 
                                 <!-- Create button -->
-                                <createInvoiceBtn v-if="createMode" 
+                                <basicButton v-if="createMode" 
                                                 class="float-right mb-2 ml-3" 
                                                 type="success" size="small" 
                                                 :ripple="true"
                                                 @click.native="createInvoice()">
-                                </createInvoiceBtn>
+                                    Create Invoice
+                                </basicButton>
 
                                 <!-- Save changes button -->
-                                <saveInvoiceBtn  v-if="!createMode && invoiceHasChanged" 
+                                <basicButton  v-if="!createMode && invoiceHasChanged" 
                                                 class="float-right mb-2 ml-3" :style="{ position:'relative' }"
                                                 type="success" size="small" 
                                                 :ripple="true"
                                                 @click.native="saveInvoice()">
-                                </saveInvoiceBtn>
+                                    Save Changes
+                                </basicButton>
 
                                 <!-- Edit mode switch -->
                                 <editModeSwitch v-bind:editMode.sync="editMode" :ripple="false" class="float-right mb-2"></editModeSwitch>
@@ -321,8 +324,7 @@
     import mainFooter from './footer.vue';
     
     /*  Buttons  */
-    import createInvoiceBtn from './../../../components/_common/buttons/createInvoiceBtn.vue';
-    import saveInvoiceBtn from './../../../components/_common/buttons/saveInvoiceBtn.vue';
+    import basicButton from './../../../components/_common/buttons/basicButton.vue';
 
     /*  Switches  */
     import toggleSwitch from './../../../components/_common/switches/toggleSwitch.vue';
@@ -351,7 +353,7 @@
             overview, recurringSettingsSteps, steps, mainHeader, 
             mainTitle, companyOrIndividualDetails, summaryDetails, toolbar,
             items, totalBreakDown, notes, mainFooter,
-            createInvoiceBtn, saveInvoiceBtn, toggleSwitch, editModeSwitch,
+            basicButton, toggleSwitch, editModeSwitch,
             Loader, imageUploader, clientSelector, IconAndCounterCard, basicCoutdown
         },
         props: {
