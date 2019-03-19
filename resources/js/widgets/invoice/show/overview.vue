@@ -16,7 +16,7 @@
         <!-- Invoice Client  -->
         <Col span="6">
             <h6 class="text-secondary">Customer</h6>
-            <h5><a href="#">{{ customerName }}</a></h5>            
+            <h5><router-link :to="{ name: urlName, params: { id: localInvoice.customized_client_details.id } }">{{ customerName }}</router-link></h5>         
         </Col>
 
         <!-- Invoice Amount  -->
@@ -92,6 +92,13 @@
                     return this.localInvoice.customized_client_details.full_name;
                 }else if(this.localInvoice.customized_client_details.model_type == 'company'){
                     return this.localInvoice.customized_client_details.name;
+                }
+            },
+            urlName: function(){
+                if(this.localInvoice.customized_client_details.model_type == 'user'){
+                    return 'show-user';
+                }else if(this.localInvoice.customized_client_details.model_type == 'company'){
+                    return 'show-company';
                 }
             }
         },

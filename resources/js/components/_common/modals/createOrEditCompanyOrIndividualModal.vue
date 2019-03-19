@@ -25,7 +25,8 @@
                     :userId="(editableCompanyOrIndividual || {}).id"
                     :showClientOrSupplierSelector="showClientOrSupplierSelector"
                     :hideBio="true" :hideSaveBtn="true"
-                    :activateDetailMode="true"
+                    :hideSummaryToggle="false"
+                    :activateSummaryMode="true"
                     :canSaveOnCreate="isCreating || isSaving"
                     @created:user="getCreatedEntity($event)"
                     @updated:user="getUpdatedEntity($event)">
@@ -37,7 +38,8 @@
                     :companyId="(editableCompanyOrIndividual || {}).id"
                     :showClientOrSupplierSelector="showClientOrSupplierSelector"
                     :hideBio="true" :hideSaveBtn="true"
-                    :activateDetailMode="true"
+                    :hideSummaryToggle="false"
+                    :activateSummaryMode="true"
                     :canSaveOnCreate="isCreating || isSaving"
                     @created:company="getCreatedEntity($event)"
                     @updated:company="getUpdatedEntity($event)">
@@ -61,7 +63,7 @@
 
     /*  Widgets  */
     import individualWidget from './../../../widgets/user/show/main.vue'; 
-    import companyWidget from './../../../widgets/company/show/main.vue'; 
+    import companyWidget from './../../../widgets/company/show/companyDetails.vue'; 
 
     export default {
         props:{

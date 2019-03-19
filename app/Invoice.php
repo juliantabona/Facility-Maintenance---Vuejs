@@ -116,7 +116,7 @@ class Invoice extends Model
 
     public function skippedSendingActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'skipped sending invoice');
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'skipped sending');
     }
 
     public function sentReceiptActivities()
@@ -178,7 +178,7 @@ class Invoice extends Model
 
     public function getLastSkippedSendingActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('type', 'skipped sending invoice')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('type', 'skipped sending')->first();
     }
 
     public function getLastSentReceiptActivityAttribute()

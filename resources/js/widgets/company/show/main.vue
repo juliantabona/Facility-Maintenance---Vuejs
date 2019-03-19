@@ -1,489 +1,538 @@
 <style scoped>
 
-    .el-form-item >>> .el-form-item__label{
-        margin:0 !important;
-        padding:0 !important;
-        line-height: 24px !important;
+    .company-widget{
+        position: relative;
     }
 
-    .form-label{
-        font-size:14px;
+    .fade-enter,
+    .fade-leave-active {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    .fade-leave-active {
+        position: absolute;
+    }
+ 
+    .animated {
+        transition: all 0.5s;
+        display: flex;
+        width: 100%;
     }
 
 </style>
 
 <template>
 
+    <div id="company-widget">
+
+        <!-- Get the summary header to display the company #, status, due date, amount due and menu options -->
+        <overview 
+            v-if="!createMode && localCompany.has_approved"
+            :company="localCompany" 
+            :editMode="editMode" 
+            :createMode="createMode"
+            @toggleEditMode="toggleEditMode($event)">
+        </overview>
+
+        <!-- Loaders for creating/saving company -->
         <Row>
-
             <Col :span="24">
-
-                <!-- Loader -->
-                <Loader v-if="isLoading" :loading="isLoading" type="text" class="text-left">Loading...</Loader>
-                
-                <el-form label-position="top" label-width="100px" :model="formData">
-                    <Row :gutter="20" class="mb-1">
-
-                        <!-- Edit mode switch -->
-                        <Col :span="24">
-                            <detailModeSwitch v-bind:detailMode.sync="detailMode" :ripple="false" class="float-right mt-2"></detailModeSwitch>
-                        </Col>
-                            
-                        <Col v-if="detailMode" :span="24" class="mt-1 mb-2">
-                            <Alert>Provide as much or as little information as you’d like. We will never share or sell individual personal information or personally identifiable details.</Alert>
-                        </Col>
-
-                        <!-- Client/Supplier Selector -->
-                        <Col :span="24" v-if="showClientOrSupplierSelector">
-                            <el-form-item label="Relationship:" prop="relationship" class="mb-2">
-                                <clientOrSupplierSelector class="mb-2" 
-                                    @on-change="formData.relationship = $event">
-                                </clientOrSupplierSelector>
-                            </el-form-item>
-                        </Col>
-
-                        <Col :span="detailMode ? '12' : '24'">
-                            <!-- Name -->
-                            <el-form-item label="Name:" prop="name" class="mb-2">
-                                <el-input v-model="formData.name" size="small" style="width:100%" placeholder="Enter company/organisation name"></el-input>
-                            </el-form-item>
-                        </Col>
-
-                        <Col v-if="detailMode" :span="12">
-                            <!-- Description -->
-                            <el-form-item label="Description:" prop="description" class="mb-2">
-                                <el-input v-model="formData.description" size="small" style="width:100%" placeholder="Enter company/organisation description"></el-input>
-                            </el-form-item>
-                        </Col>
-
-                    </Row>
-                    <Row :gutter="20" class="mb-1">
-
-                        <Col :span="detailMode ? '12' : '24'">
-                            <!-- Type Selector e.g) Private, Government, Parastatal, Non Profit Organisation -->
-                            <span class="form-label mb-1 d-block">Type</span>
-                            <companyPrivateOrGovernmentSelector class="mb-2"
-                                :selectedType="formData.type"
-                                @updated="formData.type = $event">
-                            </companyPrivateOrGovernmentSelector>
-                        </Col>
-
-                        <Col v-if="detailMode" :span="12">
-                            <!-- Date Of Birth -->
-                            <el-form-item label="Date Of Incorporation" prop="date_of_incorporation" class="mb-2">
-                                <el-date-picker v-model="formData.date_of_incorporation" type="date" placeholder="Enter date of incorporation" style="width:100%" 
-                                    format="yyyy-MM-dd" value-format="yyyy-MM-dd">
-                                </el-date-picker>
-                            </el-form-item>
-                        </Col>
-
-                    </Row>
-                    <Row :gutter="20" class="mb-1">
-
-                        <Col :span="detailMode ? '12' : '24'">
-                            <!-- Email -->
-                            <el-form-item label="Email:" prop="email" class="mb-2">
-                                <el-input v-model="formData.email" size="small" style="width:100%" placeholder="Enter email address"></el-input>
-                            </el-form-item>
-                        </Col>
-
-                        <Col v-if="detailMode" :span="12">
-                            <!-- Additional Email -->
-                            <el-form-item label="Additional Email:" prop="additional_email" class="mb-2">
-                                <el-input v-model="formData.additional_email" size="small" style="width:100%"placeholder="Enter addittional email"></el-input>
-                            </el-form-item>
-                        </Col>
-
-                    </Row>
-
-                    <Row :gutter="20" class="mb-1">
-
-                        <Col :span="detailMode ? '12' : '24'">
-                            <!-- Website Link -->
-                            <el-form-item label="Website Link:" prop="website_link" class="mb-2">
-                                <el-input v-model="formData.website_link" size="small" style="width:100%" placeholder="Enter website link"></el-input>
-                            </el-form-item>
-                        </Col>
-
-                        <Col v-if="detailMode" :span="12">
-                            <!-- Facebook Link -->
-                            <el-form-item label="Facebook Link:" prop="facebook_link" class="mb-2">
-                                <el-input v-model="formData.facebook_link" size="small" style="width:100%"placeholder="Enter Facebook link"></el-input>
-                            </el-form-item>
-                        </Col>
-
-                        <Col v-if="detailMode" :span="12">
-                            <!-- Twitter Link -->
-                            <el-form-item label="Twitter Link:" prop="twitter_link" class="mb-2">
-                                <el-input v-model="formData.twitter_link" size="small" style="width:100%"placeholder="Enter Twitter link"></el-input>
-                            </el-form-item>
-                        </Col>
-
-                        <Col v-if="detailMode" :span="12">
-                            <!-- linkedIn Link -->
-                            <el-form-item label="linkedIn Link:" prop="linkedin_link" class="mb-2">
-                                <el-input v-model="formData.linkedin_link" size="small" style="width:100%"placeholder="Enter LinkedIn link"></el-input>
-                            </el-form-item>
-                        </Col>
-
-                        <Col v-if="detailMode" :span="12">
-                            <!-- Instagram Link -->
-                            <el-form-item label="Instagram Link:" prop="instagram_link" class="mb-2">
-                                <el-input v-model="formData.instagram_link" size="small" style="width:100%"placeholder="Enter Instagram link"></el-input>
-                            </el-form-item>
-                        </Col>
-
-                    </Row>
-
-                    <Row :gutter="20" class="mb-1">
-
-                        <Col :span="24">
-                            <!-- Calling Codes Selector -->
-                            <span class="form-label mb-1 d-block">Phone(s):</span>
-                            <phoneInput class="mb-2"  
-                                        :modelId="localCompany.id" 
-                                        :modelType="localCompany.model_type" 
-                                        :phones="formData.phones" 
-                                        :deletable="true"
-                                        :hidedable="false"
-                                        :editable="true"
-                                        @updated="updatePhoneChanges($event)">
-                            </phoneInput>
-
-                        </Col>
-
-                    </Row>
-                    
-                    <Row :gutter="20" class="mb-1">
-                        
-                        <Col :span="detailMode ? '12' : '24'">
-                            <!-- Address -->
-                            <el-form-item label="Address:" prop="address" class="mb-2">
-                                <el-input v-model="formData.address" size="small" style="width:100%" placeholder="Enter address"></el-input>
-                            </el-form-item>
-                        </Col>
-
-                        <Col v-if="detailMode" :span="12">
-                            <!-- Country Selector -->
-                            <span class="form-label mb-1 d-block">Country</span>
-                            <countrySelector
-                                :selectedCountry="formData.country"
-                                @updated="updateCountryChanges($event)">
-                            </countrySelector>
-                        </Col>
-
-                    </Row>
-
-                    <Row v-if="detailMode" :gutter="20" class="mb-1">
-
-                        <Col :span="12">
-                            <!-- Provience Selector -->
-                            <span class="form-label mb-1 d-block">State/Provience/District</span>
-                            <provinceSelector
-                                :selectedCountry="formData.country"
-                                :selectedProvience="formData.provience"
-                                @updated="updateProvienceChanges($event)">
-                            </provinceSelector>
-                        </Col>
-
-                        <Col :span="12">
-                            <!-- Cities Selector -->
-                            <span class="form-label mb-1 d-block">City/Town</span>
-                            <citySelector
-                                :selectedCountry="formData.country"
-                                :selectedCity="formData.city"
-                                @updated="updateCityChanges($event)">
-                            </citySelector>
-                        </Col>
-
-                    </Row>
-
-                    <Row v-if="!hideBio" :gutter="20" class="mt-1 mb-1">
-                        
-                        <Col :span="24">
-                            <el-form-item label="Say somthing about this company/organisation:" prop="bio" class="mb-2">
-                                <el-input type="textarea" v-model="formData.bio" size="small" style="width:100%" placeholder="Write something..."></el-input>
-                            </el-form-item>
-                        </Col>
-
-                    </Row>
-
-                    <Row v-if="!hideSaveBtn">
-                        <Col :span="24">
-                            <hr class="mt-2" />
-                            <!-- Save Changes Button -->
-                            <Button class="float-right mt-2" type="success" size="large" @click="saveCompany()">
-                                <span>Save Changes</span>
-                            </Button>
-                        </Col>
-                    </Row>
-
-                </el-form>
+                <div v-if="isCreatingCompany" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Creating, please wait...</div>
+                <div v-if="isSavingCompany" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Saving, please wait...</div>
             </Col>
-            
         </Row>
+
+        
+        <transition-group name="fade">
+
+            <Row v-if="localCompany.has_approved"
+                 :gutter="20" key="take_action_cards" class="animated">
+
+                <!-- Recurring toggle switch, Recurring settings toolbox, Save changes button -->
+                <Col :span="24">
+
+                    <!-- Make recurring switch -->
+                    <toggleSwitch v-bind:toggleValue.sync="showActionCards" 
+                        @update:toggleValue="showActionCards == $event"
+                        :ripple="false" :showIcon="true" onIcon="ios-flash-outline" offIcon="ios-flash-outline" 
+                        title="Take Action:" onText="Yes" offText="No" poptipMsg="Turn to see actions you can take"
+                        class="float-right p-2">
+                    </toggleSwitch>
+
+                    <div class="clearfix"></div>
+
+                    <!-- Make recurring settings -->
+                    <Row v-show="showActionCards" key="dynamic" class="animated mb-3">
+                        
+
+                        <Col span="24">
+                            <Row :gutter="20" style="background:#eee;padding: 20px">
+
+                                <Col span="8">
+
+                                    <!-- Activity Number Card -->
+                                    <IconAndCounterCard title="Proposals" icon="ios-filing-outline" class="mb-2" type="success"
+                                                        :route="{ name: 'show-company-proposals', params: { id: localCompany.id } }">
+                                    </IconAndCounterCard>
+
+                                </Col>
+
+                                <Col span="8">
+
+                                    <!-- Activity Number Card -->
+                                    <IconAndCounterCard title="Quotations" icon="ios-browsers-outline" :count="localCompany.quotation_count.total" class="mb-2" type="success"
+                                                        :route="{ name: 'show-company-quotations', params: { id: localCompany.id } }">
+                                    </IconAndCounterCard>
+
+                                </Col>
+
+                                <Col span="8">
+
+                                    <!-- Activity Number Card -->
+                                    <IconAndCounterCard title="Invoices" icon="ios-cash-outline" :count="localCompany.invoice_count.total" class="mb-2" type="success"
+                                                        :route="{ name: 'show-company-invoices', params: { id: localCompany.id } }">
+                                    </IconAndCounterCard>
+
+                                </Col>
+
+                                <Col span="8">
+
+                                    <!-- Activity Number Card -->
+                                    <IconAndCounterCard title="Jobcards" icon="ios-briefcase-outline" class="mb-2" type="success"
+                                                        :route="{ name: 'show-company-invoices', params: { id: localCompany.id } }">
+                                    </IconAndCounterCard>
+
+                                </Col>
+
+                                <Col span="8">
+
+                                    <!-- Activity Number Card -->
+                                    <IconAndCounterCard title="Promotions" icon="ios-megaphone-outline" class="mb-2" type="success"
+                                                        :route="{ name: 'show-company-invoices', params: { id: localCompany.id } }">
+                                    </IconAndCounterCard>
+
+                                </Col>
+
+                                <Col span="8">
+
+                                    <!-- Activity Number Card -->
+                                    <IconAndCounterCard title="Appointments" icon="ios-calendar-outline" class="mb-2" type="success"
+                                                        :route="{ name: 'show-company-activities', params: { id: localCompany.id } }">
+                                    </IconAndCounterCard>
+
+                                </Col>
+
+                                <Col span="8">
+
+                                    <!-- Activity Number Card -->
+                                    <IconAndCounterCard title="Users" icon="ios-contact-outline" class="mb-2" type="success"
+                                                        :route="{ name: 'show-company-activities', params: { id: localCompany.id } }">
+                                    </IconAndCounterCard>
+
+                                </Col>
+
+
+                            </Row>
+                        </Col>
+                    </Row>
+
+                </Col>
+
+            </Row>
+
+            <!-- Activity cards & Company Steps -->
+            <Row :gutter="20" key="activity_n_steps" class="animated">
+                <!-- White overlay when creating/saving company -->
+                <Spin size="large" fix v-if="isSavingCompany || isCreatingCompany"></Spin>
+
+                <!-- Acitvity cards for showing summary of activities, sent companies, and sent receipt -->
+                <Col v-if="localCompany.has_approved" :span="5">
+                
+                    <!-- Activity Number Card -->
+                    <IconAndCounterCard title="Activity" icon="ios-pulse-outline" :count="localCompany.activity_count.total" class="mb-2" type="success"
+                                        :route="{ name: 'show-company-activities', params: { id: localCompany.id } }">
+                    </IconAndCounterCard>
+                
+                </Col>
+
+                <!-- Company steps, Approval step, Sending step and Payment step -->
+                <Col :span="localCompany.has_approved ? 19 : 24">
+                    <!-- Get the staging toolbar to display the company approved, sent/re-send and record payment stages -->
+                    <steps 
+                        v-if="!createMode"
+                        :company="localCompany" :editMode="editMode" :createMode="createMode" 
+                        @toggleEditMode="toggleEditMode($event)" 
+                        @approved="updateCompanyData($event)">
+                    </steps>
+                </Col>
+
+            </Row>
+
+            <!-- Loaders for creating/saving company -->
+            <Row key="create_n_save_loaders" class="animated">
+                <Col :span="24">
+                    <div v-if="isCreatingCompany" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Creating, please wait...</div>
+                    <div v-if="isSavingCompany" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Saving, please wait...</div>
+                </Col>
+            </Row>
+
+            <!-- Company View/Editor -->
+            <Row id="company-summary"  key="company_template" class="animated mb-5">
+                <Col :span="24">
+                    <Card :style="{ width: '100%' }">
+                        
+                        <!-- White overlay when creating/saving company -->
+                        <Spin size="large" fix v-if="isSavingCompany || isCreatingCompany"></Spin>
+
+                        <!-- Main header -->
+                        <div slot="title">
+                            <h5>Company Summary</h5>
+                        </div>
+
+                        <!-- Company options -->
+                        <div slot="extra" v-if="showMenuBtn && !createMode">
+                            
+                            <mainHeader :company="localCompany" :editMode="editMode" @toggleEditMode="toggleEditMode($event)"></mainHeader>
+
+                        </div>
+
+                        <Row>
+
+                            <Col span="24" class="pr-4">
+
+                                <!-- Create button -->
+                                <basicButton v-if="createMode" 
+                                                class="float-right mb-2 ml-3" 
+                                                type="success" size="small" 
+                                                :ripple="true"
+                                                @click.native="createCompany()">
+                                    Create Company
+                                </basicButton>
+
+                                <!-- Save changes button -->
+                                <basicButton  v-if="!createMode && companyHasChanged" 
+                                                class="float-right mb-2 ml-3" :style="{ position:'relative' }"
+                                                type="success" size="small" 
+                                                :ripple="true"
+                                                @click.native="saveCompany()">
+                                    Save Changes
+                                </basicButton>
+
+                                <!-- Edit mode switch -->
+                                <editModeSwitch v-bind:editMode.sync="editMode" :ripple="false" class="float-right mb-2"></editModeSwitch>
+
+                                <div class="clearfix"></div>
+
+                            </Col>
+
+                        </Row>
+
+                        <Row>
+                            <Col span="24" class="pl-2">
+                                            
+                                <!-- Create/Edit Company -->
+                                <companyWidget 
+                                    :editMode="editMode"
+                                    :companyId="null"
+                                    v-bind:company.sync="localCompany"
+                                    @update:company="localCompany = $event"
+                                    :showClientOrSupplierSelector="true"
+                                    :hideBio="false" 
+                                    :hideSaveBtn="true"
+                                    :hideSummaryToggle="true" 
+                                    :activateSummaryMode="true"
+                                    :canSaveOnCreate="false"
+                                    @created:company=""
+                                    @updated:company="">
+                                </companyWidget>
+
+                            </Col>
+
+                        </Row>
+
+                    </Card>
+                </Col>
+            </Row>
+
+        </transition-group>
+
+    </div>
 
 </template>
 
 <script>
 
-    /*  Loaders   */
-    import Loader from './../../../components/_common/loaders/Loader.vue'; 
 
-    /*  Inputs   */
-    import phoneInput from './../../../components/_common/inputs/phoneInput.vue'; 
+    /*  Local components    */
+    import overview from './overview.vue';
+    import steps from './steps.vue';
+    import mainHeader from './header.vue';
+    import companyWidget from './companyDetails.vue'; 
+    
+    /*  Buttons  */
+    import basicButton from './../../../components/_common/buttons/basicButton.vue';
 
-    /*  Selectors   */
-    import companyPrivateOrGovernmentSelector from './../../../components/_common/selectors/companyPrivateOrGovernmentSelector.vue'; 
-    import provinceSelector from './../../../components/_common/selectors/provinceSelector.vue'; 
-    import citySelector from './../../../components/_common/selectors/citySelector.vue'; 
-    import countrySelector from './../../../components/_common/selectors/countrySelector.vue'; 
-    import clientOrSupplierSelector from './../../../components/_common/selectors/clientOrSupplierSelector.vue';
+    /*  Switches  */
+    import toggleSwitch from './../../../components/_common/switches/toggleSwitch.vue';
+    import editModeSwitch from './../../../components/_common/switches/editModeSwitch.vue';
+
+    /*  Loaders  */
+    import Loader from './../../../components/_common/loaders/Loader.vue';  
     
-    /*  Switches   */
-    import detailModeSwitch from './../../../components/_common/switches/detailModeSwitch.vue'; 
-    
+    /*  Cards  */
+    import IconAndCounterCard from './../../../components/_common/cards/IconAndCounterCard.vue';
 
     import lodash from 'lodash';
     Event.prototype._ = lodash;
 
     export default {
+        components: { 
+            overview, steps, mainHeader, companyWidget,
+            basicButton, toggleSwitch, editModeSwitch,
+            Loader, IconAndCounterCard
+        },
         props: {
-            companyId: { 
-                type: Number,
+            company: {
+                type: Object,
                 default: null
             },
-            /*
-             *  canSaveOnCreate checks if the parent has permitted for the company
-             *  to be saved to the databse. If canSaveOnCreate is set to true
-             *  we will perform an ajax request to create the new company
-             *  using our formData information.
-             */
-            canSaveOnCreate:{
+            showMenuBtn: {
                 type: Boolean,
-                default: false          
+                default: true
             },
-            hideBio: { 
+            create: {
                 type: Boolean,
                 default: false
             },
-            hideSaveBtn: { 
-                type: Boolean,
-                default: false
+            modelType:{
+                type: String,
+                default: ''
             },
-            showClientOrSupplierSelector: { 
-                type: Boolean,
-                default: false
-            },
-            activateSummaryMode:{
-                type: Boolean,
-                default: false
+            modelId:{
+                type: Number,
+                default: null
             }
-        },
-        components: { 
-            Loader, companyPrivateOrGovernmentSelector, phoneInput, countrySelector, provinceSelector, citySelector, clientOrSupplierSelector,
-            detailModeSwitch
         },
         data(){
             return {
-                localCompany: {},
-                detailMode: this.activateSummaryMode,
-                isLoading: false,
-                formData: {
-                    relationship: '',       //  e.g) client, supplier
-                    name: '',
-                    description: '',
-                    date_of_incorporation: '',
-                    type: '',
 
-                    address: '',
-                    country: '',
-                    provience: '',
-                    city: '',
-                    postal_or_zipcode: '',
+                user: auth.user,
 
-                    email: '',
-                    additional_email: '',
-                    website_link: '',
-                    facebook_link: '',
-                    twitter_link: '',
-                    linkedin_link: '',
-                    instagram_link: '',
-                    phones: [],
+                //  Modes
+                editMode: false,
+                createMode: this.create,
 
-                    logo_url: '',
-                    bio: '',
+                //  Loading States
+                isSavingCompany: false,
+                isCreatingCompany: false,
 
-                },
-                ruleForm: {
-
-                },
-                fetchedCountries: [],
-                fetchedStates: []
+                //  Local Company and state changes
+                localCompany: (this.company || {}),
+                _localCompanyBeforeChange: {},
+                companyHasChanged: false,
+                showActionCards: true
+                
             }
         },
         watch: {
-
-            //  Watch for changes on the canSaveOnCreate value
-            canSaveOnCreate: {
+            localCompany: {
                 handler: function (val, oldVal) {
-
-                    //  Create a new company if canSaveOnCreate is set to true
-                    if(this.companyId){
-                        this.saveCompany();
-                    }else{
-                        this.createNewCompany();
-                    }
-
-                }
+                    console.log('Changes detected!!!!!');
+                    console.log(val);
+                    console.log('checkIfcompanyHasChanged - 1');
+                    this.companyHasChanged = this.checkIfcompanyHasChanged(val);
+                },
+                deep: true
             }
         },
         methods: {
-            fetch(){
-                
-                if( this.companyId ){
-                 
-                    const self = this;
+            toggleEditMode(activate = true){
 
-                    //  Additional data to eager load along with the company found
-                    var connections = '?connections=phones';
-
-                    //  Use the api call() function located in resources/js/api.js
-                    api.call('get', '/api/companies/'+this.companyId+connections)
-                        .then(({data}) => {
-
-                            console.log(data);
-
-                            //  Stop loader
-                            self.isLoading = false;
-
-                            /*
-                            *  Vue.set()
-                            *  We use Vue.set to set a new object property. This method ensures the  
-                            *  property is created as a reactive property and triggers view updates:
-                            */
-                            
-                            for(var x = 0; x <  _.size(self.formData); x++){
-                                var key = Object.keys(self.formData)[x];
-
-                                //  data[key] != undefined if the key does not exist e.g) name, description, e.t.c
-                                if(data[key] != undefined){
-                                    self.$set(self.formData, key, data[key]);
-                                }
-                                
-                            }
-                            
-                            //  Store the data as the localCompany
-                            self.localCompany = data;
-
-                        })         
-                        .catch(response => { 
-                            console.log(response);
-
-                            //  Stop loader
-                            self.isLoading = false;
-                        });
-
+                var self = this,
+                    options = {
+                        easing: 'ease-in-out',
+                        offset: -100,
+                        force: true,
+                        cancelable: true,
+                        onStart: function(element) {
+                            // scrolling started
+                        },
+                        onDone: function(element) {
+                            //  Activate edit mode
+                            self.editMode = activate;
+                        },
+                        onCancel: function() {
+                        // scrolling has been interrupted
+                        },
+                        x: false,
+                        y: true
                     }
+
+                //var cancelScroll = VueScrollTo.scrollTo('company-summary', 500, options)
+
+                // or alternatively inside your components you can use
+                var cancelScroll = this.$scrollTo('#company-summary', 1000, options);
+
+                // to cancel scrolling you can call the returned function
+                //cancelScroll()
             },
-            updatePhoneChanges(newVal){
-                console.log(newVal);
-                this.formData.phones = newVal;
+            activateCreateMode: function(){
+                //  Activate edit mode
+                self.editMode = true;
             },
-            updateCountryChanges(newVal){
-                this.formData.country = newVal;
+            checkIfcompanyHasChanged: function(updatedCompany = null){
+                
+                var currentCompany = _.cloneDeep(updatedCompany || this.localCompany);
+                var isNotEqual = !_.isEqual(currentCompany, this._localCompanyBeforeChange);
+
+                console.log('currentCompany');
+                console.log(currentCompany);
+                console.log('_localCompanyBeforeChange');
+                console.log(this._localCompanyBeforeChange);
+                console.log('isNotEqual:' +isNotEqual);
+
+                return isNotEqual;
             },
-            updateProvienceChanges(newVal){
-                this.formData.provience = newVal;
+            storeOriginalCompany(){
+                //  Store the original company
+                this._localCompanyBeforeChange = _.cloneDeep(this.localCompany);
+                console.log('stored _localCompanyBeforeChange');
+                console.log(this._localCompanyBeforeChange);
             },
-            updateCityChanges(newVal){
-                this.formData.city = newVal;
-            },
-            saveCompany() {
-                const self = this;
+            saveCompany(){
+                
+                var self = this;
 
                 //  Start loader
-                self.isSaving = true;
+                self.isSavingCompany = true;
 
-                console.log('Attempt to save company details...');
+                console.log('Attempt to save company...');
 
-                //  Company data to send
-                let companyData = {
-                    company: this.formData
-                };
+                console.log( self.localCompany );
 
-                //  Additional data to eager load along with the jobcard found
-                var connections = '?connections=phones';
+                //  Form data to send
+                let companyData = { company: self.localCompany };
 
+                console.log(companyData);
+                
                 //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/companies/'+this.localCompany.id + connections, companyData)
-                    .then(({data}) => {
-
-                        console.log(data);
+                api.call('post', '/api/companies/'+self.localCompany.id, companyData)
+                    .then(({ data }) => {
 
                         //  Stop loader
-                        self.isSaving = false;
-                        
+                        self.isSavingCompany = false;
+
+                        /*
+                        *  updateCompanyData() : This method ensures the property is
+                        *  updated as a reactive property and triggers future view updates:
+                        */
+                        self.updateCompanyData(data);
+
                         //  Alert creation success
                         self.$Message.success('Company saved sucessfully!');
 
-                        self.$emit('updated:company', data);
-
                     })         
                     .catch(response => { 
-                        console.log('widgets/company/show/main.vue - Error saving company details...');
-                        console.log(response);
-
                         //  Stop loader
-                        self.isLoggingIn = false;     
-    
-                    });
+                        self.isSavingCompany = false;
 
+                        console.log('companySummaryWidget.vue - Error saving company...');
+                        console.log(response);
+                    });
             },
-            createNewCompany() {
-                const self = this;
+            createCompany(){
+
+                var self = this;
 
                 //  Start loader
-                self.isCreating = true;
+                self.isCreatingCompany = true;
 
-                console.log('Attempt to create new user...');
+                console.log('Attempt to create company...');
 
-                //  Company data to send
-                let companyData = {
-                    company: this.formData
-                };
+                console.log( self.localCompany );
 
-                //  Additional data to eager load along with the jobcard found
-                var connections = '?connections=phones';
+                //  Form data to send
+                let companyData = { company: self.localCompany };
 
+                console.log(companyData);
+
+                var associatedModel = (this.modelType && this.modelId) ? '?model='+this.modelType+'&modelId='+this.modelId: '';
+                
                 //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/companies'+connections, companyData)
-                    .then(({data}) => {
-                        
-                        console.log(data);
+                api.call('post', '/api/companies'+associatedModel, companyData)
+                    .then(({ data }) => {
 
                         //  Stop loader
-                        self.isSaving = false;
-                        
-                        //  Alert creation success
-                        self.$Message.success('Created sucessfully!');
+                        self.isCreatingCompany = false;
 
-                        self.$emit('created:company', data);
+                        //  Disable edit mode
+                        self.editMode = false;
+
+                        //  Store the current state of the company as the original company
+                        self.storeOriginalCompany();
+                        
+                        console.log('checkIfcompanyHasChanged - 3');
+                        self.companyHasChanged = self.checkIfcompanyHasChanged();
+
+                        //  Alert creation success
+                        self.$Message.success('Company created sucessfully!');
+
+                        //  Notify parent of changes
+                        self.$emit('companyCreated', data);
+
+                        //  Go to company
+                        self.$router.push({ name: 'show-company', params: { id: data.id } });
 
                     })         
                     .catch(response => { 
-                        console.log('widgets/company/show/main.vue - Error creating company...');
-                        console.log(response);
-
                         //  Stop loader
-                        self.isLoggingIn = false;     
-    
+                        self.isCreatingCompany = false;
+
+                        console.log('companySummaryWidget.vue - Error creating company...');
+                        console.log(response);
                     });
+            },
+            updateCompanyData(newCompany){
+                
+                //  Disable edit mode
+                this.editMode = false;
+                
+                /*
+                 *  Vue.set()
+                 *  We use Vue.set to set a new object property. This method ensures the  
+                 *  property is created as a reactive property and triggers view updates:
+                 */
+            
+                for(var x = 0; x <  _.size(newCompany); x++){
+                    var key = Object.keys(this.localCompany)[x];
+                    this.$set(this.localCompany, key, newCompany[key]);
+                }
+
+                //  Store the current state of the company as the original company
+                this.storeOriginalCompany();
+
+                console.log('checkIfcompanyHasChanged - 4');
+
+                //  Update the company change status
+                this.companyHasChanged = this.checkIfcompanyHasChanged();
 
             },
         },
-        created(){
-            this.fetch();
+        mounted: function () {
+            //  Only after everything has loaded
+            this.$nextTick(function () {
+                //  Store the current state of the company as the original company
+                console.log('Now lets store that original company!');
+                this.storeOriginalCompany();
+
+                //  Update the company change status
+                this.companyHasChanged = this.checkIfcompanyHasChanged();
+
+                if(this.createMode){
+                    this.activateCreateMode();
+                }
+
+            })
         }
     };
   

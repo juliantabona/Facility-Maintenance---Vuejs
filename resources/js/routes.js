@@ -68,7 +68,80 @@ let routes = [
         component: require('./views/dashboard/quotation/show/activities.vue'),
         props: true
     },
-
+        /**************************************
+        *  COMPANIES
+        **************************************/  
+       {
+        //  companies
+        path: '/companies', name: 'companies',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/company/list/main.vue')
+    },
+    {
+        //  Create company
+        path: '/companies/create', name: 'create-company',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/company/create/main.vue'),
+        props: true
+    },
+    {
+        //  Show one company
+        path: '/companies/:id', name: 'show-company',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/company/show/main.vue'),
+        props: true
+    },
+    {
+        //  Show company activities
+        path: '/companies/:id/activities', name: 'show-company-activities',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/company/show/activities.vue'),
+        props: true
+    },
+    {
+        //  Show company quotations
+        path: '/companies/:id/quotations', name: 'show-company-quotations',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/company/show/quotations.vue'),
+        props: true
+    },
+    {
+        //  Show company invoices
+        path: '/companies/:id/invoices', name: 'show-company-invoices',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/company/show/invoices.vue'),
+        props: true
+    },
+    /**************************************
+    *  USERS/INDIVIDUALS
+    **************************************/  
+    {
+        //  Users
+        path: '/users', name: 'users',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/user/list/main.vue')
+    },
+    {
+        //  Create user
+        path: '/users/create', name: 'create-user',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/user/create/main.vue'),
+        props: true
+    },
+    {
+        //  Show one user
+        path: '/users/:id', name: 'show-user',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/user/show/main.vue'),
+        props: true
+    },
+    {
+        //  Show user activities
+        path: '/users/:id/activities', name: 'show-user-activities',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/user/show/activities.vue'),
+        props: true
+    }
 ];
 
 const router = new VueRouter({

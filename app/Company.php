@@ -2,6 +2,7 @@
 
 namespace App;
 
+use DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\AdvancedFilter\Dataviewer;
@@ -31,19 +32,19 @@ class Company extends Model
     protected $fillable = [
         'name', 'description', 'date_of_incorporation', 'type', 'address', 'country', 'provience', 'city', 'postal_or_zipcode',
         'email', 'additional_email', 'website_link', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link',
-        'logo_url', 'bio', 'currency_type',
+        'bio', 'currency_type',
     ];
 
     protected $allowedFilters = [
         'id', 'name', 'description', 'date_of_incorporation', 'type', 'address', 'country', 'provience', 'city', 'postal_or_zipcode',
         'email', 'additional_email', 'website_link', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link',
-        'logo_url', 'bio', 'created_at',
+        'bio', 'created_at',
     ];
 
     protected $orderable = [
         'id', 'name', 'description', 'date_of_incorporation', 'type', 'address', 'country', 'provience', 'city', 'postal_or_zipcode',
         'email', 'additional_email', 'website_link', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link',
-        'logo_url', 'bio', 'created_at',
+        'bio', 'created_at',
     ];
 
     /*  Get the jobcards created by this company, get them in relation to the company branches that created them
@@ -116,6 +117,12 @@ class Company extends Model
                     ->where('user_directory.type', 'supplier');
     }
 
+    public function userStaff()
+    {
+        return $this->userDirectory()
+                    ->where('user_directory.type', 'staff');
+    }
+
     public function productsOrServices()
     {
         return $this->hasMany('App\ProductOrService');
@@ -131,9 +138,19 @@ class Company extends Model
         return $this->hasMany('App\Quotation');
     }
 
+    public function clientQuotations()
+    {
+        return $this->hasMany('App\Quotation', 'client_id');
+    }
+
     public function invoices()
     {
         return $this->hasMany('App\Invoice');
+    }
+
+    public function clientInvoices()
+    {
+        return $this->hasMany('App\Invoice', 'client_id');
     }
 
     public function phones()
@@ -155,12 +172,99 @@ class Company extends Model
         return $this->morphOne('App\Setting', 'trackable');
     }
 
-    protected $appends = ['model_type'];
+    public function recentActivities()
+    {
+        return $this->morphMany('App\RecentActivity', 'trackable')
+                    ->where('trackable_id', $this->id)
+                    ->orderBy('created_at', 'desc');
+    }
+
+    public function createdActivities()
+    {
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'created');
+    }
+
+    public function approvedActivities()
+    {
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'approved');
+    }
+
+    protected $appends = [
+                            'model_type', 'phone_list',
+                            'last_approved_activity',
+                            'has_approved',
+                            'current_activity_status', 'activity_count', 'quotation_count', 'invoice_count',
+                        ];
 
     //  Getter for the type of model
     public function getModelTypeAttribute()
     {
         return 'company';
+    }
+
+    //  Getter for the phone list
+    public function getPhoneListAttribute()
+    {
+        $phones = $this->phones()->get();
+        $phoneList = '';
+
+        foreach ($phones as $key => $phone) {
+            $phoneList .= ($key != 0 ? ', ' : '').'(+'.$phone['calling_code']['calling_code'].') '.$phone['number'];
+        }
+
+        return $phoneList;
+    }
+
+    public function getLastApprovedActivityAttribute()
+    {
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('type', 'approved')->first();
+    }
+
+    public function gethasApprovedAttribute()
+    {
+        return $this->last_approved_activity ? true : false;
+    }
+
+    public function getCurrentActivityStatusAttribute()
+    {
+        //  If approved
+        if ($this->has_approved) {
+            return 'Approved';
+
+        //  If draft
+        } else {
+            return 'Draft';
+        }
+    }
+
+    public function getActivityCountAttribute()
+    {
+        $count = $this->recentActivities()->where('trackable_id', $this->id)
+                                          ->select(DB::raw('count(*) as total'))
+                                          ->groupBy('trackable_type')
+                                          ->first();
+
+        return $count ? $count->only(['total']) : ['total' => 0];
+    }
+
+    public function getQuotationCountAttribute()
+    {
+        $count = $this->clientQuotations()->select(DB::raw('count(*) as total'))
+                                          ->where('client_id', $this->id)
+                                          ->groupBy('client_id')
+                                          ->first();
+
+        return $count ? $count->only(['total']) : ['total' => 0];
+    }
+
+    public function getInvoiceCountAttribute()
+    {
+        $count = $this->clientInvoices()->select(DB::raw('count(*) as total'))
+                                        ->where('client_id', $this->id)
+                                        ->groupBy('client_id')
+                                        ->first();
+
+        return $count ? $count->only(['total']) : ['total' => 0];
     }
 
     ///////////////////////////////////////////////////////////////////////////////////
@@ -225,24 +329,9 @@ class Company extends Model
         return $this->hasMany('App\Category');
     }
 
-    /*  Get the company branches related to this company
-     *
-     */
-
     public function branches()
     {
         return $this->hasMany('App\CompanyBranch');
-    }
-
-    /*  Get all the recent activities relating to this company, Get them in relation to the company branches that
-     *  created them Recent activities are anything that happens that needs to be recorded mainly for accountability
-     *  purposes. Examples are activities such as creating, updating, trashing, deleting reources that the company
-     *  has a resource can be a user, client, supplier, jobcard, document, e.t.c
-     */
-    public function recentActivities()
-    {
-        return $this->morphMany('App\RecentActivity', 'trackable')
-                    ->orderBy('created_at', 'desc');
     }
 
     public function staff()
@@ -250,48 +339,6 @@ class Company extends Model
         return $this->userDirectory()
                     ->where('user_directory.type', 'staff');
     }
-
-    /*
-    public function recentActivities()
-    {
-        return $this->hasManyThrough('App\RecentActivity', 'App\CompanyBranch');
-    }
-    */
-
-    /*  Get the clients for this company. A client is basically another company that this company is doing work for.
-     *  A client can be stored without necessary having work to be done for them, but stored for profilling purposes.
-     *  This could be useful in the case of prospective clients.
-
-    public function clients()
-    {
-        return $this->belongsToMany('App\Company', 'company_clients', 'company_id', 'client_id')
-                    ->withPivot('client_id', 'company_id', 'who_created_id')
-                    ->withTimestamps();
-    }
-    */
-
-    /*  Get the suppliers for this company. A supplier is basically another company that this company is
-     *  subcontracting work. A supplier can be stored without necessary having work to be done by them, but stored
-     *  for profilling purposes. This could be useful in the case of prospective suppliers.
-
-
-    public function suppliers()
-    {
-        return $this->belongsToMany('App\Company', 'company_suppliers', 'company_id', 'supplier_id')
-                    ->withPivot('supplier_id', 'company_id', 'who_created_id')
-                    ->withTimestamps();
-    }
-    */
-
-    /*  Get the contacts for this company. A contact is basically users that this company is linked to. This link may
-     *  be that the contact is a staff member, a client contact, a supplier contact, or just an individual on their own
-     */
-
-    /*  Get the jobcards assigned to this supplier company, in this case this company is the one that has been
-     *  sub-contracted for the works and we would like to get access to all the jobcards that it has been listed
-     *  for. These assigned jobcards DO NOT mean that the supplier was eventually SELECTED for the job but
-     *  means that they were atleast meantioned on the list of POTENTIAL suppliers
-     */
 
     public function assignedJobcards()
     {
@@ -314,39 +361,4 @@ class Company extends Model
     {
         return $this->documents()->where('type', 'quotation');
     }
-
-    /*
-    public function createdBy()
-    {
-        return $this->belongsTo('App\User', 'who_created_id');
-    }
-    */
-
-    /*
-
-    public function jobcards()
-    {
-        return $this->belongsToMany('App\Jobcard', 'jobcard_contacts', 'contact_id', 'jobcard_id');
-    }
-
-    public function priorities()
-    {
-        return $this->hasMany('App\JobcardPriority');
-    }
-
-    public function costCenter()
-    {
-        return $this->hasMany('App\JobcardCostCenter');
-    }
-
-    public function category()
-    {
-        return $this->hasMany('App\JobcardCategory');
-    }
-
-    public function statuses()
-    {
-        return $this->hasMany('App\JobcardStatus');
-    }
-    */
 }

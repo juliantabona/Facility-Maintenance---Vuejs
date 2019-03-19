@@ -10,6 +10,46 @@ use App\Http\Controllers\Controller;
 
 class UserController extends Controller
 {
+    public function index()
+    {
+        //  Invoice Instance
+        $data = ( new User() )->initiateGetAll();
+        $success = $data['success'];
+        $response = $data['response'];
+
+        //  If the companies were found successfully
+        if ($success) {
+            //  If this is a success then we have the paginated list of companies
+            $companies = $response;
+
+            //  Action was executed successfully
+            return oq_api_notify($companies, 200);
+        }
+
+        //  If the data was not a success then return the response
+        return $response;
+    }
+
+    public function getEstimatedStats()
+    {
+        //  Start creating the company
+        $data = ( new User() )->getStatistics();
+        $success = $data['success'];
+        $response = $data['response'];
+
+        //  If the company statistics were found successfully
+        if ($success) {
+            //  If this is a success then we have the statistics returned
+            $stats = $response;
+
+            //  Action was executed successfully
+            return oq_api_notify($stats, 200);
+        }
+
+        //  If the data was not a success then return the response
+        return $response;
+    }
+
     public function update(Request $request, $user_id)
     {
         //  Current authenticated user

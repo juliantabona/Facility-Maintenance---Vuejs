@@ -36,12 +36,12 @@
             <template slot="rightContent">
 
                 <!-- Focus Ripple  -->
-                <focusRipple v-if="!localQuotation.has_converted && (localQuotation.has_sent || localQuotation.has_skipped_sending)" 
-                            :ripple="localQuotation.has_sent || localQuotation.has_skipped_sending" color="blue" class="float-right">
+                <focusRipple v-if="(localQuotation.has_sent || localQuotation.has_skipped_sending)" 
+                            :ripple="!localQuotation.has_converted && (localQuotation.has_sent || localQuotation.has_skipped_sending)" color="blue" class="float-right">
 
                     <!-- Convert Quotation Button  -->
-                    <Button type="primary" size="large" @click="approveQuotation()">
-                        <span>Convert</span>
+                    <Button :type="(!localQuotation.has_converted) ? 'primary' : 'default' " size="large" @click="approveQuotation()">
+                        <span>{{ (!localQuotation.has_converted) ? 'Convert' : 'Convert Again'  }}</span>
                     </Button>
 
                 </focusRipple>

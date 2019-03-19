@@ -97,7 +97,7 @@ class Quotation extends Model
 
     public function createdActivities()
     {
-        return $this->recentActivities()->where('type', 'created');
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'created');
     }
 
     public function approvedActivities()
@@ -114,7 +114,7 @@ class Quotation extends Model
 
     public function skippedSendingActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'skipped sending quotation');
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'skipped sending');
     }
 
     public function convertedActivities()
@@ -154,7 +154,7 @@ class Quotation extends Model
 
     public function getLastSkippedSendingActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('type', 'skipped sending quotation')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('type', 'skipped sending')->first();
     }
 
     public function getLastConvertedActivityAttribute()

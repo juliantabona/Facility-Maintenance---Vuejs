@@ -8,8 +8,8 @@
                 
                 <!-- Slot Main Title & Icon -->
                 <template slot="title">
-                    <Icon :style="{ marginTop:'-10px' }" type="ios-cash-outline" :size="30" class="mr-1"></Icon>
-                    <h1 :style="{ fontSize:'2rem' }" class="text-dark d-inline">Quotations</h1>
+                    <Icon :style="{ marginTop:'-10px', fontSize:'1.5rem' }" type="ios-cash-outline"></Icon>
+                    <h1 :style="{ fontSize:'1.5rem' }" class="text-dark d-inline">Quotations</h1>
                 </template>
 
                 <!-- Slot Extra functionality -->
@@ -26,7 +26,11 @@
                 <Col :span="24" :style="{ padding: '0 20px' }">
 
                     <!-- Get the quotation activity cards -->
-                    <activityCardWidget url="/quotations/stats"></activityCardWidget>
+                    <activityCardWidget 
+                        url="/quotations/stats" 
+                        routeName="quotations"
+                        :isMoneyList="['Converted', 'Unconverted', 'Expired', 'Sent', 'Approved', 'Draft']">
+                    </activityCardWidget>
 
                 </Col>
                 

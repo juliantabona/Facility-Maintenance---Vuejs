@@ -38,8 +38,16 @@ trait InvoiceTraits
      *  This is used to return a pagination of invoice results.
      *
      */
-    public function initiateGetAll()
+    public function initiateGetAll($options = array())
     {
+        //  Default settings
+        $defaults = array(
+            'paginate' => true,
+        );
+
+        //  Replace defaults with any provided options
+        $config = array_merge($defaults, $options);
+
         //  Current authenticated user
         $auth_user = auth('api')->user();
 
@@ -55,6 +63,15 @@ trait InvoiceTraits
          *     available. This is usually useful for users acting as superadmins.
          */
         $allocation = request('allocation');
+
+        /*
+         *  $companyId = 1, 2, 3, e.t.c
+        /*
+         *  The $companyId variable only get data specificaclly related to
+         *  the specified company id. It is useful for scenerios where we
+         *  want only quotations of that company only
+         */
+        $companyId = request('companyId');
 
         //  Apply filter by allocation
         if ($allocation == 'all') {
@@ -78,6 +95,15 @@ trait InvoiceTraits
 
             //  Only get invoices associated to the company
             $invoices = $auth_user->company->invoices();
+        }
+
+        //  Only get specific company data only if specified
+        if ($companyId) {
+            /************************************************************************
+            *  CHECK IF THE USER IS AUTHORIZED TO GET SPECIFIED COMPANY INVOICES    *
+            /***********************************************************************/
+
+            $invoices = $invoices->where('client_id', $companyId);
         }
 
         /*  To avoid sql order_by error for ambigious fields e.g) created_at
@@ -142,7 +168,13 @@ trait InvoiceTraits
                                     ['path' => url('api/invoices')]
                                 );
             } else {
-                $invoices = $invoices->advancedFilter(['order_join' => $order_join, 'paginate' => true]);
+                //  If we are not paginating then
+                if (!$config['paginate']) {
+                    //  Get the collection
+                    $invoices = $invoices->get();
+                } else {
+                    $invoices = $invoices->advancedFilter(['order_join' => $order_join, 'paginate' => $config['paginate']]);
+                }
 
                 //  Eager load other relationships wanted if specified
                 if (request('connections')) {
@@ -955,7 +987,7 @@ trait InvoiceTraits
                  *****************************/
 
                 //  Record activity of invoice skipped sending
-                $status = 'skipped sending invoice';
+                $status = 'skipped sending';
                 $invoiceSkipSendActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
 
                 //  Action was executed successfully
@@ -1504,162 +1536,134 @@ trait InvoiceTraits
         //  Current authenticated user
         $auth_user = auth('api')->user();
 
-        /*
-         *  $allocation = all, company, branch
-        /*
-         *  The $allocation variable is used to determine where the data is being
-         *  pulled from. The user may request data from three possible sources.
-         *  1) Data may come from the associated authenticated user branch
-         *  2) Data may come from the associated authenticated user company
-         *  3) Data may come from the whole bucket meaning outside the scope of the
-         *     authenticated user. This means we can access all possible models
-         *     available. This is usually useful for users acting as superadmins.
-         */
-        $allocation = request('allocation');
+        //  Start getting the companies
+        $data = $this->initiateGetAll(['paginate' => false]);
+        $success = $data['success'];
+        $response = $data['response'];
 
-        //  Apply filter by allocation
-        if ($allocation == 'all') {
-            /***********************************************************
-            *  CHECK IF THE USER IS AUTHORIZED TO ALL INVOICES         *
-            /**********************************************************/
+        if ($success) {
+            try {
+                //  Get all the available invoices so far
+                $invoices = $data['response'];
 
-            //  Get the current invoice instance
-            $invoices = $this;
-        } elseif ($allocation == 'branch') {
-            /*************************************************************
-            *  CHECK IF THE USER IS AUTHORIZED TO GET BRANCH INVOICES    *
-            /*************************************************************/
-
-            // Only get invoices associated to the company branch
-            $invoices = $auth_user->companyBranch->invoices();
-        } else {
-            /**************************************************************
-            *  CHECK IF THE USER IS AUTHORIZED TO GET COMPANY INVOICES    *
-            /**************************************************************/
-
-            //  Only get invoices associated to the company
-            $invoices = $auth_user->company->invoices();
-        }
-
-        try {
-            //  Get all the available invoices so far
-            $invoices = $invoices->get();
-
-            //  From the list of invoices we will group them by their current activity status e.g) Paid, Sent, e.t.c
-            //  After this we will map through each group (Paid, Sent, e.t.c) and get the status name, total sum of
-            //  the grand totals as well as the total count of grouped invoices of that activity.
-            /*
-             *  Example of returned output:
-             *
-                {
-                    "Paid": {
-                        "name": "Paid",
-                        "grand_total": 44520,
-                        "total_count": 5
-                    },
-                    "Sent": {
-                        "name": "Sent",
-                        "grand_total": 14000,
-                        "total_count": 1
+                //  From the list of invoices we will group them by their current activity status e.g) Paid, Sent, e.t.c
+                //  After this we will map through each group (Paid, Sent, e.t.c) and get the status name, total sum of
+                //  the grand totals as well as the total count of grouped invoices of that activity.
+                /*
+                *  Example of returned output:
+                *
+                    {
+                        "Paid": {
+                            "name": "Paid",
+                            "grand_total": 44520,
+                            "total_count": 5
+                        },
+                        "Sent": {
+                            "name": "Sent",
+                            "grand_total": 14000,
+                            "total_count": 1
+                        }
                     }
-                }
-             *
-             */
+                *
+                */
 
-            $availableStats = collect($invoices)->groupBy('current_activity_status')->map(function ($invoiceGroup, $key) {
-                return [
-                    'name' => $key,  //  e.g) Paid, Expired, Cancelled, Sent, Approved, Draft
-                    'grand_total' => collect($invoiceGroup)->sum('grand_total_value'),  //  35020
-                    'total_count' => collect($invoiceGroup)->count(),                   //  12
-                ];
-            });
-
-            //  This is a list of all the statistics we want returned in their respective order
-            $expectedStats = ['Draft', 'Approved', 'Sent', 'Cancelled', 'Expired', 'Paid'];
-
-            //  From the list of expected stats, we will map through and inspect if the expected stat
-            //  exists in the available stats we have collected. If it does then return back the existing
-            //  stat, otherwise we will create a new array that will hold the expected stat name that does
-            //  not exist, as well as put a grand total sum of zero and a total count of zero
-            /*
-             *  Example of returned output:
-             *
-                [
-                    {
-                        "name": "Draft",
-                        "grand_total": 0,
-                        "total_count": 0
-                    },
-                    {
-                        "name": "Approved",
-                        "grand_total": 0,
-                        "total_count": 0
-                    },
-                    {
-                        "name": "Sent",
-                        "grand_total": 14000,
-                        "total_count": 1
-                    },
-                    {
-                        "name": "Cancelled",
-                        "grand_total": 0,
-                        "total_count": 0
-                    },
-                    {
-                        "name": "Expired",
-                        "grand_total": 0,
-                        "total_count": 0
-                    },
-                    {
-                        "name": "Paid",
-                        "grand_total": 44520,
-                        "total_count": 5
-                    }
-                ]
-             *
-             */
-            $stats = collect($expectedStats)->map(function ($stat_name) use ($availableStats) {
-                if (collect($availableStats)->has($stat_name)) {
-                    return $availableStats[$stat_name];
-                } else {
+                $availableStats = collect($invoices)->groupBy('current_activity_status')->map(function ($invoiceGroup, $key) {
                     return [
-                                'name' => $stat_name,         //  e.g) Paid, Expired, Cancelled, Sent, Approved, Draft
-                                'grand_total' => 0,
-                                'total_count' => 0,
-                            ];
-                }
-            });
+                        'name' => $key,  //  e.g) Paid, Expired, Cancelled, Sent, Approved, Draft
+                        'grand_total' => collect($invoiceGroup)->sum('grand_total_value'),  //  35020
+                        'total_count' => collect($invoiceGroup)->count(),                   //  12
+                    ];
+                });
 
-            //  Calculate the overall stats e.g) Total Paid & Total Outstanding
-            $totalPaid = ['name' => 'Paid', 'grand_total' => 0, 'total_count' => 0];
-            $totalOutstanding = ['name' => 'Outstanding', 'grand_total' => 0, 'total_count' => 0];
+                //  This is a list of all the statistics we want returned in their respective order
+                $expectedStats = ['Draft', 'Approved', 'Sent', 'Cancelled', 'Expired', 'Paid'];
 
-            foreach ($stats as $stat) {
-                if (in_array($stat['name'], ['Draft', 'Approved', 'Sent', 'Expired'])) {
-                    $totalOutstanding['grand_total'] += $stat['grand_total'];
-                    $totalOutstanding['total_count'] += $stat['total_count'];
-                } elseif (in_array($stat['name'], ['Paid'])) {
-                    $totalPaid['grand_total'] += $stat['grand_total'];
-                    $totalPaid['total_count'] += $stat['total_count'];
+                //  From the list of expected stats, we will map through and inspect if the expected stat
+                //  exists in the available stats we have collected. If it does then return back the existing
+                //  stat, otherwise we will create a new array that will hold the expected stat name that does
+                //  not exist, as well as put a grand total sum of zero and a total count of zero
+                /*
+                *  Example of returned output:
+                *
+                    [
+                        {
+                            "name": "Draft",
+                            "grand_total": 0,
+                            "total_count": 0
+                        },
+                        {
+                            "name": "Approved",
+                            "grand_total": 0,
+                            "total_count": 0
+                        },
+                        {
+                            "name": "Sent",
+                            "grand_total": 14000,
+                            "total_count": 1
+                        },
+                        {
+                            "name": "Cancelled",
+                            "grand_total": 0,
+                            "total_count": 0
+                        },
+                        {
+                            "name": "Expired",
+                            "grand_total": 0,
+                            "total_count": 0
+                        },
+                        {
+                            "name": "Paid",
+                            "grand_total": 44520,
+                            "total_count": 5
+                        }
+                    ]
+                *
+                */
+                $stats = collect($expectedStats)->map(function ($stat_name) use ($availableStats) {
+                    if (collect($availableStats)->has($stat_name)) {
+                        return $availableStats[$stat_name];
+                    } else {
+                        return [
+                                    'name' => $stat_name,         //  e.g) Paid, Expired, Cancelled, Sent, Approved, Draft
+                                    'grand_total' => 0,
+                                    'total_count' => 0,
+                                ];
+                    }
+                });
+
+                //  Calculate the overall stats e.g) Total Paid & Total Outstanding
+                $totalPaid = ['name' => 'Paid', 'grand_total' => 0, 'total_count' => 0];
+                $totalOutstanding = ['name' => 'Outstanding', 'grand_total' => 0, 'total_count' => 0];
+
+                foreach ($stats as $stat) {
+                    if (in_array($stat['name'], ['Draft', 'Approved', 'Sent', 'Expired'])) {
+                        $totalOutstanding['grand_total'] += $stat['grand_total'];
+                        $totalOutstanding['total_count'] += $stat['total_count'];
+                    } elseif (in_array($stat['name'], ['Paid'])) {
+                        $totalPaid['grand_total'] += $stat['grand_total'];
+                        $totalPaid['total_count'] += $stat['total_count'];
+                    }
                 }
+
+                //  Get the company base currency
+                $baseCurrency = collect($auth_user->company->currency_type);
+
+                //  Merge the overview stats, stats and base currency into one collection
+                $data = [
+                        'overview_stats' => [$totalOutstanding, $totalPaid],
+                        'stats' => $stats,
+                        'base_currency' => $baseCurrency, ];
+
+                //  Action was executed successfully
+                return ['success' => true, 'response' => $data];
+            } catch (\Exception $e) {
+                //  Log the error
+                $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+                //  Return the error response
+                return ['success' => false, 'response' => $response];
             }
-
-            //  Get the company base currency
-            $baseCurrency = collect($auth_user->company->currency_type);
-
-            //  Merge the overview stats, stats and base currency into one collection
-            $data = [
-                    'overview_stats' => [$totalOutstanding, $totalPaid],
-                    'stats' => $stats,
-                    'base_currency' => $baseCurrency, ];
-
-            //  Action was executed successfully
-            return ['success' => true, 'response' => $data];
-        } catch (\Exception $e) {
-            //  Log the error
-            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
-
-            //  Return the error response
+        } else {
             return ['success' => false, 'response' => $response];
         }
     }

@@ -1,16 +1,21 @@
 <style scoped>
     @import 'https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/2.8.0/css/flag-icon.min.css';
+
+    .phone-input >>> .el-input-group__append, .phone-input >>> .el-input-group__prepend,
+    .phone-input >>> .el-input.is-disabled .el-input__inner {
+        color: #343a40 !important;
+    }
 </style>
 
 <template>
     
     <!-- Calling Code Selector -->
     <div>
-        <Row v-for="(phone, i) in localPhones" class="mb-2" :key="i" :gutter="5">
+        <Row v-for="(phone, i) in localPhones" class="phone-input mb-2" :key="i" :gutter="5">
             <Col>
             
                 <!-- Phone Number -->
-                <el-input :value="localPhones[i].number" disabled size="small" style="width:100%" placeholder="Enter phone number">
+                <el-input :value="localPhones[i].number + (showPhoneType ? ' - '+localPhones[i].type : '')" disabled size="small" style="width:100%" placeholder="Enter phone number">
                     
                     <!-- Prefix - Calling Code -->
                     <template slot="prepend">+{{ localPhones[i].calling_code.calling_code }}</template>
@@ -157,6 +162,10 @@
             suggestedPhones: {
                 type: Object,
                 default: () => { return { type: 'mobile', count: 1 } },
+            },
+            showPhoneType:{
+                type: Boolean,
+                default: false                
             },
 
             //  For the toggle switch

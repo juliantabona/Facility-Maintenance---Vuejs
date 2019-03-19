@@ -1,6 +1,6 @@
 <template>
 
-    <span v-if="localQuotation.expiry_date_value">
+    <span v-if="localQuotation">
         <Poptip word-wrap width="200" trigger="hover" :content="status.description">
             <Tag :style="{ 
                 maxWidth: '70px',
@@ -44,11 +44,11 @@
             determineStatus() {
 
                 //  If paid
-                if( this.hasPaid() ){
+                if( this.hasConverted() ){
                     
-                    // Quotation paid status details
-                    this.status.description = 'This quotation has been paid';
-                    this.status.text = 'Paid';
+                    // Quotation converted status details
+                    this.status.description = 'This quotation has been converted to an invoice';
+                    this.status.text = 'Converted';
                     this.status.color = '#19be6b';
 
                 //  If expired
@@ -57,14 +57,6 @@
                     // Quotation expired status details
                     this.status.description = 'This quotation has exceeded its period of validity';
                     this.status.text = 'Expired';
-                    this.status.color = '#ed4014';
-
-                //  If sent
-                }else if( this.hasCancelled() ){
-
-                    // Quotation expired status details
-                    this.status.description = 'This quotation payment was cancelled';
-                    this.status.text = 'Cancelled';
                     this.status.color = '#ed4014';
 
                 //  If sent
@@ -98,14 +90,11 @@
                     this.status.color = '#808695';
                 } 
             },
-            hasPaid(){
-                return this.localQuotation.current_activity_status == 'Paid' ? true: false;
+            hasConverted(){
+                return this.localQuotation.current_activity_status == 'Converted' ? true: false;
             },
             hasExpired(){
                 return this.localQuotation.current_activity_status == 'Expired' ? true: false;
-            },
-            hasCancelled(){
-                return this.localQuotation.current_activity_status == 'Cancelled' ? true: false;
             },
             hasSent(){
                 return this.localQuotation.current_activity_status == 'Sent' ? true: false;

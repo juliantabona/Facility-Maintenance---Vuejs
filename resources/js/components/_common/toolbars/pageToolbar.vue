@@ -9,9 +9,11 @@
                 <span>Back</span>
             </Button>
         </Col>
-        <Col :span="showBackBtn ? '12': '15'" :offset="showBackBtn ? '0': '1'">
-            <!-- Main Title -->
-            <slot name="title"></slot>
+        <Col :span="showBackBtn ? '12': '8'" :offset="showBackBtn ? '0': '8'">
+            <div v-if="$slots['title']" class="text-center" :style="{ boxShadow: 'inset 0px 0px 5px #bdc9d4', borderRadius: '30px', padding: '10px 5px', marginTop: '-5px' }">
+                <!-- Main Title -->
+                <slot name="title"></slot>
+            </div>
         </Col>
         <Col :span="8">
             <!-- Extra e.g) Buttons -->

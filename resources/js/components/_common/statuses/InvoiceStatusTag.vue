@@ -1,6 +1,6 @@
 <template>
 
-    <span v-if="localInvoice.expiry_date_value">
+    <span v-if="localInvoice">
         <Poptip word-wrap width="200" trigger="hover" :content="status.description">
             <Tag :style="{ 
                 maxWidth: '70px',

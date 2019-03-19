@@ -117,6 +117,15 @@
     word-wrap: break-word;      /* IE */
   }
 
+    .demo-badge{
+      color: #2d8cf0;
+      padding: 5px 10px;
+      background: #f5f7f9;
+      border-radius: 6px;
+      margin: 3px 0 0 0;
+      line-height: normal;
+    }
+
 </style>
 
 <template>
@@ -232,10 +241,15 @@
                       <Icon type="ios-settings-outline" :size="20"/>
                     </router-link>
                 </Badge>
-                <Badge :count="0" class="icon-border float-right mr-3 mt-1">
+                <Badge :count="0" class="icon-border float-right mr-3 mt-1"
+                       @click.native="isOpenProductSubscriptionModal = !isOpenProductSubscriptionModal">
                     <Icon type="ios-apps-outline" :size="20"/>
                 </Badge>
-
+                <Badge :count="37" type="primary" class="float-right mr-3 mt-1">
+                    <div class="demo-badge">
+                      <span>Sms Power</span>
+                    </div>
+                </Badge>
               </Col>
 
             </Row>
@@ -244,6 +258,16 @@
 
       </Menu>
       
+        <!-- 
+            MODAL TO LIST SUBSCRIPTION PRODUCTS
+        -->
+        <productSubscriptionModal 
+            v-if="isOpenProductSubscriptionModal"
+            @visibility="isOpenProductSubscriptionModal = $event"
+            @updated="updateClient($event)">
+        </productSubscriptionModal>
+
+
   </Header>
 
 </template>
@@ -251,11 +275,16 @@
 <script>
 
   import Loader from './../../components/_common/loaders/Loader.vue';
+
+  /*  Modals  */
+  import productSubscriptionModal from './../../components/_common/modals/productSubscriptionModal.vue';
+
+  
   import Notification from './notification.vue';
 
   export default {
     components: { 
-        Loader, Notification
+        Loader, Notification, productSubscriptionModal
     },
     props:{
       isCollapsed: {
@@ -271,6 +300,7 @@
         searchQuery:'',
         searchType:'client',
       
+        isOpenProductSubscriptionModal: false,
         isLoadingNotifications: false,
         notifications: [],
 

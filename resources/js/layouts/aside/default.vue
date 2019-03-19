@@ -56,21 +56,48 @@
             </MenuItem>
           </router-link>
 
-          <router-link :to="{name:'staff'}">
+          <router-link :to="{ name: 'users', query: { status: 'Staff', location: 'bottom' } }">
             <MenuItem name="staff">
               <Icon type="ios-man-outline" :size="20"/>
               <span>Staff</span>
             </MenuItem>
           </router-link>
 
-          <router-link :to="{name:'clients'}">
-            <MenuItem name="clients">
-              <Icon type="ios-happy-outline" :size="20"/>
-              <span>Clients</span>
-            </MenuItem>
-          </router-link>
+          <Submenu name="3" style="color:#2d8cf0;">
+
+              <template slot="title">
+                  <Icon type="ios-happy-outline" :size="20"/>
+                  <span>Clients</span>
+              </template>
+
+              <router-link :to="{ name: 'companies', query: { status: 'Client', location: 'bottom' } }">
+                <MenuItem name="companies">Companies</MenuItem>
+              </router-link>
+
+              <router-link :to="{ name: 'users', query: { status: 'Client', location: 'bottom' } }">
+                <MenuItem name="individuals">Individuals</MenuItem>
+              </router-link>
+
+          </Submenu>
 
           <Submenu name="4" style="color:#2d8cf0;">
+
+              <template slot="title">
+                  <Icon type="ios-briefcase-outline" :size="20"/>
+                  <span>Suppliers</span>
+              </template>
+
+              <router-link :to="{ name: 'companies', query: { status: 'Supplier', location: 'bottom' } }">
+                <MenuItem name="companies">Companies</MenuItem>
+              </router-link>
+
+              <router-link :to="{ name: 'users', query: { status: 'Supplier', location: 'bottom' } }">
+                <MenuItem name="individuals">Individuals</MenuItem>
+              </router-link>
+
+          </Submenu>
+
+          <Submenu name="5" style="color:#2d8cf0;">
 
               <template slot="title">
                   <Icon type="ios-cash-outline" :size="20"/>
@@ -94,12 +121,6 @@
               </router-link>
 
           </Submenu>
-          <router-link :to="{name:'suppliers'}">
-            <MenuItem name="suppliers">
-              <Icon type="ios-briefcase-outline" :size="20"/>
-              <span>Suppliers</span>
-            </MenuItem>
-          </router-link>
 
           <Submenu name="6" style="color:#2d8cf0;">
 

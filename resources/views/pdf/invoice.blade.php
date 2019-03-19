@@ -251,7 +251,7 @@
         <main id="page_1">
 
             <div id="p1dimg1">
-                <img id="p1img1" class="mrl3" src="https://wave-prod-accounting.s3.amazonaws.com/uploads/invoices/business_logos/7cac2c58-4cc1-471b-a7ff-7055296fffbc.png">
+                <img id="p1img1" class="mrl3" src="/images/assets/logo/OQ-B.png">
             </div>
 
             <div id="id1_1">

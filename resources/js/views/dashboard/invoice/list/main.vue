@@ -8,8 +8,8 @@
                 
                 <!-- Slot Main Title & Icon -->
                 <template slot="title">
-                    <Icon :style="{ marginTop:'-10px' }" type="ios-cash-outline" :size="30" class="mr-1"></Icon>
-                    <h1 :style="{ fontSize:'2rem' }" class="text-dark d-inline">Invoices</h1>
+                    <Icon :style="{ marginTop:'-10px', fontSize:'1.5rem' }" type="ios-cash-outline"></Icon>
+                    <h1 :style="{ fontSize:'1.5rem' }" class="text-dark d-inline">Invoices</h1>
                 </template>
 
                 <!-- Slot Extra functionality -->
@@ -26,7 +26,11 @@
                 <Col :span="24" :style="{ padding: '0 20px' }">
 
                     <!-- Get the invoice activity cards -->
-                    <activityCardWidget url="/invoices/stats"></activityCardWidget>
+                    <activityCardWidget 
+                        url="/invoices/stats" 
+                        routeName="invoices"
+                        :isMoneyList="['Paid', 'Outstanding', 'Expired', 'Cancelled', 'Sent', 'Approved', 'Draft']">
+                    </activityCardWidget>
 
                 </Col>
                 

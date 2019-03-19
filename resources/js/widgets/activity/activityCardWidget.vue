@@ -1,7 +1,7 @@
 <template>
 
     <Card :style="{ width: '100%' }">
-
+        
         <!-- Loader for when loading the chart information -->
         <Loader v-if="isLoading" :loading="isLoading" type="text" :style="{ marginTop:'40px' }">Loading stats...</Loader>
 
@@ -9,12 +9,16 @@
         <Row v-if="!isLoading" :gutter="20">
             <Col :span="24/(overallStatLabels.length)" v-for="(item, i) in overallStatLabels" :key="i">
                 
-                <moneyAndCounterCard :title="overallStatLabels[i]" :amount="overallStatGrandTotal[i]" :count="overallStatTotalCount[i]" 
+                <NumberCounterCard   :title="overallStatLabels[i]" 
+                                     :isMoneyList="isMoneyList"
+                                     :renameTitleList="renameTitleList"
+                                     :amount="overallStatGrandTotal[i]" 
+                                     :count="overallStatTotalCount[i]" 
                                      :currency="baseCurrency" :showZero="false" class="mb-2" 
-                                     :route="{ name: 'invoices', query: { status: ( overallStatLabels[i] ), location: 'top' } }"
+                                     :route="{ path: routePath, query: { status: ( overallStatLabels[i] ), location: 'top' } }"
                                      :active="overallStatLabels[i] == $route.query.status && $route.query.location == 'top'"
                                      type="normal">
-                </moneyAndCounterCard>
+                </NumberCounterCard>
             
             </Col>
         </Row>
@@ -23,12 +27,15 @@
         <Row v-if="!isLoading" :gutter="20">
             <Col :span="24/(statLabels.length)" v-for="(item, i) in statLabels" :key="i">
                 
-                <moneyAndCounterCard :title="statLabels[i]" :amount="statGrandTotal[i]" :count="statTotalCount[i]" 
+                <NumberCounterCard   :title="statLabels[i]" 
+                                     :isMoneyList="isMoneyList"
+                                     :renameTitleList="renameTitleList"
+                                     :amount="statGrandTotal[i]" :count="statTotalCount[i]" 
                                      :currency="baseCurrency" :showZero="false" class="mb-2" 
-                                     :route="{ name: 'invoices', query: { status: ( statLabels[i] ), location: 'bottom' } }"
+                                     :route="{ path: routePath, query: { status: ( statLabels[i] ), location: 'bottom' } }"
                                      :active="statLabels[i] == $route.query.status && $route.query.location == 'bottom'"
                                      :type="determineType(i)">
-                </moneyAndCounterCard>
+                </NumberCounterCard>
             
             </Col>
         </Row>
@@ -46,13 +53,25 @@
     import Chart from 'chart.js';
     
     /*  Cards  */
-    import moneyAndCounterCard from './../../components/_common/cards/moneyAndCounterCard.vue';
+    import NumberCounterCard from './../../components/_common/cards/NumberCounterCard.vue';
 
     export default {
         props:{
             url: {
                 type: String,
                 default: ''
+            },
+            routePath: {
+                type: String,
+                default: ''      
+            },
+            isMoneyList: {
+                type: Array,
+                default: () => { return [] }
+            },
+            renameTitleList: {
+                type: Array,
+                default: () => { return [] }
             }
         },
         data(){
@@ -70,7 +89,7 @@
                 allocationType: store.allocationType,
             }
         },
-        components: { Loader, moneyAndCounterCard },
+        components: { Loader, NumberCounterCard },
         computed: {
             statLabels: function(){
                 if( (this.fetchedStats || {}).length){
@@ -140,7 +159,7 @@
                 self.isLoading = true;
 
                 //  The allocationType: Whether to get company/branch specific data
-                var allocationType = this.allocationType ? '&&allocation='+this.allocationType : ''; 
+                var allocationType = this.allocationType ? 'allocation='+this.allocationType : ''; 
 
                 console.log('Start getting card activity statistics...');
 

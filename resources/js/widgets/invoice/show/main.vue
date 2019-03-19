@@ -215,7 +215,7 @@
                                     :imageList="
                                         [{
                                             'name': 'Company Logo',
-                                            'url': 'https://wave-prod-accounting.s3.amazonaws.com/uploads/invoices/business_logos/7cac2c58-4cc1-471b-a7ff-7055296fffbc.png'
+                                            'url': '/images/assets/logo/OQ-B.png'
                                         }]">
                                 </imageUploader>
                             </Col>
@@ -227,7 +227,10 @@
                                 
                                 <!-- Company information -->
                                 <companyOrIndividualDetails 
-                                    :client="localInvoice.customized_company_details" :editMode="editMode" align="right"
+                                    :editMode="editMode"
+                                    refName="Company"
+                                    :profile="localInvoice.customized_company_details" 
+                                    align="right"
                                     :showCompanyOrUserSelector="false"
                                     :showClientOrSupplierSelector="false"
                                     @updated:companyOrIndividual="updateCompany($event)"
@@ -248,7 +251,10 @@
 
                                 <!-- Client information -->
                                 <companyOrIndividualDetails 
-                                    :client="localInvoice.customized_client_details" :editMode="editMode"
+                                    :editMode="editMode"
+                                    refName="Client"
+                                    :profile="localInvoice.customized_client_details" 
+                                    :profileId="( createMode ? $route.query.clientId : null )" 
                                     :showCompanyOrUserSelector="false"
                                     :showClientOrSupplierSelector="true"
                                     @updated:companyOrIndividual="updateClient($event)"
@@ -613,7 +619,12 @@
 
                 this.currencySymbol = this.localInvoice.currency_type.currency.symbol;
                 
-                this.fetchCompanyInfo();
+                if(!this.company){
+                    var self = this;
+                    this.fetchCompanyInfo(this.user.company_id).then( data => {
+                        self.company = self.localInvoice.customized_company_details = data;
+                    });
+                }
             },
             checkIfinvoiceHasChanged: function(updatedInvoice = null){
                 
@@ -751,8 +762,10 @@
                 this.invoiceHasChanged = this.checkIfinvoiceHasChanged();
 
             },
-            fetchCompanyInfo() {
-                if(!this.company && this.user.company_id){
+            fetchCompanyInfo(companyId) {
+                
+                if(companyId){
+                    
                     const self = this;
 
                     //  Start loader
@@ -764,43 +777,55 @@
                     var connections = '&connections=phones';
                     
                     //  Use the api call() function located in resources/js/api.js
-                    api.call('get', '/api/companies/'+self.user.company_id+'?model=Company'+connections)
-                        .then(({data}) => {
-                            
-                            console.log(data);
+                    return api.call('get', '/api/companies/'+companyId+'?model=Company'+connections)
+                            .then(({data}) => {
+                                
+                                console.log(data);
 
-                            //  Stop loader
-                            self.isLoadingCompanyInfo = false;
+                                //  Stop loader
+                                self.isLoadingCompanyInfo = false;
 
-                            if(data){
-                                //  Format the company details
-                                self.company = self.localInvoice.customized_company_details = data;
-                            }
-                        })         
-                        .catch(response => { 
+                                if(data){
+                                    //  Format the company details
+                                    return data;
+                                }
+                            })         
+                            .catch(response => { 
 
-                            //  Stop loader
-                            self.isLoadingCompanyInfo = false;
+                                //  Stop loader
+                                self.isLoadingCompanyInfo = false;
 
-                            console.log('invoiceSummaryWidget.vue - Error getting company details...');
-                            console.log(response);    
-                        });
+                                console.log('invoiceSummaryWidget.vue - Error getting company details...');
+                                console.log(response);    
+                            });
                 }
             },
         },
         mounted: function () {
             //  Only after everything has loaded
             this.$nextTick(function () {
+
+                if(this.createMode){
+                    //  Activate create mode
+                    this.activateCreateMode();
+
+                    //  If the client id has been provided on the url
+                    if( this.$route.query.clientId ){
+                        //  Fetch the associated client if specified
+                        var self = this;
+                        this.fetchCompanyInfo(this.$route.query.clientId).then( data => {
+                            self.client = self.localInvoice.customized_client_details = data;
+                        });
+                    }
+                    
+                }
+
                 //  Store the current state of the invoice as the original invoice
                 console.log('Now lets store that original invoice!');
                 this.storeOriginalInvoice();
 
                 //  Update the invoice change status
                 this.invoiceHasChanged = this.checkIfinvoiceHasChanged();
-
-                if(this.createMode){
-                    this.activateCreateMode();
-                }
 
             })
         }

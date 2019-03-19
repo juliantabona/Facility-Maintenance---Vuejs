@@ -5,14 +5,18 @@
         height: 60px;
         text-align: center;
         line-height: 60px;
-        border: 1px solid transparent;
         border-radius: 4px;
         overflow: hidden;
         background: #fff;
         position: relative;
-        box-shadow: 0 1px 1px rgba(0,0,0,.2);
         margin-right: 4px;
     }
+
+    .highlight-line{
+        border: 1px solid transparent;
+        box-shadow: 0 1px 1px rgba(0,0,0,.2);
+    }
+
     .image-uploader img{
         width: 100%;
         height: 100%;
@@ -44,7 +48,7 @@
 
 <template>
     <div>
-        <div class="image-uploader" v-for="item in uploadList" :style="thumbnailStyle">
+        <div :class="'image-uploader' + ( allowUpload ? ' highlight-line' : '')" v-for="item in uploadList" :style="thumbnailStyle">
             <template v-if="item.status === 'finished'">
                 <img :src="item.url">
                 <div class="image-uploader-cover">

@@ -2,12 +2,6 @@
 
     <filterableList :tableColumnsData="tableColumns" :filterableData="filterable" 
                     :requestUpdate="requestUpdate" @generateURL="generateURL()">
-        
-        <!-- Heading -->
-        <slot name="heading">
-            <h5><Icon type="ios-copy-outline" :size="24" class="mr-2"/><span>Invoices</span></h5>
-        </slot>
-
     </filterableList>
 
 </template>
@@ -19,6 +13,12 @@
 
     export default {
         components: { statusTag, filterableList },
+        props: {
+            companyId: {
+                type: Number,
+                default: null
+            }
+        },
         data() {
             return {
 
@@ -176,15 +176,18 @@
         },
         methods: {
             generateURL: function () {
+
+                //  Get the company id e.g) 1, 2, 3, e.t.c
+                var companyId = this.companyId ? 'companyId='+this.companyId : '';
                 
                 //  Get the status e.g) Paid, Sent, e.t.c
                 var status = this.status ? 'status='+this.status : '';
 
                 //  Additional data to eager load along with each company found
-                var connections = '&connections=client';
+                var connections = 'connections=client';
 
                 //  Url generated for the filterable Api call  
-                var url = '/api/invoices?' + status + connections;
+                var url = '/api/invoices?' + companyId + (companyId ? '&' : '') + status + (status ? '&' : '') + connections;
 
                 //  Assign url to the filterable object
                 this.filterable.url = url;

@@ -27,13 +27,15 @@
 
 </style>
 <template>
-
     <Card @click.native="clicked()" :style="cardStyle" :class="active ? 'active': ''">
-        <h3 class="text-center mt-3" :style="{ fontSize: '20px' }">{{ formatPrice(amount, symbol) }}</h3>
+        <h3 class="text-center mt-3" :style="{ fontSize: '20px' }">
+            {{ isMoney ? formatPrice(amount, symbol) : count }}
+        </h3>
         <div style="padding: 0px 15px;">
-            <Badge :show-zero="showZero" :count="count" :type="type" style="width:100%;">
-                <p class="text-center" style="padding-top:5px;">{{ title }}</p>
+            <Badge v-if="isMoney" :show-zero="showZero" :count="count" :type="type" style="width:100%;">
+                <p class="text-center" style="padding-top:5px;">{{ cardTitle }}</p>
             </Badge>
+            <p v-else class="text-center" style="padding-top:5px;">{{ cardTitle }}</p>
         </div>
         <!-- Animated checkmark  -->
         <animatedCheckmark v-if="showCheckMark" :style="{ width: '30px', height: 'auto' }"></animatedCheckmark>
@@ -62,6 +64,14 @@
             title: {
                 type: String,
                 default: 'Title' 
+            },
+            isMoneyList: {
+                type: Array,
+                default: () => { return [] }
+            },
+            renameTitleList: {
+                type: Array,
+                default: null
             },
             currency: {
                 type: Object,
@@ -92,6 +102,32 @@
         data(){
             return {
                 symbol: ((this.currency || {}).currency || {}).symbol || ''
+            }
+        },
+        computed: {
+            isMoney(){
+                //  Replace all commas with dots
+                var thisIsMoney = false;
+
+                for(var x=0; x < this.isMoneyList.length; x++){
+                    if( this.title.toLowerCase() == this.isMoneyList[x].toLowerCase() ){
+                       thisIsMoney = true; 
+                       break;
+                    }
+                }
+
+                return thisIsMoney;
+            },
+            cardTitle(){
+
+                for(var x=0; x < this.renameTitleList.length; x++){
+                    if( this.title.toLowerCase() == this.renameTitleList[x].search.toLowerCase() ){
+                        return this.renameTitleList[x].replace;
+                    }
+                }
+
+                return this.title;
+                
             }
         },
         methods: {

@@ -2,53 +2,53 @@
 
     <div :style="align == 'right' ? 'float: right; text-align: right;' : ''">
             
-        <!-- Loader for when loading the client information -->
-        <Loader v-if="isLoadingClientInfo" :loading="isLoadingClientInfo" type="text" :style="{ marginTop:'40px' }">Loading client details...</Loader>
+        <!-- Loader for when loading the profile information -->
+        <Loader v-if="isLoadingProfileInfo" :loading="isLoadingProfileInfo" type="text" :style="{ marginTop:'40px' }">Loading {{ refName | lowercase }} details...</Loader>
 
-        <!-- Client Information -->
-        <div v-if="localClient">
+        <!-- Profile Information -->
+        <div v-if="localProfile">
 
             <!-- Edit button -->
-            <Poptip class="mt-2 mb-2" trigger="hover" :content="'Edit '+(localClient.model_type == 'company' ? 'company' : 'profile')+' details?'">
-                <Button class="mt-1 ml-1" icon="ios-create-outline" type="dashed" size="small" @click="editCompanyOrIndividual()">{{ 'Edit '+(localClient.model_type == 'company' ? 'company' : 'profile')+' details' }}</Button>
+            <Poptip class="mt-2 mb-2" trigger="hover" :content="'Edit '+(localProfile.model_type == 'company' ? 'company' : 'profile')+' details?'">
+                <Button class="mt-1 ml-1" icon="ios-create-outline" type="dashed" size="small" @click="editCompanyOrIndividual()">{{ 'Edit '+(localProfile.model_type == 'company' ? 'company' : 'profile')+' details' }}</Button>
             </Poptip>
 
             <div class="clearfix"></div>
 
-            <!-- Client Name - For Company/Individual -->
-            <p v-if="!localEditMode" class="mt-3 text-dark"><strong>{{ clientName || '___' }}</strong></p>
-            <el-input v-if="localEditMode" placeholder="Client name" disabled v-model="clientName" size="mini" class="mb-1" :style="{ maxWidth:'250px' }"></el-input>
+            <!-- Profile Name - For Company/Individual -->
+            <p v-if="!localEditMode" class="mt-3 text-dark"><strong>{{ profileName || '___' }}</strong></p>
+            <el-input v-if="localEditMode" :placeholder="refName +' name'" disabled v-model="profileName" size="mini" class="mb-1" :style="{ maxWidth:'250px' }"></el-input>
 
             <div class="clearfix"></div>
 
-            <!-- Client Email -->
-            <p v-if="!localEditMode">{{ localClient.email || '___' }}</p>
-            <el-input v-if="localEditMode" placeholder="Client email" disabled v-model="localClient.email" size="mini" class="mb-1" :style="{ maxWidth:'250px' }"></el-input>
+            <!-- Profile Email -->
+            <p v-if="!localEditMode">{{ localProfile.email || '___' }}</p>
+            <el-input v-if="localEditMode" :placeholder="refName +' email'" disabled v-model="localProfile.email" size="mini" class="mb-1" :style="{ maxWidth:'250px' }"></el-input>
 
             <div class="clearfix mt-1"></div>
 
-            <!-- Client Phones display -->
+            <!-- Profile Phones display -->
             <p v-if="!localEditMode && phoneList">{{ phoneList }}</p>
 
             <div class="clearfix mt-1"></div>
 
-            <!-- Client Address -->
-            <p v-if="!localEditMode && localClient.address" class="mt-1">{{ localClient.address }}</p>
+            <!-- Profile Address -->
+            <p v-if="!localEditMode && localProfile.address" class="mt-1">{{ localProfile.address }}</p>
 
-            <!-- Client City -->
-            <p v-if="!localEditMode && localClient.city" class="mt-1">{{ localClient.city }}</p>
+            <!-- Profile City -->
+            <p v-if="!localEditMode && localProfile.city" class="mt-1">{{ localProfile.city }}</p>
 
-            <!-- Client Country -->
-            <p v-if="!localEditMode && localClient.country" class="mt-1">{{ localClient.country }}</p>
+            <!-- Profile Country -->
+            <p v-if="!localEditMode && localProfile.country" class="mt-1">{{ localProfile.country }}</p>
 
             <div class="clearfix"></div>
             
-            <!-- Client Phones editor -->
+            <!-- Profile Phones editor -->
             <phoneInput :style="(align == 'right' ? 'float: right; text-align: left;' : '') + 'max-width:360px'"
                         v-if="localEditMode" class="mb-2"  
-                        :modelId="localClient.id" 
-                        :modelType="localClient.model_type" 
-                        :phones="localClient.phones" 
+                        :modelId="localProfile.id" 
+                        :modelType="localProfile.model_type" 
+                        :phones="localProfile.phones" 
                         :numberLimit="5"
                         selectedType="mobile"
                         :disabledTypes="[]"   
@@ -67,10 +67,10 @@
 
         </div>
 
-        <!-- No client Information Alert -->
-        <div v-if="!localClient && !isLoadingClientInfo">
+        <!-- No profile Information Alert -->
+        <div v-if="!localProfile && !isLoadingProfileInfo">
             <Alert :style="{maxWidth: '250px'}" type="warning">
-                No Client selected
+                No {{ refName | lowercase }} selected
             </Alert>
         </div>
 
@@ -81,10 +81,10 @@
             v-if="isOpenCreateOrEditCompanyOrIndividualModal"
             :editableCompanyOrIndividual="editableCompanyOrIndividual"
             :showCompanyOrUserSelector="showCompanyOrUserSelector"
-            :showClientOrSupplierSelector="showClientOrSupplierSelector"
+            :showProfileOrSupplierSelector="showProfileOrSupplierSelector"
             @visibility="isOpenCreateOrEditCompanyOrIndividualModal = $event"
-            @updated="updateClient($event)"
-            @created="updateClient($event)">
+            @updated="updateProfile($event)"
+            @created="updateProfile($event)">
         </createOrEditCompanyOrIndividualModal>
 
     </div>
@@ -112,7 +112,11 @@
 
     export default {
         props: {
-            client: {
+            refName: {
+                type: String,
+                default: 'Profile'
+            },
+            profile: {
                 type: Object,
                 default: null
             },
@@ -128,7 +132,7 @@
                 type: Boolean,
                 default: false
             },
-            showClientOrSupplierSelector: { 
+            showProfileOrSupplierSelector: { 
                 type: Boolean,
                 default: false
             }
@@ -136,23 +140,23 @@
         components: { phoneInput, citySelector, countrySelector, createOrEditCompanyOrIndividualModal, showModeSwitch },
         data() {
             return {
-                localClient: this.client,
+                localProfile: this.profile,
                 localEditMode: this.editMode,
                 editableCompanyOrIndividual: null,
                 isOpenCreateOrEditCompanyOrIndividualModal: false,
-                isLoadingClientInfo: false,
+                isLoadingProfileInfo: false,
                 phoneList: null,
                 showModeDetails: false
             }
         },
         watch: {
 
-            //  Watch for changes on the client
-            client: {
+            //  Watch for changes on the profile
+            profile: {
                 handler: function (val, oldVal) {
-                    if( !_.isEqual(val, this.localClient) ){
+                    if( !_.isEqual(val, this.localProfile) ){
 
-                        this.localClient = val;
+                        this.localProfile = val;
                         
                         //  Update phones to show/hide
                         this.determinePhonesToShow();
@@ -184,43 +188,43 @@
 
         },
         computed: {
-            clientName: {
+            profileName: {
                 get: function () {
                     //  If this is a company then return the company name
                     //  If this is an individual then return the individual full name
-                    return this.localClient.model_type == 'company' ? this.localClient.name : this.localClient.full_name;
+                    return this.localProfile.model_type == 'company' ? this.localProfile.name : this.localProfile.full_name;
                 },
                 set: function (newVal) {
-                    if(this.localClient.model_type == 'company'){
-                        this.localClient.name = newVal;
-                    }else if(this.localClient.model_type == 'user'){
-                        this.localClient.full_name = newVal;
+                    if(this.localProfile.model_type == 'company'){
+                        this.localProfile.name = newVal;
+                    }else if(this.localProfile.model_type == 'user'){
+                        this.localProfile.full_name = newVal;
                     }
                 }
             }
         },
         methods: {
-            updateClient(newCompanyOrIndividual){
-                this.localClient = newCompanyOrIndividual;
+            updateProfile(newCompanyOrIndividual){
+                this.localProfile = newCompanyOrIndividual;
                 this.determinePhonesToShow();
                 this.$emit('updated:companyOrIndividual', newCompanyOrIndividual);
             },
             editCompanyOrIndividual(){
                 this.isOpenCreateOrEditCompanyOrIndividualModal = true;
-                this.editableCompanyOrIndividual = this.localClient;
+                this.editableCompanyOrIndividual = this.localProfile;
             },
             determinePhonesToShow(){
                 console.log('Phone stage 2');
-                if( ((this.localClient || {}).phones || {}).length ){
+                if( ((this.localProfile || {}).phones || {}).length ){
                     
-                    for(var x = 0; x < this.localClient.phones.length; x++){
+                    for(var x = 0; x < this.localProfile.phones.length; x++){
                             
                         //  Only if we don't already have the show property set to either true/false
                         //  can we continue to add the show property. The show property doesn't exist
-                        //  the first time we add the client. At that point we need to set it for the
+                        //  the first time we add the profile. At that point we need to set it for the
                         //  first time by setting it equal to true/false. The code below ensures that
                         //  we set it on the first run.
-                        if(!('show' in this.localClient.phones[x])){
+                        if(!('show' in this.localProfile.phones[x])){
 
                             //  Get the current phone and set a new property called show with value "false/true"
                             //  If set to true, it will allow the system to recognize this number as something
@@ -229,10 +233,10 @@
                             //  We will only show the first two and hide the rest incase we have too many phone numbers
                             if(x <= 1){
                                 //  Set show to true - meaning that this number will be shown
-                                this.$set(this.localClient.phones[x], 'show', true);
+                                this.$set(this.localProfile.phones[x], 'show', true);
                             }else{
                                 //  Set show to true - meaning that this number will be hidden                            
-                                this.$set(this.localClient.phones[x], 'show', false);
+                                this.$set(this.localProfile.phones[x], 'show', false);
                             }
 
                         }
@@ -250,9 +254,9 @@
                 console.log('Phone stage 2.1');
                 var phoneList = '';
 
-                if( ((this.localClient || {}).phones || {}).length ){
+                if( ((this.localProfile || {}).phones || {}).length ){
 
-                    var showingPhones = this.localClient.phones.filter(function (phone) {
+                    var showingPhones = this.localProfile.phones.filter(function (phone) {
                             //  If this phones show key is set to true - meaning it is not hidden
                             //  then we can continue to get the phone number. Also if the show
                             //  key does not exist at all then we can get the number 
@@ -304,14 +308,14 @@
             },
             updatePhoneChanges(newPhones){
                 
-                this.localClient.phones = [];
+                this.localProfile.phones = [];
 
                 for(var x=0; x < newPhones.length; x++){
                     if(x <= 1){
                         newPhones[x].show = true;
                     }
                     
-                    this.localClient.phones.push(newPhones[x]);
+                    this.localProfile.phones.push(newPhones[x]);
                 }
 
                 this.determinePhonesToShow();
