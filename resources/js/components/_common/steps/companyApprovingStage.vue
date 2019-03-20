@@ -35,7 +35,7 @@
             <template slot="rightContent">
 
                 <Button class="float-right ml-2" type="default" size="large" @click.native="$emit('toggleEditMode', true)">
-                    <span>Edit Draft</span>
+                    <span>{{ localCompany.has_approved ? 'Edit Company' : 'Edit Draft' }}</span>
                 </Button>
 
                 <!-- Focus Ripple  -->

@@ -141,7 +141,51 @@ let routes = [
         meta: { layout: 'Dashboard', middlewareAuth: true },
         component: require('./views/dashboard/user/show/activities.vue'),
         props: true
-    }
+    },
+    /**************************************
+    *  JOBCARDS
+    **************************************/  
+   {
+    //  jobcards
+    path: '/jobcards', name: 'jobcards',
+    meta: { layout: 'Dashboard', middlewareAuth: true },
+    component: require('./views/dashboard/jobcard/list/main.vue')
+},
+{
+    //  Create jobcard
+    path: '/jobcards/create', name: 'create-jobcard',
+    meta: { layout: 'Dashboard', middlewareAuth: true },
+    component: require('./views/dashboard/jobcard/create/main.vue'),
+    props: true
+},
+{
+    //  Show one jobcard
+    path: '/jobcards/:id', name: 'show-jobcard',
+    meta: { layout: 'Dashboard', middlewareAuth: true },
+    component: require('./views/dashboard/jobcard/show/main.vue'),
+    props: true
+},
+{
+    //  Show jobcard activities
+    path: '/jobcards/:id/activities', name: 'show-jobcard-activities',
+    meta: { layout: 'Dashboard', middlewareAuth: true },
+    component: require('./views/dashboard/jobcard/show/activities.vue'),
+    props: true
+},
+{
+    //  Show jobcard quotations
+    path: '/jobcards/:id/quotations', name: 'show-jobcard-quotations',
+    meta: { layout: 'Dashboard', middlewareAuth: true },
+    component: require('./views/dashboard/jobcard/show/quotations.vue'),
+    props: true
+},
+{
+    //  Show jobcard invoices
+    path: '/jobcards/:id/invoices', name: 'show-jobcard-invoices',
+    meta: { layout: 'Dashboard', middlewareAuth: true },
+    component: require('./views/dashboard/jobcard/show/invoices.vue'),
+    props: true
+}
 ];
 
 const router = new VueRouter({

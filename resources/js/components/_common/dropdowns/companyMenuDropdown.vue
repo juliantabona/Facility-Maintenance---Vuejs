@@ -25,7 +25,7 @@
             <hr>
             <DropdownItem>Create Proposal</DropdownItem>
             <DropdownItem>Create Quotation</DropdownItem>
-            <DropdownItem>Create Invoice</DropdownItem>
+            <DropdownItem>Create Company</DropdownItem>
             <DropdownItem>Create Jobcard</DropdownItem>
             <DropdownItem>Create Promotion</DropdownItem>
             <hr>
@@ -52,7 +52,7 @@
         components: { },
         data() {
             return {
-                localInvoiceId: this.companyId,
+                localCompanyId: this.companyId,
                 localEditMode: this.editMode
             }
         },
@@ -61,7 +61,7 @@
             //  Watch for changes on the company id
             companyId: {
                 handler: function (val, oldVal) {
-                    this.localInvoiceId = val;
+                    this.localCompanyId = val;
                 }
             },
         
@@ -75,10 +75,10 @@
         },
         methods: {
             downloadPDF(download = { preview: false, print: false }){
-                if(this.localInvoiceId){
+                if(this.localCompanyId){
                     var action = (download.preview ? '?preview=1' : '') + (download.print ? '?print=1' : '');
                     let routeData = this.$router.resolve({
-                            path: '/api/download/companies/'+this.localInvoiceId + action
+                            path: '/api/download/companies/'+this.localCompanyId + action
                         });
 
                     window.open(routeData.href.replace("#", ""), '_blank');

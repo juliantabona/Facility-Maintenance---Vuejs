@@ -2,14 +2,23 @@
 
 namespace App;
 
+use DB;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\AdvancedFilter\Dataviewer;
+use App\Traits\JobcardTraits;
+
+Relation::morphMap([
+    'user' => 'App\User',
+    'company' => 'App\Company',
+]);
 
 class Jobcard extends Model
 {
     use SoftDeletes;
     use Dataviewer;
+    use JobcardTraits;
 
     /**
      * The attributes that should be mutated to dates.
@@ -20,18 +29,21 @@ class Jobcard extends Model
         'start_date', 'end_date',
     ];
 
+    protected $with = [
+        'client',
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
-        'title', 'description', 'start_date', 'end_date', 'step_id', 'priority_id', 'cost_center_id', 'company_branch_id',
-        'category_id', 'client_id', 'is_public', 'select_supplier_id', 'img_url',
+        'title', 'description', 'start_date', 'end_date', 'company_branch_id', 'company_id', 'client_id', 'client_type', 'is_public',
     ];
 
     protected $allowedFilters = [
-        'id', 'title', 'description', 'start_date', 'end_date', 'created_at',
+        'id', 'title', 'description', 'start_date', 'end_date', 'company_branch_id', 'company_id', 'client_id', 'is_public', 'created_at',
 
         // nested filters
         'priority.id', 'priority.name',
@@ -94,7 +106,18 @@ class Jobcard extends Model
     public function recentActivities()
     {
         return $this->morphMany('App\RecentActivity', 'trackable')
+                    ->where('trackable_id', $this->id)
                     ->orderBy('created_at', 'desc');
+    }
+
+    public function createdActivities()
+    {
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'created');
+    }
+
+    public function approvedActivities()
+    {
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'approved');
     }
 
     ///////////////////////////////////////////////////////////////////////////////////
@@ -115,7 +138,7 @@ class Jobcard extends Model
 
     public function client()
     {
-        return $this->belongsTo('App\Company', 'client_id');
+        return $this->morphTo();
     }
 
     public function selectedSuppliers()
@@ -153,7 +176,7 @@ class Jobcard extends Model
 
     public function client()
     {
-        return $this->belongsTo('App\Client', 'client_id');
+        return $this->belongsTo('App\Client', 'client');
     }
 
     public function clientContacts()
@@ -162,25 +185,52 @@ class Jobcard extends Model
     }
     */
 
-    protected $appends = ['createdBy', 'authourizedBy', 'deadline', 'deadlineArray', 'deadlineInWords', 'statusSummary'];
+    protected $appends = [
+                    'createdBy', 'deadline', 'deadlineArray', 'deadlineInWords', 'statusSummary',
+                    'last_approved_activity',
+                    'has_approved',
+                    'current_activity_status', 'activity_count',
+                ];
+
+    public function getLastApprovedActivityAttribute()
+    {
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('type', 'approved')->first();
+    }
+
+    public function gethasApprovedAttribute()
+    {
+        return $this->last_approved_activity ? true : false;
+    }
+
+    public function getCurrentActivityStatusAttribute()
+    {
+        //  If approved
+        if ($this->has_approved) {
+            return 'Approved';
+
+        //  If draft
+        } else {
+            return 'Draft';
+        }
+    }
+
+    public function getActivityCountAttribute()
+    {
+        $count = $this->recentActivities()->where('trackable_id', $this->id)
+                                            ->select(DB::raw('count(*) as total'))
+                                            ->groupBy('trackable_type')
+                                            ->first();
+
+        return $count ? $count->only(['total']) : ['total' => 0];
+    }
 
     //  Getter for calculating the deadline returned as array
     public function getCreatedByAttribute()
     {
-        $publishingUser = $this->recentActivities->where('activity.type', 'created')->first();
+        $publishingUser = $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('type', 'created')->first();
 
         if ($publishingUser) {
             return $publishingUser->createdBy;
-        }
-    }
-
-    //  Getter for calculating the deadline returned as array
-    public function getAuthourizedByAttribute()
-    {
-        $authourizingUser = $this->recentActivities->where('activity.type', 'authourized')->first();
-
-        if ($authourizingUser) {
-            return $authourizingUser->createdBy;
         }
     }
 

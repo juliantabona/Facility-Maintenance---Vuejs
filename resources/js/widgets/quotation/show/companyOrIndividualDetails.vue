@@ -9,7 +9,7 @@
         <div v-if="localProfile">
 
             <!-- Edit button -->
-            <Poptip class="mt-2 mb-2" trigger="hover" :content="'Edit '+(localProfile.model_type == 'company' ? 'company' : 'profile')+' details?'">
+            <Poptip v-if="localEditMode" class="mt-2 mb-2" trigger="hover" :content="'Edit '+(localProfile.model_type == 'company' ? 'company' : 'profile')+' details?'">
                 <Button class="mt-1 ml-1" icon="ios-create-outline" type="dashed" size="small" @click="editCompanyOrIndividual()">{{ 'Edit '+(localProfile.model_type == 'company' ? 'company' : 'profile')+' details' }}</Button>
             </Poptip>
 
@@ -120,9 +120,13 @@
                 type: Object,
                 default: null
             },
-            editMode: {
-                type: Boolean,
-                default: false
+            modelId: {
+                type: Number,
+                default: null
+            },
+            modelType: {
+                type: String,
+                default: ''
             },
             align: {
                 type: String,
@@ -135,7 +139,11 @@
             showProfileOrSupplierSelector: { 
                 type: Boolean,
                 default: false
-            }
+            },
+            editMode: { 
+                type: Boolean,
+                default: false
+            },
         },
         components: { phoneInput, citySelector, countrySelector, createOrEditCompanyOrIndividualModal, showModeSwitch },
         data() {
@@ -161,7 +169,7 @@
                         //  Update phones to show/hide
                         this.determinePhonesToShow();
 
-                        //  In a special case, for example when dealing with quotations
+                        //  In a special case, for example when dealing with invoices
                         //  the editor can save an original copy of its own to use to
                         //  detect changes so that we can allow users to save. It happens
                         //  that the "this.determinePhonesToShow()" makes changes when it runs the
@@ -322,10 +330,50 @@
 
                 this.$emit('updated:phones', newPhones);
             },
+            fetchProfile(){
+                
+                if( ( this.modelId && (this.modelType == 'user' || this.modelType == 'company') ) ){
+
+                    if( this.modelType == 'user' ){
+                        var destination = 'users';
+                    }else if( this.modelType == 'company' ){
+                        var destination = 'companies'; 
+                    }
+
+                    const self = this;
+
+                    //  Additional data to eager load along with the company found
+                    var connections = '?connections=phones';
+
+                    //  Use the api call() function located in resources/js/api.js
+                    api.call('get', '/api/'+destination+'/'+this.modelId+connections)
+                        .then(({data}) => {
+
+                            console.log(data);
+
+                            //  Stop loader
+                            self.isLoading = false;
+
+                            self.localProfile = data;
+
+                        })         
+                        .catch(response => { 
+                            console.log(response);
+
+                            //  Stop loader
+                            self.isLoading = false;
+                        });
+
+                    }
+            },
         },
         created(){
 
             this.determinePhonesToShow();
+
+            if( !this.profile ){
+                this.fetchProfile();
+            }
 
         }
     }

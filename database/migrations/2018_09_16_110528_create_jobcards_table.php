@@ -18,7 +18,9 @@ class CreateJobcardsTable extends Migration
             $table->timestampTz('start_date')->nullable();
             $table->timestampTz('end_date')->nullable();
             $table->unsignedInteger('company_branch_id')->nullable();
+            $table->unsignedInteger('company_id')->nullable();
             $table->unsignedInteger('client_id')->nullable();
+            $table->string('client_type')->nullable();
             $table->boolean('is_public')->default(0);
             $table->softDeletes();
             $table->timestamps();

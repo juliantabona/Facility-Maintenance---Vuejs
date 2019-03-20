@@ -41,7 +41,7 @@
 
                     <!-- Convert Quotation Button  -->
                     <Button :type="(!localQuotation.has_converted) ? 'primary' : 'default' " size="large" @click="approveQuotation()">
-                        <span>{{ (!localQuotation.has_converted) ? 'Convert' : 'Convert Again'  }}</span>
+                        <span>{{ (!localQuotation.has_converted) ? 'Convert To Invoice' : 'Convert Again'  }}</span>
                     </Button>
 
                 </focusRipple>

@@ -86,6 +86,7 @@ Route::post('/process-forms', 'Api\ProcessFormController@store');
 Route::get('jobcards', 'Api\JobcardController@index');
 Route::post('jobcards', 'Api\JobcardController@store');
 Route::get('jobcards/{jobcard_id}', 'Api\JobcardController@show');
+Route::post('jobcards/{jobcard_id}/approve', 'Api\JobcardController@approve');  //  ok
 Route::get('jobcards/{jobcard_id}/suppliers', 'Api\JobcardController@suppliers');
 Route::get('jobcards/lifecycle/templates', 'Api\JobcardController@getLifecycleTemplates');
 Route::get('jobcards/lifecycle/stages', 'Api\JobcardController@getLifecycleStages');

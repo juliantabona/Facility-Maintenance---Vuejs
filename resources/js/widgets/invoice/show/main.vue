@@ -35,8 +35,8 @@
         <!-- Loaders for creating/saving invoice -->
         <Row>
             <Col :span="24">
-                <div v-if="isCreatingInvoice" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Creating, please wait...</div>
-                <div v-if="isSavingInvoice" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Saving, please wait...</div>
+                <div v-if="isCreatingInvoice" class="mt-1 mb-5 text-center text-uppercase font-weight-bold text-success animate-opacity">Creating, please wait...</div>
+                <div v-if="isSavingInvoice" class="mt-1 mb-5 text-center text-uppercase font-weight-bold text-success animate-opacity">Saving, please wait...</div>
             </Col>
         </Row>
         

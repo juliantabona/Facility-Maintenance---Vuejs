@@ -60,6 +60,11 @@ class Company extends Model
                ->select('*', 'jobcards.id as id');
     }
 
+    public function clientJobcards()
+    {
+        return $this->morphOne('App\Jobcard', 'client');
+    }
+
     /*  Get the process forms related to this company.  A process form in basically a staged process in which
      *  a company can follow to achieve a set of tasks. These processes involve collecting and monitoring data.
      *  When we ask for a process form, we are asking the database to get the main tree that holds all the steps

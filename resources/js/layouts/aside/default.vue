@@ -120,6 +120,10 @@
                 <MenuItem name="invoices">Invoices</MenuItem>
               </router-link>
 
+              <router-link :to="{name:'invoices'}">
+                <MenuItem name="import">Import</MenuItem>
+              </router-link>
+
           </Submenu>
 
           <Submenu name="6" style="color:#2d8cf0;">

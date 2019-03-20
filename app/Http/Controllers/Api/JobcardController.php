@@ -12,199 +12,44 @@ use App\Http\Controllers\Controller;
 
 class JobcardController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $user = auth('api')->user();
+        //  Jobcard Instance
+        $data = ( new Jobcard() )->initiateGetAll();
+        $success = $data['success'];
+        $response = $data['response'];
 
-        //  We start with no jobcards
-        $jobcards = [];
+        //  If the jobcards were found successfully
+        if ($success) {
+            //  If this is a success then we have the paginated list of jobcards
+            $jobcards = $response;
 
-        //  Query data
-        $type = request('model', 'branch');      //  e.g) company, branch, client or supplier
-        $model_id = request('modelId');          //  The id of the client/supplier for getting related jobcards
-
-        /*  First thing is first, we need to understand one of 9 scenerios, Either we want:
-         *
-         *  1) Only jobcards for a related COMPANY of the authenticated user (NO STEPS)
-         *  2) Only jobcards for a related BRANCH of the authenticated user (NO STEPS)
-         *  3) Only jobcards for a related CLIENT of the authenticated user (NO STEPS)
-         *  4) Only jobcards for a related CONTRACTOR of the authenticated user (NO STEPS)
-         *  5) Only jobcards in their respective steps e.g) Open, Pending, Closed, e.t.c...
-         *     for a given COMPANY of the authenticated user
-         *  6) Only jobcards in their respective steps e.g) Open, Pending, Closed, e.t.c...
-         *     for a given BRANCH of the authenticated user
-         *  7) Only jobcards in their respective steps e.g) Open, Pending, Closed, e.t.c...
-         *     for a given CLIENT of the authenticated user
-         *  8) Only jobcards in their respective steps e.g) Open, Pending, Closed, e.t.c...
-         *     for a given CONTRACTOR of the authenticated user
-         *  9) All jobcards in the system e.g) If SuperAdmin needs access to all data
-         *
-         *  Once we have those jobcards we will determine whether we want any of the following
-         *
-         *  1) All jobcards aswell as the trashed ones
-         *  2) Only jobcards that are trashed
-         *  3) Only jobcards that are not trashed
-         *
-         *  After this we will perform our filters, e.g) where, orderby, e.t.c
-         *
-         */
-
-        /*  User Company specific jobcards
-         *  If the user indicated that they want jobcards related to their company,
-         *  then get the jobcards related to the authenticated users company.
-         *  They must indicate using the query "model" set to "company".
-         */
-        if ($type == 'company') {
-            /**************************************************************
-            *  CHECK IF THE USER IS AUTHORIZED TO VIEW COMPANY JOBCARDS    *
-            /**************************************************************/
-
-            $jobcards = $user->companyBranch->company->jobcards();
-
-        /*  User Branch specific jobcards
-         *  If the user indicated that they want jobcards related to their branch,
-         *  then get the jobcards related to the authenticated users branch.
-         *  They must indicate using the query "model" set to "branch".
-         */
-        } elseif ($type == 'branch') {
-            /**************************************************************
-            *  CHECK IF THE USER IS AUTHORIZED TO VIEW BRANCH JOBCARDS    *
-            /**************************************************************/
-
-            $jobcards = $user->companyBranch->jobcards();
-
-        /*  Client specific jobcards
-         *  If the user indicated that they want jobcards related to a specific client,
-         *  then get the jobcards related to that client. They must indicate using the
-         *  query "model" set to "client" and "model_id" to the company unique id.
-         */
-        } elseif ($type == 'client') {
-            /**************************************************************
-            *  CHECK IF THE USER IS AUTHORIZED TO VIEW CLIENT JOBCARDS    *
-            /**************************************************************/
-
-            //  Check if the user specified the model_id
-            if (empty($model_id)) {
-                //  No model_id specified error
-                return oq_api_notify_error('include client id', null, 404);
-            }
-
-            $jobcards = Jobcard::where('client_id', $model_id);
-
-        /*  Supplier specific jobcards
-         *  If the user indicated that they want jobcards related to a specific supplier,
-         *  then get the jobcards related to that supplier. They must indicate using the
-         *  query "model" set to "supplier" and "model_id" to the company unique id.
-         */
-        } elseif ($type == 'supplier') {
-            /***************************************************************
-            *  CHECK IF THE USER IS AUTHORIZED TO VIEW CONTRACTOR JOBCARDS *
-            /***************************************************************/
-
-            //  Check if the user specified the model_id
-            if (empty($model_id)) {
-                //  No model_id specified error
-                return oq_api_notify_error('include supplier id', null, 404);
-            }
-
-            $jobcards = Jobcard::whereHas('suppliersList', function ($query) use ($model_id) {
-                $query->where('supplier_id', $model_id);
-            });
-
-        /*  ALL JOBCARDS
-         *  If the user wants all the jobcards in the system, they must indicate
-         *  using the query "model" set to "all". This is normaly used by authorized
-         *  superadmins to access all jobcard resources in the system.
-         */
-        } elseif ($type == 'all') {
-            /***********************************************************
-            *  CHECK IF THE USER IS AUTHORIZED TO VIEW ALL JOBCARDS    *
-            /**********************************************************/
-
-            /*  ALL JOBCARDS
-            *  If the user wants all the jobcards in the system, they must indicate
-            *  using the query "all" set to "1". This is normaly used by authorized
-            *  superadmins to access all jobcard resources in the system.
-            */
-
-            /*   Create a new jobcard instance that can be used to retrieve all jobcards
-             */
-            $jobcards = new Jobcard();
+            //  Action was executed successfully
+            return oq_api_notify($jobcards, 200);
         }
 
-        /*  Now lets see if the user indicated if they want the jobcards according to their
-         *  step allocations. We will check if we have a step indicated in the query.
-         *  If so, then lets get the users company template specifically used for defining
-         *  the process steps for jobcards. Once we have the template, we need to query
-         *  jobcards in the specified step.
-         *
-         */
+        //  If the data was not a success then return the response
+        return $response;
+    }
 
-        if (!empty(request('step'))) {
-            try {
-                /*  This is how we get the jobcard step allocation template
-                 *  It must be of "type" equal to "jobcard", and "selected" equal to "1"
-                 */
-                $jobcardTemplateId = $user->companyBranch->company->formTemplate
-                                          ->where('type', 'jobcard')
-                                          ->where('selected', 1)
-                                          ->first()
-                                          ->id;
+    public function approve($jobcard_id)
+    {
+        //  Jobcard Instance
+        $data = ( new Jobcard() )->initiateApprove($jobcard_id);
+        $success = $data['success'];
+        $response = $data['response'];
 
-                /*  Filter only to the jobcards beloging to the specified step.
-                 */
-                $jobcards = $jobcards->whereHas('statusLifecycle', function ($query) use ($jobcardTemplateId) {
-                    $query->where('step', request('step'))
-                          ->where('form_template_id', $jobcardTemplateId);
-                });
-            } catch (\Exception $e) {
-                return oq_api_notify_error('Query Error', $e->getMessage(), 404);
-            }
+        //  If the jobcard was approved successfully
+        if ($success) {
+            //  If this is a success then we have the jobcard
+            $jobcard = $response;
+
+            //  Action was executed successfully
+            return oq_api_notify($jobcard, 200);
         }
 
-        /*  To avoid sql order_by error for ambigious fields e.g) created_at
-         *  we must specify the order_join.
-         *
-         *  Order joins help us when using the "advancedFilter()" method. Usually
-         *  we need to specify the joining table so that the system is not confused
-         *  by similar column names that exist on joining tables. E.g) the column
-         *  "created_at" can exist in multiple table and the system might not know
-         *  whether the "order_by" is for table_1 created_at or table 2 created_at.
-         *  By specifying this we end up with "table_1.created_at"
-         *
-         *  If we don't have any special order_joins, lets default it to nothing
-         */
-
-        $order_join = 'jobcards';
-
-        try {
-            //  Get all and trashed
-            if (request('withtrashed') == 1) {
-                //  Run query
-                $jobcards = $jobcards->withTrashed()->advancedFilter(['order_join' => $order_join]);
-            //  Get only trashed
-            } elseif (request('onlytrashed') == 1) {
-                //  Run query
-                $jobcards = $jobcards->onlyTrashed()->advancedFilter(['order_join' => $order_join]);
-            //  Get all except trashed
-            } else {
-                //  Run query
-                $jobcards = $jobcards->advancedFilter(['order_join' => $order_join]);
-            }
-
-            //  If we have any jobcards so far
-            if (count($jobcards)) {
-                //  Eager load other relationships wanted if specified
-                if (request('connections')) {
-                    $jobcards->load(oq_url_to_array(request('connections')));
-                }
-            }
-        } catch (\Exception $e) {
-            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
-        }
-
-        //  Action was executed successfully
-        return oq_api_notify($jobcards, 200);
+        //  If the data was not a success then return the response
+        return $response;
     }
 
     public function getLifecycleTemplates(Request $request)

@@ -35,8 +35,8 @@
         <!-- Loaders for creating/saving quotation -->
         <Row v-if="createMode">
             <Col :span="24">
-                <div v-if="isCreatingQuotation" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Creating, please wait...</div>
-                <div v-if="isSavingQuotation" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Saving, please wait...</div>
+                <div v-if="isCreatingQuotation" class="mt-1 mb-5 text-center text-uppercase font-weight-bold text-success animate-opacity">Creating, please wait...</div>
+                <div v-if="isSavingQuotation" class="mt-1 mb-5 text-center text-uppercase font-weight-bold text-success animate-opacity">Saving, please wait...</div>
             </Col>
         </Row>
         

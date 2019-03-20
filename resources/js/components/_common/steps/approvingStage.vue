@@ -23,11 +23,16 @@
             <template slot="leftContent">
 
                 <h4 v-if="" class="text-secondary">{{ localInvoice.has_approved ? 'Invoice Approved' : 'Approve Invoice' }}</h4>
-                <Poptip word-wrap width="200" trigger="hover" :content="localInvoice.created_at | moment('DD MMM YYYY, H:mmA') || '___'">
-                    <p class="mt-2 mb-2">
-                        <span class="font-weight-bold">Created:</span> {{ localInvoice.created_at | moment("from", "now") | capitalize }} <span v-if="localInvoice.quotation_id">from <router-link :to="{ name: 'show-quotation', params: { id: localInvoice.quotation_id } }"><span class="font-weight-bold">Estimate #{{ localInvoice.quotation_id }}</span></router-link></span>
-                    </p>
-                </Poptip>
+                
+                <p class="mt-2 mb-2">
+                    <Poptip word-wrap width="200" trigger="hover" :content="localInvoice.created_at | moment('DD MMM YYYY, H:mmA') || '___'">
+                        <span class="font-weight-bold">Created:</span> {{ localInvoice.created_at | moment("from", "now") | capitalize }} 
+                    </Poptip>
+                    <span v-if="localInvoice.quotation_id">from <router-link :to="{ name: 'show-quotation', params: { id: localInvoice.quotation_id } }">
+                        <span class="font-weight-bold">Quotation #{{ localInvoice.quotation_id }}</span></router-link>
+                    </span>
+                </p>
+                
 
             </template>
 
