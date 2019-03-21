@@ -223,6 +223,19 @@
                             </el-form-item>
                         </Col>
 
+                        <Col :span="12">
+                            <!-- Categories -->
+                            <el-form-item label="Cost Centers" prop="costcenters" class="mb-2">
+                                <costcenterSelector
+                                    modelType="jobcard" 
+                                    :selectedCostCenter="localJobcard.costcenters"
+                                    @updated:costcenter="localJobcard.costcenters = $event">
+                                </costcenterSelector>
+                            </el-form-item>
+                        </Col>
+
+                        
+
                     </Row>
                     
                     <Row v-if="!hideSaveBtn">
@@ -251,6 +264,7 @@
     /*  Selectors   */
     import prioritySelector from './../../../components/_common/selectors/prioritySelector.vue'; 
     import categorySelector from './../../../components/_common/selectors/categorySelector.vue'; 
+    import costcenterSelector from './../../../components/_common/selectors/costcenterSelector.vue'; 
 
     /*  Tags   */
     import priorityTag from './../../../components/_common/tags/priorityTag.vue'; 
@@ -291,7 +305,7 @@
             }
         },
         components: { 
-            Loader, priorityTag, categoryTags, costcenterTags, prioritySelector, categorySelector
+            Loader, priorityTag, categoryTags, costcenterTags, prioritySelector, categorySelector, costcenterSelector
         },
         data(){
             return {

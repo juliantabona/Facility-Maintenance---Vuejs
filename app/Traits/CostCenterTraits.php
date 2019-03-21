@@ -6,7 +6,7 @@ trait CostCenterTraits
 {
     /*  initiateGetAll() method:
      *
-     *  This is used to return a pagination of category results.
+     *  This is used to return a pagination of costcenter results.
      *
      */
     public function initiateGetAll($options = array())
@@ -40,37 +40,37 @@ trait CostCenterTraits
         /*
          *  The $modelType variable only get data specificaclly related to
          *  the specified model. It is useful for scenerios where we
-         *  want only categories of that model only.
+         *  want only costcenters of that model only.
          */
         $modelType = request('modelType');
 
         //  Apply filter by allocation
         if ($allocation == 'all') {
             /***********************************************************
-            *  CHECK IF THE USER IS AUTHORIZED TO ALL PRIORITIES         *
+            *  CHECK IF THE USER IS AUTHORIZED TO ALL COSTCENTERS         *
             /**********************************************************/
 
-            //  Get the current category instance
-            $categories = $this;
+            //  Get the current costcenter instance
+            $costcenters = $this;
         } elseif ($allocation == 'branch') {
             /*************************************************************
-            *  CHECK IF THE USER IS AUTHORIZED TO GET BRANCH PRIORITIES    *
+            *  CHECK IF THE USER IS AUTHORIZED TO GET BRANCH COSTCENTERS    *
             /*************************************************************/
 
-            // Only get categories associated to the company branch
-            $categories = $auth_user->companyBranch->categories();
+            // Only get costcenters associated to the company branch
+            $costcenters = $auth_user->companyBranch->costcenters();
         } else {
             /**************************************************************
-            *  CHECK IF THE USER IS AUTHORIZED TO GET COMPANY PRIORITIES    *
+            *  CHECK IF THE USER IS AUTHORIZED TO GET COMPANY COSTCENTERS    *
             /**************************************************************/
 
-            //  Only get categories associated to the company
-            $categories = $auth_user->company->categories();
+            //  Only get costcenters associated to the company
+            $costcenters = $auth_user->company->costcenters();
         }
 
         //  Flter to the model type
         if ($modelType) {
-            $categories = $categories->where('type', $modelType);
+            $costcenters = $costcenters->where('type', $modelType);
         }
 
         /*  To avoid sql order_by error for ambigious fields e.g) created_at
@@ -86,38 +86,38 @@ trait CostCenterTraits
          *  If we don't have any special order_joins, lets default it to nothing
          */
 
-        $order_join = 'categories';
+        $order_join = 'cost_centers';
 
         try {
             //  Get all and trashed
             if (request('withtrashed') == 1) {
                 //  Run query
-                $categories = $categories->withTrashed()->advancedFilter(['order_join' => $order_join, 'paginate' => false]);
+                $costcenters = $costcenters->withTrashed()->advancedFilter(['order_join' => $order_join, 'paginate' => false]);
             //  Get only trashed
             } elseif (request('onlytrashed') == 1) {
                 //  Run query
-                $categories = $categories->onlyTrashed()->advancedFilter(['order_join' => $order_join, 'paginate' => false]);
+                $costcenters = $costcenters->onlyTrashed()->advancedFilter(['order_join' => $order_join, 'paginate' => false]);
             //  Get all except trashed
             } else {
                 //  Run query
-                $categories = $categories->advancedFilter(['order_join' => $order_join, 'paginate' => false]);
+                $costcenters = $costcenters->advancedFilter(['order_join' => $order_join, 'paginate' => false]);
             }
 
             //  If we are not paginating then
             if (!$config['paginate']) {
                 //  Get the collection
-                $categories = $categories->get();
+                $costcenters = $costcenters->get();
             } else {
-                $categories = $categories->advancedFilter(['order_join' => $order_join, 'paginate' => $config['paginate']]);
+                $costcenters = $costcenters->advancedFilter(['order_join' => $order_join, 'paginate' => $config['paginate']]);
             }
 
             //  Eager load other relationships wanted if specified
             if (request('connections')) {
-                $categories->load(oq_url_to_array(request('connections')));
+                $costcenters->load(oq_url_to_array(request('connections')));
             }
 
             //  Action was executed successfully
-            return ['success' => true, 'response' => $categories];
+            return ['success' => true, 'response' => $costcenters];
         } catch (\Exception $e) {
             //  Log the error
             $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
