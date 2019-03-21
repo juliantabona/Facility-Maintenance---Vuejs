@@ -30,7 +30,7 @@ class Jobcard extends Model
     ];
 
     protected $with = [
-        'client',
+        'client.phones',
     ];
 
     /**

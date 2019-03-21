@@ -3,6 +3,7 @@
         <!-- Modal -->
         <mainModal 
             v-bind="$props" 
+            :width="700"
             :isSaving="isCreating || isSaving" 
             :hideModal="hideModal"
             :title="title"
@@ -35,6 +36,7 @@
                 <!-- Create/Edit Company -->
                 <companyWidget 
                     v-if="selectedClientType == 'company'" 
+                    :editMode="true"
                     :companyId="(editableCompanyOrIndividual || {}).id"
                     :showClientOrSupplierSelector="showClientOrSupplierSelector"
                     :hideBio="true" :hideSaveBtn="true"

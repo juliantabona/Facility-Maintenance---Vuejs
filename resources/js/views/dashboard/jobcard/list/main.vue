@@ -14,7 +14,7 @@
 
                 <!-- Slot Extra functionality -->
                 <template slot="extra">
-                    <!-- Get the resource type button to allow user to toggle between getting company/branch specific data -->
+                    <!-- Get the resource type button to allow user to toggle between getting jobcard/branch specific data -->
                     <allocationTypeButton></allocationTypeButton>
                 </template>
 
@@ -36,8 +36,8 @@
                 
             </Row>
 
-            <!-- Get the filterable company client list -->
-            <companyListWidget></companyListWidget>
+            <!-- Get the filterable jobcard client list -->
+            <jobcardListWidget></jobcardListWidget>
 
         </Col>
     </Row>
@@ -47,10 +47,10 @@
     import pageToolbar from './../../../../components/_common/toolbars/pageToolbar.vue';
     import allocationTypeButton from './../../../../components/_common/buttons/allocationTypeButton.vue';
     import activityCardWidget from './../../../../widgets/activity/activityCardWidget.vue';
-    import companyListWidget from './../../../../widgets/company/list/companyListWidget.vue';
+    import jobcardListWidget from './../../../../widgets/jobcard/list/jobcardListWidget.vue';
 
     export default {
-        components: { pageToolbar, allocationTypeButton, activityCardWidget, companyListWidget },
+        components: { pageToolbar, allocationTypeButton, activityCardWidget, jobcardListWidget },
         computed:{
             titleName(){
                 
@@ -61,7 +61,7 @@
                 }else if( this.$route.query.status == 'Client' ){
                     title = 'Company Clients';
                 }else{
-                    title = 'Companines';
+                    title = 'Jobcards';
                 }
 
                 return title;

@@ -65,7 +65,7 @@
                 </Alert>
                 
                 <!-- Add phone button -->
-                <Button v-if="(numberLimit == 0) || (((localPhones || {}).length || 0) < numberLimit)" 
+                <Button v-if="showAddPhoneBtn && ((numberLimit == 0) || (((localPhones || {}).length || 0) < numberLimit))" 
                     class="mt-1 ml-1" icon="ios-add" type="dashed" size="small" @click="isOpenAddPhoneModal = true">Add Phone</Button>
             </Col>
         </Row>
@@ -166,6 +166,10 @@
             showPhoneType:{
                 type: Boolean,
                 default: false                
+            },
+            showAddPhoneBtn:{
+                type: Boolean,
+                default: true                
             },
 
             //  For the toggle switch

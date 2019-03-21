@@ -10,12 +10,6 @@
         font-size:14px;
     }
 
-    .info-highlight-box{
-        background: #f5f7fa;
-        border-radius: 10px;
-        padding: 15px;
-    }
-
 </style>
 
 <template>
@@ -27,12 +21,12 @@
                 <!-- Loader -->
                 <Loader v-if="isLoading" :loading="isLoading" type="text" class="text-left">Loading...</Loader>
                 
-                <div v-if="!localEditMode">
+                <div v-if="!isLoading && !localEditMode">
 
                     <Row :gutter="20" class="mb-1" :style="{ lineHeight: '1.8em' }">
 
                         <Col :span="24">
-                            <Row class="info-highlight-box mb-3">
+                            <Row class="mb-3">
                                 <Col :span="24">
 
                                     <!-- Title -->
@@ -165,7 +159,7 @@
 
                 </div>
 
-                <el-form v-if="localEditMode" 
+                <el-form v-if="!isLoading && localEditMode" 
                          label-position="top" label-width="100px" 
                          :model="formData">
                     
@@ -175,17 +169,17 @@
                             <Alert>This jobcard is now editable.</Alert>
                         </Col>
 
-                        <Col :span="12">
+                        <Col :span="24">
                             <!-- Title -->
                             <el-form-item label="Title:" prop="title" class="mb-2">
                                 <el-input v-model="localJobcard.title" size="small" style="width:100%" placeholder="Enter jobcard title"></el-input>
                             </el-form-item>
                         </Col>
 
-                        <Col :span="12">
+                        <Col :span="24">
                             <!-- Description -->
                             <el-form-item label="Description:" prop="description" class="mb-2">
-                                <el-input v-model="localJobcard.description" size="small" style="width:100%" placeholder="Enter jobcard description"></el-input>
+                                <el-input type="textarea" v-model="localJobcard.description" size="small" style="width:100%" placeholder="Enter jobcard description"></el-input>
                             </el-form-item>
                         </Col>
 
@@ -207,6 +201,27 @@
                             </el-form-item>
                         </Col>
 
+                        <Col :span="12">
+                            <!-- Priority -->
+                            <el-form-item label="Priority" prop="priority" class="mb-2">
+                                <prioritySelector
+                                    modelType="jobcard" 
+                                    :selectedPriority="localJobcard.priority"
+                                    @updated:priority="localJobcard.priority = $event">
+                                </prioritySelector>
+                            </el-form-item>
+                        </Col>
+
+                        <Col :span="12">
+                            <!-- Categories -->
+                            <el-form-item label="Categories" prop="categories" class="mb-2">
+                                <categorySelector
+                                    modelType="jobcard" 
+                                    :selectedCategory="localJobcard.categories"
+                                    @updated:category="localJobcard.categories = $event">
+                                </categorySelector>
+                            </el-form-item>
+                        </Col>
 
                     </Row>
                     
@@ -234,7 +249,8 @@
     import Loader from './../../../components/_common/loaders/Loader.vue'; 
 
     /*  Selectors   */
-    import provinceSelector from './../../../components/_common/selectors/provinceSelector.vue'; 
+    import prioritySelector from './../../../components/_common/selectors/prioritySelector.vue'; 
+    import categorySelector from './../../../components/_common/selectors/categorySelector.vue'; 
 
     /*  Tags   */
     import priorityTag from './../../../components/_common/tags/priorityTag.vue'; 
@@ -275,7 +291,7 @@
             }
         },
         components: { 
-            Loader, priorityTag, categoryTags, costcenterTags
+            Loader, priorityTag, categoryTags, costcenterTags, prioritySelector, categorySelector
         },
         data(){
             return {

@@ -27,7 +27,7 @@
                 <!-- Loader -->
                 <Loader v-if="isLoading" :loading="isLoading" type="text" class="text-left">Loading...</Loader>
                 
-                <div v-if="!localEditMode">
+                <div v-if="!isLoading && !localEditMode">
 
                     <Row :gutter="20" class="mb-1">
 
@@ -57,20 +57,20 @@
                                 <Col :span="12">
 
                                     <!-- Name -->
-                                    <p class="text-dark"><strong>Name:</strong> {{ formData.name ? formData.name : '___' }}</p>
+                                    <p class="text-dark"><strong>Name:</strong> {{ localCompany.name ? localCompany.name : '___' }}</p>
                                     <!-- Relationship -->
-                                    <p class="text-dark"><strong>Relationship:</strong> {{ formData.relationship ? formData.relationship : '___' }}</p>
+                                    <p class="text-dark"><strong>Relationship:</strong> {{ localCompany.relationship ? localCompany.relationship : '___' }}</p>
                                     <!-- Description -->
-                                    <p class="text-dark"><strong>Description:</strong> {{ formData.description ? formData.description : '___' }}</p>
+                                    <p class="text-dark"><strong>Description:</strong> {{ localCompany.description ? localCompany.description : '___' }}</p>
                             
                                 </Col>
 
                                 <Col :span="12">
 
                                     <!-- Type Selector e.g) Private, Government, Parastatal, Non Profit Organisation -->
-                                    <p class="text-dark"><strong>Type:</strong> {{ formData.type ? formData.type : '___' }}</p>
+                                    <p class="text-dark"><strong>Type:</strong> {{ localCompany.type ? localCompany.type : '___' }}</p>
                                     <!-- Date Of Incorporation -->
-                                    <p class="text-dark"><strong>Date Of Incorporation:</strong> {{ formData.date_of_incorporation | moment('MMM DD YYYY') || '___' }}</p>
+                                    <p class="text-dark"><strong>Date Of Incorporation:</strong> {{ localCompany.date_of_incorporation | moment('MMM DD YYYY') || '___' }}</p>
                                     
                                 </Col>
 
@@ -86,24 +86,26 @@
 
                                 <Col :span="detailMode ? '12' : '24'">
                                     <!-- Email -->
-                                    <p class="text-dark"><strong>Email:</strong> {{ formData.email ? formData.email : '___' }}</p>
+                                    <p class="text-dark"><strong>Email:</strong> {{ localCompany.email ? localCompany.email : '___' }}</p>
                                 </Col>
 
                                 <Col v-if="detailMode" :span="12">
                                     <!-- Additional Email -->
-                                    <p v-if="!localEditMode" class="text-dark"><strong>Additional Email:</strong> {{ formData.additional_email ? formData.additional_email : '___' }}</p>
+                                    <p v-if="!localEditMode" class="text-dark"><strong>Additional Email:</strong> {{ localCompany.additional_email ? localCompany.additional_email : '___' }}</p>
                                     <el-form-item v-if="localEditMode" label="Additional Email:" prop="additional_email" class="mb-2">
-                                        <el-input v-model="formData.additional_email" size="small" style="width:100%"placeholder="Enter addittional email"></el-input>
+                                        <el-input v-model="localCompany.additional_email" size="small" style="width:100%"placeholder="Enter addittional email"></el-input>
                                     </el-form-item>
                                 </Col>
 
                                 <Col :span="24">
                                     <!-- Calling Codes Selector -->
                                     <span class="form-label text-dark mt-2 mb-2 d-block"><strong>Phone(s):</strong></span>
-                                    <phoneInput class="mb-2"  
+                                    <phoneInput 
+                                                v-if="localCompany"
+                                                class="mb-2"  
                                                 :modelId="localCompany.id" 
                                                 :modelType="localCompany.model_type" 
-                                                :phones="formData.phones" 
+                                                :phones="localCompany.phones" 
                                                 :suggestedPhones="{}"
                                                 :numberLimit="5"
                                                 selectedType="mobile"
@@ -135,26 +137,26 @@
 
                                 <Col :span="detailMode ? '12' : '24'">
                                     <!-- Address -->
-                                    <p class="text-dark"><strong>Address:</strong> {{ formData.address ? formData.address : '___' }}</p>
+                                    <p class="text-dark"><strong>Address:</strong> {{ localCompany.address ? localCompany.address : '___' }}</p>
                                 </Col>
 
                                 <Col v-if="detailMode" :span="12">
                                     <!-- Country Selector -->
-                                    <p class="text-dark"><strong>Country:</strong> {{ formData.country ? formData.country : '___' }}</p>
+                                    <p class="text-dark"><strong>Country:</strong> {{ localCompany.country ? localCompany.country : '___' }}</p>
                                 </Col>
 
                                 <Col :span="12">
                                     <!-- Provience Selector -->
-                                    <p class="text-dark"><strong>State/Provience/District:</strong> {{ formData.provience ? formData.provience : '___' }}</p>
+                                    <p class="text-dark"><strong>State/Provience/District:</strong> {{ localCompany.provience ? localCompany.provience : '___' }}</p>
                                 </Col>
 
                                 <Col :span="12">
                                     <!-- Cities Selector -->
-                                    <p class="text-dark"><strong>City/Town:</strong> {{ formData.city ? formData.city : '___' }}</p>
+                                    <p class="text-dark"><strong>City/Town:</strong> {{ localCompany.city ? localCompany.city : '___' }}</p>
                                 </Col>
                                 
                                 <Col :span="24">
-                                    <p class="text-dark"><strong>About:</strong> {{ formData.bio ? formData.bio : '___' }}</p>
+                                    <p class="text-dark"><strong>About:</strong> {{ localCompany.bio ? localCompany.bio : '___' }}</p>
                                 </Col>
 
                             </Row>
@@ -170,7 +172,7 @@
                                 <Col :span="detailMode ? '12' : '24'">
                                     <!-- Website Link -->
                                     <p class="text-dark"><strong>Website Link:</strong> 
-                                        <a v-if="formData.website_link" :href="formData.website_link" target="_blank">{{ formData.website_link }}</a>
+                                        <a v-if="localCompany.website_link" :href="localCompany.website_link" target="_blank">{{ localCompany.website_link }}</a>
                                         <span v-else>___</span>
                                     </p>
                                 </Col>
@@ -178,7 +180,7 @@
                                 <Col v-if="detailMode" :span="12">
                                     <!-- Facebook Link -->
                                     <p class="text-dark"><strong>Facebook Link:</strong> 
-                                        <a v-if="formData.facebook_link" :href="formData.facebook_link" target="_blank">{{ formData.facebook_link }}</a>
+                                        <a v-if="localCompany.facebook_link" :href="localCompany.facebook_link" target="_blank">{{ localCompany.facebook_link }}</a>
                                         <span v-else>___</span>
                                     </p>
                                 </Col>
@@ -186,7 +188,7 @@
                                 <Col v-if="detailMode" :span="12">
                                     <!-- Twitter Link -->
                                     <p class="text-dark"><strong>Twitter Link:</strong> 
-                                        <a v-if="formData.twitter_link" :href="formData.twitter_link" target="_blank">{{ formData.twitter_link }}</a>
+                                        <a v-if="localCompany.twitter_link" :href="localCompany.twitter_link" target="_blank">{{ localCompany.twitter_link }}</a>
                                         <span v-else>___</span>
                                     </p>
                                 </Col>
@@ -194,7 +196,7 @@
                                 <Col v-if="detailMode" :span="12">
                                     <!-- linkedIn Link -->
                                     <p class="text-dark"><strong>LinkedIn Link:</strong> 
-                                        <a v-if="formData.linkedin_link" :href="formData.linkedin_link" target="_blank">{{ formData.linkedin_link }}</a>
+                                        <a v-if="localCompany.linkedin_link" :href="localCompany.linkedin_link" target="_blank">{{ localCompany.linkedin_link }}</a>
                                         <span v-else>___</span>
                                     </p>
                                 </Col>
@@ -202,7 +204,7 @@
                                 <Col v-if="detailMode" :span="12">
                                     <!-- Instagram Link -->
                                     <p class="text-dark"><strong>Instagram Link:</strong> 
-                                        <a v-if="formData.instagram_link" :href="formData.instagram_link" target="_blank">{{ formData.instagram_link }}</a>
+                                        <a v-if="localCompany.instagram_link" :href="localCompany.instagram_link" target="_blank">{{ localCompany.instagram_link }}</a>
                                         <span v-else>___</span>
                                     </p>
                                 </Col>
@@ -214,7 +216,7 @@
 
                 </div>
 
-                <el-form v-if="localEditMode" 
+                <el-form v-if="!isLoading && localEditMode" 
                          label-position="top" label-width="100px" 
                          :model="formData">
                     
@@ -359,7 +361,9 @@
                         <Col :span="24">
                             <!-- Calling Codes Selector -->
                             <span class="form-label mb-1 d-block">Phone(s):</span>
-                            <phoneInput class="mb-2"  
+                            <phoneInput 
+                                        v-if="localCompany"
+                                        class="mb-2"  
                                         :modelId="localCompany.id" 
                                         :modelType="localCompany.model_type" 
                                         :phones="localCompany.phones" 
@@ -537,7 +541,7 @@
         },
         data(){
             return {
-                localCompany: {},
+                localCompany: null,
                 detailMode: this.activateSummaryMode,
                 isLoading: false,
                 ruleForm: { 
@@ -610,6 +614,9 @@
                 
                 if( this.companyId ){
                  
+                    //  Start loader
+                    this.isLoading = true;
+
                     const self = this;
 
                     //  Additional data to eager load along with the company found
@@ -638,16 +645,16 @@
             },
             updatePhoneChanges(newVal){
                 console.log(newVal);
-                this.formData.phones = newVal;
+                this.localCompany.phones = newVal;
             },
             updateCountryChanges(newVal){
-                this.formData.country = newVal;
+                this.localCompany.country = newVal;
             },
             updateProvienceChanges(newVal){
-                this.formData.provience = newVal;
+                this.localCompany.provience = newVal;
             },
             updateCityChanges(newVal){
-                this.formData.city = newVal;
+                this.localCompany.city = newVal;
             },
             saveCompany() {
                 const self = this;

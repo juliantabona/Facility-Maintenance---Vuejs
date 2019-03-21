@@ -202,11 +202,20 @@
 
                         <Row>
 
+                            <Col v-if="editMode" :span="24" class="mt-2 mb-2">
+                                <h4 class="ml-2 mb-2 text-dark">Client Details</h4>
+                            </Col>
+
                             <Col span="12" class="mb-3 ml-2">
+
+                                <!-- Client selector -->
+                                <clientSelector v-if="editMode" :style="{maxWidth: '250px'}" class="clearfix mb-2"
+                                    @updated="changeClient($event)">
+                                </clientSelector>
 
                                 <!-- Client information -->
                                 <companyOrIndividualDetails 
-                                    :style="{ background: '#f5f7fa',borderRadius: '10px', padding: '15px' }"
+                                    :style="{ border: '1px solid #e0e0e0', boxShadow: '1px 2px 5px #e0e0e0',borderRadius: '10px', padding: '15px' }"
                                     :editMode="editMode"
                                     refName="Client"
                                     :profile="localJobcard.client" 
@@ -214,21 +223,27 @@
                                     :modelType="( createMode ? $route.query.clientId : localJobcard.client_type )" 
                                     :showCompanyOrUserSelector="false"
                                     :showClientOrSupplierSelector="true"
+                                    :showAddPhoneBtn="false"
+                                    :isPhoneHideable="false"
                                     @updated:companyOrIndividual="updateClient($event)"
                                     @updated:phones="updatePhoneChanges(localJobcard.client, $event)"
                                     @reUpdateParent="storeOriginalInvoice()">
                                 </companyOrIndividualDetails>
-
-                                <!-- Client selector -->
-                                <clientSelector v-if="editMode" :style="{maxWidth: '250px'}" class="mt-2"
-                                    @updated="changeClient($event)">
-                                </clientSelector>
 
                             </Col>
 
                         </Row>
 
                         <Row>
+
+                            <Col :span="24">
+                                <Divider dashed class="mt-1 mb-2" />
+                            </Col>
+
+                            <Col v-if="editMode" :span="24" class="mt-2 mb-2">
+                                <h4 class="ml-2 mb-2 text-dark">Jobcard Details</h4>
+                            </Col>
+
                             <Col span="24" class="pl-2">
                                             
                                 <!-- Create/Edit Jobcard -->
@@ -404,16 +419,32 @@
                 this.jobcardHasChanged = this.checkIfjobcardHasChanged();
 
             },
+            updateClient(newClientDetails){
+
+                this.client = this.localInvoice.client = newClientDetails;
+
+                this.jobcardHasChanged = this.checkIfjobcardHasChanged();
+
+            },
+            updatePhoneChanges(companyOrIndividual, phones){
+                
+                //  Only update if the phones have changed
+                var currentPhone = _.cloneDeep(phones);
+                var isNotEqual = !_.isEqual(currentPhone, companyOrIndividual.phones);
+
+                if(isNotEqual){
+
+                    companyOrIndividual.phones = phones;
+                    
+                    this.jobcardHasChanged = this.checkIfjobcardHasChanged();
+
+                }
+
+            },
             checkIfjobcardHasChanged: function(updatedJobcard = null){
                 
                 var currentJobcard = _.cloneDeep(updatedJobcard || this.localJobcard);
                 var isNotEqual = !_.isEqual(currentJobcard, this._localJobcardBeforeChange);
-
-                console.log('currentJobcard');
-                console.log(currentJobcard);
-                console.log('_localJobcardBeforeChange');
-                console.log(this._localJobcardBeforeChange);
-                console.log('isNotEqual:' +isNotEqual);
 
                 return isNotEqual;
             },

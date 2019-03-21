@@ -1,12 +1,29 @@
+<style scoped>
+
+    .profile-summary >>> input {
+        color: #343a40 !important;
+    }
+
+</style>
+
 <template>
 
-    <div :style="align == 'right' ? 'float: right; text-align: right;' : ''">
+    <div class="profile-summary" :style="align == 'right' ? 'float: right; text-align: right;' : ''">
             
         <!-- Loader for when loading the profile information -->
         <Loader v-if="isLoadingProfileInfo" :loading="isLoadingProfileInfo" type="text" :style="{ marginTop:'40px' }">Loading {{ refName | lowercase }} details...</Loader>
 
         <!-- Profile Information -->
         <div v-if="localProfile">
+
+            <!-- View button -->
+            <basicButton v-if="!localEditMode && (localProfile.model_type == 'company' || localProfile.model_type == 'user')"
+                            :style="{ position:'absolute', bottom:'10px', right:'10px' }" 
+                            type="primary" size="small" 
+                            :ripple="false"
+                            @click.native="$router.push({ name: (localProfile.model_type == 'company' ? 'show-company': 'show-user'), params: { id: localProfile.id } })">
+                {{ 'View '+ refName }}
+            </basicButton>
 
             <!-- Edit button -->
             <Poptip v-if="localEditMode" class="mt-2 mb-2" trigger="hover" :content="'Edit '+(localProfile.model_type == 'company' ? 'company' : 'profile')+' details?'">
@@ -55,10 +72,11 @@
                         selectedServiceProvider="Orange"
                         :disabledServiceProviders="[]"  
                         :deletable="false"
-                        :hidedable="true"
+                        :hidedable="isPhoneHideable"
                         :editable="false"
                         :removeDuplicates="true"
                         :showIcon="true" 
+                        :showAddPhoneBtn="showAddPhoneBtn"
                         onIcon="ios-eye-outline" offIcon="ios-eye-off-outline" 
                         title="Show:" onText="Yes" offText="No" 
                         poptipMsg="Turn on to show"
@@ -110,6 +128,9 @@
     /*  Switches   */
     import showModeSwitch from './../../../components/_common/switches/showModeSwitch.vue'; 
 
+    /*  Buttons  */
+    import basicButton from './../../../components/_common/buttons/basicButton.vue';
+
     export default {
         props: {
             refName: {
@@ -144,8 +165,16 @@
                 type: Boolean,
                 default: false
             },
+            showAddPhoneBtn:{
+                type: Boolean,
+                default: true                
+            },
+            isPhoneHideable:{
+                type: Boolean,
+                default: true                
+            },
         },
-        components: { phoneInput, citySelector, countrySelector, createOrEditCompanyOrIndividualModal, showModeSwitch },
+        components: { phoneInput, citySelector, countrySelector, createOrEditCompanyOrIndividualModal, showModeSwitch, basicButton },
         data() {
             return {
                 localProfile: this.profile,
