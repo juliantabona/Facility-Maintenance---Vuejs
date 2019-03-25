@@ -60,6 +60,14 @@ class Jobcard extends Model
     ];
 
     /**
+     * Get the companies settings.
+     */
+    public function lifecycle()
+    {
+        return $this->morphOne('App\Lifecycle', 'trackable');
+    }
+
+    /**
      * Get all of the categories for the jobcard.
      */
     public function categories()
@@ -81,6 +89,14 @@ class Jobcard extends Model
     public function priority()
     {
         return $this->morphToMany('App\Priority', 'trackable', 'priority_allocations');
+    }
+
+    /**
+     * Get the priority for the jobcard.
+     */
+    public function assignedStaff()
+    {
+        return $this->morphToMany('App\User', 'trackable', 'staff_allocations');
     }
 
     /**
@@ -118,6 +134,21 @@ class Jobcard extends Model
     public function approvedActivities()
     {
         return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'approved');
+    }
+
+    public function addedLifecycleStagesActivities()
+    {
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'added lifecycle stage');
+    }
+
+    public function updatedLifecycleStagesActivities()
+    {
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'updated lifecycle stage');
+    }
+
+    public function deletedLifecycleStagesActivities()
+    {
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'deleted lifecycle stage');
     }
 
     ///////////////////////////////////////////////////////////////////////////////////
@@ -188,8 +219,8 @@ class Jobcard extends Model
     protected $appends = [
                     'createdBy', 'deadline', 'deadlineArray', 'deadlineInWords', 'statusSummary',
                     'last_approved_activity',
-                    'has_approved',
-                    'current_activity_status', 'activity_count',
+                    'has_approved', 'has_lifecycle',
+                    'current_activity_status', 'lifecycle_stages', 'activity_count',
                 ];
 
     public function getLastApprovedActivityAttribute()
@@ -212,6 +243,46 @@ class Jobcard extends Model
         } else {
             return 'Draft';
         }
+    }
+
+    public function getLifecycleStagesAttribute()
+    {
+        //$addedLifecycleStages = $this->addedLifecycleStagesActivities()->orderBy('created_at', 'asc')->get();
+        $updatedLifecycleStages = $this->updatedLifecycleStagesActivities()->orderBy('created_at', 'asc')->get();
+        //$deletedLifecycleStages = $this->deletedLifecycleStagesActivities()->orderBy('created_at', 'asc')->get();
+
+        $originalStages = collect($updatedLifecycleStages)->filter(function ($stage) {
+            return !$stage['activity']['updated_stage_id'];
+        });
+
+        $updatedStages = collect($updatedLifecycleStages)->filter(function ($stage) {
+            return $stage['activity']['updated_stage_id'];
+        });
+
+        $allStages = [];
+
+        foreach ($originalStages as $originalStage) {
+            //  Check if it has been updated
+            foreach ($updatedStages as $updatedStage) {
+                //  Check if the updated stage was created after the added stage
+                if ($updatedStage->created_at->getTimestamp() > $originalStage->created_at->getTimestamp()) {
+                    //  First check if we have updated this stage
+                    if ($updatedStage['activity']['updated_stage_id'] == $originalStage['id']) {
+                        //  This means it is deleted
+                        $originalStage = $updatedStage;
+                    }
+                }
+
+                array_push($allStages, $originalStage['activity']);
+            }
+        }
+
+        return $allStages;
+    }
+
+    public function gethasLifecycleAttribute()
+    {
+        return count($this->lifecycle_stages) ? true : false;
     }
 
     public function getActivityCountAttribute()

@@ -38,7 +38,7 @@
 
         <!-- Jobcard Menu -->
         <Col span="1">
-            <menuToggle :invoiceId="localJobcard.id" :editMode="localEditMode" @toggleEditMode="$emit('toggleEditMode', $event)"></menuToggle>
+            <menuToggle :jobcardId="localJobcard.id" :editMode="localEditMode" @toggleEditMode="$emit('toggleEditMode', $event)"></menuToggle>
         </Col>
     </Row>
 
@@ -74,11 +74,11 @@
         },
         watch: {
 
-            //  Watch for changes on the invoice
-            invoice: {
+            //  Watch for changes on the jobcard
+            jobcard: {
                 handler: function (val, oldVal) {
 
-                    //  Update the local invoice value
+                    //  Update the local jobcard value
                     this.localJobcard = val;
 
                 },

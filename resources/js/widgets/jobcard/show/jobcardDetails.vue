@@ -86,12 +86,26 @@
                                                                     
                                 </Col>
 
-                                <Col :span="24">
+                                <Col :span="12">
 
                                     <!-- Jobcard Cost Center -->
                                     <span>
                                         <strong class="text-dark">Cost Centers: </strong>
                                         <costcenterTags :costcenters="localJobcard.costcenters"></costcenterTags>
+                                    </span>
+                                                                    
+                                </Col>
+
+                                <Col :span="24">
+                                    <Divider dashed class="mt-3 mb-3" />
+                                </Col>
+
+                                <Col :span="24">
+
+                                    <!-- Assigned Staff -->
+                                    <span>
+                                        <strong class="text-dark">Assigned Staff: </strong>
+                                        <assignedStaffTags :staffMembers="localJobcard.assigned_staff"></assignedStaffTags>
                                     </span>
                                                                     
                                 </Col>
@@ -210,6 +224,24 @@
                                     @updated:priority="localJobcard.priority = $event">
                                 </prioritySelector>
                             </el-form-item>
+
+                            <!-- Cost Centers -->
+                            <el-form-item label="Cost Centers" prop="costcenters" class="mb-2">
+                                <costcenterSelector
+                                    modelType="jobcard" 
+                                    :selectedCostCenter="localJobcard.costcenters"
+                                    @updated:costcenter="localJobcard.costcenters = $event">
+                                </costcenterSelector>
+                            </el-form-item>
+
+                            <!-- Assigned Staff -->
+                            <el-form-item label="Assigned Staff" prop="staff" class="mb-2">
+                                <assignedStaffSelector
+                                    :selectedStaff="localJobcard.assigned_staff"
+                                    @updated:staff="localJobcard.assigned_staff = $event">
+                                </assignedStaffSelector>
+                            </el-form-item>
+
                         </Col>
 
                         <Col :span="12">
@@ -222,19 +254,6 @@
                                 </categorySelector>
                             </el-form-item>
                         </Col>
-
-                        <Col :span="12">
-                            <!-- Categories -->
-                            <el-form-item label="Cost Centers" prop="costcenters" class="mb-2">
-                                <costcenterSelector
-                                    modelType="jobcard" 
-                                    :selectedCostCenter="localJobcard.costcenters"
-                                    @updated:costcenter="localJobcard.costcenters = $event">
-                                </costcenterSelector>
-                            </el-form-item>
-                        </Col>
-
-                        
 
                     </Row>
                     
@@ -265,13 +284,14 @@
     import prioritySelector from './../../../components/_common/selectors/prioritySelector.vue'; 
     import categorySelector from './../../../components/_common/selectors/categorySelector.vue'; 
     import costcenterSelector from './../../../components/_common/selectors/costcenterSelector.vue'; 
+    import assignedStaffSelector from './../../../components/_common/selectors/assignedStaffSelector.vue'; 
 
     /*  Tags   */
     import priorityTag from './../../../components/_common/tags/priorityTag.vue'; 
     import categoryTags from './../../../components/_common/tags/categoryTags.vue'; 
     import costcenterTags from './../../../components/_common/tags/costcenterTags.vue'; 
-
-
+    import assignedStaffTags from './../../../components/_common/tags/assignedStaffTags.vue'; 
+    
     import lodash from 'lodash';
     Event.prototype._ = lodash;
 
@@ -305,7 +325,9 @@
             }
         },
         components: { 
-            Loader, priorityTag, categoryTags, costcenterTags, prioritySelector, categorySelector, costcenterSelector
+            Loader, priorityTag, categoryTags, costcenterTags, assignedStaffTags,
+            prioritySelector, categorySelector, costcenterSelector,
+            assignedStaffSelector
         },
         data(){
             return {
@@ -354,6 +376,7 @@
                     priority: this.localJobcard.priority,  
                     categories: this.localJobcard.categories,  
                     costcenters: this.localJobcard.costcenters,  
+                    assigned_staff: this.localJobcard.assigned_staff
                 }
             }
         },
@@ -365,7 +388,7 @@
                     const self = this;
 
                     //  Additional data to eager load along with the jobcard found
-                    var connections = '?connections=priority,categories,costcenters';
+                    var connections = '?connections=priority,categories,costcenters,assignedStaff';
 
                     //  Use the api call() function located in resources/js/api.js
                     api.call('get', '/api/jobcards/'+this.jobcardId+connections)
@@ -402,7 +425,7 @@
                 };
 
                 //  Additional data to eager load along with the jobcard found
-                var connections = '?connections=priority,categories,costcenters';
+                var connections = '?connections=priority,categories,costcenters,assignedStaff';
 
                 //  Use the api call() function located in resources/js/api.js
                 api.call('post', '/api/companies/'+this.localJobcard.id + connections, jobcardData)

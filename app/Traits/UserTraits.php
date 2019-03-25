@@ -22,6 +22,11 @@ trait UserTraits
         //  Replace defaults with any provided options
         $config = array_merge($defaults, $options);
 
+        //  If we overide using the request
+        if (request('paginate') == 0 || request('paginate') == 1) {
+            $config['paginate'] = request('paginate') == 1 ? true : false;
+        }
+
         //  Current authenticated user
         $auth_user = auth('api')->user();
 
@@ -90,7 +95,14 @@ trait UserTraits
         /*  If user did not indicate any specific group
         */
         } else {
-            $users = $model->userDirectory();
+            //  If the $type is a list e.g) client,supplier
+            $type = explode(',', $type);
+
+            if (count($type)) {
+                $users = $model->userDirectory()->whereIn('user_directory.type', $type);
+            } else {
+                $users = $model->userDirectory();
+            }
         }
 
         /*  To avoid sql order_by error for ambigious fields e.g) created_at

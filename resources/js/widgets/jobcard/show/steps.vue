@@ -5,7 +5,7 @@
         <Col :span="24">
         
             <!-- Get the stage for approving the localCompany -->
-            <approvingStage v-bind="$props" 
+            <approvingStage v-bind="$props" :stageNumber="1"
                 @toggleEditMode="$emit('toggleEditMode', $event)" @approved="$emit('approved', $event)">
             </approvingStage>
             

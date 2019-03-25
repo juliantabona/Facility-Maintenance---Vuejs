@@ -11,8 +11,7 @@
             <Option 
                 v-for="costcenter in localfetchedCostcenters" 
                 :value="JSON.stringify(costcenter)" 
-                :key="costcenter.id">{{ costcenter.name }}
-            </Option>
+                :key="costcenter.id">{{ costcenter.name }}</Option>
         </Select>
     </div>
 
@@ -38,6 +37,7 @@
         data(){
             return {
                 localfetchedCostcenters: [],
+                tracker: 0,
                 isLoading: false,
             }
         },
@@ -46,20 +46,28 @@
                 get(){
                     var costcenters = [];
                     
-                    for(var x=0; x < this.localfetchedCostcenters.length; x++){
-                        for(var y=0; y < this.selectedCostCenter.length; y++){
-                            if(  this.localfetchedCostcenters[x]['id'] == this.selectedCostCenter[y]['id'] ){
-                                costcenters.push( JSON.stringify(this.localfetchedCostcenters[x]) );
+                    if( this.selectedCostCenter ){
+                        for(var x=0; x < this.localfetchedCostcenters.length; x++){
+                            for(var y=0; y < this.selectedCostCenter.length; y++){
+                                if(  this.localfetchedCostcenters[x]['id'] == this.selectedCostCenter[y]['id'] ){
+                                    costcenters.push( JSON.stringify(this.localfetchedCostcenters[x]) );
+                                }
                             }
+                            
                         }
-                        
                     }
                     
                     return costcenters;
                 },
                 set(val){
-                    var costcenters = val.map(costcenter => JSON.parse(costcenter));
-                    this.$emit('updated:costcenter', costcenters);
+                    if( this.tracker != 0 ){
+
+                        var costcenters = val.map(costcenter => JSON.parse(costcenter));
+                        this.$emit('updated:costcenter', costcenters);
+
+                    }
+
+                    this.tracker = this.tracker + 1;
 
                 }
             }

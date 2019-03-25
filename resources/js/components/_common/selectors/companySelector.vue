@@ -64,7 +64,7 @@
                 var connections = '&connections=phones';
 
                 //  Use the api call() function located in resources/js/api.js
-                api.call('get', '/api/directories?association=company&kind=company'+connections)
+                api.call('get', '/api/companies?allocation=company&type=client,supplier'+connections)
                     .then(({data}) => {
                         
                         console.log(data);

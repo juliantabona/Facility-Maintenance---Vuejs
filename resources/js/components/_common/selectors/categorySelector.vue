@@ -11,8 +11,7 @@
             <Option 
                 v-for="category in localfetchedCategories" 
                 :value="JSON.stringify(category)" 
-                :key="category.id">{{ category.name }}
-            </Option>
+                :key="category.id">{{ category.name }}</Option>
         </Select>
     </div>
 
@@ -38,6 +37,7 @@
         data(){
             return {
                 localfetchedCategories: [],
+                tracker: 0,
                 isLoading: false,
             }
         },
@@ -46,20 +46,28 @@
                 get(){
                     var categories = [];
                     
-                    for(var x=0; x < this.localfetchedCategories.length; x++){
-                        for(var y=0; y < this.selectedCategory.length; y++){
-                            if(  this.localfetchedCategories[x]['id'] == this.selectedCategory[y]['id'] ){
-                                categories.push( JSON.stringify(this.localfetchedCategories[x]) );
+                    if( this.selectedCategory ){
+                        for(var x=0; x < this.localfetchedCategories.length; x++){
+                            for(var y=0; y < this.selectedCategory.length; y++){
+                                if(  this.localfetchedCategories[x]['id'] == this.selectedCategory[y]['id'] ){
+                                    categories.push( JSON.stringify(this.localfetchedCategories[x]) );
+                                }
                             }
+                            
                         }
-                        
                     }
                     
                     return categories;
                 },
                 set(val){
-                    var categories = val.map(category => JSON.parse(category));
-                    this.$emit('updated:category', categories);
+                    if( this.tracker != 0 ){
+
+                        var categories = val.map(category => JSON.parse(category));
+                        this.$emit('updated:category', categories);
+
+                    }
+
+                    this.tracker = this.tracker + 1;
 
                 }
             }

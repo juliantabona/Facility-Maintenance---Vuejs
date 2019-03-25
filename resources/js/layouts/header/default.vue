@@ -130,7 +130,7 @@
 
 <template>
 
-  <Header :style="{ width: '100%', position: 'fixed', zIndex: '5', background: '#fff', padding: '0' }">
+  <Header :style="{ width: '100%', position: 'fixed', zIndex: '1000', background: '#fff', padding: '0' }">
       
       <!-- Main Menu -->
       <Menu mode="horizontal" :style="{ border: 'none' }">

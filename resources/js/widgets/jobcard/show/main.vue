@@ -148,6 +148,17 @@
                 </Col>
             </Row>
 
+            <Row key="jobcard_lifecycle" class="animated">
+                
+                <Col span="24" class="mb-2">
+
+                    <!-- Jobcard Lifecycle -->
+                    <jobcardLifecycle :jobcard="localJobcard" ></jobcardLifecycle>
+
+                </Col>
+
+            </Row>
+
             <!-- Jobcard View/Editor -->
             <Row id="jobcard-summary"  key="jobcard_template" class="animated mb-5">
                 <Col :span="24">
@@ -167,7 +178,6 @@
                             <mainHeader :jobcard="localJobcard" :editMode="editMode" @toggleEditMode="toggleEditMode($event)"></mainHeader>
 
                         </div>
-
 
                         <Row>
 
@@ -227,7 +237,7 @@
                                     :isPhoneHideable="false"
                                     @updated:companyOrIndividual="updateClient($event)"
                                     @updated:phones="updatePhoneChanges(localJobcard.client, $event)"
-                                    @reUpdateParent="storeOriginalInvoice()">
+                                    @reUpdateParent="storeOriginalJobcard()">
                                 </companyOrIndividualDetails>
 
                             </Col>
@@ -302,6 +312,10 @@
     import companyOrIndividualDetails from './companyOrIndividualDetails.vue';
     import clientSelector from './../../../components/_common/selectors/clientSelector.vue'; 
 
+    /*  Lifecycles  */
+    import jobcardLifecycle from './../../../components/_common/lifecycles/jobcardLifecycle.vue';
+    
+
     import lodash from 'lodash';
     Event.prototype._ = lodash;
 
@@ -310,7 +324,7 @@
             overview, steps, mainHeader, jobcardWidget,
             basicButton, toggleSwitch, editModeSwitch,
             Loader, IconAndCounterCard, companyOrIndividualDetails,
-            clientSelector
+            clientSelector, jobcardLifecycle
         },
         props: {
             jobcard: {
@@ -421,7 +435,7 @@
             },
             updateClient(newClientDetails){
 
-                this.client = this.localInvoice.client = newClientDetails;
+                this.client = this.localJobcard.client = newClientDetails;
 
                 this.jobcardHasChanged = this.checkIfjobcardHasChanged();
 

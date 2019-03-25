@@ -72,7 +72,7 @@
                     console.log('Start getting jobcard details...');
 
                     //  Additional data to eager load along with the jobcard found
-                    var connections = '?connections=priority,categories,costcenters';
+                    var connections = '?connections=lifecycle,priority,categories,costcenters,assignedStaff';
 
                     //  Use the api call() function located in resources/js/api.js
                     api.call('get', '/api/jobcards/'+this.$route.params.id+connections)

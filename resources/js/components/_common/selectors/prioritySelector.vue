@@ -11,8 +11,7 @@
             <Option 
                 v-for="priority in localfetchedPriorities" 
                 :value="JSON.stringify(priority)" 
-                :key="priority.id">{{ priority.name }}
-            </Option>
+                :key="priority.id">{{ priority.name }}</Option>
         </Select>
     </div>
 
@@ -44,8 +43,19 @@
         computed:{
             localSelectedPriority:{
                 get(){
-                    var priority = this.selectedPriority;
-                    return (priority || {}).length ? JSON.stringify(priority[0]) : priority;
+                    if( this.selectedPriority.length ){
+
+                        var priority;
+                        
+                        for(var x=0; x < this.localfetchedPriorities.length; x++){
+                            if(  this.localfetchedPriorities[x]['id'] == this.selectedPriority[0]['id'] ){
+                                priority = JSON.stringify(this.localfetchedPriorities[x]);
+                            }  
+                        }
+                        
+                        return priority;
+
+                    }
                 },
                 set(val){
                     if(val != ''){

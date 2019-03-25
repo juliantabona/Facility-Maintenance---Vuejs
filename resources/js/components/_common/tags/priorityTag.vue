@@ -29,7 +29,7 @@
         watch: {
             priority: {
                 handler: function (val, oldVal) {
-                    this.localPriority = val;
+                    this.localPriority = (val || [] )[0];
                 },
                 deep: true
             }

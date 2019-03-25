@@ -69,6 +69,7 @@ Route::middleware('auth:api')->post('/users', 'Api\UserController@create');
 Route::get('companies', 'Api\CompanyController@index');
 Route::post('companies', 'Api\CompanyController@store');
 Route::get('companies/stats', 'Api\CompanyController@getEstimatedStats');
+Route::get('companies/staff', 'Api\CompanyController@getStaff');  //  ok
 Route::get('companies/{company_id}', 'Api\CompanyController@show');
 Route::post('companies/{company_id}', 'Api\CompanyController@update');
 Route::post('companies/{company_id}/approve', 'Api\CompanyController@approve');  //  ok
