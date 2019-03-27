@@ -146,9 +146,9 @@ class Jobcard extends Model
         return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'updated lifecycle stage');
     }
 
-    public function deletedLifecycleStagesActivities()
+    public function reversedLifecycleStagesActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'deleted lifecycle stage');
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'reversed lifecycle stage');
     }
 
     ///////////////////////////////////////////////////////////////////////////////////
@@ -249,7 +249,7 @@ class Jobcard extends Model
     {
         //$addedLifecycleStages = $this->addedLifecycleStagesActivities()->orderBy('created_at', 'asc')->get();
         $updatedLifecycleStages = $this->updatedLifecycleStagesActivities()->orderBy('created_at', 'asc')->get();
-        //$deletedLifecycleStages = $this->deletedLifecycleStagesActivities()->orderBy('created_at', 'asc')->get();
+        $reversedLifecycleStages = $this->reversedLifecycleStagesActivities()->orderBy('created_at', 'asc')->get();
 
         $originalStages = collect($updatedLifecycleStages)->filter(function ($stage) {
             return !$stage['activity']['updated_stage_id'];
@@ -261,19 +261,36 @@ class Jobcard extends Model
 
         $allStages = [];
 
+        //  For each original stage
         foreach ($originalStages as $originalStage) {
-            //  Check if it has been updated
+            //  Check if we have any updated copies of the original
             foreach ($updatedStages as $updatedStage) {
-                //  Check if the updated stage was created after the added stage
+                //  Check if the updated copy was created after the original copy
                 if ($updatedStage->created_at->getTimestamp() > $originalStage->created_at->getTimestamp()) {
-                    //  First check if we have updated this stage
+                    //  Check if the update target id is the same as the original stage id
                     if ($updatedStage['activity']['updated_stage_id'] == $originalStage['id']) {
-                        //  This means it is deleted
+                        //  This means the original has been updated, therefore we need to update the original copy
                         $originalStage = $updatedStage;
                     }
                 }
+            }
 
-                array_push($allStages, $originalStage['activity']);
+            $reversed = false;
+
+            //  Check if we have reversed/undid this update
+            foreach ($reversedLifecycleStages as $reversedStage) {
+                //  Check if the reversed update was created after the original/updated copy
+                if ($reversedStage->created_at->getTimestamp() > $originalStage->created_at->getTimestamp()) {
+                    //  Check if the update target id is the same as the original stage id
+                    if ($reversedStage['activity']['id'] == $originalStage['id']) {
+                        //  This means the original has been updated, therefore we need to update the original copy
+                        $reversed = true;
+                    }
+                }
+            }
+
+            if (!$reversed) {
+                array_push($allStages, $originalStage);
             }
         }
 

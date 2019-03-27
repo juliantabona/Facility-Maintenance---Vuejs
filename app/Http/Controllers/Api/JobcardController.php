@@ -52,6 +52,46 @@ class JobcardController extends Controller
         return $response;
     }
 
+    public function updateLifecycleProgress($jobcard_id)
+    {
+        //  Jobcard Instance
+        $data = ( new Jobcard() )->initiateUpdateLifecycleProgress($jobcard_id);
+        $success = $data['success'];
+        $response = $data['response'];
+
+        //  If the jobcard was recorded successfully
+        if ($success) {
+            //  If this is a success then we have the jobcard
+            $jobcard = $response;
+
+            //  Action was executed successfully
+            return oq_api_notify($jobcard, 200);
+        }
+
+        //  If the data was not a success then return the response
+        return $response;
+    }
+
+    public function undoLifecycleProgress($jobcard_id, $stage_id)
+    {
+        //  Jobcard Instance
+        $data = ( new Jobcard() )->initiateUndoLifecycleProgress($jobcard_id, $stage_id);
+        $success = $data['success'];
+        $response = $data['response'];
+
+        //  If the jobcard was recorded successfully
+        if ($success) {
+            //  If this is a success then we have the jobcard
+            $jobcard = $response;
+
+            //  Action was executed successfully
+            return oq_api_notify($jobcard, 200);
+        }
+
+        //  If the data was not a success then return the response
+        return $response;
+    }
+
     public function getLifecycleTemplates(Request $request)
     {
         $user = auth('api')->user();

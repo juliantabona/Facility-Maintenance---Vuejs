@@ -128,49 +128,53 @@
 <template>
 
     <Card :style="{ width: '100%' }">
-        
+        <h4 class="mb-2" :style="{ fontSize: '1.5em' }">Lifecycle</h4>
 
-        <!-- Loader -->
-        <Loader v-if="isLoading" :loading="isLoading" type="text" class="text-left">Loading Lifecycle...</Loader>
+        <div>
 
-        <Poptip word-wrap width="300" trigger="hover" :content="popTipTitle">
+            <Poptip word-wrap width="300" trigger="hover" :content="popTipTitle" class="float-left">
 
-            <h4 class="mb-2" :style="{ fontSize: '1.5em' }">Lifecycle</h4>
+                <ul v-if="(localJobcard.lifecycle.stages || {}).length" id="breadcrumb">
+                    <li v-for="(stage, i) in localJobcard.lifecycle.stages" 
+                        :class="isActiveStage(stage) || (stage.type == 'open' && localJobcard.has_approved) ? 'active': ''"
+                        @mouseover="popTipTitle = stage.description"
+                        @click="updateSelectedStage(stage)"
+                        :style="{ position: 'relative' }">
+                        
+                        <div>
+                            <span>{{ stage.name }}</span>
+                            <Icon v-if="isActiveStage(stage)" 
+                                    class="checkmark" type="ios-checkmark-circle-outline" />
+                        </div>
 
-            <ul id="breadcrumb">
-                <li :class="localJobcard.has_approved ? 'active': ''"
-                    @mouseover="popTipTitle = 'Jobcard has been approved'"
-                    @click="updateSelectedStage(stage)">
-                    <span>Open</span>
-                </li>
-                <li v-for="(stage, i) in localJobcard.lifecycle.stages" 
-                    :class="isActiveStage(stage) ? 'active': ''"
-                    @mouseover="popTipTitle = stage.description"
-                    @click="updateSelectedStage(stage)"
-                    :style="{ position: 'relative' }">
-        
-                    <Dropdown v-if="isActiveStage(stage) && ( dropdownOptions(stage) ).length && !isActiveStage(localJobcard.lifecycle.stages[i + 1])">
-                        <a href="javascript:void(0)">
-                            <span >{{ stage.name }}</span>
-                            <Icon v-if="isActiveStage(stage) && dropdownOptions(stage)" class="checkmark" type="ios-arrow-dropdown" />
-                        </a>
-                        <DropdownMenu slot="list">
-                            <DropdownItem v-for="(option, i) in dropdownOptions(stage)" :key="i"
-                                          :style="{ width: '100%' }">{{ option }}
-                            </DropdownItem>
-                        </DropdownMenu>
-                    </Dropdown>
-                    <div v-else>
-                        <span>{{ stage.name }}</span>
-                        <Icon v-if="isActiveStage(stage)" class="checkmark" type="ios-checkmark-circle-outline" />
-                    </div>
-
-                </li>
-            </ul>
+                    </li>
+                </ul>
+                
+            </Poptip>
             
-        </Poptip>
+            <div v-for="(stage, i) in localJobcard.lifecycle.stages" :key="i"
+                 class="float-left mt-1 ml-2">
+                 
+                <Select v-if="isActiveStage(stage) && ( dropdownOptions(stage) ).length && !isActiveStage(localJobcard.lifecycle.stages[i + 1])"
+                        v-model="selectedTriggerName" style="width:150px"
+                        @on-change="handleTrigger(stage)"
+                        :key="selectedTriggerRenderKey"
+                        placeholder="Next step">
+                    <Option v-for="(option, i) in dropdownOptions(stage)" :key="i"
+                            :class="option.divider ? 'border-bottom' : ''" 
+                            :value="option.triggerName">
+                            <Icon v-if="option.icon" :type="option.icon" :size="20" class="mr-1"/>
+                            <span>{{ option.name }}</span>
+                    </Option>
+                </Select>
 
-        <Alert v-if="!isLoading && !(localJobcard.lifecycle_stages || []).length" type="warning">
+            </div>
+
+        </div>
+
+        <div class="clearfix"></div>
+
+        <Alert v-if="!(localJobcard.lifecycle.stages || {}).length" type="warning">
             No Lifecycle Found
         </Alert>
 
@@ -182,19 +186,14 @@
             :jobcard="localJobcard" 
             :selectedStage="localSelectedStage" 
             @visibility="isOpenUpdateLifecycleStageModal = $event"
-            @updated="$emit('updated', $event)">
+            @updated="updateJobcardLifecycle($event)">
         </updateLifecycleStageModal>
 
     </Card>
 
 </template>
 
-<script>
-
-    import Loader from './../loaders/Loader.vue';
-
-    /*  Selectors   */
-    import jobcardLifecycleStageSelector from './../selectors/jobcardLifecycleStageSelector.vue'; 
+<script> 
 
     /*  Modals  */
     import updateLifecycleStageModal from './../modals/updateLifecycleStageModal.vue';
@@ -206,39 +205,25 @@
                 default: null
             },
         },
-        components: { Loader, jobcardLifecycleStageSelector, updateLifecycleStageModal },
+        components: { updateLifecycleStageModal },
         data(){
             return {
                 localJobcard: this.jobcard,
                 localSelectedStage: null,
                 isOpenUpdateLifecycleStageModal: false,
-
-
-
-                isLoading: false,
-                lifecycle: {},
-                popTipTitle: '',
-                storedStage: {},
-                storedNextStep: null,
-                isOpenUpdateLifecycleModal: false,
-                isOpenAddLifecycleModal: false,
+                selectedTriggerName: '',
+                selectedTriggerRenderKey: 0,
+                popTipTitle: ''
             }
-        },
-        computed: {
-            stages: function () {
-                return (this.lifecycle.template || {}).sections;
-            },
-            activeStep: {
-                get() {
-                    return this.lifecycle.step;
-                },
-                set(newValue) {
-                    this.lifecycle.step = newValue;
-                }
-            }
-
         },
         methods: {
+            updateJobcardLifecycle(updatedJobcard){
+                //  Update lifecycle stages
+                this.localJobcard.lifecycle_stages = updatedJobcard.lifecycle_stages;
+
+                //  Close the modal
+                this.isOpenUpdateLifecycleStageModal = false;
+            },
             isActiveStage(stage){
                 
                 var active = false;
@@ -246,24 +231,41 @@
                 if( stage ){
 
                     for(var x = 0; x < this.localJobcard.lifecycle_stages.length; x++){
-                        console.log('Check....................................................');
-                        
-                        if( this.localJobcard.lifecycle_stages[x].type ==  stage.type){
-                            console.log(this.localJobcard.lifecycle_stages[x].type +' == '+  stage.type);
+                        if( this.localJobcard.lifecycle_stages[x].activity.type ==  stage.type && 
+                            this.localJobcard.lifecycle_stages[x].activity.instance ==  stage.instance ){
                             active = true;
                         }
                         
+                    }
+
+                    if( !active ){
+                        if(stage.type ==  'open' && this.localJobcard.has_approved){
+                            active = true;
+                        }
                     }
 
                 }
 
                 return active;
             },
-            getStageData(stageType){
+            getStageData(stage){
                 
                 for(var x = 0; x < this.localJobcard.lifecycle_stages.length; x++){
                     
-                    if( this.localJobcard.lifecycle_stages[x].type ==  stageType){
+                    if( this.localJobcard.lifecycle_stages[x].activity.type ==  stage.type && 
+                        this.localJobcard.lifecycle_stages[x].activity.instance ==  stage.instance ){
+                        return this.localJobcard.lifecycle_stages[x].activity;
+                    }
+                    
+                }
+                
+            },
+            getStageAsRecentActivity(stage){
+                
+                for(var x = 0; x < this.localJobcard.lifecycle_stages.length; x++){
+                    
+                    if( this.localJobcard.lifecycle_stages[x].activity.type ==  stage.type && 
+                        this.localJobcard.lifecycle_stages[x].activity.instance ==  stage.instance ){
                         return this.localJobcard.lifecycle_stages[x];
                     }
                     
@@ -273,20 +275,79 @@
             dropdownOptions(stage){
                 var options = [];
                 
-                if( stage.name == 'Deposit Paid' ){
-                    options = ['Cancel Payment', 'Notify Client'];
-                }else if( stage.name == 'Job Started' ){
-                    options = ['Set Job to Pending', 'Cancel Job', 'Notify Client'];
+                if( stage.type == 'open' ){
+                    options = [{
+                                name: 'Next Step',
+                                triggerName: 'next_step',
+                                icon:'ios-redo-outline',
+                                divider:false
+                              }];
+                }else if( stage.type == 'payment' ){
+                    options = [{
+                                name: 'Next Step',
+                                triggerName: 'next_step',
+                                icon:'ios-redo-outline',
+                                divider:false
+                              },{
+                                name: 'Undo ' + stage.name,
+                                triggerName: 'undo_payment',
+                                icon:'ios-undo-outline',
+                                divider:true
+                              },{
+                                name: 'Notify Client',
+                                triggerName: 'notify_payment',
+                                icon:'ios-chatboxes-outline',
+                                divider:false
+                              }];
+                }else if( stage.type == 'job_started' ){
+                    options = [{
+                                name: 'Next Step',
+                                triggerName: 'next_step',
+                                icon:'ios-redo-outline',
+                                divider:false
+                              },{
+                                name: 'Undo ' + stage.name,
+                                triggerName: 'undo_job_started',
+                                icon:'ios-undo-outline',
+                                divider:true
+                              },{
+                                name: 'Set Job To Pending',
+                                triggerName: 'pending_job_started',
+                                icon:'ios-time-outline',
+                                divider:false
+                              },{
+                                name: 'Cancel Job Completely',
+                                triggerName: 'cancel_job_started',
+                                icon:'ios-hand-outline',
+                                divider:true
+                              },{
+                                name: 'Notify Client',
+                                triggerName: 'notify_payment',
+                                icon:'ios-chatboxes-outline',
+                                divider:false
+                              }];
+                }else if( stage.type == 'closed' ){
+                    options = [{
+                                name: 'Undo Close',
+                                triggerName: 'undo_close',
+                                icon:'ios-undo-outline',
+                                divider:false
+                              },{
+                                name: 'Notify client',
+                                triggerName: 'notify_payment',
+                                icon:'ios-chatboxes-outline',
+                                divider:false
+                              }];
                 }
                 return options;
             },
             updateSelectedStage(stage){
                 
-                if( stage.name == 'Deposit Paid' ){
+                if( stage.type == 'payment' ){
                     this.localSelectedStage = this.getDepositPaidTemplate(stage);
-                }else if( stage.name == 'Job Started' ){
+                }else if( stage.type == 'job_started' ){
                     this.localSelectedStage = this.getJobStartedTemplate(stage);
-                }else if( stage.name == 'Closed' ){
+                }else if( stage.type == 'closed' ){
                     this.localSelectedStage = this.getClosedTemplate(stage);
                 }
 
@@ -294,12 +355,13 @@
             },
             getDepositPaidTemplate(stage){
                 
-                var stageData = this.getStageData(stage.type);
-
+                var stageData = this.getStageData(stage);
+                
                 var template = 
                         {   
                             type: stage.type, 
-                            updated_stage_id: (stageData || {}).updated_stage_id,   
+                            instance: stage.instance, 
+                            updated_stage_id: (stageData || {}).updated_stage_id || null,   
                             linked_invoice_id: (stageData || {}).linked_invoice_id,
                             currency_type: (stageData || {}).currency_type,
                             payment_amount: (stageData || {}).payment_amount,
@@ -311,12 +373,13 @@
             },
             getJobStartedTemplate(stage){
               
-                var stageData = this.getStageData(stage.type);
+                var stageData = this.getStageData(stage);
 
                 var template = 
                         {
                             type: stage.type, 
-                            updated_stage_id: (stageData || {}).updated_stage_id,   
+                            instance: stage.instance, 
+                            updated_stage_id: (stageData || {}).updated_stage_id || null,   
                             linked_staff_ids: (stageData || {}).linked_staff_ids,
                             date_started: (stageData || {}).date_started,
                             time_started: (stageData || {}).time_started,
@@ -329,36 +392,88 @@
                 var template = 
                         {
                             type: stage.type, 
+                            instance: stage.instance, 
                             updated_stage_id: null
                         }
 
                 return template;
             },
+            handleTrigger(stage){
 
-            updateChanges(nextStep){
-                this.activeStep = this.storedNextStep;
-                this.closeModal();
-            },
-            updateAddLifecycleChanges(lifecycle){
-                //  Update the local lifecycle data with our new data
-                this.lifecycle = lifecycle;
+                if( stage ){
+                    
+                    let stageData = null;
 
-                //  Select the first step
-                this.activeStep = 1;
+                    let stageId = ( this.getStageAsRecentActivity(stage) || {}).id;
 
-                //  Close modal
-                this.closeAddLifecycleModal();
-            },
-            closeModal(){
-                this.isOpenUpdateLifecycleModal = !this.isOpenUpdateLifecycleModal;
-            },
-            closeAddLifecycleModal(){
-                this.isOpenAddLifecycleModal = !this.isOpenAddLifecycleModal;
-            },
-            showLifecycleStageModal(stage, step){
-                this.storedNextStep = ++step;
-                this.storedStage = stage; 
-                this.isOpenUpdateLifecycleModal = true;
+                    let triggerName = this.selectedTriggerName;
+
+                    let makeApi = false;
+
+                    this.selectedTriggerName = '';
+
+                    this.selectedTriggerRenderKey = this.selectedTriggerRenderKey + 1;
+
+                    if( triggerName ==  'undo_payment' || triggerName ==  'undo_job_started' || triggerName ==  'undo_close'){
+                       if(stageId){
+                            makeApi = true;
+                            var url = '/api/jobcards/' + this.localJobcard.id + '/lifecycle/stages/'+stageId+'/undo';
+                       }
+                    }else if( triggerName ==  'next_step' ){
+
+                        if( stage ){
+
+                            for(var x = 0; x < this.localJobcard.lifecycle.stages.length; x++){
+                                
+                                if( this.localJobcard.lifecycle.stages[x].type ==  stage.type && 
+                                    this.localJobcard.lifecycle.stages[x].instance ==  stage.instance ){
+
+                                        this.updateSelectedStage(this.localJobcard.lifecycle.stages[x + 1]);
+                                
+                                }
+                                
+                            }
+
+                        }
+
+                    }
+                    
+                    if( makeApi ){
+
+                        var self = this;
+
+                        //  Start loader
+                        this.isSaving = true;
+
+                        console.log('Attempt to handle jobcard lifecycle trigger...');
+
+                        //  Use the api call() function located in resources/js/api.js
+                        api.call('post', url, stageData)
+                            .then(({ data }) => {
+                                
+                                console.log(data);
+
+                                //  Stop loader
+                                self.isSaving = false;
+                                
+                                //  Alert creation success
+                                self.$Message.success('Lifecycle updated sucessfully!');
+
+                                self.updateJobcardLifecycle(data);
+
+                            })         
+                            .catch(response => { 
+                                //  Stop loader
+                                self.isSaving = false;
+
+                                console.log('jobcardLifecycle.vue - Error updating jobcard lifecycle trigger...');
+                                console.log(response);
+                            });
+
+                    }
+
+                }
+
             }
         },
     };

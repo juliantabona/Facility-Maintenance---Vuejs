@@ -224,6 +224,117 @@ trait JobcardTraits
         }
     }
 
+    /*  initiateUpdateLifecycleProgress() method:
+     *
+     *  This is used to save the lifecycle stage data for an existing jobcard.
+     *  As the user progress through each stage they are asked to save the data
+     *  they have provided before continuing to the next step. This data is saved
+     *  using this method. It also works to store the update activity and
+     *  broadcasting of notifications to users concerning the update of
+     *  the jobcard lifecycle stages. An example is when the user saves
+     *  data provided in the "job started" stage.
+     *
+     *
+     */
+    public function initiateUpdateLifecycleProgress($jobcard_id)
+    {
+        //  Current authenticated user
+        $auth_user = auth('api')->user();
+
+        /****************************************************************
+         *   CHECK IF USER HAS PERMISSION TO UPDATE JOBCARD LIFECYCLE   *
+         ***************************************************************/
+
+        //  Get the jobcard stage data
+        $stageData = request('stage');
+
+        try {
+            //  Get the jobcard
+            $jobcard = $this->where('id', $jobcard_id)->first();
+
+            //  Check if we have an jobcard
+            if ($jobcard) {
+                /*****************************
+                 *   SEND NOTIFICATIONS      *
+                 *****************************/
+
+                //  $auth_user->notify(new JobcardApproved($jobcard));
+
+                /*****************************
+                 *   RECORD ACTIVITY         *
+                 *****************************/
+
+                //  Record activity of jobcard approved
+                $status = 'updated lifecycle stage';
+                $jobcardApprovedActivity = oq_saveActivity($jobcard, $auth_user, $status, $stageData);
+
+                //  re-retrieve the instance to get all of the fields in the table.
+                $jobcard = $jobcard->fresh();
+
+                //  Action was executed successfully
+                return ['success' => true, 'response' => $jobcard];
+            } else {
+                //  No resource found
+                return ['success' => false, 'response' => oq_api_notify_no_resource()];
+            }
+        } catch (\Exception $e) {
+            //  Log the error
+            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+            //  Return the error response
+            return ['success' => false, 'response' => $response];
+        }
+    }
+
+    public function initiateUndoLifecycleProgress($jobcard_id, $stage_id)
+    {
+        //  Current authenticated user
+        $auth_user = auth('api')->user();
+
+        /****************************************************************
+         *   CHECK IF USER HAS PERMISSION TO UPDATE JOBCARD LIFECYCLE   *
+         ***************************************************************/
+
+        $stageData = array('id' => $stage_id);
+
+        try {
+            //  Get the jobcard
+            $jobcard = $this->where('id', $jobcard_id)->first();
+
+            //  Check if we have an jobcard
+            if ($jobcard) {
+                /*****************************
+                 *   SEND NOTIFICATIONS      *
+                 *****************************/
+
+                //  $auth_user->notify(new JobcardApproved($jobcard));
+
+                /*****************************
+                 *   RECORD ACTIVITY         *
+                 *****************************/
+
+                //  Record activity of jobcard approved
+                $status = 'reversed lifecycle stage';
+                $jobcardApprovedActivity = oq_saveActivity($jobcard, $auth_user, $status, $stageData);
+
+                //  re-retrieve the instance to get all of the fields in the table.
+                $jobcard = $jobcard->fresh();
+
+                //  Action was executed successfully
+                return ['success' => true, 'response' => $jobcard];
+            } else {
+                //  No resource found
+                return ['success' => false, 'response' => oq_api_notify_no_resource()];
+            }
+        } catch (\Exception $e) {
+            //  Log the error
+            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+            //  Return the error response
+            return ['success' => false, 'response' => $response];
+        }
+    }
+
     /*  summarize() method:
      *
      *  This is used to limit the information of an quotation to very specific
