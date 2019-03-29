@@ -95,7 +95,7 @@ Route::get('jobcards/{jobcard_id}/lifecycle', 'Api\JobcardController@getLifecycl
 Route::post('jobcards/{jobcard_id}/lifecycle', 'Api\JobcardController@updateLifecycle');
 Route::post('jobcards/{jobcard_id}/addLifecycle', 'Api\JobcardController@addLifecycle');
 Route::post('jobcards/{jobcard_id}/lifecycle/stages', 'Api\JobcardController@updateLifecycleProgress');
-Route::post('jobcards/{jobcard_id}/lifecycle/stages/{stage_id}/undo', 'Api\JobcardController@undoLifecycleProgress');
+Route::post('jobcards/{jobcard_id}/lifecycle/stages/undo', 'Api\JobcardController@undoLifecycleProgress');
 
 /*   DIRECTORY RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete

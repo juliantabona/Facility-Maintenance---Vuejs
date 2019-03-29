@@ -22,8 +22,9 @@ trait JobcardTraits
         $config = array_merge($defaults, $options);
 
         //  If we overide using the request
-        if (request('paginate') == 0 || request('paginate') == 1) {
-            $config['paginate'] = request('paginate') == 1 ? true : false;
+        $requestPagination = request('paginate');
+        if (isset($config) && ($requestPagination == 0 || $requestPagination == 1)) {
+            $config['paginate'] = $requestPagination == 1 ? true : false;
         }
 
         //  Current authenticated user
@@ -286,7 +287,7 @@ trait JobcardTraits
         }
     }
 
-    public function initiateUndoLifecycleProgress($jobcard_id, $stage_id)
+    public function initiateUndoLifecycleProgress($jobcard_id)
     {
         //  Current authenticated user
         $auth_user = auth('api')->user();
@@ -295,7 +296,12 @@ trait JobcardTraits
          *   CHECK IF USER HAS PERMISSION TO UPDATE JOBCARD LIFECYCLE   *
          ***************************************************************/
 
-        $stageData = array('id' => $stage_id);
+        if (request('stage')) {
+            $stageData = array(
+                'type' => request('stage')['type'],
+                'instance' => request('stage')['instance'],
+            );
+        }
 
         try {
             //  Get the jobcard

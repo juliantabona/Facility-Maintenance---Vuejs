@@ -53,6 +53,29 @@
     #breadcrumb >>> li.active span:after {
     border-left-color: #19be6b;
     }
+
+    #breadcrumb >>> li.warning span {
+    background-color: #f90;
+    }
+    #breadcrumb >>> li.warning span:before {
+    border-color: #f90;
+    border-left-color: transparent;
+    }
+    #breadcrumb >>> li.warning span:after {
+    border-left-color: #f90;
+    }
+
+    #breadcrumb >>> li.danger span {
+    background-color: #ed4014;
+    }
+    #breadcrumb >>> li.danger span:before {
+    border-color: #ed4014;
+    border-left-color: transparent;
+    }
+    #breadcrumb >>> li.danger span:after {
+    border-left-color: #ed4014;
+    }
+
     #breadcrumb >>> li:first-child span {
     padding-left: 15px;
     -moz-border-radius: 4px 0 0 4px;
@@ -136,14 +159,13 @@
 
                 <ul v-if="(localJobcard.lifecycle.stages || {}).length" id="breadcrumb">
                     <li v-for="(stage, i) in localJobcard.lifecycle.stages" 
-                        :class="isActiveStage(stage) || (stage.type == 'open' && localJobcard.has_approved) ? 'active': ''"
+                        :class="determineStageColor(stage)"
                         @mouseover="popTipTitle = stage.description"
-                        @click="updateSelectedStage(stage)"
                         :style="{ position: 'relative' }">
                         
                         <div>
                             <span>{{ stage.name }}</span>
-                            <Icon v-if="isActiveStage(stage)" 
+                            <Icon v-if="canShowCheckmark(stage)" 
                                     class="checkmark" type="ios-checkmark-circle-outline" />
                         </div>
 
@@ -152,15 +174,16 @@
                 
             </Poptip>
             
-            <div v-for="(stage, i) in localJobcard.lifecycle.stages" :key="i"
+            <div v-for="(stage, i_1) in localJobcard.lifecycle.stages" :key="i_1"
                  class="float-left mt-1 ml-2">
                  
-                <Select v-if="isActiveStage(stage) && ( dropdownOptions(stage) ).length && !isActiveStage(localJobcard.lifecycle.stages[i + 1])"
+                <Select v-if="isActiveStage(stage) && 
+                              ( dropdownOptions(stage, i_1) ).length && !isActiveStage(localJobcard.lifecycle.stages[i_1 + 1])"
                         v-model="selectedTriggerName" style="width:150px"
                         @on-change="handleTrigger(stage)"
                         :key="selectedTriggerRenderKey"
                         placeholder="Next step">
-                    <Option v-for="(option, i) in dropdownOptions(stage)" :key="i"
+                    <Option v-for="(option, i_2) in dropdownOptions(stage, i_1)" :key="i_2"
                             :class="option.divider ? 'border-bottom' : ''" 
                             :value="option.triggerName">
                             <Icon v-if="option.icon" :type="option.icon" :size="20" class="mr-1"/>
@@ -217,6 +240,28 @@
             }
         },
         methods: {
+            canShowCheckmark(stage){
+
+                var stageData = this.getJobStartedTemplate(stage)
+
+                if( this.isActiveStage(stage) && !stageData.pending_status && !stageData.cancelled_status ){
+                    return true;
+                }
+
+                return false;
+            },
+            determineStageColor(stage){
+
+                var stageData = this.getJobStartedTemplate(stage)
+
+                if( (stageData.cancelled_status || false) ){
+                    return 'danger';
+                }else if( (stageData.pending_status || false) ){
+                    return 'warning';
+                }else if( this.isActiveStage(stage) || (stage.type == 'open' && this.localJobcard.has_approved) ? 'active': '' ){
+                    return 'active';
+                }
+            },
             updateJobcardLifecycle(updatedJobcard){
                 //  Update lifecycle stages
                 this.localJobcard.lifecycle_stages = updatedJobcard.lifecycle_stages;
@@ -272,72 +317,76 @@
                 }
                 
             },
-            dropdownOptions(stage){
-                var options = [];
+            dropdownOptions(stage, stageIndex){
+                var stageData, nextStage, notifyClientText, options = [];
+            
+                //  Get the data associated with this step
+                stageData = this.getStageData(stage);
+                nextStage = this.localJobcard.lifecycle.stages[stageIndex + 1];
                 
                 if( stage.type == 'open' ){
-                    options = [{
-                                name: 'Next Step',
-                                triggerName: 'next_step',
-                                icon:'ios-redo-outline',
-                                divider:false
-                              }];
+
+                    options.push({ name: 'Proceed to ' + (nextStage || {}).name, triggerName: 'next_step', icon:'ios-redo-outline', divider:false });
+
                 }else if( stage.type == 'payment' ){
-                    options = [{
-                                name: 'Next Step',
-                                triggerName: 'next_step',
-                                icon:'ios-redo-outline',
-                                divider:false
-                              },{
-                                name: 'Undo ' + stage.name,
-                                triggerName: 'undo_payment',
-                                icon:'ios-undo-outline',
-                                divider:true
-                              },{
-                                name: 'Notify Client',
-                                triggerName: 'notify_payment',
-                                icon:'ios-chatboxes-outline',
-                                divider:false
-                              }];
+                    
+                    options.push({ name: 'Proceed to ' + (nextStage || {}).name, triggerName: 'next_step', icon:'ios-redo-outline', divider:false });
+                                        
+                    options.push({ name: 'Undo ' + stage.name, triggerName: 'undo_payment', icon:'ios-undo-outline', divider:true });
+                              
+                    options.push({ name: 'Notify Client', triggerName: 'notify_payment', icon:'ios-chatboxes-outline', divider:false });
+
                 }else if( stage.type == 'job_started' ){
-                    options = [{
-                                name: 'Next Step',
-                                triggerName: 'next_step',
-                                icon:'ios-redo-outline',
-                                divider:false
-                              },{
-                                name: 'Undo ' + stage.name,
-                                triggerName: 'undo_job_started',
-                                icon:'ios-undo-outline',
-                                divider:true
-                              },{
-                                name: 'Set Job To Pending',
-                                triggerName: 'pending_job_started',
-                                icon:'ios-time-outline',
-                                divider:false
-                              },{
-                                name: 'Cancel Job Completely',
-                                triggerName: 'cancel_job_started',
-                                icon:'ios-hand-outline',
-                                divider:true
-                              },{
-                                name: 'Notify Client',
-                                triggerName: 'notify_payment',
-                                icon:'ios-chatboxes-outline',
-                                divider:false
-                              }];
+
+                    if( !stageData.pending_status && !stageData.cancelled_status ){
+                        //  Option to move to the next stage
+                        options.push({ name: 'Proceed to ' + (nextStage || {}).name, triggerName: 'next_step', icon:'ios-redo-outline', divider:false });
+                    }
+
+                    if( !stageData.pending_status && !stageData.cancelled_status ){
+                        //  Option to undo
+                        options.push({ name: 'Undo ' + stage.name, triggerName: 'undo_job_started', icon:'ios-undo-outline', divider:true });
+                    }
+
+                    if( !stageData.cancelled_status ){
+
+                        if( stageData.pending_status ){
+                            //  Option to set the job to pending
+                            options.push({ name: 'Resume Job', triggerName: 'reverse_pending_job', icon:'ios-repeat', divider:false });
+                        }else{
+                            //  Option to set the job to pending
+                            options.push({ name: 'Set Job To Pending', triggerName: 'pending_job_started', icon:'ios-time-outline', divider:false });      
+                        }
+
+                    }
+
+                    if( stageData.cancelled_status ){
+                        //  Option to reverse a cancelled job
+                        options.push({ name: 'Re-open Job', triggerName: 'reverse_cancel_job', icon:'ios-repeat', divider:true });
+                    }else{
+                        //  Option to set the job to cancelled
+                        options.push({ name: 'Cancel Job Completely', triggerName: 'cancel_job_started', icon:'ios-hand-outline', divider:true });
+                    }
+
+                    //  Notify Client Text
+
+                    if( stageData.cancelled_status ){
+                        notifyClientText = 'Notify Client (Job Cancelled)';
+                    }else if( stageData.pending_status ){
+                        notifyClientText = 'Notify Client (Job Pending)';
+                    }else{
+                        notifyClientText = 'Notify Client (Job Started)';
+                    }
+
+                    //  Option to notify client on progress
+                    options.push({ name: notifyClientText, triggerName: 'notify_payment', icon:'ios-chatboxes-outline', divider:false });
+                              
                 }else if( stage.type == 'closed' ){
-                    options = [{
-                                name: 'Undo Close',
-                                triggerName: 'undo_close',
-                                icon:'ios-undo-outline',
-                                divider:false
-                              },{
-                                name: 'Notify client',
-                                triggerName: 'notify_payment',
-                                icon:'ios-chatboxes-outline',
-                                divider:false
-                              }];
+                    
+                    options.push({ name: 'Undo Close', triggerName: 'undo_close', icon:'ios-undo-outline', divider:false });
+
+                    options.push({ name: 'Notify client', triggerName: 'notify_payment', icon:'ios-chatboxes-outline', divider:false });
+
                 }
                 return options;
             },
@@ -351,21 +400,22 @@
                     this.localSelectedStage = this.getClosedTemplate(stage);
                 }
 
-                this.isOpenUpdateLifecycleStageModal = true;
+                return this.localSelectedStage;
+
             },
             getDepositPaidTemplate(stage){
                 
-                var stageData = this.getStageData(stage);
+                var stageData = this.getStageAsRecentActivity(stage);
                 
                 var template = 
                         {   
                             type: stage.type, 
                             instance: stage.instance, 
-                            updated_stage_id: (stageData || {}).updated_stage_id || null,   
-                            linked_invoice_id: (stageData || {}).linked_invoice_id,
-                            currency_type: (stageData || {}).currency_type,
-                            payment_amount: (stageData || {}).payment_amount,
-                            payment_method: (stageData || {}).payment_method,
+                            updated_stage_id: ((stageData || {}).activity || {}).updated_stage_id || (stageData || {}).id || null,   
+                            linked_invoice_id: ((stageData || {}).activity || {}).linked_invoice_id,
+                            currency_type: ((stageData || {}).activity || {}).currency_type,
+                            payment_amount: ((stageData || {}).activity || {}).payment_amount,
+                            payment_method: ((stageData || {}).activity || {}).payment_method,
                             full_payment: false
                         }
 
@@ -383,6 +433,9 @@
                             linked_staff_ids: (stageData || {}).linked_staff_ids,
                             date_started: (stageData || {}).date_started,
                             time_started: (stageData || {}).time_started,
+                            pending_status: (stageData || {}).pending_status || false,
+                            cancelled_status: (stageData || {}).cancelled_status || false,
+                            notified_client_status: (stageData || {}).cancelled_status || false,
                     }
 
                 return template;
@@ -399,10 +452,10 @@
                 return template;
             },
             handleTrigger(stage){
-
+                
                 if( stage ){
                     
-                    let stageData = null;
+                    let stageData = this.updateSelectedStage(stage);
 
                     let stageId = ( this.getStageAsRecentActivity(stage) || {}).id;
 
@@ -417,7 +470,7 @@
                     if( triggerName ==  'undo_payment' || triggerName ==  'undo_job_started' || triggerName ==  'undo_close'){
                        if(stageId){
                             makeApi = true;
-                            var url = '/api/jobcards/' + this.localJobcard.id + '/lifecycle/stages/'+stageId+'/undo';
+                            var url = '/api/jobcards/' + this.localJobcard.id + '/lifecycle/stages/undo';
                        }
                     }else if( triggerName ==  'next_step' ){
 
@@ -429,12 +482,47 @@
                                     this.localJobcard.lifecycle.stages[x].instance ==  stage.instance ){
 
                                         this.updateSelectedStage(this.localJobcard.lifecycle.stages[x + 1]);
+                                        this.isOpenUpdateLifecycleStageModal = true;
                                 
                                 }
                                 
                             }
 
                         }
+
+                    }else if( triggerName ==  'pending_job_started' ){
+                        
+                        stageData.pending_status = true;
+
+                        makeApi = true;
+                        var url = '/api/jobcards/' + this.localJobcard.id + '/lifecycle/stages';
+
+                    }else if( triggerName ==  'reverse_pending_job'){
+
+                        stageData.cancelled_status = false;
+                        stageData.pending_status = false;
+
+                        makeApi = true;
+                        var url = '/api/jobcards/' + this.localJobcard.id + '/lifecycle/stages';
+
+                    }else if( triggerName ==  'cancel_job_started' ){
+
+                        stageData.cancelled_status = true;
+
+                        makeApi = true;
+                        var url = '/api/jobcards/' + this.localJobcard.id + '/lifecycle/stages';         
+
+                    }else if( triggerName ==  'reverse_cancel_job'){
+
+                        stageData.cancelled_status = false;
+                        stageData.pending_status = false;
+
+                        makeApi = true;
+                        var url = '/api/jobcards/' + this.localJobcard.id + '/lifecycle/stages';
+
+                    }else if( triggerName ==  'notify_payment' ){
+
+                        
 
                     }
                     
@@ -444,6 +532,8 @@
 
                         //  Start loader
                         this.isSaving = true;
+
+                        stageData = { stage: stageData };
 
                         console.log('Attempt to handle jobcard lifecycle trigger...');
 

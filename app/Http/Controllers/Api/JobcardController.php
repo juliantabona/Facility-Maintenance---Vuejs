@@ -72,10 +72,10 @@ class JobcardController extends Controller
         return $response;
     }
 
-    public function undoLifecycleProgress($jobcard_id, $stage_id)
+    public function undoLifecycleProgress($jobcard_id)
     {
         //  Jobcard Instance
-        $data = ( new Jobcard() )->initiateUndoLifecycleProgress($jobcard_id, $stage_id);
+        $data = ( new Jobcard() )->initiateUndoLifecycleProgress($jobcard_id);
         $success = $data['success'];
         $response = $data['response'];
 

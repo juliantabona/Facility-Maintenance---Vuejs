@@ -281,8 +281,9 @@ class Jobcard extends Model
             foreach ($reversedLifecycleStages as $reversedStage) {
                 //  Check if the reversed update was created after the original/updated copy
                 if ($reversedStage->created_at->getTimestamp() > $originalStage->created_at->getTimestamp()) {
-                    //  Check if the update target id is the same as the original stage id
-                    if ($reversedStage['activity']['id'] == $originalStage['id']) {
+                    //  Check if the update target type and instance is the same as the original type and instance
+                    if ($reversedStage['activity']['type'] == $originalStage['activity']['type'] &&
+                        $reversedStage['activity']['instance'] == $originalStage['activity']['instance']) {
                         //  This means the original has been updated, therefore we need to update the original copy
                         $reversed = true;
                     }

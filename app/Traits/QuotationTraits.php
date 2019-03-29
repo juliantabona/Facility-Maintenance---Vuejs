@@ -45,8 +45,9 @@ trait QuotationTraits
         $config = array_merge($defaults, $options);
 
         //  If we overide using the request
-        if (request('paginate') == 0 || request('paginate') == 1) {
-            $config['paginate'] = request('paginate') == 1 ? true : false;
+        $requestPagination = request('paginate');
+        if (isset($config) && ($requestPagination == 0 || $requestPagination == 1)) {
+            $config['paginate'] = $requestPagination == 1 ? true : false;
         }
 
         //  Current authenticated user
