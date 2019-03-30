@@ -1,9 +1,9 @@
 <template>
 
     <span v-if="localQuotation">
-        <Poptip word-wrap width="200" trigger="hover" :content="status.description">
+        <Poptip word-wrap width="300" trigger="hover" :content="status.description">
             <Tag :style="{ 
-                maxWidth: '70px',
+                maxWidth: '100px',
                 background: status.color + '10 !important',
                 border: '1px solid '+status.color + ' !important'}">
                 <span :style="{ color: status.color }">{{ status.text }}</span>

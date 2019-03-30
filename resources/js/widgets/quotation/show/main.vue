@@ -437,7 +437,7 @@
                     });
                 }
 
-                this.client = this.localQuotation.customized_client_details = newClient;
+                this.client = this.$set(this.localQuotation, 'customized_client_details', newClient);
                 
                 this.quotationHasChanged = this.checkIfquotationHasChanged();
 
@@ -445,7 +445,7 @@
 
             updateClient(newClientDetails){
 
-                this.client = this.localQuotation.customized_client_details = newClientDetails;
+                this.client = this.$set(this.localQuotation, 'customized_client_details', newClientDetails);
 
                 this.quotationHasChanged = this.checkIfquotationHasChanged();
 
@@ -736,7 +736,7 @@
                         //  Fetch the associated client if specified
                         var self = this;
                         this.fetchCompanyInfo(this.$route.query.clientId).then( data => {
-                            self.client = self.localQuotation.customized_client_details = data;
+                            self.client = self.$set(self.localQuotation, 'customized_client_details', data);
                         });
                     }
                     

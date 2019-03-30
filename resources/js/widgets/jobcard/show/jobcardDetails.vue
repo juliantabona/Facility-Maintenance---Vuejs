@@ -179,10 +179,6 @@
                     
                     <Row :gutter="20" class="mb-1">
 
-                        <Col v-if="localEditMode" :span="24" class="mt-1 mb-2">
-                            <Alert>This jobcard is now editable.</Alert>
-                        </Col>
-
                         <Col :span="24">
                             <!-- Title -->
                             <el-form-item label="Title:" prop="title" class="mb-2">
@@ -221,8 +217,31 @@
                                 <prioritySelector
                                     modelType="jobcard" 
                                     :selectedPriority="localJobcard.priority"
-                                    @updated:priority="localJobcard.priority = $event">
+                                    @updated:priority="$set(localJobcard, 'priority', $event)">
                                 </prioritySelector>
+                            </el-form-item>
+
+                            <!-- Assigned Staff -->
+                            <el-form-item label="Assigned Staff" prop="staff" class="mb-2">
+                                <assignedStaffSelector
+                                    :selectedStaff="localJobcard.assigned_staff"
+                                    :tracker="localCreateMode ? 1 : 0"
+                                    @updated:staff="$set(localJobcard, 'assigned_staff', $event)">
+                                </assignedStaffSelector>
+                            </el-form-item>
+
+                        </Col>
+
+                        <Col :span="12">
+  
+                          <!-- Categories -->
+                            <el-form-item label="Categories" prop="categories" class="mb-2">
+                                <categorySelector
+                                    modelType="jobcard" 
+                                    :selectedCategory="localJobcard.categories"
+                                    :tracker="localCreateMode ? 1 : 0"
+                                    @updated:category="$set(localJobcard, 'categories', $event)">
+                                </categorySelector>
                             </el-form-item>
 
                             <!-- Cost Centers -->
@@ -230,29 +249,11 @@
                                 <costcenterSelector
                                     modelType="jobcard" 
                                     :selectedCostCenter="localJobcard.costcenters"
-                                    @updated:costcenter="localJobcard.costcenters = $event">
+                                    :tracker="localCreateMode ? 1 : 0"
+                                    @updated:costcenter="$set(localJobcard, 'costcenters', $event)">
                                 </costcenterSelector>
                             </el-form-item>
 
-                            <!-- Assigned Staff -->
-                            <el-form-item label="Assigned Staff" prop="staff" class="mb-2">
-                                <assignedStaffSelector
-                                    :selectedStaff="localJobcard.assigned_staff"
-                                    @updated:staff="localJobcard.assigned_staff = $event">
-                                </assignedStaffSelector>
-                            </el-form-item>
-
-                        </Col>
-
-                        <Col :span="12">
-                            <!-- Categories -->
-                            <el-form-item label="Categories" prop="categories" class="mb-2">
-                                <categorySelector
-                                    modelType="jobcard" 
-                                    :selectedCategory="localJobcard.categories"
-                                    @updated:category="localJobcard.categories = $event">
-                                </categorySelector>
-                            </el-form-item>
                         </Col>
 
                     </Row>
@@ -301,6 +302,10 @@
                 type: Boolean,
                 default: false
             },
+            createMode: {
+                type: Boolean,
+                default: false
+            },
             jobcardId: { 
                 type: Number,
                 default: null
@@ -337,7 +342,8 @@
                     //  VALIDATION RULES
 
                 },
-                localEditMode: this.editMode
+                localEditMode: this.editMode,
+                localCreateMode: this.createMode
             }
         },
         watch: {
@@ -362,6 +368,16 @@
 
                     //  Update the edit mode value
                     this.localEditMode = val;
+                
+                }
+            },
+
+            //  Watch for changes on the create mode value
+            createMode: {
+                handler: function (val, oldVal) {
+
+                    //  Update the create mode value
+                    this.localCreateMode = val;
                 
                 }
             }

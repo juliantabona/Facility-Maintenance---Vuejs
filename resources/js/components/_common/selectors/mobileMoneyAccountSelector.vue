@@ -66,8 +66,11 @@
                 //  Additional data to eager load along with each mobile money account found
                 var connections = '';
 
+                //  Settings to prevent pagination
+                var pagination = (connections ? '&': '') + 'paginate=0';
+
                 //  Use the api call() function located in resources/js/api.js
-                api.call('get', '/api/companies/'+this.user.company_id+'/wallets'+connections)
+                api.call('get', '/api/companies/'+this.user.company_id+'/wallets?'+connections+pagination)
                     .then(({data}) => {
                         
                         console.log(data);

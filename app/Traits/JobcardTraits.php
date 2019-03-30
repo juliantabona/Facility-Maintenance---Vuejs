@@ -2,6 +2,8 @@
 
 namespace App\Traits;
 
+use DB;
+use App\Company;
 use App\Notifications\JobcardApproved;
 
 trait JobcardTraits
@@ -23,7 +25,7 @@ trait JobcardTraits
 
         //  If we overide using the request
         $requestPagination = request('paginate');
-        if (isset($config) && ($requestPagination == 0 || $requestPagination == 1)) {
+        if (isset($requestPagination) && ($requestPagination == 0 || $requestPagination == 1)) {
             $config['paginate'] = $requestPagination == 1 ? true : false;
         }
 
@@ -173,6 +175,171 @@ trait JobcardTraits
         }
     }
 
+    /*  initiateCreate() method:
+     *
+     *  This is used to create a new invoice. It also works
+     *  to store the creation activity and broadcasting of
+     *  notifications to users concerning the creation of
+     *  the invoice.
+     *
+     */
+    public function initiateCreate($template = null)
+    {
+        //  Current authenticated user
+        $auth_user = auth('api')->user();
+
+        /*
+         *  The $invoice is a collection of the jobcard to be stored.
+         */
+        $jobcard = request('jobcard');
+
+        /*******************************************************
+         *   CHECK IF USER HAS PERMISSION TO CREATE INVOICE    *
+         ******************************************************/
+
+        /*********************************************
+         *   VALIDATE INVOICE INFORMATION            *
+         ********************************************/
+
+        //  Create a template to hold the invoice details
+        $template = $template ?? [
+             // 'client_id', 'client_type', 'is_public',
+
+            'title' => $jobcard['title'],
+            'description' => $jobcard['description'],
+            'start_date' => $jobcard['start_date'],
+            'end_date' => $jobcard['end_date'],
+            'client_id' => $jobcard['client_id'],
+            'client_type' => $jobcard['client_model_type'],
+            'company_branch_id' => $auth_user->company_branch_id,
+            'company_id' => $auth_user->company_id,
+        ];
+
+        try {
+            //  Create the jobcard
+            $jobcard = $this->create($template);
+
+            //  If the jobcard was created successfully
+            if ($jobcard) {
+                //  Save the priority
+                $jobcard->priority()->sync($jobcard['priority']);
+
+                //  Start with an empty priority, categories, costcenters, assigned_staff
+                $priority = [];
+                $categories = [];
+                $costcenters = [];
+                $assignedStaff = [];
+
+                //  Foreach of the priority
+                foreach (request('jobcard')['priority'] as $key => $id) {
+                    //  Store with the following details corresponding to the priority table columns
+                    $priority[$key] = [
+                        'priority_id' => $id,
+                        'trackable_id' => $jobcard->id,
+                        'trackable_type' => 'jobcard',
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ];
+                }
+
+                $priority = DB::table('priority_allocations')->insert($priority);
+
+                //  Foreach of the category
+                foreach (request('jobcard')['categories'] as $key => $id) {
+                    //  Store with the following details corresponding to the category table columns
+                    $categories[$key] = [
+                        'category_id' => $id,
+                        'trackable_id' => $jobcard->id,
+                        'trackable_type' => 'jobcard',
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ];
+                }
+
+                $categories = DB::table('category_allocations')->insert($categories);
+
+                //  Foreach of the costcenter
+                foreach (request('jobcard')['costcenters'] as $key => $id) {
+                    //  Store with the following details corresponding to the costcenter table columns
+                    $costcenters[$key] = [
+                        'cost_center_id' => $id,
+                        'trackable_id' => $jobcard->id,
+                        'trackable_type' => 'jobcard',
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ];
+                }
+
+                $costcenters = DB::table('costcenter_allocations')->insert($costcenters);
+
+                //  Foreach of the costcenter
+                foreach (request('jobcard')['assigned_staff'] as $key => $id) {
+                    //  Store with the following details corresponding to the assigned staff table columns
+                    $assignedStaff[$key] = [
+                        'user_id' => $id,
+                        'trackable_id' => $jobcard->id,
+                        'trackable_type' => 'jobcard',
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ];
+                }
+
+                $assignedStaff = DB::table('staff_allocations')->insert($assignedStaff);
+
+                //  Get default lifecycle
+                $defaultLifecycle = $jobcard->owningCompany->lifecycles()->where('type', 'jobcard')->first();
+
+                //  Add default lifecycle to jobcard
+                if (count($defaultLifecycle)) {
+                    $lifecycle = DB::table('lifecycle_allocations')->insert([
+                            'lifecycle_id' => $defaultLifecycle->id,
+                            'trackable_id' => $jobcard->id,
+                            'trackable_type' => 'jobcard',
+                            'created_at' => date('Y-m-d H:i:s'),
+                            'updated_at' => date('Y-m-d H:i:s'),
+                        ]);
+                }
+
+                /*****************************
+                 *   SEND NOTIFICATIONS      *
+                 *****************************/
+
+                //$auth_user->notify(new JobcardCreated($jobcard));
+
+                //  re-retrieve the instance to get all of the fields in the table.
+                $jobcard = $jobcard->fresh();
+
+                //  If we have any jobcards so far
+                if (count($jobcard)) {
+                    //  Eager load other relationships wanted if specified
+                    if (strtolower(request('connections'))) {
+                        $jobcard->load(oq_url_to_array(strtolower(request('connections'))));
+                    }
+                }
+
+                /*****************************
+                 *   RECORD ACTIVITY         *
+                 *****************************/
+
+                //  Record activity of jobcard created
+                $status = 'created';
+                $jobcardCreatedActivity = oq_saveActivity($jobcard, $auth_user, $status, ['jobcard' => $jobcard->summarize()]);
+
+                //  Action was executed successfully
+                return ['success' => true, 'response' => $jobcard];
+            } else {
+                //  No resource found
+                return ['success' => false, 'response' => oq_api_notify_no_resource()];
+            }
+        } catch (\Exception $e) {
+            //  Log the error
+            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+            //  Return the error response
+            return ['success' => false, 'response' => $response];
+        }
+    }
+
     /*  initiateApprove() method:
      *
      *  This is used to approve an existing jobcard. It also works
@@ -201,6 +368,14 @@ trait JobcardTraits
                  *****************************/
 
                 //  $auth_user->notify(new JobcardApproved($jobcard));
+
+                //  If we have any jobcards so far
+                if (count($jobcard)) {
+                    //  Eager load other relationships wanted if specified
+                    if (strtolower(request('connections'))) {
+                        $jobcard->load(oq_url_to_array(strtolower(request('connections'))));
+                    }
+                }
 
                 /*****************************
                  *   RECORD ACTIVITY         *
@@ -261,6 +436,17 @@ trait JobcardTraits
 
                 //  $auth_user->notify(new JobcardApproved($jobcard));
 
+                //  re-retrieve the instance to get all of the fields in the table.
+                $jobcard = $jobcard->fresh();
+
+                //  If we have any jobcards so far
+                if (count($jobcard)) {
+                    //  Eager load other relationships wanted if specified
+                    if (strtolower(request('connections'))) {
+                        $jobcard->load(oq_url_to_array(strtolower(request('connections'))));
+                    }
+                }
+
                 /*****************************
                  *   RECORD ACTIVITY         *
                  *****************************/
@@ -268,9 +454,6 @@ trait JobcardTraits
                 //  Record activity of jobcard approved
                 $status = 'updated lifecycle stage';
                 $jobcardApprovedActivity = oq_saveActivity($jobcard, $auth_user, $status, $stageData);
-
-                //  re-retrieve the instance to get all of the fields in the table.
-                $jobcard = $jobcard->fresh();
 
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $jobcard];
@@ -315,6 +498,17 @@ trait JobcardTraits
 
                 //  $auth_user->notify(new JobcardApproved($jobcard));
 
+                //  re-retrieve the instance to get all of the fields in the table.
+                $jobcard = $jobcard->fresh();
+
+                //  If we have any jobcards so far
+                if (count($jobcard)) {
+                    //  Eager load other relationships wanted if specified
+                    if (strtolower(request('connections'))) {
+                        $jobcard->load(oq_url_to_array(strtolower(request('connections'))));
+                    }
+                }
+
                 /*****************************
                  *   RECORD ACTIVITY         *
                  *****************************/
@@ -322,9 +516,6 @@ trait JobcardTraits
                 //  Record activity of jobcard approved
                 $status = 'reversed lifecycle stage';
                 $jobcardApprovedActivity = oq_saveActivity($jobcard, $auth_user, $status, $stageData);
-
-                //  re-retrieve the instance to get all of the fields in the table.
-                $jobcard = $jobcard->fresh();
 
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $jobcard];

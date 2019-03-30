@@ -22,7 +22,7 @@ class CostCenterAllocation extends Model
      * @var array
      */
     protected $fillable = [
-         'costcenter_id',
+         'cost_center_id',
     ];
 
     public function trackable()

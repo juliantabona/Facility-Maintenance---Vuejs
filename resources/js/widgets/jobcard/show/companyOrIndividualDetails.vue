@@ -192,7 +192,7 @@
             profile: {
                 handler: function (val, oldVal) {
                     if( !_.isEqual(val, this.localProfile) ){
-
+                        
                         this.localProfile = val;
                         
                         //  Update phones to show/hide

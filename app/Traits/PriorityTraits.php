@@ -21,7 +21,7 @@ trait PriorityTraits
 
         //  If we overide using the request
         $requestPagination = request('paginate');
-        if (isset($config) && ($requestPagination == 0 || $requestPagination == 1)) {
+        if (isset($requestPagination) && ($requestPagination == 0 || $requestPagination == 1)) {
             $config['paginate'] = $requestPagination == 1 ? true : false;
         }
 

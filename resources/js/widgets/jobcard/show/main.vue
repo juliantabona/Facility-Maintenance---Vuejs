@@ -24,7 +24,7 @@
 <template>
 
     <div id="jobcard-widget">
-
+        <full-calendar :events="events"></full-calendar>
         <!-- Get the summary header to display the jobcard #, status, due date, amount due and menu options -->
         <overview 
             v-if="!createMode && localJobcard.has_approved"
@@ -35,7 +35,7 @@
         </overview>
 
         <!-- Loaders for creating/saving jobcard -->
-        <Row>
+        <Row v-if="!createMode">
             <Col :span="24">
                 <div v-if="isCreatingJobcard" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Creating, please wait...</div>
                 <div v-if="isSavingJobcard" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Saving, please wait...</div>
@@ -148,12 +148,12 @@
                 </Col>
             </Row>
 
-            <Row key="jobcard_lifecycle" class="animated">
+            <Row v-if="!createMode && localJobcard.has_approved" key="jobcard_lifecycle" class="animated">
                 
                 <Col span="24" class="mb-2">
 
                     <!-- Jobcard Lifecycle -->
-                    <jobcardLifecycle :jobcard="localJobcard" ></jobcardLifecycle>
+                    <jobcardLifecycle :jobcard="localJobcard" @updated:lifecycle="updateJobcard($event)"></jobcardLifecycle>
 
                 </Col>
 
@@ -259,6 +259,7 @@
                                 <!-- Create/Edit Jobcard -->
                                 <jobcardWidget 
                                     :editMode="editMode"
+                                    :createMode="createMode"
                                     :jobcardId="null"
                                     v-bind:jobcard.sync="localJobcard"
                                     @update:jobcard="localJobcard = $event"
@@ -271,13 +272,14 @@
                                     @created:jobcard=""
                                     @updated:jobcard="">
                                 </jobcardWidget>
-
+                                
                             </Col>
 
                         </Row>
 
                     </Card>
                 </Col>
+                
             </Row>
 
         </transition-group>
@@ -288,6 +290,8 @@
 
 <script>
 
+    import { FullCalendar } from 'vue-full-calendar';
+    import 'fullcalendar/dist/fullcalendar.css';
 
     /*  Local components    */
     import overview from './overview.vue';
@@ -321,6 +325,9 @@
 
     export default {
         components: { 
+
+            FullCalendar,
+
             overview, steps, mainHeader, jobcardWidget,
             basicButton, toggleSwitch, editModeSwitch,
             Loader, IconAndCounterCard, companyOrIndividualDetails,
@@ -329,7 +336,19 @@
         props: {
             jobcard: {
                 type: Object,
-                default: null
+                default: function () { 
+                    return {
+                        title: '',
+                        description: '',
+                        start_date: '',
+                        end_date: '',
+                        priority: [],
+                        categories: [],
+                        costcenters: [],
+                        assigned_staff: [],
+                        client: null,
+                    }
+                }
             },
             showMenuBtn: {
                 type: Boolean,
@@ -350,6 +369,29 @@
         },
         data(){
             return {
+
+                events: [
+                    {
+                        title  : 'Repair of vehicle',
+                        start  : '2019-03-30',
+                        backgroundColor:'#2d8cf0',
+                        textColor:'#fff'
+                    },
+                    {
+                        title  : 'event2',
+                        start  : '2019-03-30',
+                        end    : '2019-04-05',
+                        backgroundColor:'#2d8cf0',
+                        textColor:'#fff'
+                    },
+                    {
+                        title  : 'event3',
+                        start  : '2010-01-09T12:30:00',
+                        allDay : false,
+                        backgroundColor:'#2d8cf0',
+                        textColor:'#fff'
+                    },
+                ],
 
                 user: auth.user,
 
@@ -381,6 +423,15 @@
             }
         },
         methods: {
+            updateJobcard(jobcard){
+                //  Update the jobcard
+                this.localJobcard = jobcard;
+
+                //  Store the current state of the jobcard as the original jobcard
+                this.storeOriginalJobcard();
+                
+                this.jobcardHasChanged = this.checkIfjobcardHasChanged();
+            },
             toggleEditMode(activate = true){
 
                 var self = this,
@@ -413,7 +464,7 @@
             },
             activateCreateMode: function(){
                 //  Activate edit mode
-                self.editMode = true;
+                this.editMode = true;
             },
             changeClient(newClient){
 
@@ -428,14 +479,14 @@
                     });
                 }
 
-                this.client = this.localJobcard.client = newClient;
+                this.client = this.$set(this.localJobcard, 'client', newClient);
                 
                 this.jobcardHasChanged = this.checkIfjobcardHasChanged();
 
             },
             updateClient(newClientDetails){
 
-                this.client = this.localJobcard.client = newClientDetails;
+                this.client = this.$set(this.localJobcard, 'client', newClientDetails);
 
                 this.jobcardHasChanged = this.checkIfjobcardHasChanged();
 
@@ -473,19 +524,19 @@
                 var self = this;
 
                 //  Start loader
-                self.isSavingJobcard = true;
+                this.isSavingJobcard = true;
 
                 console.log('Attempt to save jobcard...');
 
-                console.log( self.localJobcard );
+                console.log( this.localJobcard );
 
                 //  Form data to send
-                let jobcardData = { jobcard: self.localJobcard };
+                let jobcardData = { jobcard: this.localJobcard };
 
                 console.log(jobcardData);
                 
                 //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/companies/'+self.localJobcard.id, jobcardData)
+                api.call('post', '/api/companies/'+this.localJobcard.id, jobcardData)
                     .then(({ data }) => {
 
                         //  Stop loader
@@ -514,19 +565,32 @@
                 var self = this;
 
                 //  Start loader
-                self.isCreatingJobcard = true;
+                this.isCreatingJobcard = true;
 
                 console.log('Attempt to create jobcard...');
 
-                console.log( self.localJobcard );
+                console.log( this.localJobcard );
 
                 //  Form data to send
-                let jobcardData = { jobcard: self.localJobcard };
+                let jobcardData = { 
+                        jobcard: {
+                            title: this.localJobcard.title,
+                            description: this.localJobcard.description,
+                            start_date: this.localJobcard.start_date,
+                            end_date: this.localJobcard.end_date,
+                            priority: this.localJobcard.priority.map( (priority) => { return priority.id } ),
+                            categories: this.localJobcard.categories.map( (category) => { return category.id } ),
+                            costcenters: this.localJobcard.costcenters.map( (costcenter) => { return costcenter.id } ),
+                            assigned_staff: this.localJobcard.assigned_staff.map( (staff) => { return staff.id } ),
+                            client_id: (this.localJobcard.client || {}).id,
+                            client_model_type: (this.localJobcard.client || {}).model_type
+                        }
+                 };
 
                 console.log(jobcardData);
 
                 //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/companies'+associatedModel, jobcardData)
+                api.call('post', '/api/jobcards', jobcardData)
                     .then(({ data }) => {
 
                         //  Stop loader
@@ -558,6 +622,8 @@
                         console.log('jobcardSummaryWidget.vue - Error creating jobcard...');
                         console.log(response);
                     });
+
+
             },
             updateJobcardData(newJobcard){
                 

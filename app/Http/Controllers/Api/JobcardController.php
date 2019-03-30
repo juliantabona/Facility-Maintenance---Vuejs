@@ -32,6 +32,26 @@ class JobcardController extends Controller
         return $response;
     }
 
+    public function store()
+    {
+        //  Jobcard Instance
+        $data = ( new Jobcard() )->initiateCreate();
+        $success = $data['success'];
+        $response = $data['response'];
+
+        //  If the jobcard was created successfully
+        if ($success) {
+            //  If this is a success then we have the jobcard
+            $jobcard = $response;
+
+            //  Action was executed successfully
+            return oq_api_notify($jobcard, 200);
+        }
+
+        //  If the data was not a success then return the response
+        return $response;
+    }
+
     public function approve($jobcard_id)
     {
         //  Jobcard Instance
@@ -404,119 +424,6 @@ class JobcardController extends Controller
 
         //  Action was executed successfully
         return oq_api_notify($suppliers, 200);
-    }
-
-    public function store(Request $request)
-    {
-        //  Current authenticated user
-        $user = auth('api')->user();
-
-        /*  Validate and Create the new jobcard and associated branch and upload related documents
-         *  [e.g logo, jobcard profile, other documents]. Update recent activities
-         *
-         *  @param $request - The request parameters used to create a new jobcard
-         *  @param $user - The user creating the jobcard
-         *
-         *  @return Validator - If validation failed
-         *  @return jobcard - If successful
-         */
-
-        //  Get the rules for validating a jobcard on creation
-        $rules = oq_jobcard_create_v_rules($user);
-
-        //  Customized error messages for validating a jobcard on creation
-        $messages = oq_jobcard_create_v_msgs($request);
-
-        // Now pass the input and rules into the validator
-        $validator = Validator::make($request->all(), $rules, $messages);
-
-        // Check to see if validation fails or passes
-        if ($validator->fails()) {
-            //  Notify the user that validation failed
-            oq_notify('Couldn\'t update jobcard, check your information!', 'danger');
-            //  Return back with errors and old inputs
-            return  ['failed_validation' => true, 'validator' => $validator->errors()];
-        }
-
-        foreach ($request->all() as $key => $value) {
-            $request[str_replace('jobcard_', '', $key)] = $value;
-            unset($request[$key]);
-        }
-
-        //  Create the jobcard
-        $jobcard = \App\Jobcard::create(
-            array_merge($request->all(), ['company_branch_id' => $user->company_branch_id])
-        );
-
-        //  Add the priority to the jobcard
-        if (!empty(request('priority'))) {
-            $jobcard->priority()->sync(request('priority'));
-        }
-
-        //  Add the categories to the jobcard
-        if (!empty(request('categories'))) {
-            $jobcard->categories()->sync(request('categories'));
-        }
-
-        //  Add the costcenters to the jobcard
-        if (!empty(request('costcenters'))) {
-            $jobcard->costCenters()->sync(request('costcenters'));
-        }
-
-        $status = 'created';
-
-        //  If the jobcard was created/updated successfully
-        if ($jobcard) {
-            //  re-retrieve the instance to get all of the fields in the table.
-            $jobcard = $jobcard->fresh();
-
-            //  Record activity of a jobcard created
-            $jobcardCreatedActivity = oq_saveActivity($jobcard, $status, $user, ['type' => 'created']);
-
-            //  Record activity of a jobcard authourized
-            $jobcardAuthourizedActivity = oq_saveActivity($jobcard, $status, $user, ['type' => 'authourized']);
-
-            //  Allocate the process form for tracking status
-            $companyId = $user->companyBranch->company->id;
-            if ($companyId) {
-                //  Get the Jobcard Form Template
-                $jobcardTemplate = FormTemplate::where('type', 'jobcard')->where('selected', '1')->where('company_id', $companyId)->first();
-
-                //  If we have a Form Template
-                if (count($jobcardTemplate)) {
-                    //  Allocate it to the jobcard to serve as the jobcard lifecycle
-                    $statusLifecycle = $jobcard->statusLifecycle()->create([
-                        'template' => $jobcardTemplate->form_template,
-                        'form_template_id' => $jobcardTemplate->id,
-                    ]);
-                }
-            }
-
-            /*  Allocate the process form for tracking status
-             *
-                $process = $jobcard->processInstructions()->create([
-                    'process_form' => Auth::user()->companyBranch->company->processForms()->where('selected', 1)->first()->instructions,
-                ]);
-             */
-
-            //  If we have the jobcard image and has been approved, then save it to Amazon S3 bucket
-            if ($request->hasFile('new_jobcard_image')) {
-                $document = oq_saveDocument($request, $jobcard, Input::file('new_jobcard_image'), 'jobcard_images', 'jobcard', $user);
-            }
-
-            //  Notify the user that the jobcard creation was successful
-            oq_notify('Jobcard '.$status.' successfully!', 'success');
-        } else {
-            //  Record activity of a failed jobcard during creation
-            $failType = ($status == 'created') ? 'create' : 'update';
-            $jobcardCreatedActivity = oq_saveActivity(null, 'jobcard '.$failType.' failed', $user);
-
-            //  Notify the user that the jobcard creation was unsuccessful
-            oq_notify('Something went wrong '.$status.' the jobcard. Please try again', 'warning');
-        }
-
-        //  return created jobcard
-        return oq_api_notify($jobcard, 201);
     }
 
     public function update(Request $request, $jobcard_id)

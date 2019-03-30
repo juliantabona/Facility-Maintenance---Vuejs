@@ -145,8 +145,11 @@
                 console.log('Attempt to approve jobcard...');
                 console.log( self.localJobcard );
 
+                //  Additional data to eager load along with the jobcard found
+                var connections = '?connections=lifecycle,priority,categories,costcenters,assignedStaff';
+
                 //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/jobcards/'+self.localJobcard.id+'/convert')
+                api.call('post', '/api/jobcards/'+self.localJobcard.id+'/convert'+connections)
                     .then(({ data }) => {
                         
                         console.log(data);

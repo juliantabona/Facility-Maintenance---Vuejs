@@ -79,11 +79,19 @@
 
                 console.log('Start getting existing phones...');
 
+                //  Get the status e.g) client, supplier, e.t.c
+                var modelId = this.modelId ? 'modelId='+this.modelId : '';
+                
+                var modelType = this.modelType ? 'modelType='+this.modelType : '';
+
                 //  Additional data to eager load along with each mobile money phone found
                 var connections = '';
 
+                //  Settings to prevent pagination
+                var pagination = (connections ? '&': '') + 'paginate=0';
+
                 //  Use the api call() function located in resources/js/api.js
-                api.call('get', '/api/phones?modelId='+this.modelId+'&modelType='+this.modelType)
+                api.call('get', '/api/phones?'+modelId+'&'+modelType+connections+pagination)
                     .then(({data}) => {
                         
                         console.log(data);

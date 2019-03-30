@@ -7,8 +7,6 @@ use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
-    'user' => 'App\User',
-    'company' => 'App\Company',
     'jobcard' => 'App\Jobcard',
 ]);
 
@@ -26,14 +24,19 @@ class Lifecycle extends Model
      * @var array
      */
     protected $fillable = [
-        'stages', 'selected', 'template', 'company_branch_id', 'company_id',
+        'stages', 'default', 'type', 'company_branch_id', 'company_id',
     ];
 
     /**
-     * Get all of the trackable models.
+     * Get all of the jobcards that are assigned this lifecycle.
      */
-    public function trackable()
+    public function jobcards()
     {
-        return $this->morphTo();
+        return $this->morphedByMany('App\Jobcard', 'trackable', 'lifecycle_allocations');
+    }
+
+    public function owningCompany()
+    {
+        return $this->belongsTo('App\Company', 'company_id');
     }
 }

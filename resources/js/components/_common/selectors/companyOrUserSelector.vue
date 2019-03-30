@@ -1,7 +1,7 @@
 <template>
 
     <Select v-model="localSelectedClientType" 
-            placeholder="Change client..." 
+            :placeholder="localSelectedClientType ? 'Change client...': 'Select client...'" 
             not-found-text="No client types found"
             @on-change="$emit('on-change', $event)">
         <Option 

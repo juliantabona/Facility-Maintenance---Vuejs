@@ -515,7 +515,7 @@
                     });
                 }
 
-                this.client = this.localInvoice.customized_client_details = newClient;
+                this.client = this.$set(this.localInvoice, 'customized_client_details', newClient);
                 
                 this.invoiceHasChanged = this.checkIfinvoiceHasChanged();
 
@@ -523,7 +523,7 @@
 
             updateClient(newClientDetails){
 
-                this.client = this.localInvoice.customized_client_details = newClientDetails;
+                this.client = this.$set(this.localInvoice, 'customized_client_details', newClientDetails);
 
                 this.invoiceHasChanged = this.checkIfinvoiceHasChanged();
 
@@ -814,7 +814,7 @@
                         //  Fetch the associated client if specified
                         var self = this;
                         this.fetchCompanyInfo(this.$route.query.clientId).then( data => {
-                            self.client = self.localInvoice.customized_client_details = data;
+                            self.client = self.$set(self.localInvoice, 'customized_client_details', data);
                         });
                     }
                     

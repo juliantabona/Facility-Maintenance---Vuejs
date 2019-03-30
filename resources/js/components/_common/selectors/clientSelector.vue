@@ -85,6 +85,7 @@
                     return this.selectedClient;
                 },
                 set(newClient){
+                    
                     this.$emit('updated',  newClient );
 
                 }

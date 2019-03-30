@@ -151,53 +151,56 @@
 <template>
 
     <Card :style="{ width: '100%' }">
-        <h4 class="mb-2" :style="{ fontSize: '1.5em' }">Lifecycle</h4>
 
-        <div>
-
-            <Poptip word-wrap width="300" trigger="hover" :content="popTipTitle" class="float-left">
-
-                <ul v-if="(localJobcard.lifecycle.stages || {}).length" id="breadcrumb">
-                    <li v-for="(stage, i) in localJobcard.lifecycle.stages" 
-                        :class="determineStageColor(stage)"
-                        @mouseover="popTipTitle = stage.description"
-                        :style="{ position: 'relative' }">
-                        
-                        <div>
-                            <span>{{ stage.name }}</span>
-                            <Icon v-if="canShowCheckmark(stage)" 
-                                    class="checkmark" type="ios-checkmark-circle-outline" />
-                        </div>
-
-                    </li>
-                </ul>
-                
-            </Poptip>
+        <div v-if="lifecycleStages.length">
             
-            <div v-for="(stage, i_1) in localJobcard.lifecycle.stages" :key="i_1"
-                 class="float-left mt-1 ml-2">
-                 
-                <Select v-if="isActiveStage(stage) && 
-                              ( dropdownOptions(stage, i_1) ).length && !isActiveStage(localJobcard.lifecycle.stages[i_1 + 1])"
-                        v-model="selectedTriggerName" style="width:150px"
-                        @on-change="handleTrigger(stage)"
-                        :key="selectedTriggerRenderKey"
-                        placeholder="Next step">
-                    <Option v-for="(option, i_2) in dropdownOptions(stage, i_1)" :key="i_2"
-                            :class="option.divider ? 'border-bottom' : ''" 
-                            :value="option.triggerName">
-                            <Icon v-if="option.icon" :type="option.icon" :size="20" class="mr-1"/>
-                            <span>{{ option.name }}</span>
-                    </Option>
-                </Select>
+            <h4 class="mb-2" :style="{ fontSize: '1.5em' }">Lifecycle</h4>
 
+            <div>
+                <Poptip word-wrap width="300" trigger="hover" :content="popTipTitle" class="float-left">
+
+                    <ul v-if="lifecycleStages.length" id="breadcrumb">
+                        <li v-for="(stage, i) in lifecycleStages" 
+                            :class="determineStageColor(stage)"
+                            @mouseover="popTipTitle = stage.description"
+                            :style="{ position: 'relative' }">
+                            
+                            <div>
+                                <span>{{ stage.name }}</span>
+                                <Icon v-if="canShowCheckmark(stage)" 
+                                        class="checkmark" type="ios-checkmark-circle-outline" />
+                            </div>
+
+                        </li>
+                    </ul>
+                    
+                </Poptip>
+                
+                <div v-for="(stage, i_1) in lifecycleStages" :key="i_1"
+                    class="float-left mt-1 ml-2">
+                    
+                    <Select v-if="isActiveStage(stage) && 
+                                ( dropdownOptions(stage, i_1) ).length && !isActiveStage(lifecycleStages[i_1 + 1])"
+                            v-model="selectedTriggerName" style="width:150px"
+                            @on-change="handleTrigger(stage)"
+                            :key="selectedTriggerRenderKey"
+                            placeholder="Next step">
+                        <Option v-for="(option, i_2) in dropdownOptions(stage, i_1)" :key="i_2"
+                                :class="option.divider ? 'border-bottom' : ''" 
+                                :value="option.triggerName">
+                                <Icon v-if="option.icon" :type="option.icon" :size="20" class="mr-1"/>
+                                <span>{{ option.name }}</span>
+                        </Option>
+                    </Select>
+
+                </div>
             </div>
 
         </div>
 
         <div class="clearfix"></div>
 
-        <Alert v-if="!(localJobcard.lifecycle.stages || {}).length" type="warning">
+        <Alert v-if="!lifecycleStages.length" type="warning">
             No Lifecycle Found
         </Alert>
 
@@ -232,6 +235,7 @@
         data(){
             return {
                 localJobcard: this.jobcard,
+                lifecycleStages: (((this.jobcard.lifecycle || [])[0] || {}).stages || {}),
                 localSelectedStage: null,
                 isOpenUpdateLifecycleStageModal: false,
                 selectedTriggerName: '',
@@ -264,7 +268,10 @@
             },
             updateJobcardLifecycle(updatedJobcard){
                 //  Update lifecycle stages
-                this.localJobcard.lifecycle_stages = updatedJobcard.lifecycle_stages;
+                this.localJobcard = updatedJobcard;
+
+                //  Notify parent
+                this.$emit('updated:lifecycle', updatedJobcard);
 
                 //  Close the modal
                 this.isOpenUpdateLifecycleStageModal = false;
@@ -322,7 +329,7 @@
             
                 //  Get the data associated with this step
                 stageData = this.getStageData(stage);
-                nextStage = this.localJobcard.lifecycle.stages[stageIndex + 1];
+                nextStage = this.lifecycleStages[stageIndex + 1];
                 
                 if( stage.type == 'open' ){
 
@@ -476,12 +483,12 @@
 
                         if( stage ){
 
-                            for(var x = 0; x < this.localJobcard.lifecycle.stages.length; x++){
+                            for(var x = 0; x < this.lifecycleStages.length; x++){
                                 
-                                if( this.localJobcard.lifecycle.stages[x].type ==  stage.type && 
-                                    this.localJobcard.lifecycle.stages[x].instance ==  stage.instance ){
+                                if( this.lifecycleStages[x].type ==  stage.type && 
+                                    this.lifecycleStages[x].instance ==  stage.instance ){
 
-                                        this.updateSelectedStage(this.localJobcard.lifecycle.stages[x + 1]);
+                                        this.updateSelectedStage(this.lifecycleStages[x + 1]);
                                         this.isOpenUpdateLifecycleStageModal = true;
                                 
                                 }
@@ -535,10 +542,13 @@
 
                         stageData = { stage: stageData };
 
+                        //  Additional data to eager load along with the jobcard found
+                        var connections = '?connections=lifecycle,priority,categories,costcenters,assignedStaff';
+
                         console.log('Attempt to handle jobcard lifecycle trigger...');
 
                         //  Use the api call() function located in resources/js/api.js
-                        api.call('post', url, stageData)
+                        api.call('post', url + connections, stageData)
                             .then(({ data }) => {
                                 
                                 console.log(data);

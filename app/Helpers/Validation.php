@@ -173,7 +173,7 @@ function oq_jobcard_create_v_rules($user = null)
         //  The priority (name & company_id) must be unique per row
         'priority_id' => 'sometimes|integer|unique:priorities,name,null,who_created_id,priority_id,'.$company_id.',priority_type,company',
         //  The cost center (name & company_id) must be unique per row
-        'cost_center_id' => 'sometimes|integer|unique:costcenters,name,null,who_created_id,costcenter_id,'.$company_id.',costcenter_type,company',
+        'cost_center_id' => 'sometimes|integer|unique:costcenters,name,null,who_created_id,cost_center_id,'.$company_id.',costcenter_type,company',
         //  The category (name & company_id) must be unique per row
         'category_id' => 'sometimes|integer|unique:categories,name,null,who_created_id,category_id,'.$company_id.',category_type,company',
         //  The branch (name & company_id) must be unique per row

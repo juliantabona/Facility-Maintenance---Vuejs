@@ -60,11 +60,11 @@ class Jobcard extends Model
     ];
 
     /**
-     * Get the companies settings.
+     * Get the lifecycle for the jobcard.
      */
     public function lifecycle()
     {
-        return $this->morphOne('App\Lifecycle', 'trackable');
+        return $this->morphToMany('App\Lifecycle', 'trackable', 'lifecycle_allocations');
     }
 
     /**
@@ -157,6 +157,11 @@ class Jobcard extends Model
     //                                                                              //
     //////////////////////////////////////////////////////////////////////////////////
 
+    public function owningCompany()
+    {
+        return $this->belongsTo('App\Company', 'company_id');
+    }
+
     public function owningBranch()
     {
         return $this->belongsTo('App\CompanyBranch', 'company_branch_id');
@@ -177,11 +182,6 @@ class Jobcard extends Model
         return $this->suppliersList()->where('selected', 1);
     }
 
-    public function processFormStep()
-    {
-        return $this->belongsTo('App\ProcessFormSteps', 'step_id');
-    }
-
     /*  Get the total count of all the people who viewed this jobcard. Make sure that
      *  we have distinct viewers meaning that we are not counting repeated records.
     */
@@ -189,14 +189,6 @@ class Jobcard extends Model
     {
         return $this->recentActivities()->distinct('who_created_id')->count('who_created_id');
     }
-
-    /*
-        public function progressSteps()
-        {
-            return $this->morphToMany('App\ProgressStatusSteps', 'progressable', 'progress_status', 'progressable_id', 'step_id');
-        }
-
-    */
 
     /*
 
@@ -217,10 +209,12 @@ class Jobcard extends Model
     */
 
     protected $appends = [
-                    'createdBy', 'deadline', 'deadlineArray', 'deadlineInWords', 'statusSummary',
+                    'createdBy', 'deadline', 'deadlineArray', 'deadlineInWords',
                     'last_approved_activity',
                     'has_approved', 'has_lifecycle',
-                    'current_activity_status', 'lifecycle_stages', 'activity_count',
+                    'current_activity_status',
+                    'current_lifecycle_stage', 'current_lifecycle_status', 'lifecycle_stages',
+                    'activity_count',
                 ];
 
     public function getLastApprovedActivityAttribute()
@@ -298,6 +292,41 @@ class Jobcard extends Model
         return $allStages;
     }
 
+    public function getCurrentLifecycleStageAttribute()
+    {
+        if (count($this->lifecycle_stages)) {
+            //  Return the last lifecycle stage
+            return $this->lifecycle_stages[0];
+        }
+    }
+
+    public function getCurrentLifecycleStatusAttribute()
+    {
+        if (count($this->current_lifecycle_stage)) {
+            $availableStages = $this->lifecycle->first()['stages'];
+            foreach ($availableStages as $availableStage) {
+                if ($availableStage['type'] == $this->current_lifecycle_stage['activity']['type']
+                    && $availableStage['instance'] == $this->current_lifecycle_stage['activity']['instance']) {
+                    //  Current stage name and type
+                    $stageName = $availableStage['name'];
+                    $stageType = $availableStage['type'];
+
+                    if ($this->current_lifecycle_stage['activity']['type'] == 'job_started') {
+                        if ($this->current_lifecycle_stage['activity']['cancelled_status']) {
+                            return ['name' => 'Job Cancelled', 'type' => $stageType];
+                        } elseif ($this->current_lifecycle_stage['activity']['pending_status']) {
+                            return ['name' => 'Job Pending', 'type' => $stageType];
+                        }
+                    }
+
+                    return ['name' => $stageName, 'type' => $stageType];
+                }
+            }
+        } elseif ($this->has_approved) {
+            return ['name' => 'Open', 'type' => 'open'];
+        }
+    }
+
     public function gethasLifecycleAttribute()
     {
         return count($this->lifecycle_stages) ? true : false;
@@ -345,28 +374,6 @@ class Jobcard extends Model
     {
         if ($this->deadline) {
             return oq_jobcardDeadlineWords(oq_jobcardDeadlineArray($this));
-        }
-    }
-
-    //  Getter for getting the jobcard lifecycle status name
-    public function getStatusSummaryAttribute()
-    {
-        //  What we want the summary to contain
-        $lookfor = array('name', 'description');
-
-        //  Get the jobcard lifecycle details
-        $jobcardStatusLifecycle = $this->statusLifecycle->first();
-
-        if ($jobcardStatusLifecycle) {
-            //  Get only the details of the current jobcard status
-            $status = $jobcardStatusLifecycle->template['sections'][$jobcardStatusLifecycle->step - 1];
-
-            //  Filter the jobcard status and get only the status details we want to look for
-            $filteredStatusDetails = array_filter($status, function ($key) use ($lookfor) {
-                return in_array($key, $lookfor);
-            }, ARRAY_FILTER_USE_KEY);
-
-            return $filteredStatusDetails;
         }
     }
 }

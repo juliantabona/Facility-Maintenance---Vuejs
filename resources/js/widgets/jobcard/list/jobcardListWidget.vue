@@ -8,10 +8,18 @@
 <script type="text/javascript">
 
     import moment from 'moment';
+    
+    /*  Statuses   */
+    import JobcardStatusTag from './../../../components/_common/statuses/JobcardStatusTag.vue';  
+    import JobcardLifecycleStatusTag from './../../../components/_common/statuses/JobcardLifecycleStatusTag.vue';  
+
+    /*  Tags   */
+    import priorityTag from './../../../components/_common/tags/priorityTag.vue'; 
+
     import filterableList from './../../../components/_common/list/filterableList.vue';
 
     export default {
-        components: { filterableList },
+        components: { JobcardStatusTag, JobcardLifecycleStatusTag, filterableList },
         data() {
             return {
 
@@ -51,19 +59,37 @@
                         }
                     },
                     {
-                        width: 200,
-                        title: 'Email',
-                        sortable: true,
-                        render: (h, params) => {
-                            return h('span', params.row.client.email || '...');
-                        }
-                    },
-                    {
                         width: 100,
                         title: 'Priority',
                         sortable: true,
                         render: (h, params) => {
-                            return h('span', ((params.row.priority || [])[0] || {}).name || '...');
+                            return h(priorityTag, {
+                                props: {
+                                    priority: params.row.priority
+                                }
+                            })
+                        }
+                    },
+                    {
+                        title: 'Status',
+                        sortable: true,
+                        render: (h, params) => {
+                            return h(JobcardStatusTag, {
+                                props: {
+                                    jobcard: params.row
+                                }
+                            })
+                        }
+                    },
+                    {
+                        title: 'Lifecycle',
+                        sortable: true,
+                        render: (h, params) => {
+                            return h(JobcardLifecycleStatusTag, {
+                                props: {
+                                    jobcard: params.row
+                                }
+                            })
                         }
                     },
                     {
@@ -75,6 +101,7 @@
                         }
                     },
                     {
+                        width: 100,
                         title: 'Action',
                         align: 'center',
                         render: (h, params) => {

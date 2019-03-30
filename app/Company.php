@@ -53,6 +53,14 @@ class Company extends Model
      *  as the history (Recent Activities) describing the series of events building the jobcard
      */
 
+    /**
+     * Get the company associated lifecycle.
+     */
+    public function lifecycles()
+    {
+        return $this->hasMany('App\Lifecycle');
+    }
+
     public function jobcards()
     {
         return $this->hasManyThrough('App\Jobcard', 'App\CompanyBranch', 'company_id', 'company_branch_id', 'id')

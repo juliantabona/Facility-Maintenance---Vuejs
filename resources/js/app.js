@@ -95,6 +95,10 @@ import locale from 'element-ui/lib/locale/lang/en';
 
 Vue.use(ElementUI, { locale });
 
+//  Import FullCalendar
+import FullCalendar from 'vue-full-calendar'
+Vue.use(FullCalendar)
+
 //  Imports Moment.js for use by vue components in formatting dates
 Vue.use(require('vue-moment'));
 

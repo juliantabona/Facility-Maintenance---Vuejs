@@ -209,8 +209,11 @@
                         stage: this.localSelectedStage
                     };
 
+                    //  Additional data to eager load along with the jobcard found
+                    var connections = '?connections=lifecycle,priority,categories,costcenters,assignedStaff';
+
                     //  Use the api call() function located in resources/js/api.js
-                    api.call('post', '/api/jobcards/' + self.localJobcard.id + '/lifecycle/stages', stageData)
+                    api.call('post', '/api/jobcards/' + self.localJobcard.id + '/lifecycle/stages'+connections, stageData)
                         .then(({ data }) => {
                             
                             console.log(data);

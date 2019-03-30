@@ -13,6 +13,7 @@
                 :value="JSON.stringify(staff)" 
                 :key="staff.id">{{ staff.full_name }}{{ staff.position ? ' ('+staff.position+')' : '' }}</Option>
         </Select>
+        
     </div>
 
 </template>
@@ -31,13 +32,17 @@
             modelType: {
                 type: String,
                 default: ''   
-            }
+            },
+            tracker: {
+                type: Number,
+                default: 0   
+            },
         },
         components: { Loader },
         data(){
             return {
                 localfetchedStaff: [],
-                tracker: 0,
+                localTracker: this.tracker,
                 isLoading: false,
             }
         },
@@ -60,14 +65,14 @@
                     return staff;
                 },
                 set(val){
-                    if( this.tracker != 0 ){
+                    if( this.localTracker != 0 ){
 
                         var staff = val.map(staff => JSON.parse(staff));
                         this.$emit('updated:staff', staff);
 
                     }
 
-                    this.tracker = this.tracker + 1;
+                    this.localTracker = this.localTracker + 1;
 
                 }
             }
@@ -82,13 +87,16 @@
                 console.log('Start getting staff...');
 
                 //  Get the status e.g) client, supplier, e.t.c
-                var modelType = this.modelType ? '?modelType='+this.modelType : '';
+                var modelType = this.modelType ? 'modelType='+this.modelType : '';
 
                 //  Additional data to eager load along with each user found
                 var connections = '';
 
+                //  Settings to prevent pagination
+                var pagination = (this.modelType || connections ? '&': '') + 'paginate=0';
+
                 //  Use the api call() function located in resources/js/api.js
-                api.call('get', '/api/companies/staff'+modelType+connections)
+                api.call('get', '/api/companies/staff?'+modelType+connections+pagination)
                     .then(({data}) => {
                         
                         console.log(data);

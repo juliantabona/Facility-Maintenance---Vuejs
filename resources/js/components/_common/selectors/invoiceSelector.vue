@@ -93,8 +93,11 @@
                 //  Additional data to eager load along with each user found
                 var connections = '';
 
+                //  Settings to prevent pagination
+                var pagination = (connections ? '&': '') + 'paginate=0';
+
                 //  Use the api call() function located in resources/js/api.js
-                api.call('get', '/api/invoices?paginate=0'+connections)
+                api.call('get', '/api/invoices?'+connections+pagination)
                     .then(({data}) => {
                         
                         console.log(data);

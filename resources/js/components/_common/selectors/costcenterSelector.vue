@@ -13,6 +13,7 @@
                 :value="JSON.stringify(costcenter)" 
                 :key="costcenter.id">{{ costcenter.name }}</Option>
         </Select>
+        
     </div>
 
 </template>
@@ -31,13 +32,17 @@
             modelType: {
                 type: String,
                 default: ''   
-            }
+            },
+            tracker: {
+                type: Number,
+                default: 0   
+            },
         },
         components: { Loader },
         data(){
             return {
                 localfetchedCostcenters: [],
-                tracker: 0,
+                localTracker: this.tracker,
                 isLoading: false,
             }
         },
@@ -47,27 +52,32 @@
                     var costcenters = [];
                     
                     if( this.selectedCostCenter ){
-                        for(var x=0; x < this.localfetchedCostcenters.length; x++){
-                            for(var y=0; y < this.selectedCostCenter.length; y++){
-                                if(  this.localfetchedCostcenters[x]['id'] == this.selectedCostCenter[y]['id'] ){
-                                    costcenters.push( JSON.stringify(this.localfetchedCostcenters[x]) );
+
+                        if( this.selectedCostCenter.length ){
+
+                            for(var x=0; x < this.localfetchedCostcenters.length; x++){
+                                for(var y=0; y < this.selectedCostCenter.length; y++){
+                                    if(  this.localfetchedCostcenters[x]['id'] == this.selectedCostCenter[y]['id'] ){
+                                        costcenters.push( JSON.stringify(this.localfetchedCostcenters[x]) );
+                                    }
                                 }
+                                
                             }
-                            
+
                         }
                     }
                     
                     return costcenters;
                 },
                 set(val){
-                    if( this.tracker != 0 ){
+                    if( this.localTracker != 0 ){
 
                         var costcenters = val.map(costcenter => JSON.parse(costcenter));
                         this.$emit('updated:costcenter', costcenters);
 
                     }
 
-                    this.tracker = this.tracker + 1;
+                    this.localTracker = this.localTracker + 1;
 
                 }
             }
@@ -87,8 +97,11 @@
                 //  Additional data to eager load along with each user found
                 var connections = '';
 
+                //  Settings to prevent pagination
+                var pagination = (this.modelType || connections ? '&': '') + 'paginate=0';
+
                 //  Use the api call() function located in resources/js/api.js
-                api.call('get', '/api/costcenters'+modelType+connections)
+                api.call('get', '/api/costcenters'+modelType+connections+pagination)
                     .then(({data}) => {
                         
                         console.log(data);

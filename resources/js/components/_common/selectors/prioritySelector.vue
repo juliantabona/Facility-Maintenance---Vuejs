@@ -43,14 +43,18 @@
         computed:{
             localSelectedPriority:{
                 get(){
-                    if( this.selectedPriority.length ){
+                    if( this.selectedPriority ){
 
-                        var priority;
-                        
-                        for(var x=0; x < this.localfetchedPriorities.length; x++){
-                            if(  this.localfetchedPriorities[x]['id'] == this.selectedPriority[0]['id'] ){
-                                priority = JSON.stringify(this.localfetchedPriorities[x]);
-                            }  
+                        if( this.selectedPriority.length ){
+                            
+                            var priority;
+                            
+                            for(var x=0; x < this.localfetchedPriorities.length; x++){
+                                if(  this.localfetchedPriorities[x]['id'] == this.selectedPriority[0]['id'] ){
+                                    priority = JSON.stringify(this.localfetchedPriorities[x]);
+                                }  
+                            }
+
                         }
                         
                         return priority;
@@ -76,13 +80,16 @@
                 console.log('Start getting priorities...');
 
                 //  Get the status e.g) client, supplier, e.t.c
-                var modelType = this.modelType ? '?modelType='+this.modelType : '';
+                var modelType = this.modelType ? 'modelType='+this.modelType : '';
 
                 //  Additional data to eager load along with each user found
                 var connections = '';
 
+                //  Settings to prevent pagination
+                var pagination = (this.modelType || connections ? '&': '') + 'paginate=0';
+
                 //  Use the api call() function located in resources/js/api.js
-                api.call('get', '/api/priorities'+modelType+connections)
+                api.call('get', '/api/priorities?'+modelType+connections+pagination)
                     .then(({data}) => {
                         
                         console.log(data);

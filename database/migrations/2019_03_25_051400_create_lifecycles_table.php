@@ -14,10 +14,8 @@ class CreateLifecyclesTable extends Migration
         Schema::create('lifecycles', function (Blueprint $table) {
             $table->increments('id');
             $table->text('stages')->nullable();
-            $table->boolean('selected')->nullable();
-            $table->boolean('template')->nullable();
-            $table->unsignedInteger('trackable_id');
-            $table->string('trackable_type');
+            $table->boolean('default')->nullable();
+            $table->string('type');
             $table->unsignedInteger('company_branch_id')->nullable();
             $table->unsignedInteger('company_id')->nullable();
             $table->timestamps();

@@ -3,7 +3,7 @@
     <Row :gutter="20">
 
         <Col span="20" offset="2">
-            <invoiceSummaryWidget :create="true"></invoiceSummaryWidget>
+            <jobcardSummaryWidget :create="true"></jobcardSummaryWidget>
         </Col>
 
     </Row>
@@ -11,12 +11,12 @@
 </template>
 <script>
 
-    import invoiceSummaryWidget from './../../../../widgets/invoice/show/main.vue';
-
+    /*  Widgets   */
+    import jobcardSummaryWidget from './../../../../widgets/jobcard/show/main.vue';
 
     export default {
         components: { 
-          invoiceSummaryWidget
+          jobcardSummaryWidget
         }
     };
 </script>

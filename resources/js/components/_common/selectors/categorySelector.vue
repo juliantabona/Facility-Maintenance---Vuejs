@@ -13,6 +13,7 @@
                 :value="JSON.stringify(category)" 
                 :key="category.id">{{ category.name }}</Option>
         </Select>
+        
     </div>
 
 </template>
@@ -31,13 +32,17 @@
             modelType: {
                 type: String,
                 default: ''   
-            }
+            },
+            tracker: {
+                type: Number,
+                default: 0   
+            },
         },
         components: { Loader },
         data(){
             return {
                 localfetchedCategories: [],
-                tracker: 0,
+                localTracker: this.tracker,
                 isLoading: false,
             }
         },
@@ -47,27 +52,32 @@
                     var categories = [];
                     
                     if( this.selectedCategory ){
-                        for(var x=0; x < this.localfetchedCategories.length; x++){
-                            for(var y=0; y < this.selectedCategory.length; y++){
-                                if(  this.localfetchedCategories[x]['id'] == this.selectedCategory[y]['id'] ){
-                                    categories.push( JSON.stringify(this.localfetchedCategories[x]) );
+
+                        if( this.selectedCategory.length ){
+
+                            for(var x=0; x < this.localfetchedCategories.length; x++){
+                                for(var y=0; y < this.selectedCategory.length; y++){
+                                    if(  this.localfetchedCategories[x]['id'] == this.selectedCategory[y]['id'] ){
+                                        categories.push( JSON.stringify(this.localfetchedCategories[x]) );
+                                    }
                                 }
+                                
                             }
-                            
+
                         }
                     }
                     
                     return categories;
                 },
                 set(val){
-                    if( this.tracker != 0 ){
-
+                    if( this.localTracker != 0 ){
+                        
                         var categories = val.map(category => JSON.parse(category));
                         this.$emit('updated:category', categories);
 
                     }
 
-                    this.tracker = this.tracker + 1;
+                    this.localTracker = this.localTracker + 1;
 
                 }
             }
@@ -82,13 +92,16 @@
                 console.log('Start getting categories...');
 
                 //  Get the status e.g) client, supplier, e.t.c
-                var modelType = this.modelType ? '?modelType='+this.modelType : '';
+                var modelType = this.modelType ? 'modelType='+this.modelType : '';
 
                 //  Additional data to eager load along with each user found
                 var connections = '';
 
+                //  Settings to prevent pagination
+                var pagination = (this.modelType || connections ? '&': '') + 'paginate=0';
+
                 //  Use the api call() function located in resources/js/api.js
-                api.call('get', '/api/categories'+modelType+connections)
+                api.call('get', '/api/categories?'+modelType+connections+pagination)
                     .then(({data}) => {
                         
                         console.log(data);

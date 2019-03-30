@@ -20,12 +20,13 @@
         </Col>
 
         <!-- Jobcard Lifecycle  -->
-        <Col span="3">
+        <Col span="4">
             <h6 class="text-secondary">Lifecycle</h6>
+            <JobcardLifecycleStatusTag :jobcard="jobcard"></JobcardLifecycleStatusTag>
         </Col>
 
         <!-- Jobcard Type e.g) Private, Goverment, Parastatal  -->
-        <Col span="5">
+        <Col span="4">
             <h6 class="text-secondary">Deadline</h6>     
             <h5>{{ localJobcard.end_date | moment("from", "now")  }}</h5>         
         </Col>
@@ -47,6 +48,7 @@
 
     /*  Statuses   */
     import JobcardStatusTag from './../../../components/_common/statuses/JobcardStatusTag.vue';  
+    import JobcardLifecycleStatusTag from './../../../components/_common/statuses/JobcardLifecycleStatusTag.vue';  
 
     /*  Tags   */
     import priorityTag from './../../../components/_common/tags/priorityTag.vue'; 
@@ -65,7 +67,7 @@
                 default: null
             }
         },
-        components: { JobcardStatusTag, priorityTag, menuToggle },
+        components: { JobcardStatusTag, JobcardLifecycleStatusTag, priorityTag, menuToggle },
         data() {
             return {
                 localJobcard: this.jobcard,
