@@ -1258,28 +1258,19 @@ trait QuotationTraits
 
     /*  summarize() method:
      *
-     *  This is used to limit the information of an quotation to very specific
-     *  columns that can then be used for storage e.g) in the instance of
-     *  adding a recent activity. We may only want to summarize the quotation
-     *  to very important information, rather tha storing everything along
+     *  This is used to limit the information of the resource to very specific
+     *  columns that can then be used for storage. We may only want to summarize
+     *  the data to very important information, rather than storing everything along
      *  with useless information. In this instance we specify table columns
-     *  that we want, while also removing any custom attributes we do not
-     *  want to store.
-     *
+     *  that we want (we access the fillable columns of the model), while also
+     *  removing any custom attributes we do not want to store
+     *  (we access the appends columns of the model),
      */
     public function summarize()
     {
         //  Collect and select table columns
-        return collect(
-            $this->select(
-                'heading', 'reference_no_title', 'reference_no_value', 'created_date_title', 'created_date_value',
-                'expiry_date_title', 'expiry_date_value', 'sub_total_title', 'sub_total_value', 'grand_total_title', 'grand_total_value',
-                'currency_type', 'calculated_taxes', 'quotation_to_title', 'customized_company_details', 'customized_client_details', 'client_id',
-                'table_columns', 'items', 'notes', 'colors', 'footer'
-            )->first())
-            //  Remove all custom attributes since the are all based on recent activities
-            ->forget(['last_approved_activity', 'last_sent_activity', 'last_paid_activity', 'last_payment_cancelled_activity',
-                    'has_paid', 'has_expired', 'has_cancelled', 'has_sent', 'has_approved', 'current_activity_status', 'recent_activities',
-            ]);
+        return collect($this->fillable)
+                //  Remove all custom attributes since the are all based on recent activities
+                ->forget($this->appends);
     }
 }

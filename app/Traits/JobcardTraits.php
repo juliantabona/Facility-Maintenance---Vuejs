@@ -5,6 +5,7 @@ namespace App\Traits;
 use DB;
 use App\Company;
 use App\Notifications\JobcardApproved;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 trait JobcardTraits
 {
@@ -94,32 +95,6 @@ trait JobcardTraits
             });
         }
 
-        if (request('step')) {
-            try {
-                /*  This is how we get the jobcard step allocation template
-                 *  It must be of "type" equal to "jobcard", and "selected" equal to "1"
-                 */
-                $jobcardTemplateId = $user->company->formTemplate
-                                          ->where('type', 'jobcard')
-                                          ->where('selected', 1)
-                                          ->first()
-                                          ->id;
-
-                /*  Filter only to the jobcards beloging to the specified step.
-                 */
-                $jobcards = $jobcards->whereHas('statusLifecycle', function ($query) use ($jobcardTemplateId) {
-                    $query->where('step', request('step'))
-                          ->where('form_template_id', $jobcardTemplateId);
-                });
-            } catch (\Exception $e) {
-                //  Log the error
-                $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
-
-                //  Return the error response
-                return ['success' => false, 'response' => $response];
-            }
-        }
-
         /*  To avoid sql order_by error for ambigious fields e.g) created_at
          *  we must specify the order_join.
          *
@@ -139,28 +114,54 @@ trait JobcardTraits
             //  Get all and trashed
             if (request('withtrashed') == 1) {
                 //  Run query
-                $jobcards = $jobcards->withTrashed()->advancedFilter(['order_join' => $order_join, 'paginate' => $config['paginate']]);
+                $jobcards = $jobcards->withTrashed()->advancedFilter(['order_join' => $order_join, 'paginate' => false]);
             //  Get only trashed
             } elseif (request('onlytrashed') == 1) {
                 //  Run query
-                $jobcards = $jobcards->onlyTrashed()->advancedFilter(['order_join' => $order_join, 'paginate' => $config['paginate']]);
+                $jobcards = $jobcards->onlyTrashed()->advancedFilter(['order_join' => $order_join, 'paginate' => false]);
             //  Get all except trashed
             } else {
                 //  Run query
-                $jobcards = $jobcards->advancedFilter(['order_join' => $order_join, 'paginate' => $config['paginate']]);
+                $jobcards = $jobcards->advancedFilter(['order_join' => $order_join, 'paginate' => false]);
             }
 
-            //  If we are not paginating then
-            if (!$config['paginate']) {
-                //  Get the collection
+            //  Filter by status if specified
+            if (request('status')) {
+                //  Run query
+                $stat_name = ucwords(request('status'));
+
                 $jobcards = $jobcards->get();
-            }
 
-            //  If we have any jobcards so far
-            if (count($jobcards)) {
                 //  Eager load other relationships wanted if specified
-                if (strtolower(request('connections'))) {
-                    $jobcards->load(oq_url_to_array(strtolower(request('connections'))));
+                if (request('connections')) {
+                    $jobcards->load(oq_url_to_array(request('connections')));
+                }
+
+                $jobcards = collect($jobcards)->filter(function ($jobcard, $key) use ($stat_name) {
+                    return  $jobcard['current_lifecycle_main_status']['name'] == $stat_name || $jobcard['current_lifecycle_sub_status'] == $stat_name;
+                });
+
+                $page = request('page', 1);         //  The page number from the pagination list
+                $perPage = request('limit', 10);    //  Pagination limit
+                $jobcards = new LengthAwarePaginator(
+                                    collect($jobcards->forPage($page, $perPage))->values(),
+                                    $jobcards->count(),
+                                    $perPage,
+                                    $page,
+                                    ['path' => url('api/jobcards')]
+                                );
+            } else {
+                //  If we are not paginating then
+                if (!$config['paginate']) {
+                    //  Get the collection
+                    $jobcards = $jobcards->get();
+                } else {
+                    $jobcards = $jobcards->advancedFilter(['order_join' => $order_join, 'paginate' => $config['paginate']]);
+                }
+
+                //  Eager load other relationships wanted if specified
+                if (request('connections')) {
+                    $jobcards->load(oq_url_to_array(request('connections')));
                 }
             }
 
@@ -532,28 +533,288 @@ trait JobcardTraits
         }
     }
 
+    /*  getStatistics() method:
+     *
+    /*  This method is used to get the overall statistics of the invoices,
+     *  showing information of invoices in their respective states such as
+     *  1) Name of status
+     *  2) Total number of invoices in each respective status
+     *  3) Total sum of the grand totals in each respective status
+     *  4) The base currency used by the associated company
+     *
+     *  Example of returned output:
+        {
+            "stats": [
+                {
+                    "grand_total": null,
+                    "total_count": 0,
+                    "name": "Draft"
+                },
+                {
+                    "grand_total": 23450,
+                    "total_count": 6,
+                    "name": "Approved"
+                },
+                {
+                    "grand_total": 45240,
+                    "total_count": 2,
+                    "name": "Sent"
+                },
+                {
+                    "grand_total": 1250,
+                    "total_count": 1,
+                    "name": "Cancelled"
+                },
+                {
+                    "grand_total": 18560,
+                    "total_count": 5,
+                    "name": "Expired"
+                },
+                {
+                    "grand_total": 75880,
+                    "total_count": 12,
+                    "name": "Paid"
+                }
+            ],
+            "base_currency": {
+                "country": "Botswana",
+                "currency": {
+                    "iso": {
+                        "code": "BWP",
+                        "number": "072"
+                    },
+                    "name": "Pula",
+                    "symbol": "P"
+                }
+            }
+        }
+     *
+     */
+
+    public function getStatistics()
+    {
+        //  Current authenticated user
+        $auth_user = auth('api')->user();
+
+        //  Start getting the jobcards
+        $data = $this->initiateGetAll(['paginate' => false]);
+        $success = $data['success'];
+        $response = $data['response'];
+
+        if ($success) {
+            try {
+                //  Get all the available jobcards so far
+                $jobcards = $data['response'];
+
+                //  From the list of jobcards we will group them by their lifecycle status e.g) Open, Closed e.t.c
+                //  After this we will map through each group (Open, Closed, e.t.c) and get the status name, and the
+                //  total count of grouped jobcards of that status.
+                /*
+                 *  Example of returned output:
+                 *
+                    {
+                        "Paid": {
+                            "name": "Paid",
+                            "grand_total": 44520,
+                            "total_count": 5
+                        },
+                        "Sent": {
+                            "name": "Sent",
+                            "grand_total": 14000,
+                            "total_count": 1
+                        }
+                    }
+                 *
+                 */
+
+                $mainAvailableStages = [];
+                $inbetweenAvailableStages = [];
+
+                foreach ($jobcards as $key => $jobcard) {
+                    if ($jobcard['current_lifecycle_stage']) {
+                        $stage = [
+                                    'type' => $jobcard['current_lifecycle_stage']['activity']['type'],
+                                    'instance' => $jobcard['current_lifecycle_stage']['activity']['instance'],
+                                    'instance_type' => $jobcard['current_lifecycle_stage']['activity']['type'].'_'.$jobcard['current_lifecycle_stage']['activity']['instance'],
+                                ];
+
+                        if (!empty($jobcard['current_lifecycle_sub_status'])) {
+                            $stage['name'] = $jobcard['current_lifecycle_sub_status'];
+                            array_push($inbetweenAvailableStages, $stage);
+                        } else {
+                            array_push($mainAvailableStages, $stage);
+                        }
+                    } elseif ($jobcard['has_approved']) {
+                        array_push($mainAvailableStages, [
+                                    'type' => 'open',
+                                    'instance' => 1,
+                                    'instance_type' => 'open_1',
+                                ]);
+                    }
+                }
+
+                //  Format for main stages
+                $mainAvailableStages = collect($mainAvailableStages)->reject(function ($value, $key) {
+                    return  $value == null;
+                })->groupBy('instance_type')->map(function ($jobcardGroup, $key) {
+                    return [
+                        'type' => $jobcardGroup[0]['type'],           //  e.g) Open, Closed, e.t.c
+                        'instance' => $jobcardGroup[0]['instance'],           //  e.g) Open, Closed, e.t.c
+                        'total_count' => collect($jobcardGroup)->count(),        //  12
+                    ];
+                })->values();
+
+                //  Format for inbetween stages
+                $inbetweenAvailableStages = collect($inbetweenAvailableStages)->reject(function ($value, $key) {
+                    return  $value == null;
+                })->groupBy('name')->map(function ($jobcardGroup, $key) {
+                    return [
+                        'name' => $jobcardGroup[0]['name'],                      //  e.g) Open, Closed, e.t.c
+                        'type' => $jobcardGroup[0]['type'],                      //  e.g) Open, Closed, e.t.c
+                        'instance' => $jobcardGroup[0]['instance'],              //  e.g) Open, Closed, e.t.c
+                        'total_count' => collect($jobcardGroup)->count(),        //  12
+                    ];
+                })->values();
+
+                /*  This is a list of all the statistics we want returned in their respective order
+                 *  - First get the companies default lifecycle
+                 */
+                $defaultLifecycle = $auth_user->company->lifecycles()->where('type', 'jobcard')->first();
+
+                $expectedStats = $defaultLifecycle['stages'];
+
+                //  From the list of expected stats, we will map through and inspect if the expected stat
+                //  exists in the available stats we have collected. If it does then return back the existing
+                //  stat, otherwise we will create a new array that will hold the expected stat name that does
+                //  not exist, as well as put a grand total sum of zero and a total count of zero
+                /*
+                 *  Example of returned output:
+                 *
+                    [
+                        {
+                            "name": "Draft",
+                            "grand_total": 0,
+                            "total_count": 0
+                        },
+                        {
+                            "name": "Approved",
+                            "grand_total": 0,
+                            "total_count": 0
+                        },
+                        {
+                            "name": "Sent",
+                            "grand_total": 14000,
+                            "total_count": 1
+                        },
+                        {
+                            "name": "Cancelled",
+                            "grand_total": 0,
+                            "total_count": 0
+                        },
+                        {
+                            "name": "Expired",
+                            "grand_total": 0,
+                            "total_count": 0
+                        },
+                        {
+                            "name": "Paid",
+                            "grand_total": 44520,
+                            "total_count": 5
+                        }
+                    ]
+                 *
+                 */
+                $mainStats = $this->getMainStats($expectedStats, $mainAvailableStages);
+                $subStats = $this->getSubStats($inbetweenAvailableStages);
+
+                //  Merge the overview stats, stats and base currency into one collection
+                $data = [
+                        'overview_stats' => $mainStats,
+                        'stats' => $subStats,
+                    ];
+
+                //  Action was executed successfully
+                return ['success' => true, 'response' => $data];
+            } catch (\Exception $e) {
+                //  Log the error
+                $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+                //  Return the error response
+                return ['success' => false, 'response' => $response];
+            }
+        } else {
+            return ['success' => false, 'response' => $response];
+        }
+    }
+
+    public function getMainStats($expectedStats, $availableStages)
+    {
+        return collect($expectedStats)->map(function ($stage, $key) use ($availableStages) {
+            $available = collect($availableStages)->map(function ($availableStage) use ($stage) {
+                if ($availableStage['type'] == $stage['type'] && $availableStage['instance'] == $stage['instance']) {
+                    return $availableStage;
+                }
+            })->reject(function ($value, $key) {
+                return  $value == null;
+            });
+
+            if (count($available)) {
+                return [
+                            'name' => $stage['name'],        //  e.g) Open, Closed, e.t.c
+                            'type' => $stage['type'],
+                            'instance' => $stage['instance'],
+                            'total_count' => collect($available)->values()[0]['total_count'],
+                        ];
+            } else {
+                return [
+                            'name' => $stage['name'],        //  e.g) Open, Closed, e.t.c
+                            'type' => $stage['type'],
+                            'instance' => $stage['instance'],
+                            'total_count' => 0,
+                        ];
+            }
+        });
+    }
+
+    public function getSubStats($availableStages)
+    {
+        //  This is a list of all the statistics we want returned in their respective order
+        $expectedStats = ['Expired', 'Pending', 'Cancelled'];
+
+        return collect($expectedStats)->map(function ($stat_name) use ($availableStages) {
+            $availableStage = collect($availableStages)->filter(function ($stage) use ($stat_name) {
+                return collect($stage)['name'] == $stat_name;
+            })->values();
+
+            if (count($availableStage)) {
+                return [
+                            'name' => $stat_name,        //  e.g) Open, Closed, e.t.c
+                            'total_count' => $availableStage[0]['total_count'],
+                        ];
+            } else {
+                return [
+                            'name' => $stat_name,        //  e.g) Open, Closed, e.t.c
+                            'total_count' => 0,
+                        ];
+            }
+        });
+    }
+
     /*  summarize() method:
      *
-     *  This is used to limit the information of an quotation to very specific
-     *  columns that can then be used for storage e.g) in the instance of
-     *  adding a recent activity. We may only want to summarize the quotation
-     *  to very important information, rather tha storing everything along
+     *  This is used to limit the information of the resource to very specific
+     *  columns that can then be used for storage. We may only want to summarize
+     *  the data to very important information, rather than storing everything along
      *  with useless information. In this instance we specify table columns
-     *  that we want, while also removing any custom attributes we do not
-     *  want to store.
-     *
+     *  that we want (we access the fillable columns of the model), while also
+     *  removing any custom attributes we do not want to store
+     *  (we access the appends columns of the model),
      */
     public function summarize()
     {
         //  Collect and select table columns
-        return collect(
-            $this->select(
-                'title', 'description', 'start_date', 'end_date', 'company_branch_id', 'company_id', 'client_id', 'is_public'
-            )->first())
-            //  Remove all custom attributes since the are all based on recent activities
-            ->forget(['createdBy', 'authourizedBy', 'deadline', 'deadlineArray', 'deadlineInWords', 'statusSummary',
-                      'last_approved_activity', 'has_approved', 'current_activity_status', 'activity_count',
-                      'recent_activities',
-            ]);
+        return collect($this->fillable)
+                //  Remove all custom attributes since the are all based on recent activities
+                ->forget($this->appends);
     }
 }

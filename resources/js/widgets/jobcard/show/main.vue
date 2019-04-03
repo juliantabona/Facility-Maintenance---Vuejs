@@ -24,7 +24,7 @@
 <template>
 
     <div id="jobcard-widget">
-        <full-calendar :events="events"></full-calendar>
+
         <!-- Get the summary header to display the jobcard #, status, due date, amount due and menu options -->
         <overview 
             v-if="!createMode && localJobcard.has_approved"
@@ -290,9 +290,6 @@
 
 <script>
 
-    import { FullCalendar } from 'vue-full-calendar';
-    import 'fullcalendar/dist/fullcalendar.css';
-
     /*  Local components    */
     import overview from './overview.vue';
     import steps from './steps.vue';
@@ -325,9 +322,6 @@
 
     export default {
         components: { 
-
-            FullCalendar,
-
             overview, steps, mainHeader, jobcardWidget,
             basicButton, toggleSwitch, editModeSwitch,
             Loader, IconAndCounterCard, companyOrIndividualDetails,
@@ -369,29 +363,6 @@
         },
         data(){
             return {
-
-                events: [
-                    {
-                        title  : 'Repair of vehicle',
-                        start  : '2019-03-30',
-                        backgroundColor:'#2d8cf0',
-                        textColor:'#fff'
-                    },
-                    {
-                        title  : 'event2',
-                        start  : '2019-03-30',
-                        end    : '2019-04-05',
-                        backgroundColor:'#2d8cf0',
-                        textColor:'#fff'
-                    },
-                    {
-                        title  : 'event3',
-                        start  : '2010-01-09T12:30:00',
-                        allDay : false,
-                        backgroundColor:'#2d8cf0',
-                        textColor:'#fff'
-                    },
-                ],
 
                 user: auth.user,
 

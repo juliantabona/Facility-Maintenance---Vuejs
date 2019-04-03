@@ -53,12 +53,12 @@
             '$route.params.id': function (id) {
                 
                 // react to route changes by fetching the associated jobcard...
-                this.fetchInvoice();
+                this.fetchJobcard();
 
             }
         },
         methods: {
-            fetchInvoice() {
+            fetchJobcard() {
 
                 //  If we have the route id set
                 if( this.$route.params.id ){
@@ -111,7 +111,7 @@
         },
         created(){
             //  Fetch the jobcard
-            this.fetchInvoice();
+            this.fetchJobcard();
         }
     };
 </script>

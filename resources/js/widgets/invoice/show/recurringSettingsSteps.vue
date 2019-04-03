@@ -15,24 +15,57 @@
             <div class="clearfix"></div>
 
             <!-- Get the stage for setting the recurring schedule plan -->
-            <invoiceRecurringSchedulePlanStage :invoice="localInvoice" :style="{ position:'relative', zIndex: 4 }" 
+            <recurringSchedulePlanStage 
+                resourceName="invoice"
+                resourceNamePlural="invoices"
+                :recurringSettings="localInvoice.recurringSettings" 
+                :showHeader="!localInvoice.has_approved_recurring_schedule"
+                :showCheckMark="localInvoice.has_set_recurring_schedule_plan && !(((localInvoice.recurringSettings || {}).editing || {}).schedulePlan)"
+                :showNextStepBtn="localInvoice.has_set_recurring_schedule_plan"
+                :isEditing="(((localInvoice.recurringSettings || {}).editing || {}).schedulePlan)"
+                :rippleEffect="!localInvoice.has_set_recurring_schedule_plan"
+                :url="'/api/invoices/'+localInvoice.id+'/recurring/update-schedule-plan'"
+                :style="{ position:'relative', zIndex: 4 }" 
                 @saved="$emit('saved', $event)">
-            </invoiceRecurringSchedulePlanStage>
+            </recurringSchedulePlanStage>
 
             <!-- Get the stage for setting the recurring payment plan -->
-            <invoiceRecurringPaymentPlanStage :invoice="localInvoice" :style="{ position:'relative', zIndex: 3 }" 
+            <recurringPaymentPlanStage :invoice="localInvoice" :style="{ position:'relative', zIndex: 3 }" 
                 @saved="$emit('saved', $event)">
-            </invoiceRecurringPaymentPlanStage>
+            </recurringPaymentPlanStage>
+
+            <!-- Get the stage for setting the recurring payment plan -->
+            <recurringDeliveryPlanStage 
+                resourceName="invoice"
+                resourceNamePlural="invoices"
+                :client="localInvoice.customized_client_details"
+                smsTemplate="invoice-sms"
+                :smsTemplateData="localInvoice"
+                :testSmsUrl="'/api/invoices/'+localInvoice.id+'/send?test=1'"
+                :testEmailUrl="'/api/invoices/'+localInvoice.id+'/send?test=1'"
+                :recurringSettings="localInvoice.recurringSettings" 
+                :disabled="!localInvoice.has_set_recurring_payment_plan"
+                :showCheckMark="localInvoice.has_set_recurring_delivery_plan && !(((localInvoice.recurringSettings || {}).editing || {}).deliveryPlan)"
+                :showToggleSwitch="localInvoice.has_set_recurring_payment_plan && (((localInvoice.recurringSettings || {}).editing || {}).deliveryPlan)"
+                :showSettings="localInvoice.has_set_recurring_payment_plan && (((localInvoice.recurringSettings || {}).editing || {}).deliveryPlan)"
+                :showMessage="!localInvoice.has_set_recurring_payment_plan && !(((localInvoice.recurringSettings || {}).editing || {}).deliveryPlan)"
+                :showActionBtns="localInvoice.has_set_recurring_payment_plan"
+                :showDoneText="localInvoice.has_set_recurring_delivery_plan"
+                :isEditing="(((localInvoice.recurringSettings || {}).editing || {}).schedulePlan)"
+                :url="'/api/invoices/'+localInvoice.id+'/recurring/update-delivery-plan'"
+                :style="{ position:'relative', zIndex: 4 }" 
+                @saved="$emit('saved', $event)">
+            </recurringDeliveryPlanStage>
 
             <!-- Get the stage for setting the recurring delivery plan -->
-            <invoiceRecurringDeliveryPlanStage :invoice="localInvoice" :style="{ position:'relative', zIndex: 1 }" 
+            <recurringDeliveryPlanStage :invoice="localInvoice" :style="{ position:'relative', zIndex: 1 }" 
                 @saved="$emit('saved', $event)">
-            </invoiceRecurringDeliveryPlanStage>
+            </recurringDeliveryPlanStage>
 
             <!-- Get the stage for setting the recurring delivery plan -->
-            <invoiceRecurringApprovalStage :invoice="localInvoice" :style="{ position:'relative', zIndex: 2 }" 
+            <recurringApprovalStage :invoice="localInvoice" :style="{ position:'relative', zIndex: 2 }" 
                 @saved="$emit('saved', $event)">
-            </invoiceRecurringApprovalStage>
+            </recurringApprovalStage>
 
         </Col>
 
@@ -41,10 +74,10 @@
 </template>
 <script type="text/javascript">
 
-    import invoiceRecurringSchedulePlanStage from './../../../components/_common/steps/invoiceRecurringSchedulePlanStage.vue'; 
-    import invoiceRecurringPaymentPlanStage from './../../../components/_common/steps/invoiceRecurringPaymentPlanStage.vue'; 
-    import invoiceRecurringDeliveryPlanStage from './../../../components/_common/steps/invoiceRecurringDeliveryPlanStage.vue'; 
-    import invoiceRecurringApprovalStage from './../../../components/_common/steps/invoiceRecurringApprovalStage.vue'; 
+    import recurringSchedulePlanStage from './../../../components/_common/steps/recurringSchedulePlanStage.vue'; 
+    import recurringPaymentPlanStage from './../../../components/_common/steps/recurringPaymentPlanStage.vue'; 
+    import recurringDeliveryPlanStage from './../../../components/_common/steps/recurringDeliveryPlanStage.vue'; 
+    import recurringApprovalStage from './../../../components/_common/steps/recurringApprovalStage.vue'; 
 
     export default {
         props: {
@@ -53,7 +86,7 @@
                 default: null
             }
         },
-        components: { invoiceRecurringSchedulePlanStage, invoiceRecurringPaymentPlanStage, invoiceRecurringDeliveryPlanStage, invoiceRecurringApprovalStage },
+        components: { recurringSchedulePlanStage, recurringPaymentPlanStage, recurringDeliveryPlanStage, recurringApprovalStage },
         data(){
             var vm = this;
             return {

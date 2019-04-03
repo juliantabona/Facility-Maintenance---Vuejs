@@ -2,13 +2,13 @@
 
     <div>
         
-        <!-- Fade loader - Shows when saving the recurring invoice schedule plan  -->
+        <!-- Fade loader - Shows when saving the recurring schedule plan  -->
         <fadeLoader :loading="isSavingRecurringSchedulePlan" msg="Saving schedule plan, please wait..."></fadeLoader>
 
         <!-- Stage card  -->
         <stagingCard 
-            :stageNumber="1" :showCheckMark="localInvoice.has_set_recurring_schedule_plan && !isEditingSchedulePlan" 
-            :showHeader="!localInvoice.has_approved_recurring_schedule" 
+            :stageNumber="1" :showCheckMark="showCheckMark" 
+            :showHeader="showHeader" 
             :disabled="false" :showVerticalLine="true" :leftWidth="24"
             :isSaving="isSavingRecurringSchedulePlan">
 
@@ -23,9 +23,9 @@
 
             <template slot="leftContent">
 
-                <h4 :class="'text-secondary' + ( isEditingSchedulePlan ? ' mt-3 mb-4': '')">Schedule Plan:</h4>
-                <div v-if="!isEditingSchedulePlan" class="d-inline-block mt-2" :style="{ lineHeight: '1.6em' }">
-                    <p><b>Repeat {{ localInvoice.recurringSettings.schedulePlan.chosen }}:</b> {{ scheduleSummaryInWords }}</p>
+                <h4 :class="'text-secondary' + ( isEditingStage ? ' mt-3 mb-4': '')">Schedule Plan:</h4>
+                <div v-if="!isEditingStage" class="d-inline-block mt-2" :style="{ lineHeight: '1.6em' }">
+                    <p><b>Repeat {{ localRecurringSettings.schedulePlan.chosen }}:</b> {{ scheduleSummaryInWords }}</p>
                     <p><b>Dates:</b> {{ scheduleStartAndStopDatesInWords }}</p>
                     <p><b>Time zone:</b> Africa/Gaborone</p>
                 </div>
@@ -36,16 +36,16 @@
             <template slot="extraContent">
 
                 <!-- Schedule settings -->
-                <Row v-if="isEditingSchedulePlan">
+                <Row v-if="isEditingStage">
                     
                     <!-- Schedule Frequency e.g) Daily, Weekly, Monthly, Yearly or Custom  -->
                     <Col span="24">
 
                         <!-- Reminder method Selector -->
-                        <span class="float-left d-block mr-1 mb-3">Repeat this invoice</span>
+                        <span class="float-left d-block mr-1 mb-3">Repeat this {{ resourceName }}</span>
 
                         <!-- Timeline Options -->
-                        <Select v-model="localInvoice.recurringSettings.schedulePlan.chosen" 
+                        <Select v-model="localRecurringSettings.schedulePlan.chosen" 
                                 :style="{ width:'100px', marginTop:'-5px',position:'relative',zIndex:'1' }" class="float-left d-block mb-3" placeholder="Select frequency"
                                 @on-change="updateSchedulePlans()">
                             <Option value="Daily">Daily</Option>
@@ -56,9 +56,9 @@
                         </Select>
 
                         <!-- If Weekly -->
-                        <span v-show="localInvoice.recurringSettings.schedulePlan.chosen == 'Weekly'" class="mb-3">
+                        <span v-show="localRecurringSettings.schedulePlan.chosen == 'Weekly'" class="mb-3">
                             <span class="float-left d-block ml-1 mr-1">every</span>
-                            <Select v-model="localInvoice.recurringSettings.schedulePlan.weekly" :style="{ width:'120px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day of week"
+                            <Select v-model="localRecurringSettings.schedulePlan.weekly" :style="{ width:'120px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day of week"
                                     @on-change="updateSchedulePlans()">
                                 <Option value="1">Monday</Option>
                                 <Option value="2">Tuesday</Option>
@@ -71,9 +71,9 @@
                         </span>
                         
                         <!-- If Monthly -->
-                        <span v-show="localInvoice.recurringSettings.schedulePlan.chosen == 'Monthly'" class="mb-3">
+                        <span v-show="localRecurringSettings.schedulePlan.chosen == 'Monthly'" class="mb-3">
                             <span class="float-left d-block ml-1 mr-1">on the</span>
-                            <Select v-model="localInvoice.recurringSettings.schedulePlan.monthly" :style="{ width:'60px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day"
+                            <Select v-model="localRecurringSettings.schedulePlan.monthly" :style="{ width:'60px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day"
                                     @on-change="updateSchedulePlans()">
                                 <Option value="1">1st</Option>
                                 <Option value="2">2nd</Option>
@@ -111,9 +111,9 @@
                         </span>
 
                         <!-- If Yearly -->
-                        <span v-show="localInvoice.recurringSettings.schedulePlan.chosen == 'Yearly'" class="mb-3">
+                        <span v-show="localRecurringSettings.schedulePlan.chosen == 'Yearly'" class="mb-3">
                             <span class="float-left d-block ml-1 mr-1">every</span>
-                            <Select v-model="localInvoice.recurringSettings.schedulePlan.yearly.month" :style="{ width:'120px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day of week"
+                            <Select v-model="localRecurringSettings.schedulePlan.yearly.month" :style="{ width:'120px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day of week"
                                     @on-change="updateSchedulePlans()">
                                     <Option value="0">January</Option>
                                     <Option value="1">February</Option>
@@ -130,7 +130,7 @@
                             </Select>
                             
                             <span class="float-left d-block ml-1 mr-1">on the</span>
-                            <Select v-model="localInvoice.recurringSettings.schedulePlan.yearly.day" :style="{ width:'60px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day"
+                            <Select v-model="localRecurringSettings.schedulePlan.yearly.day" :style="{ width:'60px', marginTop:'-5px' }" class="float-left d-block" placeholder="Select day"
                                     @on-change="updateSchedulePlans()">
                                 <Option value="1">1st</Option>
                                 <Option value="2">2nd</Option>
@@ -167,13 +167,13 @@
                         </span>
 
                         <!-- If Custom -->
-                        <span v-show="localInvoice.recurringSettings.schedulePlan.chosen == 'Custom'" class="mb-3">
+                        <span v-show="localRecurringSettings.schedulePlan.chosen == 'Custom'" class="mb-3">
                             <span class="float-left d-block ml-1 mr-1 mb-3">every</span>
-                            <el-input v-model="localInvoice.recurringSettings.schedulePlan.custom.count" type="number" min="1" :maxlength="2"
+                            <el-input v-model="localRecurringSettings.schedulePlan.custom.count" type="number" min="1" :maxlength="2"
                                       placeholder="E.g) 6" size="mini" class="float-left d-block mr-1 mb-3" :style="{ maxWidth:'60px', marginTop:'-3px' }"
                                       @input="updateSchedulePlans()">
                             </el-input>
-                            <Select v-model="localInvoice.recurringSettings.schedulePlan.custom.chosen" :style="{ width:'100px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day of week"
+                            <Select v-model="localRecurringSettings.schedulePlan.custom.chosen" :style="{ width:'100px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day of week"
                                 @on-change="updateSchedulePlans()">
                                 <Option value="Days">Day(s)</Option>
                                 <Option value="Weeks">Week(s)</Option>
@@ -182,9 +182,9 @@
                             </Select>
 
                             <!-- If weeks -->
-                            <span v-show="localInvoice.recurringSettings.schedulePlan.custom.chosen == 'Weeks'">
+                            <span v-show="localRecurringSettings.schedulePlan.custom.chosen == 'Weeks'">
                                 <span class="float-left d-block ml-1 mr-1 mb-3">on every</span>
-                                <Select v-model="localInvoice.recurringSettings.schedulePlan.custom.weeks" :style="{ width:'120px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day of week"
+                                <Select v-model="localRecurringSettings.schedulePlan.custom.weeks" :style="{ width:'120px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day of week"
                                     @on-change="updateSchedulePlans()">
                                     <Option value="1">Monday</Option>
                                     <Option value="2">Tuesday</Option>
@@ -197,9 +197,9 @@
                             </span>
                             
                             <!-- If months -->
-                            <span v-show="localInvoice.recurringSettings.schedulePlan.custom.chosen == 'Months'">
+                            <span v-show="localRecurringSettings.schedulePlan.custom.chosen == 'Months'">
                                 <span class="float-left d-block ml-1 mr-1 mb-3">on the</span>
-                                    <Select v-model="localInvoice.recurringSettings.schedulePlan.custom.months" :style="{ width:'60px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day"
+                                    <Select v-model="localRecurringSettings.schedulePlan.custom.months" :style="{ width:'60px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day"
                                             @on-change="updateSchedulePlans()">
                                         <Option value="1">1st</Option>
                                         <Option value="2">2nd</Option>
@@ -237,9 +237,9 @@
                             </span>
 
                             <!-- If years -->
-                            <span v-show="localInvoice.recurringSettings.schedulePlan.custom.chosen == 'Years'">
+                            <span v-show="localRecurringSettings.schedulePlan.custom.chosen == 'Years'">
                                 <span class="float-left d-block ml-1 mr-1 mb-3">on every</span>
-                                <Select v-model="localInvoice.recurringSettings.schedulePlan.custom.years.month" :style="{ width:'120px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day of week"
+                                <Select v-model="localRecurringSettings.schedulePlan.custom.years.month" :style="{ width:'120px', marginTop:'-5px' }" class="float-left d-block mb-3" placeholder="Select day of week"
                                     @on-change="updateSchedulePlans()">
                                     <Option value="0">January</Option>
                                     <Option value="1">February</Option>
@@ -255,7 +255,7 @@
                                     <Option value="11">December</Option>
                                 </Select>
                                 <span class="float-left d-block ml-1 mr-1 mb-3">on the</span>
-                                <Select v-model="localInvoice.recurringSettings.schedulePlan.custom.years.day" :style="{ width:'60px', marginTop:'-5px' }" class="float-left mb-3" placeholder="Select day"
+                                <Select v-model="localRecurringSettings.schedulePlan.custom.years.day" :style="{ width:'60px', marginTop:'-5px' }" class="float-left mb-3" placeholder="Select day"
                                         @on-change="updateSchedulePlans()">
                                     <Option value="1">1st</Option>
                                     <Option value="2">2nd</Option>
@@ -338,11 +338,11 @@
                     <!-- Schedule Start and End period  -->
                     <Col span="24" class="border-top pt-3">
                         
-                        <!-- Text for when to create first invoice -->
-                        <span class="float-left d-block mr-1 mb-3">Create first invoice on</span>
+                        <!-- Text for when to create first resource -->
+                        <span class="float-left d-block mr-1 mb-3">Create first {{ resourceName }} on</span>
 
-                        <!-- First Invoice - Start Date -->
-                        <el-date-picker v-model="localInvoice.recurringSettings.schedulePlan.startDate" type="date" 
+                        <!-- First Send - Start Date -->
+                        <el-date-picker v-model="localRecurringSettings.schedulePlan.startDate" type="date" 
                             :clearable="false" placeholder="e.g) January 1, 2018" size="mini" 
                             class="float-left mb-2" :style="{ maxWidth:'135px', marginTop:'-3px' }"
                             format="MMM dd yyyy" value-format="yyyy-MM-dd"
@@ -354,18 +354,18 @@
                         <span class="float-left d-block mr-1 ml-1 mb-3">and end</span>
 
                         <!-- Text for when to end -->
-                        <Select v-model="localInvoice.recurringSettings.schedulePlan.stop.chosen" :style="{ width:'100px', marginTop:'-5px' }" class="float-left mb-3" placeholder="Select day of week"
+                        <Select v-model="localRecurringSettings.schedulePlan.stop.chosen" :style="{ width:'100px', marginTop:'-5px' }" class="float-left mb-3" placeholder="Select day of week"
                             @on-change="updateScheduleInWords()">
                             <Option value="Count">After</Option>
                             <Option value="Date">On</Option>
                             <Option value="Never">Never</Option>
                         </Select>
-                        <el-input v-show="localInvoice.recurringSettings.schedulePlan.stop.chosen == 'Count'" type="number" min="1" :maxlength="2" v-model="localInvoice.recurringSettings.schedulePlan.stop.count" placeholder="E.g) 3" size="mini" class="float-left mr-1 ml-1 mb-3" :style="{ maxWidth:'80px', marginTop:'-3px' }"
+                        <el-input v-show="localRecurringSettings.schedulePlan.stop.chosen == 'Count'" type="number" min="1" :maxlength="2" v-model="localRecurringSettings.schedulePlan.stop.count" placeholder="E.g) 3" size="mini" class="float-left mr-1 ml-1 mb-3" :style="{ maxWidth:'80px', marginTop:'-3px' }"
                             @input="updateScheduleInWords()">
                         </el-input>
                         <!-- Text for when to end -->
-                        <span v-if="localInvoice.recurringSettings.schedulePlan.stop.chosen == 'Count'" class="float-left d-block mr-1 ml-1 mb-3">invoice(s) have been sent</span>
-                        <el-date-picker v-show="localInvoice.recurringSettings.schedulePlan.stop.chosen == 'Date'" v-model="localInvoice.recurringSettings.schedulePlan.stop.date" type="date" :clearable="false" placeholder="e.g) January 1, 2018" size="mini" class="float-left mr-1 ml-1 mb-3" :style="{ maxWidth:'135px', marginTop:'-3px' }"
+                        <span v-if="localRecurringSettings.schedulePlan.stop.chosen == 'Count'" class="float-left d-block mr-1 ml-1 mb-3">{{ resourceName }}(s) have been sent</span>
+                        <el-date-picker v-show="localRecurringSettings.schedulePlan.stop.chosen == 'Date'" v-model="localRecurringSettings.schedulePlan.stop.date" type="date" :clearable="false" placeholder="e.g) January 1, 2018" size="mini" class="float-left mr-1 ml-1 mb-3" :style="{ maxWidth:'135px', marginTop:'-3px' }"
                             format="MMM dd yyyy" value-format="yyyy-MM-dd"
                             @change="updateScheduleInWords()">
                         </el-date-picker>
@@ -381,11 +381,11 @@
                             <Col span="24">
 
                                 <!-- Focus Ripple  -->
-                                <focusRipple color="blue" :ripple="!localInvoice.has_set_recurring_schedule_plan" class="float-right">
+                                <focusRipple color="blue" :ripple="rippleEffect" class="float-right">
                                     
                                     <!-- Next Button -->
-                                    <Button v-if="isEditingSchedulePlan" class="float-right" type="primary" size="large" @click="saveSchedulePlan()">
-                                        <span>{{ localInvoice.has_set_recurring_schedule_plan ? 'Save Changes': 'Next Step' }}</span>
+                                    <Button v-if="isEditingStage" class="float-right" type="primary" size="large" @click="saveSchedulePlan()">
+                                        <span>{{ showNextStepBtn ? 'Save Changes': 'Next Step' }}</span>
                                     </Button>
 
                                     <Button v-else class="float-right" type="default" size="large" @click="activateEditMode()">
@@ -422,10 +422,40 @@
     export default {
         components: { fadeLoader, stagingCard, focusRipple },
         props: {
-            invoice: {
-                moment: moment,
-
+            recurringSettings: {
                 type: Object,
+                default: null
+            },
+            resourceName:{
+                type: String,
+                default: '___'
+            },
+            resourceNamePlural:{
+                type: String,
+                default: '___'
+            },
+            showHeader:{
+                type: Boolean,
+                default: false    
+            },
+            showCheckMark:{
+                type: Boolean,
+                default: false    
+            },
+            showNextStepBtn:{
+                type: Boolean,
+                default: false    
+            },
+            isEditing: {
+                type: Boolean,
+                default: false 
+            },
+            rippleEffect:{
+                type: Boolean,
+                default: false  
+            },
+            url:{
+                type: String,
                 default: null
             }
         },
@@ -434,21 +464,21 @@
             return {
                 /*
                     We are using cloneDeep to create a coplete copy of the javascript object without
-                    having reactivity to the main invoice. This is so that whatever changes we make to 
-                    the localInvoice, they must not affect the parent "invoice". We will only update
-                    the parent when we save the changes to the database.
+                    having reactivity to the main recurring settings. This is so that whatever changes 
+                    we make to the localRecurringSettings, they must not affect the parent "Recurring Settings". 
+                    We will only update the parent details when we save the changes to the database.
                 */
-                localInvoice: _.cloneDeep(this.invoice),
-                isEditingSchedulePlan: (_.cloneDeep(this.invoice).recurringSettings.editing.schedulePlan),
+                localRecurringSettings: _.cloneDeep( (this.recurringSettings || {}) ),
+                isEditingStage: ((_.cloneDeep( (this.recurringSettings || {}) ).editing || {}).schedulePlan),
                 isSavingRecurringSchedulePlan: false,
                 scheduleSummaryInWords:'',
                 scheduleStartAndStopDatesInWords: '',
                 scheduleTime: '0800AM',
                 pickerOptions: {
                     disabledDate(time) {
-                        if( (vm.localInvoice || {}).recurringSettings){
+                        if( vm.localRecurringSettings ){
 
-                            var schedulePlan = vm.localInvoice.recurringSettings.schedulePlan;
+                            var schedulePlan = vm.localRecurringSettings.schedulePlan;
                             var chosenSchedule = schedulePlan.chosen;             //  Daily, Weekly, Monthly, Yearly, Custom
 
                             var weekly = schedulePlan.weekly;                     //  0, 1, 2, 3, 4, 5, 6
@@ -464,7 +494,7 @@
                             var yearsMonth = schedulePlan.custom.years.month;     //  0, 1, 2,... 11
                             var yearsDay = schedulePlan.custom.years.day;         //  0, 1, 2, 3,... 31
                         
-                            if( moment(time) < moment(vm.localInvoice.recurringSettings.schedulePlan.startDate) 
+                            if( moment(time) < moment(vm.localRecurringSettings.schedulePlan.startDate) 
                                 && (chosenSchedule != 'Custom') ){
                                 //  If the time is less than the scheduled start date then it must be disabled
                                 return true;
@@ -516,15 +546,15 @@
         },
         watch: {
 
-            //  Watch for changes on the invoice
-            invoice: {
+            //  Watch for changes on the recurringSettings
+            recurringSettings: {
                 handler: function (val, oldVal) {
                     
-                    //  Update the local invoice value
-                    this.localInvoice = _.cloneDeep(val);
+                    //  Update the local recurringSettings value
+                    this.localRecurringSettings = _.cloneDeep(val);
 
                     //  Update the editing schedule shortcut
-                    this.isEditingSchedulePlan = (_.cloneDeep(val).recurringSettings.editing.schedulePlan);
+                    this.isEditingStage = ((_.cloneDeep( (val || {}) ).editing|| {}).schedulePlan);
 
                     this.updateSchedulePlans();
                     this.updateScheduleInWords();
@@ -535,7 +565,7 @@
         },
         methods: {
             updateSchedulePlans(){
-                var schedulePlan = this.localInvoice.recurringSettings.schedulePlan;
+                var schedulePlan = this.localRecurringSettings.schedulePlan;
                 
                 /*********************************************************************
                  *   SET THE NEXT SCHEDULE TIME ACCORDING TO RECURRING SCHEDULE      *
@@ -688,8 +718,8 @@
                     var updatedStartDate = newStartDate.format('YYYY-MM-DD HH:mm:ss');
                     var updatedEndDate = newEndDate.format('YYYY-MM-DD HH:mm:ss');
 
-                    this.$set(this.localInvoice.recurringSettings.schedulePlan, 'startDate', updatedStartDate);
-                    this.$set(this.localInvoice.recurringSettings.schedulePlan.stop, 'date', updatedEndDate);
+                    this.$set(this.localRecurringSettings.schedulePlan, 'startDate', updatedStartDate);
+                    this.$set(this.localRecurringSettings.schedulePlan.stop, 'date', updatedEndDate);
 
                     this.updateScheduleInWords();
                 }
@@ -699,24 +729,24 @@
             updateScheduleInWords(){
 
                     //  Explain in words
-                    var currStartDate = this.localInvoice.recurringSettings.schedulePlan.startDate;
-                    var currStopDate = this.localInvoice.recurringSettings.schedulePlan.stop.date;
-                    var currStopCount = this.localInvoice.recurringSettings.schedulePlan.stop.count;          //  2
-                    var chosenStopMethod = this.localInvoice.recurringSettings.schedulePlan.stop.chosen       //  Count, Date, Never
+                    var currStartDate = this.localRecurringSettings.schedulePlan.startDate;
+                    var currStopDate = this.localRecurringSettings.schedulePlan.stop.date;
+                    var currStopCount = this.localRecurringSettings.schedulePlan.stop.count;          //  2
+                    var chosenStopMethod = this.localRecurringSettings.schedulePlan.stop.chosen       //  Count, Date, Never
                     var time = this.scheduleTime.substring(0, 2) +':'+ this.scheduleTime.substring(2, 4) + this.scheduleTime.substring(4, 6);
 
-                    var startDateInWods = 'Create first invoice on ' + moment(currStartDate).format('MMM Do YYYY') + ' at ' + time;
+                    var startDateInWods = 'Create first '+this.resourceName+' on ' + moment(currStartDate).format('MMM Do YYYY') + ' at ' + time;
                     var stopDate = ' and send the last on '+moment(currStopDate).format('MMM Do YYYY') + ' at ' + time;
-                    var stopCount = ' and stop after ' + (currStopCount) + (currStopCount == 1 ? ' invoice has': ' invoices have')+' been sent';
+                    var stopCount = ' and stop after ' + (currStopCount) + (currStopCount == 1 ? ' '+ this.resourceName +' has': ' '+this.resourceNamePlural+' have')+' been sent';
                     var stopNever = ' and never stop sending';
 
                     this.scheduleStartAndStopDatesInWords = startDateInWods + (chosenStopMethod == 'Date' ? stopDate  : ( chosenStopMethod == 'Count' ? stopCount : stopNever) );  
             },
             activateEditMode(){
                 //  Get all the plans and their edit state
-                var editingSchedulePlan = ( this.localInvoice.recurringSettings.editing.schedulePlan );
-                var editingDeliveryPlan = ( this.localInvoice.recurringSettings.editing.deliveryPlan );
-                var editingPaymentPlan = ( this.localInvoice.recurringSettings.editing.paymentPlan );
+                var editingSchedulePlan = ( this.localRecurringSettings.editing.schedulePlan );
+                var editingDeliveryPlan = ( this.localRecurringSettings.editing.deliveryPlan );
+                var editingPaymentPlan = ( this.localRecurringSettings.editing.paymentPlan );
 
                 //  If we are still editing the delivery/payment plan 
                 if( editingDeliveryPlan || editingPaymentPlan ){
@@ -726,8 +756,8 @@
                         desc: 'Save your '+(editingDeliveryPlan ? 'Delivery Plans': 'Payment Plans')+' first before editing your Schedule Plans',
                     });
                 }else{
-                    this.localInvoice.recurringSettings.editing.schedulePlan = true;
-                    this.isEditingSchedulePlan = true;
+                    this.localRecurringSettings.editing.schedulePlan = true;
+                    this.isEditingStage = true;
                 }
             },
             saveSchedulePlan(){
@@ -740,30 +770,35 @@
                 console.log('Attempt to save recurring schedule plan...');
 
                 //  Form data to send
-                let invoiceData = { invoice: self.localInvoice };
+                let RecurringSettingsData = { settings: self.localRecurringSettings };
 
-                //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/invoices/'+self.localInvoice.id+'/recurring/update-schedule-plan', invoiceData)
-                    .then(({ data }) => {
-                        
-                        console.log(data);
+                if( this.url ){
 
-                        //  Stop loader
-                        self.isSavingRecurringSchedulePlan = false;
-                        
-                        //  Alert creation success
-                        self.$Message.success('Schedule plan saved sucessfully!');
+                    //  Use the api call() function located in resources/js/api.js
+                    api.call('post', this.url, RecurringSettingsData)
+                        .then(({ data }) => {
+                            
+                            console.log(data);
 
-                        self.$emit('saved', data);
+                            //  Stop loader
+                            self.isSavingRecurringSchedulePlan = false;
+                            
+                            //  Alert creation success
+                            self.$Message.success('Schedule plan saved sucessfully!');
 
-                    })         
-                    .catch(response => { 
-                        //  Stop loader
-                        self.isSavingRecurringSchedulePlan = false;
+                            self.$emit('saved', data);
 
-                        console.log('recurringSettingsStage.vue - Error saving recurring schedule...');
-                        console.log(response);
-                    });
+                        })         
+                        .catch(response => { 
+                            //  Stop loader
+                            self.isSavingRecurringSchedulePlan = false;
+
+                            console.log('recurringSettingsStage.vue - Error saving recurring schedule...');
+                            console.log(response);
+                        });
+
+                }
+
             }
         },
         created(){

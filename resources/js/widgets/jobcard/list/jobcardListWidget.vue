@@ -25,7 +25,7 @@
 
                 moment: moment,
 
-                type: this.$route.query.status,
+                status: this.$route.query.status,
 
                 requestUpdate: 0,
 
@@ -170,11 +170,11 @@
             }
         },
         watch: {
-            //  Watch for changes on the type
+            //  Watch for changes on the status
             '$route.query.status': function (status) {
                 
-                //  Update the type query
-                this.type = status;
+                //  Update the status query
+                this.status = status;
 
                 //  Request an update
                 this.requestUpdate = this.requestUpdate + 1;
@@ -185,13 +185,13 @@
             generateURL: function () {
                 
                 //  Get the status e.g) client, supplier, e.t.c
-                var type = this.type ? 'type='+this.type : '';
+                var status = this.status ? 'status='+this.status : '';
 
                 //  Additional data to eager load along with each jobcard found
-                var connections = (type ? '&' : '') + 'connections=priority,categories,costcenters';
+                var connections = (status ? '&' : '') + 'connections=priority,categories,costcenters';
 
                 //  Url generated for the filterable Api call  
-                var url = '/api/jobcards?' + type + connections;
+                var url = '/api/jobcards?' + status + connections;
 
                 //  Assign url to the filterable object
                 this.filterable.url = url;

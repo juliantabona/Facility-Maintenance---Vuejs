@@ -25,20 +25,38 @@
 
         <!-- Activity Number Card -->
         <Row v-if="!isLoading" :gutter="20">
-            <Col :span="24/(statLabels.length)" v-for="(item, i) in statLabels" :key="i">
+            <Col :span="24/(mainStatLabels.length)" v-for="(item, i) in mainStatLabels" :key="i">
                 
-                <NumberCounterCard   :title="statLabels[i]" 
+                <NumberCounterCard   :title="mainStatLabels[i]" 
                                      :isMoneyList="isMoneyList"
                                      :renameTitleList="renameTitleList"
-                                     :amount="statGrandTotal[i]" :count="statTotalCount[i]" 
+                                     :amount="mainStatGrandTotalunt[i]" :count="mainStatTotalCount[i]" 
                                      :currency="baseCurrency" :showZero="false" class="mb-2" 
-                                     :route="{ path: routePath, query: { status: ( statLabels[i] ), location: 'bottom' } }"
-                                     :active="statLabels[i] == $route.query.status && $route.query.location == 'bottom'"
+                                     :route="{ path: routePath, query: { status: ( mainStatLabels[i] ), location: 'bottom' } }"
+                                     :active="mainStatLabels[i] == $route.query.status && $route.query.location == 'bottom'"
                                      :type="determineType(i)">
                 </NumberCounterCard>
             
             </Col>
         </Row>
+
+        <!-- Activity Number Card -->
+        <Row v-if="!isLoading" :gutter="20">
+            <Col :span="24/(subStatLabels.length)" v-for="(item, i) in subStatLabels" :key="i">
+                
+                <NumberCounterCard   :title="subStatLabels[i]" 
+                                     :isMoneyList="isMoneyList"
+                                     :renameTitleList="renameTitleList"
+                                     :amount="mainStatGrandTotalunt[i]" :count="subStatTotalCount[i]" 
+                                     :currency="baseCurrency" :showZero="false" class="mb-2" 
+                                     :route="{ path: routePath, query: { status: ( subStatLabels[i] ), location: 'bottom' } }"
+                                     :active="subStatLabels[i] == $route.query.status && $route.query.location == 'bottom'"
+                                     :type="determineType(i)">
+                </NumberCounterCard>
+            
+            </Col>
+        </Row>
+
 
     </Card>
 
@@ -77,7 +95,7 @@
         data(){
             return {
                 isLoading: false,
-                fetchedStats: [],
+                fetchedMainStats: [],
                 fetchedOverallStats: [],
                 baseCurrency: null,
 
@@ -91,30 +109,63 @@
         },
         components: { Loader, NumberCounterCard },
         computed: {
-            statLabels: function(){
-                if( (this.fetchedStats || {}).length){
-                    return this.fetchedStats.map(stat => stat.name);
+            /******************************
+             *   MAIN STATS               *
+             ******************************/
+            mainStatLabels: function(){
+                if( (this.fetchedMainStats || {}).length){
+                    return this.fetchedMainStats.map(stat => stat.name);
                 }
 
                 return [];
                 
             },
-            statTotalCount: function(){
-                if( (this.fetchedStats || {}).length){
-                    return this.fetchedStats.map(stat => stat.total_count);
+            mainStatTotalCount: function(){
+                if( (this.fetchedMainStats || {}).length){
+                    return this.fetchedMainStats.map(stat => stat.total_count);
                 }
 
                 return [];
 
             },
-            statGrandTotal: function(){
-                if( (this.fetchedStats || {}).length){
-                    return this.fetchedStats.map(stat => stat.grand_total);
+            mainStatGrandTotalunt: function(){
+                if( (this.fetchedMainStats || {}).length){
+                    return this.fetchedMainStats.map(stat => stat.grand_total);
                 }
 
                 return [];
 
             },
+            /******************************
+             *   SUB STATS                *
+             ******************************/
+            subStatLabels: function(){
+                if( (this.fetchedSubStats || {}).length){
+                    return this.fetchedSubStats.map(stat => stat.name);
+                }
+
+                return [];
+                
+            },
+            subStatTotalCount: function(){
+                if( (this.fetchedSubStats || {}).length){
+                    return this.fetchedSubStats.map(stat => stat.total_count);
+                }
+
+                return [];
+
+            },
+            subStatGrandTotalunt: function(){
+                if( (this.fetchedSubStats || {}).length){
+                    return this.fetchedSubStats.map(stat => stat.grand_total);
+                }
+
+                return [];
+
+            },
+            /******************************
+             *   OVERALL STATS            *
+             ******************************/
             overallStatLabels: function(){
                 if( (this.fetchedOverallStats || {}).length){
                     return this.fetchedOverallStats.map(stat => stat.name);
@@ -142,11 +193,11 @@
         },
         methods: {
             determineType(i){
-                if( this.statLabels[i] == 'Paid' ){
+                if( this.mainStatLabels[i] == 'Paid' ){
                     return 'success';
-                }else if( this.statLabels[i] == 'Expired' ){
+                }else if( this.mainStatLabels[i] == 'Expired' ){
                     return 'error';
-                }else if( this.statLabels[i] == 'Cancelled' ){
+                }else if( this.mainStatLabels[i] == 'Cancelled' ){
                     return 'warning';
                 }else{
                     return 'normal';
@@ -175,7 +226,8 @@
                             self.isLoading = false;
                             
                             //  Get the data
-                            self.fetchedStats = data['stats'];
+                            self.fetchedMainStats = data['stats'];
+                            self.fetchedSubStats = data['sub_stats'];
                             self.fetchedOverallStats = data['overview_stats'];
                             self.baseCurrency = data['base_currency'];
 

@@ -97,6 +97,13 @@
 
           </Submenu>
 
+          <router-link :to="{ name:'appointments' }">
+            <MenuItem name="appointment">
+              <Icon type="ios-man-outline" :size="20"/>
+              <span>Appointment</span>
+            </MenuItem>
+          </router-link>
+
           <Submenu name="5" style="color:#2d8cf0;">
 
               <template slot="title">
@@ -145,8 +152,12 @@
                 <MenuItem name="jobcards">Recent Jobcards</MenuItem>
               </router-link>
 
+              <router-link :to="{name:'jobcard-calendar'}">
+                <MenuItem name="jobcardCalendar">Calendar</MenuItem>
+              </router-link>
+
               <router-link :to="{name:'jobcards'}">
-                <MenuItem name="jobcardSettings">Jobcard Settings</MenuItem>
+                <MenuItem name="jobcardSettings">Settings</MenuItem>
               </router-link>
 
           </Submenu>

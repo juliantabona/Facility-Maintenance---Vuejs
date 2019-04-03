@@ -58,37 +58,22 @@
 
                     // Lifecycle status info
                     this.status.description = 'This jobcard has received payment';
-                    this.status.text = (this.localJobcard.current_lifecycle_status || {}).name;
+                    this.status.text = (this.localJobcard.current_lifecycle_main_status || {}).name;
                     this.status.color = '#2d8cf0';
                 
                 //  If closed
                 }else if( this.jobstartedStage() ){
 
-                    // Lifecycle status info
-                    if( (this.localJobcard.current_lifecycle_status || {}).name == 'Job Cancelled' ){
-                        
-                        this.status.description = 'This jobcard has been cancelled';
-                        this.status.text = (this.localJobcard.current_lifecycle_status || {}).name;
-                        this.status.color = '#ed4014';
-
-                    }else if( (this.localJobcard.current_lifecycle_status || {}).name == 'Job Pending' ){
-
-                        this.status.description = 'This jobcard is currently pending';
-                        this.status.text = (this.localJobcard.current_lifecycle_status || {}).name;
-                        this.status.color = '#f90';
-                    }else{
-
-                        this.status.description = 'The job is currently running';
-                        this.status.text = (this.localJobcard.current_lifecycle_status || {}).name;
-                        this.status.color = '#2d8cf0';
-                    }
+                    this.status.description = 'The job is currently running';
+                    this.status.text = (this.localJobcard.current_lifecycle_main_status || {}).name;
+                    this.status.color = '#2d8cf0';
 
                 //  If closed
                 }else if( this.closedStage() ){
 
                     // Lifecycle status info
                     this.status.description = 'This jobcard has been completed successfully';
-                    this.status.text = (this.localJobcard.current_lifecycle_status || {}).name;
+                    this.status.text = (this.localJobcard.current_lifecycle_main_status || {}).name;
                     this.status.color = '#19be6b';
 
                 //  If open
@@ -96,7 +81,7 @@
 
                     // Lifecycle status info
                     this.status.description = 'This jobcard is open';
-                    this.status.text = (this.localJobcard.current_lifecycle_status || {}).name;
+                    this.status.text = (this.localJobcard.current_lifecycle_main_status || {}).name;
                     this.status.color = '#2d8cf0';
                 }else{
                     // Lifecycle status info
@@ -104,18 +89,35 @@
                     this.status.text = '...';
                     this.status.color = '#808695';
                 } 
+
+                /********************************************************
+                *     If we have a lifecycle sub status then override   *
+                *********************************************************/ 
+                if( this.localJobcard.current_lifecycle_sub_status == 'Cancelled' ){
+                    
+                    this.status.description = 'This jobcard has been cancelled';
+                    this.status.text = this.localJobcard.current_lifecycle_sub_status;
+                    this.status.color = '#ed4014';
+
+                }else if( this.localJobcard.current_lifecycle_sub_status == 'Pending' ){
+
+                    this.status.description = 'This jobcard is currently pending';
+                    this.status.text = this.localJobcard.current_lifecycle_sub_status;
+                    this.status.color = '#f90';
+                }
+
             },
             openStage(){
-                return (this.localJobcard.current_lifecycle_status || {}).type == 'open' ? true: false;
+                return (this.localJobcard.current_lifecycle_main_status || {}).type == 'open' ? true: false;
             },
             paymentStage(){
-                return (this.localJobcard.current_lifecycle_status || {}).type == 'payment' ? true: false;
+                return (this.localJobcard.current_lifecycle_main_status || {}).type == 'payment' ? true: false;
             },
             jobstartedStage(){
-                return (this.localJobcard.current_lifecycle_status || {}).type == 'job_started' ? true: false;
+                return (this.localJobcard.current_lifecycle_main_status || {}).type == 'job_started' ? true: false;
             },
             closedStage(){
-                return (this.localJobcard.current_lifecycle_status || {}).type == 'closed' ? true: false;
+                return (this.localJobcard.current_lifecycle_main_status || {}).type == 'closed' ? true: false;
             }
         },
         created() {

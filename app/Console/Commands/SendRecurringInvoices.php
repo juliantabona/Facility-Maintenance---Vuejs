@@ -51,7 +51,7 @@ class SendRecurringInvoices extends Command
         //  Foreach invoice
         foreach ($invoices as $invoice) {
             //  Get the recurring settings
-            $recurringSettings = $invoice['recurringSettings'];
+            $recurringSettings = $invoice['recurring_settings'];
             $schedulePlan = $recurringSettings['schedulePlan'];
 
             //  Get the total number of recurring child invoices
@@ -167,7 +167,7 @@ class SendRecurringInvoices extends Command
 
                 //  Now update scheduled time for next sending
                 $recurringSettings['schedulePlan']['nextDate'] = (new Carbon($newDate))->format('Y-m-d H:i:s');
-                $invoice->update(['recurringSettings' => $recurringSettings]);
+                $invoice->update(['recurring_settings' => $recurringSettings]);
 
                 //  Record next estimated recurring activity
 

@@ -92,34 +92,35 @@ class Quotation extends Model
     {
         return $this->morphMany('App\RecentActivity', 'trackable')
                     ->where('trackable_id', $this->id)
+                    ->where('trackable_type', 'quotation')
                     ->orderBy('created_at', 'desc');
     }
 
     public function createdActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'created');
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'quotation')->where('type', 'created');
     }
 
     public function approvedActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'approved');
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'quotation')->where('type', 'approved');
     }
 
     public function sentActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where(function ($q) {
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'quotation')->where(function ($q) {
             $q->where('type', 'sent email')->orWhere('type', 'sent sms');
         });
     }
 
     public function skippedSendingActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'skipped sending');
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'quotation')->where('type', 'skipped sending');
     }
 
     public function convertedActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'converted');
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'quotation')->where('type', 'converted');
     }
 
     public function client()
@@ -142,24 +143,24 @@ class Quotation extends Model
 
     public function getLastApprovedActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('type', 'approved')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('trackable_type', 'quotation')->where('type', 'approved')->first();
     }
 
     public function getLastSentActivityAttribute()
     {
-        return $this->recentActivities()->select('id', 'type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where(function ($q) {
+        return $this->recentActivities()->select('id', 'type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('trackable_type', 'quotation')->where(function ($q) {
             $q->where('type', 'sent email')->orWhere('type', 'sent sms');
         })->first();
     }
 
     public function getLastSkippedSendingActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('type', 'skipped sending')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('trackable_type', 'quotation')->where('type', 'skipped sending')->first();
     }
 
     public function getLastConvertedActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('type', 'converted')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('trackable_type', 'quotation')->where('type', 'converted')->first();
     }
 
     public function gethasApprovedAttribute()
@@ -216,7 +217,7 @@ class Quotation extends Model
 
     public function getActivityCountAttribute()
     {
-        $count = $this->recentActivities()->where('trackable_id', $this->id)
+        $count = $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'quotation')
                                           ->select(DB::raw('count(*) as total'))
                                           ->groupBy('trackable_type')
                                           ->first();
@@ -226,7 +227,7 @@ class Quotation extends Model
 
     public function getSentQuotationActivityCountAttribute()
     {
-        $count = $this->recentActivities()->where('trackable_id', $this->id)->where(function ($q) {
+        $count = $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'quotation')->where(function ($q) {
             $q->where('type', 'sent email')->orWhere('type', 'sent sms');
         })
                                           ->select(DB::raw('count(*) as total'))
@@ -239,7 +240,7 @@ class Quotation extends Model
     public function getConvertedActivityCountAttribute()
     {
         $count = $this->recentActivities()->select(DB::raw('count(*) as total'))
-                                          ->where('trackable_id', $this->id)
+                                          ->where('trackable_id', $this->id)->where('trackable_type', 'quotation')
                                           ->where('type', 'converted')
                                           ->groupBy('type')
                                           ->first();

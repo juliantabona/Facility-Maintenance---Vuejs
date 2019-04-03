@@ -86,6 +86,7 @@ Route::post('/process-forms', 'Api\ProcessFormController@store');
 */
 Route::get('jobcards', 'Api\JobcardController@index');
 Route::post('jobcards', 'Api\JobcardController@store');
+Route::get('jobcards/stats', 'Api\JobcardController@getEstimatedStats');
 Route::get('jobcards/{jobcard_id}', 'Api\JobcardController@show');
 Route::post('jobcards/{jobcard_id}/approve', 'Api\JobcardController@approve');  //  ok
 Route::get('jobcards/{jobcard_id}/suppliers', 'Api\JobcardController@suppliers');
@@ -96,6 +97,14 @@ Route::post('jobcards/{jobcard_id}/lifecycle', 'Api\JobcardController@updateLife
 Route::post('jobcards/{jobcard_id}/addLifecycle', 'Api\JobcardController@addLifecycle');
 Route::post('jobcards/{jobcard_id}/lifecycle/stages', 'Api\JobcardController@updateLifecycleProgress');
 Route::post('jobcards/{jobcard_id}/lifecycle/stages/undo', 'Api\JobcardController@undoLifecycleProgress');
+
+/*   APPOINTMENT RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::get('appointments', 'Api\AppointmentController@index');
+Route::get('appointments/{appointment_id}', 'Api\AppointmentController@show');
+Route::post('appointments/{appointment_id}/approve', 'Api\AppointmentController@approve');  //  ok
+Route::post('appointments/{appointment_id}/recurring/update-schedule-plan', 'Api\AppointmentController@updateRecurringSettingsSchedulePlan');
 
 /*   DIRECTORY RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete

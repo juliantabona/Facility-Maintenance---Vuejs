@@ -27,8 +27,8 @@
 
                     <!-- Get the client activity cards -->
                     <activityCardWidget 
-                        url="/companies/stats" 
-                        routeName="companies"
+                        url="/jobcards/stats" 
+                        routeName="jobcards"
                         :renameTitleList="[{search: 'Client', replace: 'Clients'}, {search: 'Supplier', replace: 'Suppliers'}]">
                     </activityCardWidget>
 

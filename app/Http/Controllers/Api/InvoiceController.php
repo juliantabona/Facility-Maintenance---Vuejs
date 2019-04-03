@@ -167,6 +167,10 @@ class InvoiceController extends Controller
         return $response;
     }
 
+    /*  updateRecurringSettingsSchedulePlan()
+     *  Updates the schedule plan (date, time and frequency) of how the invoices
+     *  will be sent over a time period
+     */
     public function updateRecurringSettingsSchedulePlan($invoice_id)
     {
         //  Invoice Instance

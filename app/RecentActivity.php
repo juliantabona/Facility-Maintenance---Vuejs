@@ -8,15 +8,17 @@ use App\AdvancedFilter\Dataviewer;
 use App\Traits\RecentActivityTraits;
 
 Relation::morphMap([
+    'jobcard' => 'App\Jobcard',
+    'quotation' => 'App\Quotation',
+    'invoice' => 'App\Invoice',
+    'appointment' => 'App\Appointment',
     'company' => 'App\Company',
     'companybranch' => 'App\CompanyBranch',
-    'jobcard' => 'App\Jobcard',
     'category' => 'App\Category',
     'priority' => 'App\Priority',
     'costcenter' => 'App\CostCenter',
     'document' => 'App\Document',
-    'quotation' => 'App\Quotation',
-    'invoice' => 'App\Invoice',
+
     'phone' => 'App\Phone',
     'user' => 'App\User',
 ]);

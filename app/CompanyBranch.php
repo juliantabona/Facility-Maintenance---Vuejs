@@ -126,6 +126,11 @@ class CompanyBranch extends Model
         return $this->hasMany('App\Jobcard', 'company_branch_id');
     }
 
+    public function appointments()
+    {
+        return $this->hasMany('App\Appointment', 'company_branch_id');
+    }
+
     /**
      *   Get the recent activities that belong to the branch.
      */

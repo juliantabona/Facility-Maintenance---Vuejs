@@ -159,6 +159,13 @@ let routes = [
     props: true
 },
 {
+    //  Show jobcard calendar
+    path: '/jobcards/calendar', name: 'jobcard-calendar',
+    meta: { layout: 'Dashboard', middlewareAuth: true },
+    component: require('./views/dashboard/jobcard/show/calendar.vue'),
+    props: true
+},
+{
     //  Show one jobcard
     path: '/jobcards/:id', name: 'show-jobcard',
     meta: { layout: 'Dashboard', middlewareAuth: true },
@@ -185,7 +192,23 @@ let routes = [
     meta: { layout: 'Dashboard', middlewareAuth: true },
     component: require('./views/dashboard/jobcard/show/invoices.vue'),
     props: true
-}
+},
+    /**************************************
+    *  APPOINTMENTS
+    **************************************/  
+{
+    //  Appointments
+    path: '/appointments', name: 'appointments',
+    meta: { layout: 'Dashboard', middlewareAuth: true },
+    component: require('./views/dashboard/appointment/list/main.vue')
+},
+{
+    //  Show one appointment
+    path: '/appointments/:id', name: 'show-appointment',
+    meta: { layout: 'Dashboard', middlewareAuth: true },
+    component: require('./views/dashboard/appointment/show/main.vue'),
+    props: true
+},
 ];
 
 const router = new VueRouter({

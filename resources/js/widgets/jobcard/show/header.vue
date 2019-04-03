@@ -10,7 +10,7 @@
         <basicButton @click.native="downloadPDF({ preview: true })" size="small" class="float-right mr-2">Preview</basicButton>
 
         <!-- Preview button -->
-        <basicButton @click.native="downloadPDF({ preview: true })" size="small" class="float-right mr-2">View Calendar</basicButton>
+        <basicButton @click.native="$router.push({name:'jobcard-calendar'})" size="small" class="float-right mr-2">View Calendar</basicButton>
         
     </div>
 

@@ -73,6 +73,11 @@ class Company extends Model
         return $this->morphOne('App\Jobcard', 'client');
     }
 
+    public function appointments()
+    {
+        return $this->hasMany('App\Appointment', 'company_id');
+    }
+
     /*  Get the process forms related to this company.  A process form in basically a staged process in which
      *  a company can follow to achieve a set of tasks. These processes involve collecting and monitoring data.
      *  When we ask for a process form, we are asking the database to get the main tree that holds all the steps
@@ -189,17 +194,18 @@ class Company extends Model
     {
         return $this->morphMany('App\RecentActivity', 'trackable')
                     ->where('trackable_id', $this->id)
+                    ->where('trackable_type', 'company')
                     ->orderBy('created_at', 'desc');
     }
 
     public function createdActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'created');
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'company')->where('type', 'created');
     }
 
     public function approvedActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'approved');
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'company')->where('type', 'approved');
     }
 
     protected $appends = [
@@ -230,7 +236,7 @@ class Company extends Model
 
     public function getLastApprovedActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('type', 'approved')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('trackable_type', 'company')->where('type', 'approved')->first();
     }
 
     public function gethasApprovedAttribute()
@@ -252,7 +258,7 @@ class Company extends Model
 
     public function getActivityCountAttribute()
     {
-        $count = $this->recentActivities()->where('trackable_id', $this->id)
+        $count = $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'company')
                                           ->select(DB::raw('count(*) as total'))
                                           ->groupBy('trackable_type')
                                           ->first();

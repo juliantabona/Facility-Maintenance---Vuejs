@@ -21,7 +21,6 @@ use App\Notifications\InvoiceReceiptEmailSent;
 use App\Notifications\InvoiceReceiptTestEmailSent;
 use App\Notifications\InvoicePaid;
 use App\Notifications\InvoicePaymentCancelled;
-use App\Notifications\InvoiceRecurringSettingsSchedulePlanUpdated;
 use App\Notifications\InvoiceRecurringSettingsPaymentPlanUpdated;
 use App\Notifications\InvoiceRecurringSettingsDeliveryPlanUpdated;
 use App\Notifications\InvoiceRecurringSettingsApproved;
@@ -392,7 +391,7 @@ trait InvoiceTraits
             'colors' => $invoice['colors'],
             'footer' => $invoice['footer'],
             'isRecurring' => $invoice['isRecurring'],
-            'recurringSettings' => $invoice['recurringSettings'],
+            'recurring_settings' => $invoice['recurring_settings'],
             'company_branch_id' => $auth_user->company_branch_id,
             'company_id' => $auth_user->company_id,
         ];
@@ -1011,38 +1010,43 @@ trait InvoiceTraits
         }
     }
 
+    /*  initiateUpdateRecurringSettingsSchedulePlan() method:
+     *
+     *  This is used to update the schedule plan of an existing invoice.
+     *  The schedule plan is the (date, time and frequency) of how the invoice
+     *  are sent to receipients over a time period. It also works to store the update
+     *  activity and broadcasting of notifications to users concerning the updating of
+     *  the invoice schedule.
+     *
+     */
     public function initiateUpdateRecurringSettingsSchedulePlan($invoice_id)
     {
         //  Current authenticated user
         $auth_user = auth('api')->user();
 
         /*
-         *  The $invoice is a collection of the invoice to be stored.
+         *  The $settings is a collection of the recurring settings to be stored.
          */
-        $invoiceData = request('invoice');
+        $settingsData = request('settings');
 
         /**************************************************************************
          *   CHECK IF USER HAS PERMISSION TO SAVE RECURRING INVOICE SCHEDULES     *
-         *************************************************************************/
+         **************************************************************************/
 
         /*********************************************
          *   VALIDATE INVOICE INFORMATION            *
-         ********************************************/
+         *********************************************/
 
         try {
             //  Get the invoice
             $invoice = $this->where('id', $invoice_id)->first();
 
             //  Create a template to hold the invoice details
-            $invoiceData['recurringSettings']['editing']['schedulePlan'] = false;
-
-            if (!$invoice->has_set_recurring_payment_plan) {
-                $invoiceData['recurringSettings']['editing']['paymentPlan'] = true;
-            }
+            $settingsData['editing']['schedulePlan'] = false;
 
             $template = [
                 'isRecurring' => 1,
-                'recurringSettings' => $invoiceData['recurringSettings'],
+                'recurring_settings' => $settingsData,
             ];
 
             //  Update the invoice
@@ -1053,11 +1057,16 @@ trait InvoiceTraits
                 //  re-retrieve the instance to get all of the fields in the table.
                 $invoice = $this->where('id', $invoice_id)->first();
 
+                //  Mark the next stage with a status of editting
+                if (!$invoice->has_set_recurring_delivery_plan) {
+                    $settingsData['editing']['paymentPlan'] = true;
+                }
+
                 /*****************************
                  *   SEND NOTIFICATIONS      *
                  *****************************/
 
-                $auth_user->notify(new InvoiceRecurringSettingsSchedulePlanUpdated($invoice));
+                //  $auth_user->notify(new InvoiceRecurringSettingsSchedulePlanUpdated($invoice));
 
                 /*****************************
                  *   RECORD ACTIVITY         *
@@ -1105,16 +1114,16 @@ trait InvoiceTraits
             $invoice = $this->where('id', $invoice_id)->first();
 
             //  Create a template to hold the invoice details
-            $invoiceData['recurringSettings']['editing']['schedulePlan'] = false;
-            $invoiceData['recurringSettings']['editing']['paymentPlan'] = false;
+            $settingsData['editing']['schedulePlan'] = false;
+            $settingsData['editing']['paymentPlan'] = false;
 
             if (!$invoice->has_set_recurring_delivery_plan) {
-                $invoiceData['recurringSettings']['editing']['deliveryPlan'] = true;
+                $settingsData['editing']['deliveryPlan'] = true;
             }
 
             $template = [
                 'isRecurring' => 1,
-                'recurringSettings' => $invoiceData['recurringSettings'],
+                'recurring_settings' => $settingsData,
             ];
 
             //  Update the invoice
@@ -1177,13 +1186,13 @@ trait InvoiceTraits
             $invoice = $this->where('id', $invoice_id)->first();
 
             //  Create a template to hold the invoice details
-            $invoiceData['recurringSettings']['editing']['schedulePlan'] = false;
-            $invoiceData['recurringSettings']['editing']['paymentPlan'] = false;
-            $invoiceData['recurringSettings']['editing']['deliveryPlan'] = false;
+            $settingsData['editing']['schedulePlan'] = false;
+            $settingsData['editing']['paymentPlan'] = false;
+            $settingsData['editing']['deliveryPlan'] = false;
 
             $template = [
                 'isRecurring' => 1,
-                'recurringSettings' => $invoiceData['recurringSettings'],
+                'recurring_settings' => $settingsData,
             ];
 
             //  Update the invoice
@@ -1246,7 +1255,7 @@ trait InvoiceTraits
             $invoice = $this->where('id', $invoice_id)->first();
 
             $template = [
-                'recurringSettings' => $invoiceData['recurringSettings'],
+                'recurring_settings' => $settingsData,
             ];
 
             //  Update the invoice
@@ -1676,28 +1685,19 @@ trait InvoiceTraits
 
     /*  summarize() method:
      *
-     *  This is used to limit the information of an invoice to very specific
-     *  columns that can then be used for storage e.g) in the instance of
-     *  adding a recent activity. We may only want to summarize the invoice
-     *  to very important information, rather tha storing everything along
+     *  This is used to limit the information of the resource to very specific
+     *  columns that can then be used for storage. We may only want to summarize
+     *  the data to very important information, rather than storing everything along
      *  with useless information. In this instance we specify table columns
-     *  that we want, while also removing any custom attributes we do not
-     *  want to store.
-     *
+     *  that we want (we access the fillable columns of the model), while also
+     *  removing any custom attributes we do not want to store
+     *  (we access the appends columns of the model),
      */
     public function summarize()
     {
         //  Collect and select table columns
-        return collect(
-            $this->select(
-                'heading', 'reference_no_title', 'reference_no_value', 'created_date_title', 'created_date_value',
-                'expiry_date_title', 'expiry_date_value', 'sub_total_title', 'sub_total_value', 'grand_total_title', 'grand_total_value',
-                'currency_type', 'calculated_taxes', 'invoice_to_title', 'customized_company_details', 'customized_client_details', 'client_id',
-                'table_columns', 'items', 'notes', 'colors', 'footer', 'quotation_id'
-            )->first())
-            //  Remove all custom attributes since the are all based on recent activities
-            ->forget(['last_approved_activity', 'last_sent_activity', 'last_paid_activity', 'last_payment_cancelled_activity',
-                    'has_paid', 'has_expired', 'has_cancelled', 'has_sent', 'has_approved', 'current_activity_status', 'recent_activities',
-            ]);
+        return collect($this->fillable)
+                //  Remove all custom attributes since the are all based on recent activities
+                ->forget($this->appends);
     }
 }

@@ -123,32 +123,33 @@ class Jobcard extends Model
     {
         return $this->morphMany('App\RecentActivity', 'trackable')
                     ->where('trackable_id', $this->id)
+                    ->where('trackable_type', 'jobcard')
                     ->orderBy('created_at', 'desc');
     }
 
     public function createdActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'created');
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'jobcard')->where('type', 'created');
     }
 
     public function approvedActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'approved');
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'jobcard')->where('type', 'approved');
     }
 
     public function addedLifecycleStagesActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'added lifecycle stage');
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'jobcard')->where('type', 'added lifecycle stage');
     }
 
     public function updatedLifecycleStagesActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'updated lifecycle stage');
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'jobcard')->where('type', 'updated lifecycle stage');
     }
 
     public function reversedLifecycleStagesActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('type', 'reversed lifecycle stage');
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'jobcard')->where('type', 'reversed lifecycle stage');
     }
 
     ///////////////////////////////////////////////////////////////////////////////////
@@ -213,13 +214,13 @@ class Jobcard extends Model
                     'last_approved_activity',
                     'has_approved', 'has_lifecycle',
                     'current_activity_status',
-                    'current_lifecycle_stage', 'current_lifecycle_status', 'lifecycle_stages',
+                    'current_lifecycle_stage', 'current_lifecycle_main_status', 'current_lifecycle_sub_status', 'lifecycle_stages',
                     'activity_count',
                 ];
 
     public function getLastApprovedActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('type', 'approved')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('trackable_type', 'jobcard')->where('type', 'approved')->first();
     }
 
     public function gethasApprovedAttribute()
@@ -300,7 +301,7 @@ class Jobcard extends Model
         }
     }
 
-    public function getCurrentLifecycleStatusAttribute()
+    public function getCurrentLifecycleMainStatusAttribute()
     {
         if (count($this->current_lifecycle_stage)) {
             $availableStages = $this->lifecycle->first()['stages'];
@@ -311,19 +312,24 @@ class Jobcard extends Model
                     $stageName = $availableStage['name'];
                     $stageType = $availableStage['type'];
 
-                    if ($this->current_lifecycle_stage['activity']['type'] == 'job_started') {
-                        if ($this->current_lifecycle_stage['activity']['cancelled_status']) {
-                            return ['name' => 'Job Cancelled', 'type' => $stageType];
-                        } elseif ($this->current_lifecycle_stage['activity']['pending_status']) {
-                            return ['name' => 'Job Pending', 'type' => $stageType];
-                        }
-                    }
-
                     return ['name' => $stageName, 'type' => $stageType];
                 }
             }
         } elseif ($this->has_approved) {
             return ['name' => 'Open', 'type' => 'open'];
+        }
+    }
+
+    public function getCurrentLifecycleSubStatusAttribute()
+    {
+        if (count($this->current_lifecycle_stage)) {
+            //  Check if this stage is cancelled
+            if ($this->current_lifecycle_stage['activity']['cancelled_status'] ?? false) {
+                return 'Cancelled';
+            //  Check if this stage is pending
+            } elseif ($this->current_lifecycle_stage['activity']['pending_status'] ?? false) {
+                return 'Pending';
+            }
         }
     }
 
@@ -334,7 +340,7 @@ class Jobcard extends Model
 
     public function getActivityCountAttribute()
     {
-        $count = $this->recentActivities()->where('trackable_id', $this->id)
+        $count = $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'jobcard')
                                             ->select(DB::raw('count(*) as total'))
                                             ->groupBy('trackable_type')
                                             ->first();
@@ -345,7 +351,7 @@ class Jobcard extends Model
     //  Getter for calculating the deadline returned as array
     public function getCreatedByAttribute()
     {
-        $publishingUser = $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('type', 'created')->first();
+        $publishingUser = $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('trackable_type', 'jobcard')->where('type', 'created')->first();
 
         if ($publishingUser) {
             return $publishingUser->createdBy;
