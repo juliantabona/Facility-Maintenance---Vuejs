@@ -1041,9 +1041,14 @@ trait InvoiceTraits
             //  Get the invoice
             $invoice = $this->where('id', $invoice_id)->first();
 
-            //  Create a template to hold the invoice details
             $settingsData['editing']['schedulePlan'] = false;
 
+            //  Mark the next stage with a status of editting
+            if (!$invoice->has_set_recurring_payment_plan) {
+                $settingsData['editing']['paymentPlan'] = true;
+            }
+
+            //  Create a template to hold the setting details
             $template = [
                 'isRecurring' => 1,
                 'recurring_settings' => $settingsData,
@@ -1056,11 +1061,6 @@ trait InvoiceTraits
             if ($invoice) {
                 //  re-retrieve the instance to get all of the fields in the table.
                 $invoice = $this->where('id', $invoice_id)->first();
-
-                //  Mark the next stage with a status of editting
-                if (!$invoice->has_set_recurring_delivery_plan) {
-                    $settingsData['editing']['paymentPlan'] = true;
-                }
 
                 /*****************************
                  *   SEND NOTIFICATIONS      *

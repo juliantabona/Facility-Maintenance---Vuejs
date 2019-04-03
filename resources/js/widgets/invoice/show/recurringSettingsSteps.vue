@@ -34,7 +34,7 @@
                 @saved="$emit('saved', $event)">
             </recurringPaymentPlanStage>
 
-            <!-- Get the stage for setting the recurring payment plan -->
+            <!-- Get the stage for setting the recurring delivery plan -->
             <recurringDeliveryPlanStage 
                 resourceName="invoice"
                 resourceNamePlural="invoices"
@@ -54,11 +54,6 @@
                 :isEditing="(((localInvoice.recurringSettings || {}).editing || {}).schedulePlan)"
                 :url="'/api/invoices/'+localInvoice.id+'/recurring/update-delivery-plan'"
                 :style="{ position:'relative', zIndex: 4 }" 
-                @saved="$emit('saved', $event)">
-            </recurringDeliveryPlanStage>
-
-            <!-- Get the stage for setting the recurring delivery plan -->
-            <recurringDeliveryPlanStage :invoice="localInvoice" :style="{ position:'relative', zIndex: 1 }" 
                 @saved="$emit('saved', $event)">
             </recurringDeliveryPlanStage>
 

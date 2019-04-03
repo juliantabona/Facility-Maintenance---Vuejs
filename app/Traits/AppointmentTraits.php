@@ -288,9 +288,14 @@ trait AppointmentTraits
             //  Get the appointment
             $appointment = $this->where('id', $appointment_id)->first();
 
-            //  Create a template to hold the appointment details
             $settingsData['editing']['schedulePlan'] = false;
 
+            //  Mark the next stage with a status of editting
+            if (!$appointment->has_set_recurring_delivery_plan) {
+                $settingsData['editing']['deliveryPlan'] = true;
+            }
+
+            //  Create a template to hold the setting details
             $template = [
                 'recurring_settings' => $settingsData,
             ];
@@ -302,11 +307,6 @@ trait AppointmentTraits
             if ($appointment) {
                 //  re-retrieve the instance to get all of the fields in the table.
                 $appointment = $this->where('id', $appointment_id)->first();
-
-                //  Mark the next stage with a status of editting
-                if (!$appointment->has_set_recurring_delivery_plan) {
-                    $settingsData['editing']['deliveryPlan'] = true;
-                }
 
                 /*****************************
                  *   SEND NOTIFICATIONS      *
