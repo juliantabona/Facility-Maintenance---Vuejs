@@ -33,7 +33,7 @@
 
         <!-- Jobcard Due Date  -->
         <Col span="4">
-            <h6 class="text-secondary">Created Date</h6>
+            <h6 class="text-secondary">Created</h6>
             <h5>{{ localJobcard.created_at | moment("from", "now")  }}</h5>            
         </Col>
 

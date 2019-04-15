@@ -102,9 +102,31 @@ Route::post('jobcards/{jobcard_id}/lifecycle/stages/undo', 'Api\JobcardControlle
      -  Get, Show, Update, Trash, Delete
 */
 Route::get('appointments', 'Api\AppointmentController@index');
+Route::post('appointments', 'Api\AppointmentController@store');
 Route::get('appointments/{appointment_id}', 'Api\AppointmentController@show');
 Route::post('appointments/{appointment_id}/approve', 'Api\AppointmentController@approve');  //  ok
+Route::post('appointments/{appointment_id}/send', 'Api\AppointmentController@send');
+Route::post('appointments/{appointment_id}/skip-send', 'Api\AppointmentController@skipSend');
+Route::post('appointments/{appointment_id}/confirm', 'Api\AppointmentController@confirm');
+Route::post('appointments/{appointment_id}/cancel-confirmation', 'Api\AppointmentController@cancelConfirmation');
+Route::post('appointments/{appointment_id}/reminders', 'Api\AppointmentController@updateReminders');
 Route::post('appointments/{appointment_id}/recurring/update-schedule-plan', 'Api\AppointmentController@updateRecurringSettingsSchedulePlan');
+Route::post('appointments/{appointment_id}/recurring/update-delivery-plan', 'Api\AppointmentController@updateRecurringSettingsDeliveryPlan');
+Route::post('appointments/{appointment_id}/recurring/approve', 'Api\AppointmentController@approveRecurringSettings');
+
+/*
+Route::post('invoices/{invoice_id}/approve', 'Api\InvoiceController@approve');
+Route::post('invoices/{invoice_id}/send', 'Api\InvoiceController@send');
+Route::post('invoices/{invoice_id}/skip-send', 'Api\InvoiceController@skipSend');
+Route::post('invoices/{invoice_id}/payment', 'Api\InvoiceController@recordPayment');
+Route::post('invoices/{invoice_id}/cancel-payment', 'Api\InvoiceController@cancelPayment');
+Route::post('invoices/{invoice_id}/reminders', 'Api\InvoiceController@updateReminders');
+Route::post('invoices/{invoice_id}/receipts/send', 'Api\InvoiceController@sendReceipt');
+Route::post('invoices/{invoice_id}/recurring/update-schedule-plan', 'Api\InvoiceController@updateRecurringSettingsSchedulePlan');
+Route::post('invoices/{invoice_id}/recurring/update-delivery-plan', 'Api\InvoiceController@updateRecurringSettingsDeliveryPlan');
+Route::post('invoices/{invoice_id}/recurring/update-payment-plan', 'Api\InvoiceController@updateRecurringSettingsPaymentPlan');
+Route::post('invoices/{invoice_id}/recurring/approve', 'Api\InvoiceController@approveRecurringSettings');
+*/
 
 /*   DIRECTORY RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete

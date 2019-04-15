@@ -9,6 +9,7 @@ use App\Traits\CategoryTraits;
 
 Relation::morphMap([
     'jobcard' => 'App\Jobcard',
+    'appointment' => 'App\Appointment',
 ]);
 
 class Category extends Model

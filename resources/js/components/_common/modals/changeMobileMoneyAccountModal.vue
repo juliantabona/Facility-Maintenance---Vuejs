@@ -7,7 +7,7 @@
             :hideModal="hideModal"
             title="Add/Change Mobile Money Account"
             okText="Save" cancelText="Cancel"
-            @on-ok="sendSms()" 
+            @on-ok="addNewAccount()" 
             @visibility="$emit('visibility', $event)">
 
             <template slot="content">
@@ -94,16 +94,10 @@
     import mobileMoneyAccountSelector from './../../../components/_common/selectors/mobileMoneyAccountSelector.vue'; 
 
     export default {
-        props: {
-            invoice: {
-                type: Object,
-                default: null
-            }
-        },
+        props: {},
         components: { mainModal, Loader, phoneInput, mobileMoneyAccountSelector },
         data(){
             return{
-                localInvoice: this.invoice,
                 hideModal: false,
                 isSending: false
             }
@@ -114,51 +108,6 @@
             },
             addNewAccount(){
                 
-                if(this.url){
-
-                    var self = this;
-
-                    //  Start loader
-                    self.isSending = true;
-
-                    console.log('Attempt to send recurring invoice test sms...');
-
-                    var smsData = {
-                            phoneNumber: this.testPhoneNumber[0],
-                            message: this.locaMessage,
-                        }
-
-                    console.log('smsData');
-                    console.log(smsData);
-
-                    //  Use the api call() function located in resources/js/api.js
-                    api.call('post', self.url, smsData)
-                    .then(({ data }) => {
-
-                        console.log(data);
-
-                        //  Stop loader
-                        self.isSending = false;
-                        
-                        //  Alert parent and pass updated invoice data
-                        //  NOTE that "data = updated invoice"
-                        self.$emit('sent', data);
-
-                        //  Alert creation success
-                        self.$Message.success('Sms sent sucessfully!');
-
-                        //  Close the modal
-                        self.closeModal();
-
-                    })         
-                    .catch(response => { 
-                        //  Stop loader
-                        self.isSending = false;
-
-                        console.log('sendTestSmsModal.vue - Error sending recurring invoice test sms...');
-                        console.log(response);
-                    });
-                }
             },
             closeModal(){
                 this.hideModal = true;

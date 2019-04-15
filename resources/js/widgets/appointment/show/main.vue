@@ -44,12 +44,12 @@
 
         
         <transition-group name="fade">
-
+            
             <Row :gutter="20" key="recurring_details" class="animated">
 
                 <!-- Recurring toggle switch, Recurring settings toolbox, Save changes button -->
                 <Col :span="24">
-
+                
                     <!-- Save changes button -->
                     <basicButton  v-if="!createMode && appointmentHasChanged" 
                                     class="float-right pt-2 ml-4" :style="{ position:'relative' }"
@@ -58,6 +58,22 @@
                                     @click.native="saveAppointment()">
                         Save Changes
                     </basicButton>
+
+                    <!-- Recurring Settings Icon Button -->
+                    <span v-if="localAppointment.isRecurring" class="float-right d-block pt-2">
+                        <div @click="showRecurringSettings = !showRecurringSettings" :style="{ position: 'relative', zIndex: '1' }">
+                            <Icon :style="showRecurringSettings ? { fontSize: '20px',height: '33px',color: '#2d8cf0',background: '#eee',borderRadius: '50% 50% 0 0',padding: '3px 6px',marginTop: '-3px',boxShadow: '#c8c8c8 1px 1px 1px inset',cursor: 'pointer' }: { cursor: 'pointer' }"
+                                type="ios-settings-outline" :size="20" />
+                        </div>
+                    </span>
+
+                    <!-- Make recurring switch -->
+                    <toggleSwitch v-bind:toggleValue.sync="localAppointment.isRecurring" 
+                        @update:toggleValue="updateReccuring($event)"
+                        :ripple="false" :showIcon="true" onIcon="ios-repeat" offIcon="ios-repeat" 
+                        title="Make Recurring:" onText="Yes" offText="No" poptipMsg="Turn on to make recurring"
+                        class="float-right p-2">
+                    </toggleSwitch>
 
                     <div class="clearfix"></div>
 
@@ -71,7 +87,7 @@
                     </basicCoutdown>
                     
                     <!-- Make recurring settings -->
-                    <Row key="dynamic" class="animated mb-3">
+                    <Row v-show="showRecurringSettings" key="dynamic" class="animated mb-3">
 
                         <!-- White overlay when creating/saving appointment -->
                         <Spin size="large" fix v-if="isSavingAppointment || isCreatingAppointment"></Spin>
@@ -109,14 +125,18 @@
                 
                 </Col>
 
-                <!-- Appointment steps, Approval step, Sending step and Payment step -->
+                <!-- Appointment steps, Approval step, Sending step and Confirmation step -->
                 <Col :span="localAppointment.has_approved ? 19 : 24">
-                    <!-- Get the staging toolbar to display the appointment approved, sent/re-send and record payment stages -->
                     <steps 
                         v-if="!createMode"
                         :appointment="localAppointment" :editMode="editMode" :createMode="createMode" 
                         @toggleEditMode="toggleEditMode($event)" 
-                        @approved="updateAppointmentData($event)">
+                        @approved="updateAppointmentData($event)"
+                        @sent="updateAppointmentData($event)"
+                        @skipped="updateAppointmentData($event)"
+                        @confirmed="updateAppointmentData($event)"
+                        @cancelled="updateAppointmentData($event)"
+                        @reminderSet="updateAppointmentData($event)">
                     </steps>
                 </Col>
 
@@ -187,7 +207,7 @@
                                 <h4 class="ml-2 mb-2 text-dark">Client Details</h4>
                             </Col>
 
-                            <Col span="12" class="mb-3 ml-2">
+                            <Col span="12" class="mb-3">
 
                                 <!-- Client selector -->
                                 <clientSelector v-if="editMode" :style="{maxWidth: '250px'}" class="clearfix mb-2"
@@ -226,7 +246,7 @@
                             </Col>
 
                             <Col span="24" class="pl-2">
-                                            
+                            
                                 <!-- Create/Edit Appointment -->
                                 <appointmentWidget 
                                     :editMode="editMode"
@@ -293,20 +313,19 @@
             overview, steps, mainHeader, appointmentWidget,
             basicButton, toggleSwitch, editModeSwitch,
             Loader, IconAndCounterCard, companyOrIndividualDetails,
-            recurringSettingsSteps
+            clientSelector, recurringSettingsSteps
         },
         props: {
             appointment: {
                 type: Object,
                 default: function () { 
                     return {
-                        title: '',
-                        description: '',
+                        subject: '',
+                        agenda: '',
                         start_date: '',
                         end_date: '',
-                        priority: [],
+                        location: '',
                         categories: [],
-                        costcenters: [],
                         assigned_staff: [],
                         client: null,
                     }
@@ -400,6 +419,13 @@
 
                 // to cancel scrolling you can call the returned function
                 //cancelScroll()
+            },
+            updateReccuring(val){
+                
+                this.localAppointment.isRecurring = val ? 1 : 0;
+                
+                this.showRecurringSettings = val;
+                
             },
             activateCreateMode: function(){
                 //  Activate edit mode
@@ -513,13 +539,12 @@
                 //  Form data to send
                 let appointmentData = { 
                         appointment: {
-                            title: this.localAppointment.title,
-                            description: this.localAppointment.description,
+                            subject: this.localAppointment.subject,
+                            agenda: this.localAppointment.agenda,
                             start_date: this.localAppointment.start_date,
                             end_date: this.localAppointment.end_date,
-                            priority: this.localAppointment.priority.map( (priority) => { return priority.id } ),
+                            location: this.localAppointment.location,
                             categories: this.localAppointment.categories.map( (category) => { return category.id } ),
-                            costcenters: this.localAppointment.costcenters.map( (costcenter) => { return costcenter.id } ),
                             assigned_staff: this.localAppointment.assigned_staff.map( (staff) => { return staff.id } ),
                             client_id: (this.localAppointment.client || {}).id,
                             client_model_type: (this.localAppointment.client || {}).model_type

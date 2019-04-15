@@ -17,10 +17,13 @@ class CreateAppointmentsTable extends Migration
             $table->string('agenda')->nullable();
             $table->timestampTz('start_date')->nullable();
             $table->timestampTz('end_date')->nullable();
+            $table->unsignedInteger('duration')->nullable();
+            $table->string('location')->nullable();
             $table->unsignedInteger('company_branch_id')->nullable();
             $table->unsignedInteger('company_id')->nullable();
             $table->unsignedInteger('client_id')->nullable();
             $table->string('client_type')->nullable();
+            $table->boolean('isRecurring')->default(0);
             $table->json('recurring_settings')->nullable();
             $table->softDeletes();
             $table->timestamps();

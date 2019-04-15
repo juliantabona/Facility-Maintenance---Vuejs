@@ -123,7 +123,7 @@ class Invoice extends Model
     public function sentReceiptActivities()
     {
         return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'invoice')->where(function ($q) {
-            $q->where('type', 'sent invoice receipt email')->orWhere('type', 'sent invoice receipt sms');
+            $q->where('type', 'sent receipt email')->orWhere('type', 'sent receipt sms');
         });
     }
 
@@ -185,7 +185,7 @@ class Invoice extends Model
     public function getLastSentReceiptActivityAttribute()
     {
         return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'invoice')->where(function ($q) {
-            $q->where('type', 'sent invoice receipt email')->orWhere('type', 'sent invoice receipt sms');
+            $q->where('type', 'sent receipt email')->orWhere('type', 'sent receipt sms');
         })->first();
     }
 

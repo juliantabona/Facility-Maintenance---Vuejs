@@ -3,7 +3,7 @@
     <Row :gutter="20">
 
         <Col span="20" offset="2">
-            <jobcardSummaryWidget :create="true"></jobcardSummaryWidget>
+            <appointmentSummaryWidget :create="true"></appointmentSummaryWidget>
         </Col>
 
     </Row>
@@ -12,11 +12,11 @@
 <script>
 
     /*  Widgets   */
-    import jobcardSummaryWidget from './../../../../widgets/jobcard/show/main.vue';
+    import appointmentSummaryWidget from './../../../../widgets/appointment/show/main.vue';
 
     export default {
         components: { 
-          jobcardSummaryWidget
+          appointmentSummaryWidget
         }
     };
 </script>

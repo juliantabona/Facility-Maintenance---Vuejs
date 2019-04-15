@@ -28,14 +28,16 @@ class Appointment extends Model
         'recurring_settings' => 'array',
     ];
 
+    protected $with = ['client', 'company', 'companyBranch', 'reminders'];
+
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
-        'subject', 'agenda', 'start_date', 'end_date', 'client_id', 'client_type',
-        'company_branch_id', 'company_id', 'recurring_settings',
+        'subject', 'agenda', 'start_date', 'end_date', 'duration', 'location', 'client_id', 'client_type',
+        'company_branch_id', 'company_id', 'isRecurring', 'recurring_settings',
     ];
 
     /**
@@ -57,14 +59,60 @@ class Appointment extends Model
         'id', 'subject', 'agenda', 'start_date', 'end_date', 'client_id', 'client_type', 'company_branch_id', 'company_id', 'created_at',
     ];
 
+    /**
+     *   Get the client the appointment was created for. This client could be a company
+     *   or an individual.
+     */
     public function client()
     {
         return $this->morphTo();
     }
 
-    public function childInvoices()
+    /**
+     *   Get the company the appointment belongs to. This is the company that the appointment
+     *   was created by. In this case it was created by a user who belongs to that company.
+     */
+    public function company()
     {
-        return $this->hasMany('App\Invoice', 'invoice_parent_id');
+        return $this->belongsTo('App\Company', 'company_id');
+    }
+
+    /**
+     *   Get the branch the appointment belongs to. This is the branch that the appointment
+     *   was created by. In this case it was created by a user who belongs to that branch.
+     */
+    public function companyBranch()
+    {
+        return $this->belongsTo('App\CompanyBranch', 'company_branch_id');
+    }
+
+    public function childAppointments()
+    {
+        return $this->hasMany('App\Appointment', 'Appointment_parent_id');
+    }
+
+    /**
+     * Get all of the categories for the appointment.
+     */
+    public function categories()
+    {
+        return $this->morphToMany('App\Category', 'trackable', 'category_allocations');
+    }
+
+    /**
+     * Get the staff members for the appointment.
+     */
+    public function assignedStaff()
+    {
+        return $this->morphToMany('App\User', 'trackable', 'staff_allocations');
+    }
+
+    /**
+     * Get all of the appointment reminders.
+     */
+    public function reminders()
+    {
+        return $this->morphMany('App\Reminder', 'trackable');
     }
 
     /***********************************************************************
@@ -83,6 +131,19 @@ class Appointment extends Model
                     ->where('trackable_id', $this->id)
                     ->where('trackable_type', 'appointment')
                     ->orderBy('created_at', 'desc');
+    }
+
+    /*  CREATED BY ACTIVITIES
+     *  Activity that shows the user details of the person who created the appointment
+     */
+    public function getCreatedByAttribute()
+    {
+        $publishingUser = $this->recentActivities()->select('type', 'created_by', 'created_at')
+                               ->where('trackable_id', $this->id)->where('trackable_type', 'appointment')->where('type', 'created')->first();
+
+        if ($publishingUser) {
+            return $publishingUser->createdBy;
+        }
     }
 
     /*  CREATED ACTIVITIES
@@ -120,11 +181,11 @@ class Appointment extends Model
     }
 
     /*  ACCEPTED ACTIVITIES
-     *  Activity that shows when this appointment was accepted by the receipient/receiver
+     *  Activity that shows when this appointment was confirmed by the receipient/receiver
      */
-    public function acceptedActivities()
+    public function confirmedActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'appointment')->where('type', 'accepted')->limit(1);
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'appointment')->where('type', 'confirmed')->limit(1);
     }
 
     /*  DECLINED ACTIVITIES
@@ -148,7 +209,7 @@ class Appointment extends Model
      */
     public function cancelledActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'appointment')->where('type', 'cancelled')->limit(1);
+        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'appointment')->where('type', 'cancelled confirmation')->limit(1);
     }
 
     /***********************************************************************
@@ -186,11 +247,11 @@ class Appointment extends Model
     }
 
     /*  LAST ACCEPTED ACTIVITY
-     *  The last activity that shows when this appointment was accepted by the receipient/receiver
+     *  The last activity that shows when this appointment was confirmed by the receipient/receiver
      */
-    public function getLastAcceptedActivityAttribute()
+    public function getLastConfirmedActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('trackable_type', 'appointment')->where('type', 'accepted')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('trackable_type', 'appointment')->where('type', 'confirmed')->first();
     }
 
     /*  LAST DECLINED ACTIVITY
@@ -198,7 +259,7 @@ class Appointment extends Model
      */
     public function getLastDeclinedActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('trackable_type', 'appointment')->where('type', 'accepted')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('trackable_type', 'appointment')->where('type', 'declined')->first();
     }
 
     /*  LAST RESCHEDULE ACTIVITY
@@ -214,7 +275,7 @@ class Appointment extends Model
      */
     public function getLastCancelledActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('trackable_type', 'appointment')->where('type', 'cancelled')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('trackable_type', 'appointment')->where('type', 'cancelled confirmation')->first();
     }
 
     /*  LAST RECURRING SCHEDULE PLAN ACTIVITY
@@ -267,9 +328,9 @@ class Appointment extends Model
         return $this->last_skipped_sending_activity ? true : false;
     }
 
-    public function gethasAcceptedAttribute()
+    public function gethasConfirmedAttribute()
     {
-        return $this->last_accepted_activity ? true : false;
+        return $this->last_confirmed_activity ? true : false;
     }
 
     public function gethasDeclinedAttribute()
@@ -320,27 +381,27 @@ class Appointment extends Model
 
     public function getCurrentActivityStatusAttribute()
     {
-        //  If accepted/declined/rescheduled/cancelled
-        if ($this->has_accepted || $this->has_declined || $this->has_rescheduled || $this->has_cancelled) {
-            $acceptedDate = (new Carbon($this->last_accepted_activity->created_date) )->getTimestamp();
-            $declinedDate = (new Carbon($this->last_declined_activity->created_date) )->getTimestamp();
-            $rescheduleDate = (new Carbon($this->last_reschedule_activity->created_date) )->getTimestamp();
-            $cancelledDate = (new Carbon($this->last_cancelled_activity->created_date) )->getTimestamp();
+        //  If confirmed/declined/rescheduled/cancelled
+        if ($this->has_confirmed || $this->has_declined || $this->has_rescheduled || $this->has_cancelled) {
+            $confirmedDate = $this->last_confirmed_activity ? (new Carbon($this->last_confirmed_activity->created_at) )->getTimestamp() : 0;
+            $declinedDate = $this->last_declined_activity ? (new Carbon($this->last_declined_activity->created_at) )->getTimestamp() : 0;
+            $rescheduleDate = $this->last_reschedule_activity ? (new Carbon($this->last_reschedule_activity->created_at) )->getTimestamp() : 0;
+            $cancelledDate = $this->last_cancelled_activity ? (new Carbon($this->last_cancelled_activity->created_at) )->getTimestamp() : 0;
 
-            //  If we accepted last
-            if ($acceptedDate > $declinedDate && $acceptedDate > $rescheduleDate && $acceptedDate > $cancelledDate) {
-                return 'Accepted';
+            //  If we confirmed last
+            if ($confirmedDate > $declinedDate && $confirmedDate > $rescheduleDate && $confirmedDate > $cancelledDate) {
+                return 'Confirmed';
 
             //  If we declined last
-            } elseif ($declinedDate > $acceptedDate && $declinedDate > $rescheduleDate && $declinedDate > $cancelledDate) {
+            } elseif ($declinedDate > $confirmedDate && $declinedDate > $rescheduleDate && $declinedDate > $cancelledDate) {
                 return 'Declined';
 
             //  If we rescheduled last
-            } elseif ($rescheduleDate > $acceptedDate && $rescheduleDate > $declinedDate && $rescheduleDate > $cancelledDate) {
+            } elseif ($rescheduleDate > $confirmedDate && $rescheduleDate > $declinedDate && $rescheduleDate > $cancelledDate) {
                 return 'Reschedule';
 
             //  If cancelled last
-            } elseif ($cancelledDate > $acceptedDate && $cancelledDate > $declinedDate && $cancelledDate > $rescheduleDate) {
+            } elseif ($cancelledDate > $confirmedDate && $cancelledDate > $declinedDate && $cancelledDate > $rescheduleDate) {
                 return 'Cancelled';
             }
 
@@ -381,14 +442,15 @@ class Appointment extends Model
     }
 
     protected $appends = [
+                          'createdBy',
                           /*    Last Activity Record     */
                           'last_approved_activity', 'last_sent_activity', 'last_skipped_sending_activity',
-                          'last_accepted_activity', 'last_declined_activity', 'last_reschedule_activity',
+                          'last_confirmed_activity', 'last_declined_activity', 'last_reschedule_activity',
                           'last_cancelled_activity',
                           'last_recurring_schedule_plan_activity', 'last_recurring_delivery_plan_activity',
                           'last_approved_recurring_settings_activity',
                           /*    Activity Confirmation Record     */
-                          'has_approved', 'has_sent', 'has_skipped_sending', 'has_accepted', 'has_declined',
+                          'has_approved', 'has_sent', 'has_skipped_sending', 'has_confirmed', 'has_declined',
                           'has_rescheduled', 'has_expired', 'has_cancelled',
                           'has_set_recurring_schedule_plan', 'has_set_recurring_delivery_plan',
                           'has_approved_recurring_settings',

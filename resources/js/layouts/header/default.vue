@@ -163,6 +163,7 @@
                         <DropdownItem><router-link :to="{ name:'create-jobcard' }">Jobcard</router-link></DropdownItem>
                         <DropdownItem divided><router-link :to="{ name:'create-quotation' }">Quotation</router-link></DropdownItem>
                         <DropdownItem><router-link :to="{ name:'create-invoice' }">Invoice</router-link></DropdownItem>
+                        <DropdownItem divided><router-link :to="{ name:'create-appointment' }">Appointment</router-link></DropdownItem>
                     </DropdownMenu>
 
                 </Dropdown>

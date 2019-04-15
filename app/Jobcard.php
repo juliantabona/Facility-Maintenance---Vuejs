@@ -92,7 +92,7 @@ class Jobcard extends Model
     }
 
     /**
-     * Get the priority for the jobcard.
+     * Get the staff members for the jobcard.
      */
     public function assignedStaff()
     {
@@ -348,10 +348,11 @@ class Jobcard extends Model
         return $count ? $count->only(['total']) : ['total' => 0];
     }
 
-    //  Getter for calculating the deadline returned as array
+    //  Getter for the user who created this jobcard
     public function getCreatedByAttribute()
     {
-        $publishingUser = $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('trackable_type', 'jobcard')->where('type', 'created')->first();
+        $publishingUser = $this->recentActivities()->select('type', 'created_by', 'created_at')
+                               ->where('trackable_id', $this->id)->where('trackable_type', 'jobcard')->where('type', 'created')->first();
 
         if ($publishingUser) {
             return $publishingUser->createdBy;

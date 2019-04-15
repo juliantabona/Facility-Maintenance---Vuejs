@@ -76,7 +76,7 @@
                         self.isLoading = false;
 
                         //  Get currencies
-                        self.localfetchedUsers = data.data;
+                        self.localfetchedUsers = data;
 
                         console.log('New fetched companies');
 

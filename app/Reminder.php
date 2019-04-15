@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
     'invoice' => 'App\Invoice',
+    'appointment' => 'App\Appointment',
 ]);
 
 class Reminder extends Model

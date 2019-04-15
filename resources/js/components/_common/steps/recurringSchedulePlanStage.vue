@@ -554,7 +554,7 @@
                     this.localRecurringSettings = _.cloneDeep(val);
 
                     //  Update the editing schedule shortcut
-                    this.isEditingStage = ((_.cloneDeep( (val || {}) ).editing|| {}).schedulePlan);
+                    this.isEditingStage = ((_.cloneDeep( (val || {}) ).editing || {}).schedulePlan);
 
                     this.updateSchedulePlans();
                     this.updateScheduleInWords();
@@ -723,8 +723,6 @@
 
                     this.updateScheduleInWords();
                 }
-
-
             },
             updateScheduleInWords(){
 

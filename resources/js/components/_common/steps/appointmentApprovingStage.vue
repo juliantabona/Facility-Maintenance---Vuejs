@@ -117,7 +117,7 @@
                 console.log( self.localAppointment );
 
                 //  Additional data to eager load along with the appointment found
-                var connections = '?connections=client';
+                var connections = '?connections=client,categories,assignedStaff';
 
                 //  Use the api call() function located in resources/js/api.js
                 api.call('post', '/api/appointments/'+self.localAppointment.id+'/approve'+connections)

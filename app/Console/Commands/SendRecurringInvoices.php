@@ -51,8 +51,8 @@ class SendRecurringInvoices extends Command
         //  Foreach invoice
         foreach ($invoices as $invoice) {
             //  Get the recurring settings
-            $recurringSettings = $invoice['recurring_settings'];
-            $schedulePlan = $recurringSettings['schedulePlan'];
+            $recurring_settings = $invoice['recurring_settings'];
+            $schedulePlan = $recurring_settings['schedulePlan'];
 
             //  Get the total number of recurring child invoices
             $recurringInvoiceCount = $invoice->childInvoices->count();
@@ -166,8 +166,8 @@ class SendRecurringInvoices extends Command
                 }
 
                 //  Now update scheduled time for next sending
-                $recurringSettings['schedulePlan']['nextDate'] = (new Carbon($newDate))->format('Y-m-d H:i:s');
-                $invoice->update(['recurring_settings' => $recurringSettings]);
+                $recurring_settings['schedulePlan']['nextDate'] = (new Carbon($newDate))->format('Y-m-d H:i:s');
+                $invoice->update(['recurring_settings' => $recurring_settings]);
 
                 //  Record next estimated recurring activity
 
@@ -182,7 +182,7 @@ class SendRecurringInvoices extends Command
                 //  Set the recurring status to be off
                 $childInvoice->isRecurring = 0;
                 //  Remove the recurring settings
-                $childInvoice->recurringSettings = null;
+                $childInvoice->recurring_settings = null;
                 //  Link this child invoice to the parent
                 $childInvoice->invoice_parent_id = $invoice->id;
                 //  Update the invoice created date
@@ -203,7 +203,7 @@ class SendRecurringInvoices extends Command
                 //  Get the user responsible for this invoice
                 $user = $invoice->createdActivities()->createdBy;
 
-                $deliveryPlan = $recurringSettings['deliveryPlan'];
+                $deliveryPlan = $recurring_settings['deliveryPlan'];
 
                 //  Accepted Delivery Methods
                 $isDeliveryAutomated = $deliveryPlan['automatic'];

@@ -3,24 +3,20 @@
     <Row class="border-bottom mb-3 pb-3">
 
         <!-- Appointment Reference Number  -->
-        <Col span="5">
+        <Col span="6">
             <h2 class="text-dark">Appointment #{{ localAppointment.id }}</h2>
         </Col>
 
+        <!-- Invoice Client  -->
+        <Col span="5">
+            <h6 class="text-secondary">Customer</h6>
+            <h5><router-link :to="{ name: urlName, params: { id: (localAppointment.client || {}).id } }">{{ customerName }}</router-link></h5>         
+        </Col>
+
         <!-- Appointment Status  -->
-        <Col span="3">
+        <Col span="4">
             <h6 class="text-secondary">Status</h6>
             <h5><AppointmentStatusTag :appointment="appointment"></AppointmentStatusTag></h5>   
-        </Col>
-
-        <!-- Appointment Priority  -->
-        <Col span="3">
-            <h6 class="text-secondary">Priority</h6>
-        </Col>
-
-        <!-- Appointment Lifecycle  -->
-        <Col span="4">
-            <h6 class="text-secondary">Lifecycle</h6>
         </Col>
 
         <!-- Appointment Type e.g) Private, Goverment, Parastatal  -->
@@ -31,7 +27,7 @@
 
         <!-- Appointment Due Date  -->
         <Col span="4">
-            <h6 class="text-secondary">Created Date</h6>
+            <h6 class="text-secondary">Created</h6>
             <h5>{{ localAppointment.created_at | moment("from", "now")  }}</h5>            
         </Col>
 
@@ -94,10 +90,17 @@
         },
         computed:{
             customerName: function(){
-                if(this.localAppointment.client.model_type == 'user'){
-                    return this.localAppointment.client.full_name;
-                }else if(this.localAppointment.client.model_type == 'company'){
-                    return this.localAppointment.client.name;
+                if((this.localAppointment.client || {}).model_type == 'user'){
+                    return (this.localAppointment.client || {}).full_name;
+                }else if((this.localAppointment.client || {}).model_type == 'company'){
+                    return (this.localAppointment.client || {}).name;
+                }
+            },
+            urlName: function(){
+                if((this.localAppointment.client || {}).model_type == 'user'){
+                    return 'show-user';
+                }else if((this.localAppointment.client || {}).model_type == 'company'){
+                    return 'show-company';
                 }
             }
         },

@@ -463,7 +463,7 @@
                         console.log(response);
 
                         //  Stop loader
-                        self.isLoggingIn = false;     
+                        self.isSaving = false;     
     
                     });
 
@@ -504,7 +504,7 @@
                         console.log(response);
 
                         //  Stop loader
-                        self.isLoggingIn = false;     
+                        self.isSaving = false;     
     
                     });
 

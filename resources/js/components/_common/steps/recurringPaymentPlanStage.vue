@@ -31,34 +31,38 @@
         
         <!-- Stage card  -->
         <stagingCard 
-            :stageNumber="2" :showCheckMark="localInvoice.has_set_recurring_payment_plan && !isEditingPaymentPlan" :showHeader="false" 
-            :disabled="!localInvoice.has_set_recurring_schedule_plan" :showVerticalLine="true" :leftWidth="24"
+            :stageNumber="2" 
+            :showCheckMark="showCheckMark" 
+            :showHeader="false" 
+            :disabled="disabled" 
+            :showVerticalLine="true" 
+            :leftWidth="24"
             :isSaving="isSavingRecurringPaymentPlan">
 
             <template slot="leftContent">
-
-                <h4 :class="'text-secondary' + ( isEditingPaymentPlan ? ' mt-3 mb-2': '')">Payment Plan:</h4>
+                
+                <h4 :class="'text-secondary' + ( isEditingStage ? ' mt-3 mb-2': ' mt-3')">Payment Plan:</h4>
 
                 <!-- Manual/Automatic Toggle switch -->
-                <toggleSwitch v-if="localInvoice.has_set_recurring_schedule_plan && isEditingPaymentPlan"
-                    v-bind:toggleValue.sync="localInvoice.recurringSettings.paymentPlan.automatic"
+                <toggleSwitch v-if="showToggleSwitch"
+                    v-bind:toggleValue.sync="recurringSettings.paymentPlan.automatic"
                     @update:toggleValue="updateToggleChanges($event)"
                     :ripple="false" :showIcon="true" onIcon="ios-cash-outline" offIcon="ios-cash-outline" 
                     title="Automatic Payment:" onText="Yes" offText="No" poptipMsg="Turn on for the system to allow customers to pay using credit cards/mobile phones">
                 </toggleSwitch>
 
-                <div v-if="!isEditingPaymentPlan" class="d-inline-block mt-2" :style="{ maxWidth: '80%',lineHeight: '1.6em' }">
+                <div v-if="showSummary" class="d-inline-block mt-2" :style="{ maxWidth: '80%',lineHeight: '1.6em' }">
                     <p>
-                        <b>{{ localInvoice.recurringSettings.paymentPlan.automatic ? 'Automatic': 'Manual' }} Payment:</b> 
-                        {{ localInvoice.recurringSettings.paymentPlan.automatic ? 'Allow each invoice to be conveniently paid using mobile money.': 'Notify me on each invoice due, but i will be responsible to collect the money and record payments manually' }}
+                        <b>{{ recurringSettings.paymentPlan.automatic ? 'Automatic': 'Manual' }} Payment:</b> 
+                        {{ recurringSettings.paymentPlan.automatic ? 'Allow each '+resourceName+' to be conveniently paid using mobile money.': 'Notify me on each '+resourceName+' due, but i will be responsible to collect the money and record payments manually' }}
                     </p>
-                    <p v-if="localInvoice.recurringSettings.paymentPlan.automatic"><b>Payment Methods:</b> {{ paymentMethodsInWords }}</p>
+                    <p v-if="recurringSettings.paymentPlan.automatic"><b>Payment Methods:</b> {{ paymentMethodsInWords }}</p>
                 </div>
 
-                <div v-if="localInvoice.has_set_recurring_schedule_plan && isEditingPaymentPlan" class="d-inline-block mt-2 mb-2" :style="{ width: '100%' }">
+                <div v-if="showSettings" class="d-inline-block mt-2 mb-2" :style="{ width: '100%' }">
 
                     <!-- Payment settings -->
-                    <Row v-if="localInvoice.recurringSettings.paymentPlan.automatic" class="mt-2"
+                    <Row v-if="recurringSettings.paymentPlan.automatic" class="mt-2"
                         :style="{ padding: '30px', boxShadow: 'inset 1px 1px 5px 1px #d6d6d6' }">
 
                         <!-- Payment Methods e.g) Orange Money, MyZaka, e.t.c  -->
@@ -66,25 +70,25 @@
                             <span>
                                 <span class="d-inline-block">Customer can pay using:</span>
                                 <span class="d-inline-block">
-                                    <CheckboxGroup v-model="localInvoice.recurringSettings.paymentPlan.methods"
+                                    <CheckboxGroup v-model="recurringSettings.paymentPlan.methods"
                                             @on-change="getPaymentMethodsInWords()">
                                         <Checkbox label="OrangeMoney" 
-                                                  :disabled="localInvoice.recurringSettings.paymentPlan.methods.length == 1 && 
-                                                            localInvoice.recurringSettings.paymentPlan.methods[0] == 'OrangeMoney'">
+                                                  :disabled="recurringSettings.paymentPlan.methods.length == 1 && 
+                                                            recurringSettings.paymentPlan.methods[0] == 'OrangeMoney'">
                                             Orange Money
                                         </Checkbox>
                                         <Checkbox label="MyZaka" 
-                                                  :disabled="localInvoice.recurringSettings.paymentPlan.methods.length == 1 && 
-                                                             localInvoice.recurringSettings.paymentPlan.methods[0] == 'MyZaka'">
+                                                  :disabled="recurringSettings.paymentPlan.methods.length == 1 && 
+                                                             recurringSettings.paymentPlan.methods[0] == 'MyZaka'">
                                         </Checkbox>
                                     </CheckboxGroup>
                                 </span>
                             </span>
                             
-                            <Tabs :animated="false" class="payment-nav-tabs pt-3" :key="localInvoice.recurringSettings.paymentPlan.methods.length">
+                            <Tabs :animated="false" class="payment-nav-tabs pt-3" :key="recurringSettings.paymentPlan.methods.length">
 
                                 <!-- Orange Money - Settings -->
-                                <TabPane v-if="localInvoice.recurringSettings.paymentPlan.methods.includes('OrangeMoney')" label="Orange Money">
+                                <TabPane v-if="recurringSettings.paymentPlan.methods.includes('OrangeMoney')" label="Orange Money">
                                     
                                     <Row :gutter="20">
                                         <Col :span="6">
@@ -111,7 +115,7 @@
                                 </TabPane>
 
                                 <!-- MyZaka - Settings -->
-                                <TabPane v-if="localInvoice.recurringSettings.paymentPlan.methods.includes('MyZaka')" label="MyZaka">
+                                <TabPane v-if="recurringSettings.paymentPlan.methods.includes('MyZaka')" label="MyZaka">
                                     
                                     <Row :gutter="20">
                                         <Col :span="6">
@@ -146,22 +150,25 @@
                     <Alert v-else show-icon :style="{ padding: '18px 65px', boxShadow: '#cedee7 1px 1px 3px 1px inset' }">
                         Manual Payment
                         <Icon type="ios-bulb-outline" slot="icon"></Icon>
-                        <template slot="desc">Notify me on each invoice due, but i will be responsible to collect the money and record payments manually</template>
+                        <template slot="desc">Notify me on each {{ resourceName }} due, but i will be responsible to collect the money and record payments manually</template>
                     </Alert>
 
                 </div>
 
-                <div v-if="!localInvoice.has_set_recurring_schedule_plan && !isEditingPaymentPlan" class="mt-3">
+                <div v-if="showInformationalMessage" class="mt-4">
                     <Alert show-icon>
                         <Icon type="ios-bulb-outline" slot="icon"></Icon>
-                        <template slot="desc">Make paying invoices easy. Setup your invoices to be paid manually/automatically via Orange Money/MyZaka and get notified on every payment made.</template>
+                        <template slot="desc">
+                            Make paying {{ resourceNamePlural }} easy. <br>
+                            Setup your {{ resourceNamePlural }} to be paid manually/automatically via Orange Money/MyZaka and get notified on every payment made.
+                        </template>
                     </Alert>
                 </div>
 
             </template>
 
             <!-- Extra Content  -->
-            <template v-if="localInvoice.has_set_recurring_schedule_plan" slot="extraContent">
+            <template v-if="showActionBtns" slot="extraContent">
 
                 <Row>
 
@@ -170,11 +177,11 @@
                             <Col span="24">
 
                                 <!-- Focus Ripple  -->
-                                <focusRipple color="blue" :ripple="!localInvoice.has_set_recurring_payment_plan" class="float-right">
+                                <focusRipple color="blue" :ripple="rippleEffect" class="float-right">
                                     
                                     <!-- Final Step Button -->
-                                    <Button v-if="isEditingPaymentPlan" class="float-right" type="primary" size="large" @click="savePaymentPlan()">
-                                        <span>{{ localInvoice.has_set_recurring_payment_plan ? 'Save Changes': 'Final Step' }}</span>
+                                    <Button v-if="isEditingStage" class="float-right" type="primary" size="large" @click="savePaymentPlan()">
+                                        <span>{{ showSaveChangesText ? 'Save Changes': 'Final Step' }}</span>
                                     </Button>
                                     
                                     <Button v-else class="float-right" type="default" size="large" @click="activateEditMode()">
@@ -199,7 +206,6 @@
         -->
         <changeMobileMoneyAccountModal 
             v-if="isOpenChangeMobileMoneyAccountModal" 
-            :invoice="localInvoice" 
             @visibility="isOpenChangeMobileMoneyAccountModal = $event"
             @sent="$emit('sent', $event)">
         </changeMobileMoneyAccountModal>
@@ -233,8 +239,64 @@
     export default {
         components: { fadeLoader, stagingCard, toggleSwitch, phoneInput, focusRipple , changeMobileMoneyAccountModal},
         props: {
-            invoice: {
+            recurringSettings: {
                 type: Object,
+                default: null
+            },
+            resourceName:{
+                type: String,
+                default: '___'
+            },
+            resourceNamePlural:{
+                type: String,
+                default: '___'
+            },
+            disabled:{
+                type: Boolean,
+                default: false    
+            },
+            showHeader:{
+                type: Boolean,
+                default: false    
+            },
+            showCheckMark:{
+                type: Boolean,
+                default: false    
+            },
+            showSummary:{
+                type: Boolean,
+                default: false    
+            },
+            showToggleSwitch:{
+                type: Boolean,
+                default: false    
+            },
+            showSettings:{
+                type: Boolean,
+                default: false    
+            },
+            showInformationalMessage:{
+                type: Boolean,
+                default: false    
+            },
+            showActionBtns:{
+                type: Boolean,
+                default: false    
+            },
+            showSaveChangesText:{
+                type: Boolean,
+                default: false    
+            },
+            isEditing: {
+                type: Boolean,
+                default: false 
+            },
+            rippleEffect:{
+                type: Boolean,
+                default: false  
+            },
+            url:{
+                type: String,
                 default: null
             }
         },
@@ -242,12 +304,12 @@
             return {
                 /*
                     We are using cloneDeep to create a coplete copy of the javascript object without
-                    having reactivity to the main invoice. This is so that whatever changes we make to 
-                    the localInvoice, they must not affect the parent "invoice". We will only update
-                    the parent when we save the changes to the database.
+                    having reactivity to the main recurring settings. This is so that whatever changes 
+                    we make to the localRecurringSettings, they must not affect the parent "Recurring Settings". 
+                    We will only update the parent details when we save the changes to the database.
                 */
-                localInvoice: _.cloneDeep(this.invoice),
-                isEditingPaymentPlan: (_.cloneDeep(this.invoice).recurringSettings.editing.paymentPlan),
+                localRecurringSettings: _.cloneDeep( (this.recurringSettings || {}) ),
+                isEditingStage: ((_.cloneDeep( (this.recurringSettings || {}) ).editing || {}).paymentPlan),
                 isSavingRecurringPaymentPlan: false,
                 isOpenChangeMobileMoneyAccountModal: false,
 
@@ -256,15 +318,15 @@
         },
         watch: {
 
-            //  Watch for changes on the invoice
-            invoice: {
+            //  Watch for changes on the recurringSettings
+            recurringSettings: {
                 handler: function (val, oldVal) {
                     
-                    //  Update the local invoice value
-                    this.localInvoice = _.cloneDeep(val);
+                    //  Update the local recurringSettings value
+                    this.localRecurringSettings = _.cloneDeep(val);
 
-                    //  Update the editing payment shortcut
-                    this.isEditingPaymentPlan = (_.cloneDeep(val).recurringSettings.editing.paymentPlan);
+                    //  Update the editing schedule shortcut
+                    this.isEditingStage = ((_.cloneDeep( (val || {}) ).editing || {}).paymentPlan);
 
                 },
                 deep: true
@@ -272,11 +334,11 @@
         },
         methods: {
             updateToggleChanges(newVal){
-                this.localInvoice.recurringSettings.paymentPlan.automatic = newVal;
+                this.recurringSettings.paymentPlan.automatic = newVal;
                 this.getPaymentMethodsInWords();
             },
             getPaymentMethodsInWords(){
-                var paymentMethods = this.localInvoice.recurringSettings.paymentPlan.methods;
+                var paymentMethods = this.recurringSettings.paymentPlan.methods;
                 var inWords = '';
 
                 for(var x=0; x < paymentMethods.length; x++){
@@ -292,9 +354,9 @@
             },
             activateEditMode(){
                 //  Get all the plans and their edit state
-                var editingSchedulePlan = ( this.localInvoice.recurringSettings.editing.schedulePlan );
-                var editingDeliveryPlan = ( this.localInvoice.recurringSettings.editing.deliveryPlan );
-                var editingPaymentPlan = ( this.localInvoice.recurringSettings.editing.paymentPlan );
+                var editingSchedulePlan = ( this.recurringSettings.editing.schedulePlan );
+                var editingDeliveryPlan = ( this.recurringSettings.editing.deliveryPlan );
+                var editingPaymentPlan = ( this.recurringSettings.editing.paymentPlan );
 
                 //  If we are still editing the schedule/delivery plan 
                 if( editingSchedulePlan || editingDeliveryPlan ){
@@ -304,8 +366,8 @@
                         desc: 'Save your '+(editingSchedulePlan ? 'Schedule Plans': 'Delivery Plans')+' first before editing your Payment Plans',
                     });
                 }else{
-                    this.localInvoice.recurringSettings.editing.paymentPlan = true;
-                    this.isEditingPaymentPlan = true;
+                    this.recurringSettings.editing.paymentPlan = true;
+                    this.isEditingStage = true;
                 }
             },
             savePaymentPlan(){
@@ -313,35 +375,40 @@
                 var self = this;
 
                 //  Start loader
-                self.isSavingRecurringPaymentPlan = true;
+                this.isSavingRecurringPaymentPlan = true;
 
                 console.log('Attempt to save recurring payment plan...');
 
                 //  Form data to send
-                let invoiceData = { invoice: self.localInvoice };
+                let RecurringSettingsData = { settings: this.localRecurringSettings };
 
-                //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/invoices/'+self.localInvoice.id+'/recurring/update-payment-plan', invoiceData)
-                    .then(({ data }) => {
-                        
-                        console.log(data);
+                if( this.url ){
 
-                        //  Stop loader
-                        self.isSavingRecurringPaymentPlan = false;
-                        
-                        //  Alert creation success
-                        self.$Message.success('Payment plan saved sucessfully!');
+                    //  Use the api call() function located in resources/js/api.js
+                    api.call('post', this.url, RecurringSettingsData)
+                        .then(({ data }) => {
+                            
+                            console.log(data);
 
-                        self.$emit('saved', data);
+                            //  Stop loader
+                            self.isSavingRecurringPaymentPlan = false;
+                            
+                            //  Alert creation success
+                            self.$Message.success('Payment plan saved sucessfully!');
 
-                    })         
-                    .catch(response => { 
+                            self.$emit('saved', data);
+
+                        })         
+                        .catch(response => { 
                         //  Stop loader
                         self.isSavingRecurringPaymentPlan = false;
 
                         console.log('invoiceRecurringPaymentPlanStage.vue - Error saving recurring schedule payment plan...');
                         console.log(response);
-                    });
+                        });
+
+                }
+
             }
         },
         created(){

@@ -5,7 +5,7 @@
         <Col :span="24">
         
             <!-- Get the stage for setting the recurring schedule plan -->
-            <Poptip confirm title="Reset all the settings back to factory so that you can start over." word-wrap width="300" 
+            <Poptip confirm title="Reset all the settings back to default so that you can start over." word-wrap width="300" 
                     ok-text="Yes" cancel-text="No" @on-ok="resetAllSettings()"
                     class="float-right mb-1" trigger="hover" placement="left">
                 <Button type="default" size="large">
@@ -18,11 +18,11 @@
             <recurringSchedulePlanStage 
                 resourceName="invoice"
                 resourceNamePlural="invoices"
-                :recurringSettings="localInvoice.recurringSettings" 
+                :recurringSettings="localInvoice.recurring_settings" 
                 :showHeader="!localInvoice.has_approved_recurring_schedule"
-                :showCheckMark="localInvoice.has_set_recurring_schedule_plan && !(((localInvoice.recurringSettings || {}).editing || {}).schedulePlan)"
+                :showCheckMark="localInvoice.has_set_recurring_schedule_plan && !(((localInvoice.recurring_settings || {}).editing || {}).schedulePlan)"
                 :showNextStepBtn="localInvoice.has_set_recurring_schedule_plan"
-                :isEditing="(((localInvoice.recurringSettings || {}).editing || {}).schedulePlan)"
+                :isEditing="(((localInvoice.recurring_settings || {}).editing || {}).schedulePlan)"
                 :rippleEffect="!localInvoice.has_set_recurring_schedule_plan"
                 :url="'/api/invoices/'+localInvoice.id+'/recurring/update-schedule-plan'"
                 :style="{ position:'relative', zIndex: 4 }" 
@@ -30,10 +30,26 @@
             </recurringSchedulePlanStage>
 
             <!-- Get the stage for setting the recurring payment plan -->
-            <recurringPaymentPlanStage :invoice="localInvoice" :style="{ position:'relative', zIndex: 3 }" 
+            <recurringPaymentPlanStage 
+                resourceName="invoice"
+                resourceNamePlural="invoices"
+                :client="localInvoice.customized_client_details"
+                :recurringSettings="localInvoice.recurring_settings" 
+                :disabled="!localInvoice.has_set_recurring_schedule_plan"
+                :showCheckMark="localInvoice.has_set_recurring_payment_plan && !(((localInvoice.recurring_settings || {}).editing || {}).paymentPlan)"
+                :showToggleSwitch="localInvoice.has_set_recurring_schedule_plan && (((localInvoice.recurring_settings || {}).editing || {}).paymentPlan)"
+                :showSummary="localInvoice.has_set_recurring_schedule_plan && !(((localInvoice.recurring_settings || {}).editing || {}).paymentPlan)"
+                :showSettings="localInvoice.has_set_recurring_schedule_plan && (((localInvoice.recurring_settings || {}).editing || {}).paymentPlan)"
+                :showInformationalMessage="!localInvoice.has_set_recurring_schedule_plan && !(((localInvoice.recurring_settings || {}).editing || {}).paymentPlan)"
+                :showActionBtns="localInvoice.has_set_recurring_schedule_plan"
+                :rippleEffect="!localInvoice.has_set_recurring_payment_plan"
+                :showSaveChangesText="localInvoice.has_set_recurring_payment_plan"
+                :isEditing="(((localInvoice.recurring_settings || {}).editing || {}).schedulePlan)"
+                :url="'/api/invoices/'+localInvoice.id+'/recurring/update-payment-plan'"
+                :style="{ position:'relative', zIndex: 4 }" 
                 @saved="$emit('saved', $event)">
             </recurringPaymentPlanStage>
-
+            
             <!-- Get the stage for setting the recurring delivery plan -->
             <recurringDeliveryPlanStage 
                 resourceName="invoice"
@@ -43,22 +59,33 @@
                 :smsTemplateData="localInvoice"
                 :testSmsUrl="'/api/invoices/'+localInvoice.id+'/send?test=1'"
                 :testEmailUrl="'/api/invoices/'+localInvoice.id+'/send?test=1'"
-                :recurringSettings="localInvoice.recurringSettings" 
+                :recurringSettings="localInvoice.recurring_settings" 
                 :disabled="!localInvoice.has_set_recurring_payment_plan"
-                :showCheckMark="localInvoice.has_set_recurring_delivery_plan && !(((localInvoice.recurringSettings || {}).editing || {}).deliveryPlan)"
-                :showToggleSwitch="localInvoice.has_set_recurring_payment_plan && (((localInvoice.recurringSettings || {}).editing || {}).deliveryPlan)"
-                :showSettings="localInvoice.has_set_recurring_payment_plan && (((localInvoice.recurringSettings || {}).editing || {}).deliveryPlan)"
-                :showMessage="!localInvoice.has_set_recurring_payment_plan && !(((localInvoice.recurringSettings || {}).editing || {}).deliveryPlan)"
+                :showCheckMark="localInvoice.has_set_recurring_delivery_plan && !(((localInvoice.recurring_settings || {}).editing || {}).deliveryPlan)"
+                :showToggleSwitch="localInvoice.has_set_recurring_payment_plan && (((localInvoice.recurring_settings || {}).editing || {}).deliveryPlan)"
+                :showSummary="localInvoice.has_set_recurring_payment_plan && !(((localInvoice.recurring_settings || {}).editing || {}).deliveryPlan)"
+                :showSettings="localInvoice.has_set_recurring_payment_plan && (((localInvoice.recurring_settings || {}).editing || {}).deliveryPlan)"
+                :showInformationalMessage="!localInvoice.has_set_recurring_payment_plan && !(((localInvoice.recurring_settings || {}).editing || {}).deliveryPlan)"
                 :showActionBtns="localInvoice.has_set_recurring_payment_plan"
-                :showDoneText="localInvoice.has_set_recurring_delivery_plan"
-                :isEditing="(((localInvoice.recurringSettings || {}).editing || {}).schedulePlan)"
+                :showSaveChangesText="localInvoice.has_set_recurring_delivery_plan"
+                :isEditing="(((localInvoice.recurring_settings || {}).editing || {}).schedulePlan)"
                 :url="'/api/invoices/'+localInvoice.id+'/recurring/update-delivery-plan'"
                 :style="{ position:'relative', zIndex: 4 }" 
                 @saved="$emit('saved', $event)">
             </recurringDeliveryPlanStage>
 
             <!-- Get the stage for setting the recurring delivery plan -->
-            <recurringApprovalStage :invoice="localInvoice" :style="{ position:'relative', zIndex: 2 }" 
+            <recurringApprovalStage 
+                resourceName="invoice"
+                resourceNamePlural="invoices"
+                :recurringSettings="localInvoice.recurring_settings" 
+                :disabled="!localInvoice.has_set_recurring_delivery_plan"
+                :showCheckMark="localInvoice.has_approved_recurring_settings"
+                :showActionBtns="localInvoice.has_set_recurring_delivery_plan"
+                :hasApproved="localInvoice.has_approved_recurring_settings"
+                :rippleEffect="localInvoice.has_approved_recurring_settings"
+                :url="'/api/invoices/'+localInvoice.id+'/recurring/approve'"
+                :style="{ position:'relative', zIndex: 2 }" 
                 @saved="$emit('saved', $event)">
             </recurringApprovalStage>
 
@@ -106,8 +133,8 @@
                     //  Update the local invoice value
                     this.localInvoice = _.cloneDeep(val);
 
-                    if(!this.localInvoice.recurringSettings){
-                        this.localInvoice.recurringSettings = this.getRecurringSettingsTemplate();
+                    if(!this.localInvoice.recurring_settings){
+                        this.localInvoice.recurring_settings = this.getRecurringSettingsTemplate();
                     }
                 },
                 deep: true
@@ -115,7 +142,7 @@
         },
         methods: {
             resetAllSettings(){
-                this.localInvoice.recurringSettings = this.getRecurringSettingsTemplate();
+                this.localInvoice.recurring_settings = this.getRecurringSettingsTemplate();
             
                 //  Alert creation success
                 this.$Message.success('Reset successfully!');
@@ -215,8 +242,8 @@
         },
         created(){
             
-            if(!this.invoice.recurringSettings){
-                this.localInvoice.recurringSettings = this.getRecurringSettingsTemplate();
+            if(!this.invoice.recurring_settings){
+                this.localInvoice.recurring_settings = this.getRecurringSettingsTemplate();
             }
         }
     }

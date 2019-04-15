@@ -203,6 +203,13 @@ let routes = [
     component: require('./views/dashboard/appointment/list/main.vue')
 },
 {
+    //  Create appointment
+    path: '/appointments/create', name: 'create-appointment',
+    meta: { layout: 'Dashboard', middlewareAuth: true },
+    component: require('./views/dashboard/appointment/create/main.vue'),
+    props: true
+},,
+{
     //  Show one appointment
     path: '/appointments/:id', name: 'show-appointment',
     meta: { layout: 'Dashboard', middlewareAuth: true },

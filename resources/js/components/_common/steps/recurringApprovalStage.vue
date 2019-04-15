@@ -2,19 +2,25 @@
 
     <div>
 
-        <!-- Fade loader - Shows when approving the recurring invoice  -->
-        <fadeLoader :loading="isSavingApproval" msg="Approving recurring invoice, please wait..."></fadeLoader>
+        <!-- Fade loader - Shows when approving the recurring  -->
+        <fadeLoader :loading="isSavingApproval" :msg="'Approving recurring '+resourceName+', please wait...'"></fadeLoader>
 
         <!-- Stage card  -->
         <stagingCard 
-            :stageNumber="4" :showCheckMark="localInvoice.has_approved_recurring_settings" :showHeader="false" 
-            :disabled="!localInvoice.has_set_recurring_delivery_plan" :showVerticalLine="false"
-            :isSaving="isSavingApproval" :leftWidth="16" :rightWidth="8">
+            :stageNumber="4" 
+            :showCheckMark="showCheckMark" 
+            :showHeader="false" 
+            :disabled="disabled" 
+            :showVerticalLine="false"
+            :isSaving="isSavingApproval" 
+            :leftWidth="16" :rightWidth="8">
 
             <template slot="leftContent">
 
-                <h4 :class="'text-secondary' + (localInvoice.has_approved_recurring_settings) ? ' mt-2': ''">{{ (localInvoice.has_approved_recurring_settings) ? 'Approved': 'Approve:' }}</h4>
-                <span v-if="!localInvoice.has_approved_recurring_settings" class="d-inline-block mt-2 mb-2">Approve to allow for recurring invoices to start.</span>
+                <h4 :class="'text-secondary' + (hasApproved ? ' mt-2': '')">
+                    {{ hasApproved ? 'Approved': 'Approve:' }}
+                </h4>
+                <span v-if="!hasApproved" class="d-inline-block mt-2 mb-2">Approve to allow for recurring {{ resourceNamePlural }} to start.</span>
 
             </template>
 
@@ -22,10 +28,10 @@
             <template slot="rightContent">
 
                 <!-- Focus Ripple  -->
-                <focusRipple v-if="!localInvoice.has_approved_recurring_settings" :ripple="true" color="blue" class="float-right mt-3">
+                <focusRipple v-if="showActionBtns && !hasApproved" :ripple="rippleEffect" color="blue" class="float-right mt-3">
                     
                     <!-- Approve Button  -->
-                    <Poptip confirm title="Are you sure you want to approve this recurring invoice?"  width="300"
+                    <Poptip confirm :title="'Are you sure you want to approve this recurring '+resourceName+'?'"  width="300"
                             ok-text="Yes" cancel-text="No" @on-ok="approveRecurringSettings()" placement="left">
                         
                         <Button type="primary" size="large">
@@ -60,8 +66,40 @@
     export default {
         components: { fadeLoader, stagingCard, animatedCheckmark, focusRipple },
         props: {
-            invoice: {
+            recurringSettings: {
                 type: Object,
+                default: null
+            },
+            resourceName:{
+                type: String,
+                default: '___'
+            },
+            resourceNamePlural:{
+                type: String,
+                default: '___'
+            },
+            disabled:{
+                type: Boolean,
+                default: false    
+            },
+            showCheckMark:{
+                type: Boolean,
+                default: false    
+            },
+            hasApproved:{
+                type: Boolean,
+                default: false    
+            },
+            showActionBtns:{
+                type: Boolean,
+                default: false    
+            },
+            rippleEffect:{
+                type: Boolean,
+                default: false    
+            },
+            url:{
+                type: String,
                 default: null
             }
         },
@@ -71,10 +109,10 @@
                 /*
                     We are using cloneDeep to create a coplete copy of the javascript object without
                     having reactivity to the main invoice. This is so that whatever changes we make to 
-                    the localInvoice, they must not affect the parent "invoice". We will only update
+                    the localRecurringSettings, they must not affect the parent "invoice". We will only update
                     the parent when we save the changes to the database.
                 */
-                localInvoice: _.cloneDeep(this.invoice),
+                localRecurringSettings: _.cloneDeep( (this.recurringSettings || {}) ),
 
                 isSavingApproval: false
     
@@ -82,12 +120,12 @@
         },
         watch: {
 
-            //  Watch for changes on the invoice
-            invoice: {
+            //  Watch for changes on the recurringSettings
+            recurringSettings: {
                 handler: function (val, oldVal) {
                     
-                    //  Update the local invoice value
-                    this.localInvoice = _.cloneDeep(val);
+                    //  Update the local recurringSettings value
+                    this.localRecurringSettings = _.cloneDeep(val);
 
                 },
                 deep: true
@@ -102,32 +140,34 @@
                 self.isSavingApproval = true;
 
                 //  Form data to send
-                let invoiceData = { invoice: self.localInvoice };
+                let RecurringSettingsData = { settings: self.localRecurringSettings };
 
-                console.log('Attempt to approve recurring invoice...');
+                if( this.url ){
 
-                //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/invoices/'+self.localInvoice.id+'/recurring/approve', invoiceData)
-                    .then(({ data }) => {
-                        
+                    //  Use the api call() function located in resources/js/api.js
+                    api.call('post', this.url, RecurringSettingsData)
+                        .then(({ data }) => {
+                            
                         console.log(data);
 
                         //  Stop loader
                         self.isSavingApproval = false;
                         
                         //  Alert creation success
-                        self.$Message.success('Invoice approved sucessfully!');
+                        self.$Message.success('Approved sucessfully!');
 
                         self.$emit('saved', data);
 
-                    })         
-                    .catch(response => { 
-                        //  Stop loader
-                        self.isSavingApproval = false;
+                        })         
+                        .catch(response => { 
+                            //  Stop loader
+                            self.isSavingApproval = false;
 
-                        console.log('recurringSettingsStage.vue - Error in approving recurring invoice...');
-                        console.log(response);
-                    });
+                            console.log('recurringSettingsStage.vue - Error in approving...');
+                            console.log(response);
+                        });
+
+                }
             }
         }
     }

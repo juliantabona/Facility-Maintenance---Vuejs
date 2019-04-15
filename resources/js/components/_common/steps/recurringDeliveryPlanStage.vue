@@ -8,14 +8,14 @@
         <!-- Stage card  -->
         <stagingCard 
             :stageNumber="3" 
+            :showCheckMark="showCheckMark" 
             :showHeader="showHeader"
             :disabled="disabled" 
             :showVerticalLine="true" :leftWidth="24"
             :isSaving="isSavingRecurringDeliveryPlan">
 
             <template slot="leftContent">
-
-                <h4 :class="'text-secondary' + ( isEditingStage ? ' mt-3 mb-2': '')">Delivery Plan:</h4>
+                <h4 :class="'text-secondary' + ( isEditingStage ? ' mt-3 mb-2': ' mt-3')">Delivery Plan:</h4>
 
                 <!-- Manual/Automatic Toggle switch -->
                 <toggleSwitch v-if="showToggleSwitch"
@@ -25,7 +25,7 @@
                     title="Send Automatically:" onText="Yes" offText="No" poptipMsg="Turn on for the system to send email/sms automatically">
                 </toggleSwitch>
 
-                <div v-if="!isEditingStage" class="d-inline-block mt-2" :style="{ maxWidth: '80%',lineHeight: '1.6em' }">
+                <div v-if="showSummary" class="d-inline-block mt-2" :style="{ maxWidth: '80%',lineHeight: '1.6em' }">
                     <p>
                         <b>{{ (localRecurringSettings.deliveryPlan || {}).automatic ? 'Automatic': 'Manual' }} Sending:</b> 
                         {{ (localRecurringSettings.deliveryPlan || {}).automatic ? 'Automatically send each '+resourceName+' to my customer.': 'Notify me on each '+resourceName+' due, but i will be responsible to send it manually' }}
@@ -73,7 +73,7 @@
                     </Alert>
                 </div>
 
-                <div v-if="showMessage" class="mt-3">
+                <div v-if="showInformationalMessage" class="mt-3">
                     <Alert show-icon>
                         <Icon type="ios-bulb-outline" slot="icon"></Icon>
                         <template slot="desc">Make delivering {{ resourceNamePlural }} easy. Setup your {{ resourceNamePlural }} to be sent manually/automatically via email/sms and get notified on delivery.</template>
@@ -93,7 +93,7 @@
 
                                 <!-- Final Step Button -->
                                 <Button v-if="isEditingStage" class="float-right" type="primary" size="large" @click="saveDeliveryPlan()">
-                                    <span>{{ showDoneText ? 'Save Changes': 'Done' }}</span>
+                                    <span>{{ showSaveChangesText ? 'Save Changes': 'Done' }}</span>
                                 </Button>
                                 <Button v-else class="float-right" type="default" size="large" @click="activateEditMode()">
                                     <span>Edit Delivery</span>
@@ -157,6 +157,10 @@
                 type: Object,
                 default: null
             },
+            testSmsUrl: {
+                type: String,
+                default: ''
+            },
             testEmailUrl: {
                 type: String,
                 default: ''
@@ -185,11 +189,15 @@
                 type: Boolean,
                 default: false    
             },
+            showSummary:{
+                type: Boolean,
+                default: false    
+            },
             showSettings:{
                 type: Boolean,
                 default: false    
             },
-            showMessage:{
+            showInformationalMessage:{
                 type: Boolean,
                 default: false    
             },
@@ -197,7 +205,7 @@
                 type: Boolean,
                 default: false    
             },
-            showDoneText:{
+            showSaveChangesText:{
                 type: Boolean,
                 default: false    
             },
@@ -221,7 +229,7 @@
                     We will only update the parent details when we save the changes to the database.
                 */
                 localRecurringSettings: _.cloneDeep( (this.recurringSettings || {}) ),
-                isEditingStage: ((_.cloneDeep( (this.recurringSettings || {}) ).editing || {}).schedulePlan),
+                isEditingStage: ((_.cloneDeep( (this.recurringSettings || {}) ).editing || {}).deliveryPlan),
 
                 isSavingRecurringDeliveryPlan: false,
                 deliveryMethodsInWords: '',
@@ -242,7 +250,7 @@
                     this.localRecurringSettings = _.cloneDeep(val);
 
                     //  Update the editing schedule shortcut
-                    this.isEditingStage = ((_.cloneDeep( (val || {}) ).editing|| {}).deliveryPlan);
+                    this.isEditingStage = ((_.cloneDeep( (val || {}) ).editing || {}).deliveryPlan);
 
                 },
                 deep: true
@@ -253,12 +261,23 @@
                 this.localRecurringSettings.deliveryPlan.sms.phones.push(newPhone)
             },
             smsMessageCompiled: function(){
+                console.log('sms builder location');
+                console.log('./../../../components/_common/compiledText/smsCompiledText/'+this.smsTemplate+'.js')
+
                 var smsBuilder = require('./../../../components/_common/compiledText/smsCompiledText/'+this.smsTemplate+'.js');
 
-                var smsMessage = smsBuilder.buildSms(this.smsTemplateData);
+                console.log('Builder Variable');
+                console.log(smsBuilder);
+
+                var smsMessage = smsBuilder.default.buildSms(this.smsTemplateData);
+
+                console.log('smsMessage');
+                console.log(smsMessage);
 
                 //  Update the local message
                 this.localRecurringSettings.deliveryPlan.sms.message = smsMessage;
+
+                return smsMessage;
             },
             emailMessageCompiled: function(){
 
@@ -306,7 +325,7 @@
             },
             getShotCodes(){
 
-                return [];
+                return {};
             },
 
             activateEditMode(){

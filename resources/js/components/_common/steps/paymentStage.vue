@@ -98,10 +98,10 @@
                                         <Col span="8">
                                             <h6 class="text-secondary mb-3">1) Remind before due date</h6>
                                             <CheckboxGroup v-model="paymentReminderTime">
-                                                <Checkbox class="font-weight-bold" label="1-b">1 day before</Checkbox>
-                                                <Checkbox class="font-weight-bold" label="3-b">3 days before</Checkbox>
-                                                <Checkbox class="font-weight-bold" label="7-b">7 days before</Checkbox>
-                                                <Checkbox class="font-weight-bold" label="14-b">14 days before</Checkbox>
+                                                <Checkbox class="font-weight-bold" label="1-d-b">1 day before</Checkbox>
+                                                <Checkbox class="font-weight-bold" label="3-d-b">3 days before</Checkbox>
+                                                <Checkbox class="font-weight-bold" label="7-d-b">7 days before</Checkbox>
+                                                <Checkbox class="font-weight-bold" label="14-d-b">14 days before</Checkbox>
                                             </CheckboxGroup>
                                         </Col>
 
@@ -117,10 +117,10 @@
                                         <Col span="8" class="pl-3">
                                             <h6 class="text-secondary mb-3">3) Remind after due date</h6>
                                             <CheckboxGroup v-model="paymentReminderTime">
-                                                <Checkbox class="font-weight-bold" label="1-a">1 day after</Checkbox>
-                                                <Checkbox class="font-weight-bold" label="3-a">3 days after</Checkbox>
-                                                <Checkbox class="font-weight-bold" label="7-a">7 days after</Checkbox>
-                                                <Checkbox class="font-weight-bold" label="14-a">14 days after</Checkbox>
+                                                <Checkbox class="font-weight-bold" label="1-d-a">1 day after</Checkbox>
+                                                <Checkbox class="font-weight-bold" label="3-d-a">3 days after</Checkbox>
+                                                <Checkbox class="font-weight-bold" label="7-d-a">7 days after</Checkbox>
+                                                <Checkbox class="font-weight-bold" label="14-d-a">14 days after</Checkbox>
                                             </CheckboxGroup>
                                         </Col>
                                         
@@ -233,16 +233,16 @@
         methods: {
 
             getPaymentReminderTime: function(){
-                if( ((this.localInvoice || {}).reminders || {}).length ){
-                    return this.localInvoice.reminders.map(reminder => reminder.days_after);
+                if( ((this.invoice || {}).reminders || {}).length ){
+                    return this.invoice.reminders.map(reminder => reminder.days_after);
                 }else{
                     return [];
                 }
 
             },
             getPaymentReminderMethod: function(){
-                if( ((this.localInvoice || {}).reminders || {}).length ){
-                    return this.localInvoice.reminders.map(reminder => {
+                if( ((this.invoice || {}).reminders || {}).length ){
+                    return this.invoice.reminders.map(reminder => {
                         var can = [];
 
                         //  If this reminder can be emailed return 'email' value

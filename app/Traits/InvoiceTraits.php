@@ -315,7 +315,7 @@ trait InvoiceTraits
                  *   SEND NOTIFICATIONS      *
                  *****************************/
 
-                //$auth_user->notify(new InvoiceCreated($invoice));
+                // $auth_user->notify(new InvoiceCreated($invoice));
 
                 /*****************************
                  *   RECORD ACTIVITY         *
@@ -409,7 +409,7 @@ trait InvoiceTraits
                  *   SEND NOTIFICATIONS      *
                  *****************************/
 
-                $auth_user->notify(new InvoiceUpdated($invoice));
+                // $auth_user->notify(new InvoiceUpdated($invoice));
 
                 /*****************************
                  *   RECORD ACTIVITY         *
@@ -461,7 +461,7 @@ trait InvoiceTraits
                  *   SEND NOTIFICATIONS      *
                  *****************************/
 
-                $auth_user->notify(new InvoiceApproved($invoice));
+                // $auth_user->notify(new InvoiceApproved($invoice));
 
                 /*****************************
                  *   RECORD ACTIVITY         *
@@ -626,11 +626,11 @@ trait InvoiceTraits
          *****************************/
 
         if (request('test') == 1) {
-            $status = 'sent invoice test sms';
-            $auth_user->notify(new InvoiceTestSmsSent($invoice));
+            $status = 'sent test sms';
+        // $auth_user->notify(new InvoiceTestSmsSent($invoice));
         } else {
             $status = 'sent sms';
-            $auth_user->notify(new InvoiceSmsSent($invoice));
+            // $auth_user->notify(new InvoiceSmsSent($invoice));
         }
 
         //  If we have phones and a message to send
@@ -737,13 +737,13 @@ trait InvoiceTraits
 
         //  If this is a test email
         if (request('test') == 1) {
-            $status = 'sent invoice test email';
-            $auth_user->notify(new InvoiceTestEmailSent($invoice));
+            $status = 'sent test email';
+        // $auth_user->notify(new InvoiceTestEmailSent($invoice));
 
         //  Otherwise if this is not a test email
         } else {
             $status = 'sent email';
-            $auth_user->notify(new InvoiceEmailSent($invoice));
+            // $auth_user->notify(new InvoiceEmailSent($invoice));
         }
 
         //  Invoice PDF
@@ -812,11 +812,11 @@ trait InvoiceTraits
          *****************************/
 
         if (request('test') == 1) {
-            $status = 'sent invoice receipt test sms';
-            $auth_user->notify(new InvoiceReceiptTestSmsSent($invoice));
+            $status = 'sent receipt test sms';
+        // $auth_user->notify(new InvoiceReceiptTestSmsSent($invoice));
         } else {
-            $status = 'sent invoice receipt sms';
-            $auth_user->notify(new InvoiceReceiptSmsSent($invoice));
+            $status = 'sent receipt sms';
+            // $auth_user->notify(new InvoiceReceiptSmsSent($invoice));
         }
 
         //  Foreach phone number provided
@@ -863,13 +863,13 @@ trait InvoiceTraits
 
         //  If this is a test email
         if (request('test') == 1) {
-            $status = 'sent invoice receipt test email';
-            $auth_user->notify(new InvoiceReceiptTestEmailSent($invoice));
+            $status = 'sent receipt test email';
+        // $auth_user->notify(new InvoiceReceiptTestEmailSent($invoice));
 
         //  Otherwise if this is not a test email
         } else {
-            $status = 'sent invoice receipt email';
-            $auth_user->notify(new InvoiceReceiptEmailSent($invoice));
+            $status = 'sent receipt email';
+            // $auth_user->notify(new InvoiceReceiptEmailSent($invoice));
         }
 
         /*****************************
@@ -1097,30 +1097,31 @@ trait InvoiceTraits
         $auth_user = auth('api')->user();
 
         /*
-         *  The $invoice is a collection of the invoice to be stored.
+         *  The $settings is a collection of the recurring settings to be stored.
          */
-        $invoiceData = request('invoice');
+        $settingsData = request('settings');
 
         /**************************************************************************
          *   CHECK IF USER HAS PERMISSION TO SAVE RECURRING INVOICE SCHEDULES     *
-         *************************************************************************/
+         **************************************************************************/
 
         /*********************************************
          *   VALIDATE INVOICE INFORMATION            *
-         ********************************************/
+         *********************************************/
 
         try {
             //  Get the invoice
             $invoice = $this->where('id', $invoice_id)->first();
 
-            //  Create a template to hold the invoice details
             $settingsData['editing']['schedulePlan'] = false;
             $settingsData['editing']['paymentPlan'] = false;
 
-            if (!$invoice->has_set_recurring_delivery_plan) {
+            //  Mark the next stage with a status of editting
+            if (!$invoice->has_set_recurring_payment_plan) {
                 $settingsData['editing']['deliveryPlan'] = true;
             }
 
+            //  Create a template to hold the setting details
             $template = [
                 'isRecurring' => 1,
                 'recurring_settings' => $settingsData,
@@ -1138,13 +1139,13 @@ trait InvoiceTraits
                  *   SEND NOTIFICATIONS      *
                  *****************************/
 
-                $auth_user->notify(new InvoiceRecurringSettingsPaymentPlanUpdated($invoice));
+                //  $auth_user->notify(new InvoiceRecurringSettingsPaymentPlanUpdated($invoice));
 
                 /*****************************
                  *   RECORD ACTIVITY         *
                  *****************************/
 
-                //  Record activity of recurring schedule timing updated
+                //  Record activity of recurring payment plan updated
                 $status = 'updated recurring payment';
                 $invoiceUpdatedActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
 
@@ -1169,27 +1170,27 @@ trait InvoiceTraits
         $auth_user = auth('api')->user();
 
         /*
-         *  The $invoice is a collection of the invoice to be stored.
+         *  The $settings is a collection of the recurring settings to be stored.
          */
-        $invoiceData = request('invoice');
+        $settingsData = request('settings');
 
         /**************************************************************************
          *   CHECK IF USER HAS PERMISSION TO SAVE RECURRING INVOICE SCHEDULES     *
-         *************************************************************************/
+         **************************************************************************/
 
         /*********************************************
          *   VALIDATE INVOICE INFORMATION            *
-         ********************************************/
+         *********************************************/
 
         try {
             //  Get the invoice
             $invoice = $this->where('id', $invoice_id)->first();
 
-            //  Create a template to hold the invoice details
             $settingsData['editing']['schedulePlan'] = false;
             $settingsData['editing']['paymentPlan'] = false;
             $settingsData['editing']['deliveryPlan'] = false;
 
+            //  Create a template to hold the setting details
             $template = [
                 'isRecurring' => 1,
                 'recurring_settings' => $settingsData,
@@ -1207,7 +1208,7 @@ trait InvoiceTraits
                  *   SEND NOTIFICATIONS      *
                  *****************************/
 
-                $auth_user->notify(new InvoiceRecurringSettingsDeliveryPlanUpdated($invoice));
+                //  $auth_user->notify(new InvoiceRecurringSettingsDeliveryPlanUpdated($invoice));
 
                 /*****************************
                  *   RECORD ACTIVITY         *
@@ -1237,24 +1238,30 @@ trait InvoiceTraits
         //  Current authenticated user
         $auth_user = auth('api')->user();
 
-        /**************************************************************************
-         *   CHECK IF USER HAS PERMISSION TO APPROVE RECURRING INVOICE            *
-         *************************************************************************/
-
         /*
-         *  The $invoice is a collection of the invoice to be stored.
+         *  The $settings is a collection of the recurring settings to be stored.
          */
-        $invoiceData = request('invoice');
+        $settingsData = request('settings');
+
+        /**************************************************************************
+         *   CHECK IF USER HAS PERMISSION TO SAVE RECURRING INVOICE SCHEDULES     *
+         **************************************************************************/
 
         /*********************************************
          *   VALIDATE INVOICE INFORMATION            *
-         ********************************************/
+         *********************************************/
 
         try {
             //  Get the invoice
             $invoice = $this->where('id', $invoice_id)->first();
 
+            $settingsData['editing']['schedulePlan'] = false;
+            $settingsData['editing']['paymentPlan'] = false;
+            $settingsData['editing']['deliveryPlan'] = false;
+
+            //  Create a template to hold the setting details
             $template = [
+                'isRecurring' => 1,
                 'recurring_settings' => $settingsData,
             ];
 
@@ -1270,7 +1277,7 @@ trait InvoiceTraits
                  *   SEND NOTIFICATIONS      *
                  *****************************/
 
-                $auth_user->notify(new InvoiceRecurringSettingsApproved($invoice));
+                //  $auth_user->notify(new InvoiceRecurringSettingsApproved($invoice));
 
                 /*****************************
                  *   RECORD ACTIVITY         *
@@ -1321,7 +1328,7 @@ trait InvoiceTraits
                  *   SEND NOTIFICATIONS      *
                  *****************************/
 
-                $auth_user->notify(new InvoicePaid($invoice));
+                // $auth_user->notify(new InvoicePaid($invoice));
 
                 /*****************************
                  *   RECORD ACTIVITY         *
@@ -1372,7 +1379,7 @@ trait InvoiceTraits
                  *   SEND NOTIFICATIONS      *
                  *****************************/
 
-                $auth_user->notify(new InvoicePaymentCancelled($invoice));
+                // $auth_user->notify(new InvoicePaymentCancelled($invoice));
 
                 /*****************************
                  *   RECORD ACTIVITY         *

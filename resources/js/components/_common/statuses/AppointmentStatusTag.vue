@@ -50,11 +50,11 @@
                     this.status.description = 'This appointment has been approved for processing';
                     this.status.text = 'Approved';
                     this.status.color = '#2d8cf0';
-                //  If accepted
-                }else if( this.hasAccepted() ){
-                    // Appointment accepted status details
-                    this.status.description = 'This appointment has been accepted';
-                    this.status.text = 'Accepted';
+                //  If confirmed
+                }else if( this.hasConfirmed() ){
+                    // Appointment confirmed status details
+                    this.status.description = 'This appointment has been confirmed';
+                    this.status.text = 'Confirmed';
                     this.status.color = '#19be6b';
                 //  If declined
                 }else if( this.hasDeclined() ){
@@ -77,7 +77,6 @@
                     this.status.description = 'This appointment has been cancelled';
                     this.status.text = 'Cancelled';
                     this.status.color = '#ed4014';
-
 
                 //  If expired
                 }else if( this.hasExpired() ){
@@ -113,8 +112,8 @@
             hasApproved(){
                 return this.localAppointment.current_activity_status == 'Approved' ? true: false;
             },
-            hasAccepted(){
-                return this.localAppointment.current_activity_status == 'Accepted' ? true: false;
+            hasConfirmed(){
+                return this.localAppointment.current_activity_status == 'Confirmed' ? true: false;
             },
             hasDeclined(){
                 return this.localAppointment.current_activity_status == 'Declined' ? true: false;

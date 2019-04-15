@@ -178,10 +178,10 @@ trait JobcardTraits
 
     /*  initiateCreate() method:
      *
-     *  This is used to create a new invoice. It also works
+     *  This is used to create a new appointment. It also works
      *  to store the creation activity and broadcasting of
      *  notifications to users concerning the creation of
-     *  the invoice.
+     *  the appointment.
      *
      */
     public function initiateCreate($template = null)
@@ -190,19 +190,19 @@ trait JobcardTraits
         $auth_user = auth('api')->user();
 
         /*
-         *  The $invoice is a collection of the jobcard to be stored.
+         *  The $appointment is a collection of the jobcard to be stored.
          */
         $jobcard = request('jobcard');
 
         /*******************************************************
-         *   CHECK IF USER HAS PERMISSION TO CREATE INVOICE    *
+         *   CHECK IF USER HAS PERMISSION TO CREATE JOBCARD    *
          ******************************************************/
 
         /*********************************************
-         *   VALIDATE INVOICE INFORMATION            *
+         *   VALIDATE JOBCARD INFORMATION            *
          ********************************************/
 
-        //  Create a template to hold the invoice details
+        //  Create a template to hold the appointment details
         $template = $template ?? [
              // 'client_id', 'client_type', 'is_public',
 
@@ -222,16 +222,13 @@ trait JobcardTraits
 
             //  If the jobcard was created successfully
             if ($jobcard) {
-                //  Save the priority
-                $jobcard->priority()->sync($jobcard['priority']);
-
                 //  Start with an empty priority, categories, costcenters, assigned_staff
                 $priority = [];
                 $categories = [];
                 $costcenters = [];
                 $assignedStaff = [];
 
-                //  Foreach of the priority
+                //  Foreach of the priorities
                 foreach (request('jobcard')['priority'] as $key => $id) {
                     //  Store with the following details corresponding to the priority table columns
                     $priority[$key] = [
@@ -245,7 +242,7 @@ trait JobcardTraits
 
                 $priority = DB::table('priority_allocations')->insert($priority);
 
-                //  Foreach of the category
+                //  Foreach of the categories
                 foreach (request('jobcard')['categories'] as $key => $id) {
                     //  Store with the following details corresponding to the category table columns
                     $categories[$key] = [
@@ -259,7 +256,7 @@ trait JobcardTraits
 
                 $categories = DB::table('category_allocations')->insert($categories);
 
-                //  Foreach of the costcenter
+                //  Foreach of the costcenters
                 foreach (request('jobcard')['costcenters'] as $key => $id) {
                     //  Store with the following details corresponding to the costcenter table columns
                     $costcenters[$key] = [
@@ -273,7 +270,7 @@ trait JobcardTraits
 
                 $costcenters = DB::table('costcenter_allocations')->insert($costcenters);
 
-                //  Foreach of the costcenter
+                //  Foreach of the assigned staff
                 foreach (request('jobcard')['assigned_staff'] as $key => $id) {
                     //  Store with the following details corresponding to the assigned staff table columns
                     $assignedStaff[$key] = [
@@ -535,10 +532,10 @@ trait JobcardTraits
 
     /*  getStatistics() method:
      *
-    /*  This method is used to get the overall statistics of the invoices,
-     *  showing information of invoices in their respective states such as
+    /*  This method is used to get the overall statistics of the appointments,
+     *  showing information of appointments in their respective states such as
      *  1) Name of status
-     *  2) Total number of invoices in each respective status
+     *  2) Total number of appointments in each respective status
      *  3) Total sum of the grand totals in each respective status
      *  4) The base currency used by the associated company
      *

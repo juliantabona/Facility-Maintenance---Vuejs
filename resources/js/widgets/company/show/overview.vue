@@ -2,38 +2,38 @@
 
     <Row class="border-bottom mb-3 pb-3">
 
-        <!-- Invoice Reference Number  -->
+        <!-- Company Reference Number  -->
         <Col span="5">
             <h2 class="text-dark">Company #{{ localCompany.id }}</h2>
         </Col>
 
-        <!-- Invoice Status  -->
+        <!-- Company Status  -->
         <Col span="3">
             <h6 class="text-secondary">Status</h6>
             <h5><companyTag :company="company"></companyTag></h5>   
         </Col>
 
-        <!-- Invoice Client  -->
+        <!-- Company Client  -->
         <Col span="6">
             <h6 class="text-secondary">Name</h6>
             <h5>{{ customerName }}</h5>            
         </Col>
 
-        <!-- Invoice Type e.g) Private, Goverment, Parastatal  -->
+        <!-- Company Type e.g) Private, Goverment, Parastatal  -->
         <Col span="5">
             <h6 class="text-secondary">Type</h6>
             <h5>{{ localCompany.type }}</h5>            
         </Col>
 
-        <!-- Invoice Due Date  -->
+        <!-- Company Due Date  -->
         <Col span="4">
-            <h6 class="text-secondary">Created Date</h6>
+            <h6 class="text-secondary">Created</h6>
             <h5>{{ localCompany.created_at | moment("from", "now")  }}</h5>            
         </Col>
 
-        <!-- Invoice Menu -->
+        <!-- Company Menu -->
         <Col span="1">
-            <menuToggle :invoiceId="localCompany.id" :editMode="localEditMode" @toggleEditMode="$emit('toggleEditMode', $event)"></menuToggle>
+            <menuToggle :companyId="localCompany.id" :editMode="localEditMode" @toggleEditMode="$emit('toggleEditMode', $event)"></menuToggle>
         </Col>
     </Row>
 
@@ -63,11 +63,11 @@
         },
         watch: {
 
-            //  Watch for changes on the invoice
-            invoice: {
+            //  Watch for changes on the company
+            company: {
                 handler: function (val, oldVal) {
 
-                    //  Update the local invoice value
+                    //  Update the local company value
                     this.localCompany = val;
 
                 },

@@ -6,15 +6,21 @@
             
             <!-- Get the stage for approving the invoice -->
             <approvingStage v-bind="$props" 
-                @toggleEditMode="$emit('toggleEditMode', $event)" @approved="$emit('approved', $event)">
+                @toggleEditMode="$emit('toggleEditMode', $event)" 
+                @approved="$emit('approved', $event)">
             </approvingStage>
             
             <!-- Get the stage for sending the invoice -->
-            <sendingStage v-bind="$props" @sent="$emit('sent', $event)" @skipped="$emit('skipped', $event)"></sendingStage>
+            <sendingStage v-bind="$props" 
+                @sent="$emit('sent', $event)" 
+                @skipped="$emit('skipped', $event)">
+            </sendingStage>
             
             <!-- Get the stage for recording the invoice payment, setting payment reminders and sending receipts -->
             <paymentStage v-bind="$props" 
-                @paid="$emit('paid', $event)" @cancelled="$emit('cancelled', $event)" @reminderSet="$emit('reminderSet', $event)"
+                @paid="$emit('paid', $event)" 
+                @cancelled="$emit('cancelled', $event)" 
+                @reminderSet="$emit('reminderSet', $event)"
                 @sent="$emit('sent', $event)">
             </paymentStage>
             
