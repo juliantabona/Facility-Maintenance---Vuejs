@@ -19,7 +19,7 @@
 
             <!-- Left Content  -->
             <template slot="leftContent">
-                <h4 class="text-secondary">{{ (localAppointment.current_activity_status == 'Confirmed') ? 'Appointment Confirmed' : 'Confirm Appointment' }}</h4>
+                <h4 class="text-secondary">{{ (localAppointment.current_activity_status == 'Confirmed') ? 'Appointment Confirmed' : 'Client Confirmation' }}</h4>
                 <Poptip word-wrap width="200" trigger="hover" :content="(localAppointment.last_sent_activity || {}).created_at | moment('DD MMM YYYY, H:mmA') || '___'">
                     <p v-if="(localAppointment.current_activity_status == 'Confirmed')" class="mt-2 mb-2">
                         <span class="font-weight-bold">Last Confirmed:</span> {{ (localAppointment.last_confirmed_activity || {}).created_at | moment("from", "now") }}<span v-if="!(localAppointment.current_activity_status == 'Confirmed')" class="font-weight-bold">Last Confirmed: Never</span>

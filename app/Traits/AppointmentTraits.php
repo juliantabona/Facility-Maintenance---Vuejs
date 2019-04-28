@@ -323,6 +323,144 @@ trait AppointmentTraits
         }
     }
 
+    /*  initiateUpdate() method:
+     *
+     *  This is used to update an existing appointment. It also works
+     *  to store the update activity and broadcasting of
+     *  notifications to users concerning the update of
+     *  the appointment.
+     *
+     */
+    public function initiateUpdate($appointment_id)
+    {
+        //  Current authenticated user
+        $auth_user = auth('api')->user();
+
+        /*
+         *  The $appointment is a collection of the appointment to be stored.
+         */
+        $appointment = request('appointment');
+
+        /*******************************************************
+         *   CHECK IF USER HAS PERMISSION TO CREATE APPOINTMENT    *
+         ******************************************************/
+
+        /*********************************************
+         *   VALIDATE APPOINTMENT INFORMATION            *
+         ********************************************/
+
+        //  Create a template to hold the appointment details
+        $template = $template ?? [
+            'subject' => $appointment['subject'],
+            'agenda' => $appointment['agenda'],
+            'start_date' => $appointment['start_date'],
+            'end_date' => $appointment['end_date'],
+            'location' => $appointment['location'],
+            'client_id' => $appointment['client_id'] ?? null,
+            'client_type' => $appointment['client_model_type'] ?? '',
+            'company_branch_id' => $auth_user->company_branch_id,
+            'company_id' => $auth_user->company_id,
+        ];
+
+        try {
+            //  Update the appointment
+            $appointment = $this->where('id', $appointment_id)->first()->update($template);
+
+            //  If the appointment was updated successfully
+            if ($appointment) {
+                //  Re-fresh appointment
+                $appointment = $this->where('id', $appointment_id)->first();
+
+                //  Start with an empty categories, assigned_staff
+                $categories = [];
+                $assignedStaff = [];
+
+                if( isset( request('appointment')['categories'] ) ){
+                    if( COUNT( request('appointment')['categories'] ) ){
+
+                        //  Foreach of the categories
+                        foreach (request('appointment')['categories'] as $key => $id) {
+                            //  Store with the following details corresponding to the category table columns
+                            $categories[$key] = [
+                                'category_id' => $id,
+                                'trackable_id' => $appointment->id,
+                                'trackable_type' => 'appointment',
+                                'created_at' => date('Y-m-d H:i:s'),
+                                'updated_at' => date('Y-m-d H:i:s'),
+                            ];
+                        }
+
+                        //  Delete all previous categories
+                        DB::table('category_allocations')->where('trackable_type', 'appointment')->where('trackable_id', $appointment->id)->delete();
+
+                        //  Add new categories
+                        $categories = DB::table('category_allocations')->insert($categories);
+                    }
+                }
+
+
+                if( isset( request('appointment')['assigned_staff'] ) ){
+                    if( COUNT( request('appointment')['assigned_staff'] ) ){
+
+                        //  Foreach of the assigned staff
+                        foreach (request('appointment')['assigned_staff'] as $key => $id) {
+                            //  Store with the following details corresponding to the assigned staff table columns
+                            $assignedStaff[$key] = [
+                                'user_id' => $id,
+                                'trackable_id' => $appointment->id,
+                                'trackable_type' => 'appointment',
+                                'created_at' => date('Y-m-d H:i:s'),
+                                'updated_at' => date('Y-m-d H:i:s'),
+                            ];
+                        }
+
+                        //  Delete all previous staff
+                        DB::table('staff_allocations')->where('trackable_type', 'appointment')->where('trackable_id', $appointment->id)->delete();
+
+                        //  Add new staff
+                        $assignedStaff = DB::table('staff_allocations')->insert($assignedStaff);
+                    }
+                }
+                /*****************************
+                 *   SEND NOTIFICATIONS      *
+                 *****************************/
+
+                //$auth_user->notify(new AppointmentCreated($appointment));
+
+                //  re-retrieve the instance to get all of the fields in the table.
+                $appointment = $appointment->fresh();
+
+                //  If we have any appointments so far
+                if (count($appointment)) {
+                    //  Eager load other relationships wanted if specified
+                    if (strtolower(request('connections'))) {
+                        $appointment->load(oq_url_to_array(strtolower(request('connections'))));
+                    }
+                }
+
+                /*****************************
+                 *   RECORD ACTIVITY         *
+                 *****************************/
+
+                //  Record activity of appointment created
+                $status = 'created';
+                $appointmentCreatedActivity = oq_saveActivity($appointment, $auth_user, $status, ['appointment' => $appointment->summarize()]);
+
+                //  Action was executed successfully
+                return ['success' => true, 'response' => $appointment];
+            } else {
+                //  No resource found
+                return ['success' => false, 'response' => oq_api_notify_no_resource()];
+            }
+        } catch (\Exception $e) {
+            //  Log the error
+            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+            //  Return the error response
+            return ['success' => false, 'response' => $response];
+        }
+    }
+
     /*  initiateApprove() method:
      *
      *  This is used to approve an existing appointment. It also works

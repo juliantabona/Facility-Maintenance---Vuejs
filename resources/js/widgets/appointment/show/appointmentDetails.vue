@@ -423,26 +423,36 @@
                     }
             },
             saveAppointment() {
-                const self = this;
+
+                var self = this;
 
                 //  Start loader
-                self.isSaving = true;
+                this.isSaving = true;
 
-                console.log('Attempt to save appointment details...');
+                console.log('Attempt to save appointment...');
 
-                //  Appointment data to send
-                let appointmentData = {
-                    appointment: this.formData
-                };
+                console.log( this.localAppointment );
 
-                //  Additional data to eager load along with the appointment found
-                var connections = '?connections=priority,categories,costcenters,assignedStaff';
+                //  Form data to send
+                let appointmentData = { 
+                        appointment: {
+                            subject: this.localAppointment.subject,
+                            agenda: this.localAppointment.agenda,
+                            start_date: this.localAppointment.start_date,
+                            end_date: this.localAppointment.end_date,
+                            location: this.localAppointment.location,
+                            categories: this.localAppointment.categories.map( (category) => { return category.id } ),
+                            assigned_staff: this.localAppointment.assigned_staff.map( (staff) => { return staff.id } ),
+                            client_id: (this.localAppointment.client || {}).id,
+                            client_model_type: (this.localAppointment.client || {}).model_type
+                        }
+                 };
 
+                console.log(appointmentData);
+                
                 //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/companies/'+this.localAppointment.id + connections, appointmentData)
-                    .then(({data}) => {
-
-                        console.log(data);
+                api.call('post', '/api/appointments/'+this.localAppointment.id, appointmentData)
+                    .then(({ data }) => {
 
                         //  Stop loader
                         self.isSaving = false;
@@ -454,14 +464,12 @@
 
                     })         
                     .catch(response => { 
-                        console.log('widgets/appointment/show/main.vue - Error saving appointment details...');
+                        console.log('widgets/appointment/show/appointmentDetails.vue - Error saving appointment details...');
                         console.log(response);
 
                         //  Stop loader
-                        self.isSaving = false;     
-    
+                        self.isSaving = false;  
                     });
-
             },
             createNewAppointment() {
                 const self = this;

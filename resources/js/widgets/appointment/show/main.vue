@@ -485,23 +485,34 @@
                 console.log(this._localAppointmentBeforeChange);
             },
             saveAppointment(){
-                
                 var self = this;
 
                 //  Start loader
                 this.isSavingAppointment = true;
 
-                console.log('Attempt to save appointment...');
+                console.log('Attempt to create appointment...');
 
                 console.log( this.localAppointment );
 
                 //  Form data to send
-                let appointmentData = { appointment: this.localAppointment };
+                let appointmentData = { 
+                        appointment: {
+                            subject: this.localAppointment.subject,
+                            agenda: this.localAppointment.agenda,
+                            start_date: this.localAppointment.start_date,
+                            end_date: this.localAppointment.end_date,
+                            location: this.localAppointment.location,
+                            categories: this.localAppointment.categories.map( (category) => { return category.id } ),
+                            assigned_staff: this.localAppointment.assigned_staff.map( (staff) => { return staff.id } ),
+                            client_id: (this.localAppointment.client || {}).id,
+                            client_model_type: (this.localAppointment.client || {}).model_type
+                        }
+                 };
 
                 console.log(appointmentData);
                 
                 //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/companies/'+this.localAppointment.id, appointmentData)
+                api.call('post', '/api/appointments/'+this.localAppointment.id, appointmentData)
                     .then(({ data }) => {
 
                         //  Stop loader

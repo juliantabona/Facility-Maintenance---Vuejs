@@ -104,6 +104,7 @@ Route::post('jobcards/{jobcard_id}/lifecycle/stages/undo', 'Api\JobcardControlle
 Route::get('appointments', 'Api\AppointmentController@index');
 Route::post('appointments', 'Api\AppointmentController@store');
 Route::get('appointments/{appointment_id}', 'Api\AppointmentController@show');
+Route::post('appointments/{appointment_id}', 'Api\AppointmentController@update');
 Route::post('appointments/{appointment_id}/approve', 'Api\AppointmentController@approve');  //  ok
 Route::post('appointments/{appointment_id}/send', 'Api\AppointmentController@send');
 Route::post('appointments/{appointment_id}/skip-send', 'Api\AppointmentController@skipSend');

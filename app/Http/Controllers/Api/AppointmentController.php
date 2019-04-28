@@ -52,6 +52,26 @@ class AppointmentController extends Controller
         return $response;
     }
 
+    public function update($appointment_id)
+    {
+        //  Appointment Instance
+        $data = ( new Appointment() )->initiateUpdate($appointment_id);
+        $success = $data['success'];
+        $response = $data['response'];
+
+        //  If the appointment was updated successfully
+        if ($success) {
+            //  If this is a success then we have the appointment
+            $appointment = $response;
+
+            //  Action was executed successfully
+            return oq_api_notify($appointment, 200);
+        }
+
+        //  If the data was not a success then return the response
+        return $response;
+    }
+
     /*  show()
      *  Returns only one appointment from the database.
      *  This appointment must be specified using the appointment_id

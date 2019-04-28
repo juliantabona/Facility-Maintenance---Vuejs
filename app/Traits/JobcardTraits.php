@@ -212,8 +212,8 @@ trait JobcardTraits
             'end_date' => $jobcard['end_date'],
             'client_id' => $jobcard['client_id'],
             'client_type' => $jobcard['client_model_type'],
-            'company_branch_id' => $auth_user->company_branch_id,
-            'company_id' => $auth_user->company_id,
+            'company_branch_id' => $auth_user->company_branch_id ?? null,
+            'company_id' => $auth_user->company_id ?? null,
         ];
 
         try {
@@ -228,61 +228,82 @@ trait JobcardTraits
                 $costcenters = [];
                 $assignedStaff = [];
 
-                //  Foreach of the priorities
-                foreach (request('jobcard')['priority'] as $key => $id) {
-                    //  Store with the following details corresponding to the priority table columns
-                    $priority[$key] = [
-                        'priority_id' => $id,
-                        'trackable_id' => $jobcard->id,
-                        'trackable_type' => 'jobcard',
-                        'created_at' => date('Y-m-d H:i:s'),
-                        'updated_at' => date('Y-m-d H:i:s'),
-                    ];
+                if( isset( request('appointment')['priority'] ) ){
+                    if( COUNT( request('appointment')['priority'] ) ){
+                        //  Foreach of the priorities
+                        foreach (request('jobcard')['priority'] as $key => $id) {
+                            //  Store with the following details corresponding to the priority table columns
+                            $priority[$key] = [
+                                'priority_id' => $id,
+                                'trackable_id' => $jobcard->id,
+                                'trackable_type' => 'jobcard',
+                                'created_at' => date('Y-m-d H:i:s'),
+                                'updated_at' => date('Y-m-d H:i:s'),
+                            ];
+                        }
+
+                        $priority = DB::table('priority_allocations')->insert($priority);
+
+                    }
                 }
 
-                $priority = DB::table('priority_allocations')->insert($priority);
+                if( isset( request('appointment')['categories'] ) ){
+                    if( COUNT( request('appointment')['categories'] ) ){
 
-                //  Foreach of the categories
-                foreach (request('jobcard')['categories'] as $key => $id) {
-                    //  Store with the following details corresponding to the category table columns
-                    $categories[$key] = [
-                        'category_id' => $id,
-                        'trackable_id' => $jobcard->id,
-                        'trackable_type' => 'jobcard',
-                        'created_at' => date('Y-m-d H:i:s'),
-                        'updated_at' => date('Y-m-d H:i:s'),
-                    ];
+                        //  Foreach of the categories
+                        foreach (request('jobcard')['categories'] as $key => $id) {
+                            //  Store with the following details corresponding to the category table columns
+                            $categories[$key] = [
+                                'category_id' => $id,
+                                'trackable_id' => $jobcard->id,
+                                'trackable_type' => 'jobcard',
+                                'created_at' => date('Y-m-d H:i:s'),
+                                'updated_at' => date('Y-m-d H:i:s'),
+                            ];
+                        }
+
+                        $categories = DB::table('category_allocations')->insert($categories);
+
+                    }
                 }
 
-                $categories = DB::table('category_allocations')->insert($categories);
+                if( isset( request('appointment')['costcenters'] ) ){
+                    if( COUNT( request('appointment')['costcenters'] ) ){
+                        //  Foreach of the costcenters
+                        foreach (request('jobcard')['costcenters'] as $key => $id) {
+                            //  Store with the following details corresponding to the costcenter table columns
+                            $costcenters[$key] = [
+                                'cost_center_id' => $id,
+                                'trackable_id' => $jobcard->id,
+                                'trackable_type' => 'jobcard',
+                                'created_at' => date('Y-m-d H:i:s'),
+                                'updated_at' => date('Y-m-d H:i:s'),
+                            ];
+                        }
 
-                //  Foreach of the costcenters
-                foreach (request('jobcard')['costcenters'] as $key => $id) {
-                    //  Store with the following details corresponding to the costcenter table columns
-                    $costcenters[$key] = [
-                        'cost_center_id' => $id,
-                        'trackable_id' => $jobcard->id,
-                        'trackable_type' => 'jobcard',
-                        'created_at' => date('Y-m-d H:i:s'),
-                        'updated_at' => date('Y-m-d H:i:s'),
-                    ];
+                        $costcenters = DB::table('costcenter_allocations')->insert($costcenters);
+
+                    }
                 }
 
-                $costcenters = DB::table('costcenter_allocations')->insert($costcenters);
+                if( isset( request('appointment')['assigned_staff'] ) ){
+                    if( COUNT( request('appointment')['assigned_staff'] ) ){
+                        //  Foreach of the assigned staff
+                        foreach (request('jobcard')['assigned_staff'] as $key => $id) {
+                            //  Store with the following details corresponding to the assigned staff table columns
+                            $assignedStaff[$key] = [
+                                'user_id' => $id,
+                                'trackable_id' => $jobcard->id,
+                                'trackable_type' => 'jobcard',
+                                'created_at' => date('Y-m-d H:i:s'),
+                                'updated_at' => date('Y-m-d H:i:s'),
+                            ];
+                        }
+                        
+                        $assignedStaff = DB::table('staff_allocations')->insert($assignedStaff);
 
-                //  Foreach of the assigned staff
-                foreach (request('jobcard')['assigned_staff'] as $key => $id) {
-                    //  Store with the following details corresponding to the assigned staff table columns
-                    $assignedStaff[$key] = [
-                        'user_id' => $id,
-                        'trackable_id' => $jobcard->id,
-                        'trackable_type' => 'jobcard',
-                        'created_at' => date('Y-m-d H:i:s'),
-                        'updated_at' => date('Y-m-d H:i:s'),
-                    ];
+                    }
                 }
-
-                $assignedStaff = DB::table('staff_allocations')->insert($assignedStaff);
 
                 //  Get default lifecycle
                 $defaultLifecycle = $jobcard->owningCompany->lifecycles()->where('type', 'jobcard')->first();
