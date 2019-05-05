@@ -218,7 +218,7 @@ trait QuotationTraits
             }
 
             //  If we have any quotation so far
-            if (count($quotation)) {
+            if ($quotation) {
                 //  Eager load other relationships wanted if specified
                 if (request('connections')) {
                     $quotation->load(oq_url_to_array(request('connections')));
@@ -984,7 +984,7 @@ trait QuotationTraits
                 $company = Company::where('id', $quotation->company_id)->first();
 
                 //  If we have any company so far
-                if (count($company)) {
+                if ($company) {
                     //  Get the company settings
                     $settings = $company->settings['details'];
                     $invoiceTemplate = $settings['invoiceTemplate'];

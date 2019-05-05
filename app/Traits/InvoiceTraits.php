@@ -221,7 +221,7 @@ trait InvoiceTraits
             }
 
             //  If we have any invoice so far
-            if (count($invoice)) {
+            if ($invoice) {
                 //  Eager load other relationships wanted if specified
                 if (request('connections')) {
                     $invoice->load(oq_url_to_array(request('connections')));

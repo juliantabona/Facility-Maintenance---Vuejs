@@ -138,7 +138,7 @@ trait CompanyTraits
             }
 
             //  If we have any companies so far
-            if (count($companies)) {
+            if ($companies) {
                 //  Eager load other relationships wanted if specified
                 if (strtolower(request('connections'))) {
                     $companies->load(oq_url_to_array(strtolower(request('connections'))));
@@ -245,7 +245,7 @@ trait CompanyTraits
             }
 
             //  If we have any staff so far
-            if (count($staff)) {
+            if ($staff) {
                 //  Eager load other relationships wanted if specified
                 if (strtolower(request('connections'))) {
                     $staff->load(oq_url_to_array(strtolower(request('connections'))));

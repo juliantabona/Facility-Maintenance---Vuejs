@@ -143,7 +143,7 @@ trait UserTraits
             }
 
             //  If we have any users so far
-            if (count($users)) {
+            if ($users) {
                 //  Eager load other relationships wanted if specified
                 if (strtolower(request('connections'))) {
                     $users->load(oq_url_to_array(strtolower(request('connections'))));

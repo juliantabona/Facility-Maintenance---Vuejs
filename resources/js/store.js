@@ -14,8 +14,11 @@ class Store {
 
         //  If no data found
         if(!data){
-            //  Api to get the users settings and update the allocationType
-            data = this.getAllocationType();
+            //  Check if user is authenticated
+            if (auth.check()) {
+                //  Api to get the users settings and update the allocationType
+                data = this.getAllocationType();
+            }
         }else{
             
             //  Otherwise get what we already have.

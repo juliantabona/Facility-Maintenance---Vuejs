@@ -249,7 +249,7 @@ trait AppointmentTraits
                 $appointment = $appointment->fresh();
 
                 //  If we have any appointments so far
-                if (count($appointment)) {
+                if ($appointment) {
                     //  Eager load other relationships wanted if specified
                     if (strtolower(request('connections'))) {
                         $appointment->load(oq_url_to_array(strtolower(request('connections'))));
@@ -302,7 +302,7 @@ trait AppointmentTraits
             }
 
             //  If we have any appointment so far
-            if (count($appointment)) {
+            if ($appointment) {
                 //  Eager load other relationships wanted if specified
                 if (request('connections')) {
                     $appointment->load(oq_url_to_array(request('connections')));
@@ -431,7 +431,7 @@ trait AppointmentTraits
                 $appointment = $appointment->fresh();
 
                 //  If we have any appointments so far
-                if (count($appointment)) {
+                if ($appointment) {
                     //  Eager load other relationships wanted if specified
                     if (strtolower(request('connections'))) {
                         $appointment->load(oq_url_to_array(strtolower(request('connections'))));

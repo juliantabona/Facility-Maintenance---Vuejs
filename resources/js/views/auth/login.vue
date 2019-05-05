@@ -285,14 +285,15 @@ export default {
                     //  Start loader
                     self.isLoggingIn = true;
 
-                    console.log('Attempt to login using the following...');
-                    console.log(loginData);
+                    console.log('Attempt to login using the following...');   
 
                     //  Login data to send
                     let loginData = {
                         identity: this.ruleForm.identity,
                         password: this.ruleForm.password
                     };
+
+                    console.log(loginData);
 
                     //  Use the api call() function located in resources/js/api.js
                     api.call('post', '/api/login', loginData)

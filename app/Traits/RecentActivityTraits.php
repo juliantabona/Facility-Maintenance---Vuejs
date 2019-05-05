@@ -102,7 +102,7 @@ trait RecentActivityTraits
                     $activities = $activities->advancedFilter(['order_join' => $order_join]);
 
                     //  If we have any activities so far
-                    if (count($activities)) {
+                    if ($activities) {
                         //  Eager load other relationships wanted if specified
                         if (request('connections')) {
                             $activities->load(oq_url_to_array(request('connections')));

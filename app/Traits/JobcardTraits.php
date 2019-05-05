@@ -309,7 +309,7 @@ trait JobcardTraits
                 $defaultLifecycle = $jobcard->owningCompany->lifecycles()->where('type', 'jobcard')->first();
 
                 //  Add default lifecycle to jobcard
-                if (count($defaultLifecycle)) {
+                if ($defaultLifecycle) {
                     $lifecycle = DB::table('lifecycle_allocations')->insert([
                             'lifecycle_id' => $defaultLifecycle->id,
                             'trackable_id' => $jobcard->id,
@@ -329,7 +329,7 @@ trait JobcardTraits
                 $jobcard = $jobcard->fresh();
 
                 //  If we have any jobcards so far
-                if (count($jobcard)) {
+                if ($jobcard) {
                     //  Eager load other relationships wanted if specified
                     if (strtolower(request('connections'))) {
                         $jobcard->load(oq_url_to_array(strtolower(request('connections'))));
@@ -389,7 +389,7 @@ trait JobcardTraits
                 //  $auth_user->notify(new JobcardApproved($jobcard));
 
                 //  If we have any jobcards so far
-                if (count($jobcard)) {
+                if ($jobcard) {
                     //  Eager load other relationships wanted if specified
                     if (strtolower(request('connections'))) {
                         $jobcard->load(oq_url_to_array(strtolower(request('connections'))));
@@ -459,7 +459,7 @@ trait JobcardTraits
                 $jobcard = $jobcard->fresh();
 
                 //  If we have any jobcards so far
-                if (count($jobcard)) {
+                if ($jobcard) {
                     //  Eager load other relationships wanted if specified
                     if (strtolower(request('connections'))) {
                         $jobcard->load(oq_url_to_array(strtolower(request('connections'))));
@@ -521,7 +521,7 @@ trait JobcardTraits
                 $jobcard = $jobcard->fresh();
 
                 //  If we have any jobcards so far
-                if (count($jobcard)) {
+                if ($jobcard) {
                     //  Eager load other relationships wanted if specified
                     if (strtolower(request('connections'))) {
                         $jobcard->load(oq_url_to_array(strtolower(request('connections'))));
