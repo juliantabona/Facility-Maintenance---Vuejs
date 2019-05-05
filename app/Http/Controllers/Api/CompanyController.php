@@ -88,7 +88,7 @@ class CompanyController extends Controller
             $company = Company::where('id', $company_id)->first();
 
             //  If we have any company so far
-            if (count($company)) {
+            if ($company) {
                 //  Get the company settings
                 $settings = $company->settings;
 
@@ -221,7 +221,7 @@ class CompanyController extends Controller
             $company = Company::where('id', $company_id)->first();
 
             //  If we have any company so far
-            if (count($company)) {
+            if ($company) {
                 //  Get the company wallets
                 $wallets = $company->wallets;
 

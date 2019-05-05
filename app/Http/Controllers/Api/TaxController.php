@@ -63,7 +63,7 @@ class TaxController extends Controller
 
             $company = Company::where('id', $companyId)->first();
 
-            if (count($company)) {
+            if ($company) {
                 $taxes = $company->taxes();
             } else {
                 return oq_api_notify_error('Specified company was not found', 1, 404);
@@ -93,7 +93,7 @@ class TaxController extends Controller
 
             $branch = CompanyBranch::where('id', $branchId)->first();
 
-            if (count($branch)) {
+            if ($branch) {
                 $taxes = $branch->taxes();
             } else {
                 return oq_api_notify_error('Specified branch was not found', null, 404);
@@ -147,7 +147,7 @@ class TaxController extends Controller
             }
 
             //  If we have any products or services so far
-            if (count($taxes)) {
+            if ($taxes) {
                 //  Eager load other relationships wanted if specified
                 if (request('connections')) {
                     $taxes->load(oq_url_to_array(request('connections')));

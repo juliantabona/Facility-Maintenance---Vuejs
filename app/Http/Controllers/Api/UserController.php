@@ -202,7 +202,7 @@ class UserController extends Controller
         $user = auth()->user();
 
         //  If we have any jobcard so far
-        if (count($user)) {
+        if ($user) {
             //  Eager load other relationships wanted if specified
             if (request('connections')) {
                 $user->load(oq_url_to_array(request('connections')));

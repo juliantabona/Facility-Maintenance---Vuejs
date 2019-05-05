@@ -146,7 +146,7 @@ class DirectoryController extends Controller
             }
 
             //  If we have any companies so far
-            if (count($companies)) {
+            if ($companies) {
                 //  Eager load other relationships wanted if specified
                 if (request('connections')) {
                     $companies->load(oq_url_to_array(request('connections')));

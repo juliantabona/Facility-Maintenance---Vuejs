@@ -67,7 +67,7 @@ class ProductOrServiceController extends Controller
 
             $company = Company::where('id', $companyId)->first();
 
-            if (count($company)) {
+            if ($company) {
                 $productsOrServices = $company->productsOrServices();
             } else {
                 return oq_api_notify_error('Specified company was not found', 1, 404);
@@ -97,7 +97,7 @@ class ProductOrServiceController extends Controller
 
             $branch = CompanyBranch::where('id', $branchId)->first();
 
-            if (count($branch)) {
+            if ($branch) {
                 $productsOrServices = $branch->productsOrServices();
             } else {
                 return oq_api_notify_error('Specified branch was not found', null, 404);
@@ -160,7 +160,7 @@ class ProductOrServiceController extends Controller
             }
 
             //  If we have any products or services so far
-            if (count($productsOrServices)) {
+            if ($productsOrServices) {
                 //  Eager load other relationships wanted if specified
                 if (request('connections')) {
                     $productsOrServices->load(oq_url_to_array(request('connections')));
