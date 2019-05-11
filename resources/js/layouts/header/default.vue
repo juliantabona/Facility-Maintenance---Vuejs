@@ -248,7 +248,7 @@
                 </Badge>
                 <Badge :count="37" type="primary" class="float-right mr-3 mt-1">
                     <div class="demo-badge">
-                      <span>Sms Power</span>
+                      <span>Sms Left</span>
                     </div>
                 </Badge>
               </Col>

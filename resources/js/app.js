@@ -124,6 +124,13 @@ import VueFroala from 'vue-froala-wysiwyg'
 
 Vue.use(VueFroala)
 
+//  Import enjoyhint for step by step guide
+require('enjoyhint/enjoyhint.css');
+require('enjoyhint/jquery.enjoyhint.js');
+import enjoyhint from 'enjoyhint';
+Object.defineProperty(Vue.prototype, '$enjoyhint', { value: enjoyhint });
+
+
 const app = new Vue({
     el: '#app',
     //  Render the main app view

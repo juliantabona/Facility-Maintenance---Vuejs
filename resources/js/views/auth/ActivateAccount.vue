@@ -146,10 +146,8 @@ export default {
                         self.isVerifying = false;   
                             
                         if(response.status === 422){
-                            //  Grab errors              
-                            self.verificationError.msg = response.data.message;
-                            
-
+                            //  Grab any available error messages to display              
+                            self.verificationError.msg = ((response || {}).data || {}).message;
                         }
 
                     });
@@ -178,20 +176,21 @@ export default {
                     
                         //  Stop loader
                         self.isSendingEmail = false;
-
-                        if(response.status == 200){
-                            self.isEmailSentMsg = response.data.message;
-                            self.isEmailSentSuccess = true;
-                        }
+                    
+                        var user = response.data;
+                        self.isEmailSentMsg = 'Account activation email sent successfully to "'+user.email+'"';
+                        self.isEmailSentSuccess = true;
 
                     })         
                     .catch(response => { 
                         if(response){
                             console.error(response);
+                            
                             //  Stop loader
-                            self.isSendingEmail = false;     
-                            //  Grab errors              
-                            self.registerErrors = response.data.errors;
+                            self.isSendingEmail = false;    
+
+                            //  Grab any available error messages to display            
+                            self.registerErrors = ((response || {}).data || {}).message;
                         }
                     });
 

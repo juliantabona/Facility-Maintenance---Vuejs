@@ -28,7 +28,7 @@
 
             <template slot="content">
                 
-                <Tabs :value="selectedTab" :animated="false" :class="'phone-content-tabs'+(editablePhone ? ' hide-tabs': '')" 
+                <Tabs :value="selectedTab" :animated="false" :class="'phone-content-tabs'+(editablePhone || !showExistingPhonesTab ? ' hide-tabs': '')" 
                       :style="{ minHeight: '250px' }"
                       @on-click="(selectedTab = $event)">
                 
@@ -48,7 +48,7 @@
                     </TabPane>
                 
                     <!-- Select Existing Account -->
-                    <TabPane :label="editablePhone ? '' : 'Add New Phone'" name="addPhoneTab" :style="{ minHeight: '250px' }">
+                    <TabPane :label="editablePhone || !showExistingPhonesTab ? '' : 'Add New Phone'" name="addPhoneTab" :style="{ minHeight: '250px' }">
 
                         <!-- Phone Details -->
                         <Row :gutter="5">
@@ -154,24 +154,75 @@
                 type: Array,
                 default: () => { return [] },  
             },
+            showExistingPhonesTab: {
+                type: Boolean,
+                default: true, 
+            },
+
         },
         data(){
             return {
-                selectedTab: null,
+                selectedTab: this.showExistingPhonesTab ? 'existingPhonesTab' : 'addPhoneTab',
+                /*  localPhone -
+                    This is the object of the phone structure. If we have a editable phone then we
+                    will make use of the details, however if we don't have an editable phone then
+                    we will create a new empty object will all the template fields that the new
+                    phone object will require.
+                 */             
                 localPhone: this.currentPhone(),
-                localSelectedType: this.selectedType,
+                /*  localSelectedType -
+                    This is the phones type e.g) tel, mobile or fax. If the current phone has a type
+                    that has been assigned to it, then we will use that type. However if it does not 
+                    have a type then we will check if the "selectedType" has been set. If it has been
+                    set then we can use it to default the type to that value e.g) Mobile. This will 
+                    mean that even if the number does not have a type, the selectedType will be the
+                    default suggested type for the user.
+                 */
+                localSelectedType: (this.currentPhone() || {}).type || this.selectedType,
+                /*  _localPhoneBeforeChange -
+                    This is the stored version of the editable phone before anly changes are made to 
+                    it. Note that this will only have something to stored if the editable phone actually
+                    exists.
+                 */
                 _localPhoneBeforeChange: this.storedPhone(),
+                /*  phoneType -
+                    This is a list of all the types of categories that phones that can be classified.
+                 */
                 phoneType: [
                     { name: 'Telephone', value: 'tel' }, 
                     { name: 'Mobile', value: 'mobile' },
                     { name: 'Fax', value: 'fax' }
                 ],
-                localSelectedServiceProvider: this.selectedServiceProvider,
+                /*  localSelectedServiceProvider -
+                    This is the phones provider e.g) Orange, Mascom, BeMobile, e.t.c. If the current 
+                    phone has a provider that has been assigned to it, then we will use that provider.  
+                    However if it does not have a provider then we will check if the "selectedServiceProvider"
+                    has been set. If it has been set then we can use it to default the provider to that 
+                    value e.g) Orange. This will mean that even if the number does not have a provider, the 
+                    selectedServiceProvider will be the default suggested provider for the user.
+                 */
+                localSelectedServiceProvider: (this.currentPhone() || {}).provider || this.selectedServiceProvider,
+                /*  serviceProviders -
+                    This is a list of all the providers that phones that can be classified.
+                 */
                 serviceProviders: ['Orange', 'Mascom', 'BeMobile'],
+                /*  fetchedCallingCodes -
+                    This holds an empty array to store all the available calling codes after we make our 
+                    API request to fetch them.
+                 */
                 fetchedCallingCodes: [],
-
+                /*  isLoadingCallingCodes -
+                    Loader status for fetching calling codes
+                 */
                 isLoadingCallingCodes: false,
+                /*  hideModal -
+                    Visibility status for showing/hiding the modal
+                 */   
                 hideModal: false,
+                /*  isSaving -
+                    Saving status used when making an API request to create a new phone or save an
+                    existing phone in the database
+                 */   
                 isSaving: false,
             }
         },
@@ -209,6 +260,7 @@
                         {
                             calling_code: '',
                             number:'',
+                            provider:'',
                             type:'',
                         };
             },
@@ -315,10 +367,7 @@
                         });
 
                 }else{
-                    
                     //  Alert parent and pass phone data
-
-                    //  Close modal
                     this.$emit('created',  self.localPhone);
 
                     //  Close modal

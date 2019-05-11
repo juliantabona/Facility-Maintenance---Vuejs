@@ -31,7 +31,7 @@
     Layout used by authenticated users to access their dashboard
     Contains Header, SideMenu, Content and Footer
   -->
-  <div class="layout">
+  <div class="layout" :style="blurBackground ? 'filter:blur(0px);' : ''">
 
       <Layout>
           <!-- Dashboard Header -->
@@ -46,12 +46,20 @@
 
                 <!-- Dashboard content -->
                 <Content :style="{ position: 'relative', minHeight: '2000px' }">
-                  
+              
+                    <!-- Forced Profile Update Modal 
+                            This is a modal that pops up once the user has created their account and now needs
+                            to complete the setup process
+                    -->
+                    <!--
+                    <updateProfileAfterSignUpModal v-if="!assignedCompany"></updateProfileAfterSignUpModal>
+                    -->
+
                   <!-- Put Profile, Jobcards, Staff e.t.c resource content here -->
                   <!-- Only authenticated users can access this content -->
 
                   <transition name="slide">
-                    
+                      
                       <slot></slot>
 
                   </transition>
@@ -81,12 +89,24 @@
 
   import moment from 'moment';
 
+  /*  Modal  */
+  import updateProfileAfterSignUpModal from './../../components/_common/modals/updateProfileAfterSignUpModal.vue';
+
   export default {
+    components:{ updateProfileAfterSignUpModal },
     data(){
       return {
         moment: moment,
         isCollapsed: false
       }
+    },
+    computed:{
+      assignedCompany: function(){
+        return (this.user || {}).company_id ? true : false;
+      },
+      blurBackground: function(){
+        return !this.assignedCompany;
+      },
     }
   }
 

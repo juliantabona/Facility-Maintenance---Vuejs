@@ -2,6 +2,10 @@
 
 namespace App\Traits;
 
+use Mail;
+use App\User;
+use App\VerifyUser;
+use App\Mail\ActivateAccount;
 use Illuminate\Support\Facades\URL;
 use App\Notifications\UserCreated;
 
@@ -368,6 +372,74 @@ trait UserTraits
                     'auth' => $response,                                        //  API ACCESS TOKEN
                     'user' => $this->with('settings')->first()->toArray(),
                 ], 201);
+    }
+
+    /*  initiateSendAccountActivationMail() method:
+     *
+     *  This is used to send the user an account verification email.
+     *  The verificaton link will be used to ensure that this is a
+     *  valid user who created an account. If an account is left
+     *  unverified for a time, it will be subject for termination
+     *  by permanent deleting.
+     *
+     */
+    public function initiateSendAccountActivationMail($userId = null)
+    {
+        //  Use the current user's model id otherwise use the provided id
+        $userId = $this->id ?? $userId;
+
+        //  Check if the account id was provided
+        if (empty($userId)) {
+            //  If this is an API request
+            if (oq_viaAPI($request)) {
+                return ['success' => false, 'response' => oq_api_notify_error('Account could not be identified', 'no_user_id', 404)];
+            }
+        }else{
+
+            //  Get the associated user
+            $user = User::find($userId);
+
+            //  If the user does not exist
+            if ($user) {
+ 
+                //  Check if the user is already verified
+                if ($user->verified) {
+                    return ['success' => true, 'response' => $user];
+                }
+
+                //  Delete any possible existing tokens
+                VerifyUser::where('user_id', $user->id)->delete();
+
+                //  Create a new account verification token
+                $verification = VerifyUser::create([
+                    'user_id' => $user->id,
+                    'token' => sha1(time()),
+                ]);
+
+                //  Send verification email
+                Mail::to($user->email)->send(new ActivateAccount($user));
+
+                //  If verification email sent successfully
+                if( !Mail::failures() ){
+                    //  Update the status
+                    $status = 'veriication mail sent';
+                    $verificationMailSentActivity = oq_saveActivity($user, $user, $status, null);
+                    return ['success' => true, 'response' => $user];
+
+                //  If verification email sending failed
+                }else{
+                    //  Update the status
+                    $status = 'veriication mail failed';
+                    $verificationMailFailedActivity = oq_saveActivity($user, $user, $status, null);
+                    return ['success' => false, 'response' => oq_api_notify_error('Something went wrong trying to send the verification email. Please try again', 'failed_sending_email', 404)];
+                }
+
+            } else {
+                //  No resource found
+                return ['success' => false, 'response' => oq_api_notify_error('Account does exist', 'no_account_found', 404)];
+            }
+
+        }
     }
 
     public function initiateCreate()

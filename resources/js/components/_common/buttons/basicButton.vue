@@ -4,7 +4,7 @@
     <focusRipple :ripple="ripple">
 
         <!-- Button  -->
-        <Button :type="type" :size="size">
+        <Button :type="type" :size="size" :class="customClass">
             <span><slot></slot></span>
             <Icon v-if="showIcon" type="ios-send-outline" :size="20" style="margin-top: -4px;"/>
         </Button>
@@ -35,7 +35,11 @@
             ripple: {
                 type: Boolean,
                 default: false
-            }
+            },
+            customClass: {
+                type: String,
+                default: ''
+            },
         },
         components: { focusRipple }
     }

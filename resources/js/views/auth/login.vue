@@ -189,8 +189,8 @@
 
                 <!-- Forgot Password And Create Acconut Links -->
                 <div class="mt-4 text-center">
-                    <a href="#" class="mr-3">Forgot password?</a>
-                    <router-link :to="{ name: 'register'}">Create Account?</router-link>
+                    <router-link :to="{ name: 'register'}" class="mr-3">Create Account</router-link>
+                    <router-link :to="{ name: 'register'}">Forgot password?</router-link>
                 </div>
 
                 <!-- Promotion information -->

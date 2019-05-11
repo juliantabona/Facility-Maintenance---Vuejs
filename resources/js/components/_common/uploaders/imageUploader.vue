@@ -1,4 +1,13 @@
-<style>
+<style scoped>
+    .image_upload_poptip,
+    .image_upload_poptip >>> .ivu-poptip-rel{
+        width: 100% !important;
+    }
+
+    .image_upload_poptip >>> .ivu-upload{
+        width: 100% !important;
+    }
+
     .image-uploader{
         display: inline-block;
         width: 60px;
@@ -35,7 +44,7 @@
     }
     .image-uploader-cover i{
         color: #fff;
-        font-size: 20px;
+        font-size: 70px;
         cursor: pointer;
         margin: 0;
         position: absolute;
@@ -59,7 +68,7 @@
                 <Progress v-if="item.showProgress" :percent="item.percentage" hide-info></Progress>
             </template>
         </div>
-        <Poptip v-show="allowUpload" word-wrap width="200" trigger="hover" :content="uploadMsg">
+        <Poptip v-show="allowUpload" word-wrap width="200" trigger="hover" :content="uploadMsg" class="image_upload_poptip">
             
             <Upload
                 ref="upload"
@@ -76,8 +85,9 @@
                 action="//jsonplaceholder.typicode.com/posts/"
                 style="display: inline-block;width:58px;">
                 
-                <div style="width: 58px;height:58px;line-height: 58px;">
-                    <Icon type="md-images" size="20"></Icon>
+                <div style="line-height: 135px;">
+                    <Icon type="ios-image-outline" size="70"></Icon>
+                    <span class="">Add Logo</span>
                 </div>
                 
             </Upload>

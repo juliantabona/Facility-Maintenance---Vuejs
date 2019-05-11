@@ -17,6 +17,7 @@
     padding: 2px;
     position: absolute;
     right: 20px;
+    bottom: -16px;
     background: #f5f5f5;
     border: 1px solid #d4d4d4;
     border-radius: 50%;

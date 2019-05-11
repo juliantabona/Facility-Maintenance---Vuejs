@@ -15,7 +15,7 @@
             <Col>
             
                 <!-- Phone Number -->
-                <el-input :value="localPhones[i].number + (showPhoneType ? ' - '+localPhones[i].type : '')" disabled size="small" style="width:100%" placeholder="Enter phone number">
+                <el-input :value="localPhones[i].number + (showPhoneType && localPhones[i].type ? ' - '+localPhones[i].type : '')" disabled size="small" style="width:100%" placeholder="Enter phone number">
                     
                     <!-- Prefix - Calling Code -->
                     <template slot="prepend">+{{ localPhones[i].calling_code.calling_code }}</template>
@@ -82,6 +82,7 @@
             :editablePhone="editablePhone"
             :selectedServiceProvider="selectedServiceProvider"
             :disabledServiceProviders="disabledServiceProviders"  
+            :showExistingPhonesTab="showExistingPhonesTab"
             @visibility="closeModal($event)"
             @created="handleCreatedPhone($event)"
             @updated="handleUpdatedPhone($event)"
@@ -209,6 +210,10 @@
                 type: Boolean,
                 default: false 
             },
+            showExistingPhonesTab: {
+                type: Boolean,
+                default: true, 
+            }
         },
         data(){
             return {
@@ -321,7 +326,7 @@
                 }else{
                     this.localPhones.push(newPhone);
                 }
-                
+
                 if(this.removeDuplicates){
                     this.removePhoneDuplicates();
                 }
@@ -335,7 +340,18 @@
             },
             removePhoneDuplicates(){
                 this.localPhones = _.uniqBy(this.localPhones, function (e) {
-                    return e.id;
+                    /*  Make unique using the id and number e.g) 1_75993221
+                        The reason why we don't only use the id is because sometimes we get a phone
+                        that does not have an id. This happens is the phone has not been saved to the
+                        database yet and therefore hasn't been assigned a unique id. If we have many 
+                        phones without any id, then they will all be with null for that id. This means
+                        only the first number with id=null will be returned even if this number is not
+                        the same as the others. To avoid this we use the id and phone number combined 
+                        to check is the numbers are duplicates. 
+                        Case 1 (Non-null id): 1_75903212, 2_74894312 (considered different at "id" level)
+                        Case 2 (null id): _75903212, _74894312 (considered different at "phone number" level)
+                     */
+                    return e.id +'_'+e.number;
                 });
             },
             closeModal($visibility){
@@ -348,6 +364,9 @@
                 this.localPhones[i].calling_code = JSON.parse(newCallingCode);
             },
             runUpdate(){
+                console.log('this.localPhones - @runUpdate');
+                console.log(this.localPhones);
+
                 this.$emit('updated',  this.localPhones);
             },
             suggestPhoneNumbers() {

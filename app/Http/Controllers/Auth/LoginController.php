@@ -67,7 +67,7 @@ class LoginController extends Controller
     {
         //  Check if the user activated their account
         if (!$user->verified) {
-            //  API Response
+            //  If this is an API Request
             if (oq_viaAPI($request)) {
                 return oq_api_notify([
                     'message' => 'Activate account',

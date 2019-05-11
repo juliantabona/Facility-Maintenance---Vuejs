@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\User;
-use App\VerifyUser;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -38,16 +37,6 @@ class RegisterController extends Controller
     public function __construct()
     {
         $this->middleware('guest');
-    }
-
-    /**
-     *  After the user is successfully registered,
-     *  we hook into the registered() function from "RegistersUsers"
-     *  and create the token used during authorization for API calls.
-     */
-    protected function registered(Request $request, $user)
-    {
-        return $user->generateToken($request);
     }
 
     /**
@@ -97,11 +86,9 @@ class RegisterController extends Controller
 
         //  If the user was created successfully
         if ($user) {
-            //  Create a new account verification token
-            $verification = VerifyUser::create([
-                'user_id' => $user->id,
-                'token' => sha1(time()),
-              ]);
+
+            //  Create and send an account activation token and email
+            $user->initiateSendAccountActivationMail();
 
             /*  Validate and Create the new company and associated branch and upload related documents
             *  [e.g logo, company profile, other documents]. Update recent activities
@@ -114,22 +101,43 @@ class RegisterController extends Controller
             *  @return Company - If successful
             */
 
-            $response = oq_createOrUpdateCompany($data, null, $user);
+    //        $response = oq_createOrUpdateCompany($data, null, $user);
 
             //  If validation passed but we had issues while trying to create the company
             //  E.g SQL related issues.
-            if (oq_failed_sql($response)) {
+    //        if (oq_failed_sql($response)) {
                 //  Return failed sql error with an alert or json response if API request
-                return oq_failed_sql_return($request, $response);
-            }
+    //            return oq_failed_sql_return($request, $response);
+    //        }
 
             //  At this point we are certain we have a company
-            $company = $response;
+    //        $company = $response;
         }
 
-        return User::where('id', $user->id)->with([
-                        'companyBranch' => function ($query) {
-                            $query->with('company');
-                        }, ])->first();
+        $user = User::where('id', $user->id)->with([
+            'companyBranch' => function ($query) {
+                $query->with('company');
+            }, ])->first();
+
+        //  Return new user
+        return $user;
     }
+
+
+    /**
+     *  After the user is successfully registered,
+     *  we hook into the registered() function from "RegistersUsers"
+     *  and create the token used during authorization for API calls.
+     */
+    protected function registered(Request $request, $user)
+    {
+        //  If this is an API Response
+        if (oq_viaAPI($request)) {
+            //  Return API Response
+            return oq_api_notify( $user, 201 );
+        } else {
+            return $user;
+        }
+    }
+    
 }

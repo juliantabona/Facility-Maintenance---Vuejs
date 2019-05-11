@@ -170,7 +170,7 @@
                                                 <table border="0" cellspacing="0" cellpadding="0" class="mobile-button-container">
                                                     <tr>
                                                         <td align="center" style="border-radius: 3px;">
-                                                            <a href="{{ URL::to('/') .'/activate-account?token='.$user->verification->token }}" target="_blank" 
+                                                            <a href="{{ URL::to('/') .'/#/activate-account?token='.$user->verification->token }}" target="_blank" 
                                                             style=" font-size: 16px;
                                                                     font-family: Helvetica,Arial,sans-serif;
                                                                     color: #ffffff;
@@ -182,9 +182,12 @@
                                                                     display: inline-block;
                                                                     margin-bottom: 60px;" 
                                                             class="mobile-button">Activate Account &rarr;</a>
+                                                            <br>
+                                                            <p style="margin-top:30px;padding:10px;background:red;color:#fff;">
                                                             Hey Julian ;) This button should point to the vue router not laravel routes.
                                                             Make sure you fix the url to point to "/activate-account" in the routes.js, after
                                                             you use the "history" option
+                                                            </p>
                                                         </td>
                                                     </tr>
                                                 </table>

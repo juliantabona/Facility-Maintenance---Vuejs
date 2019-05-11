@@ -8,6 +8,24 @@ let routes = [
         meta: { middlewareGuest: true },
         component: require('./views/auth/login.vue')
     },
+    //  Register
+    {
+        path: '/register', name: 'register',
+        meta: { middlewareGuest: true },
+        component: require('./views/auth/register.vue')
+    },
+    //  Activate Account
+    {
+        path: '/activate-account', name: 'activate-account',
+        meta: { middlewareGuest: true },
+        component: require('./views/auth/ActivateAccount.vue')
+    },
+    //  Overview
+    {
+        path: '/overview', name: 'overview',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/overview/main.vue')
+    },
         /**************************************
         *  INVOICES
         **************************************/  

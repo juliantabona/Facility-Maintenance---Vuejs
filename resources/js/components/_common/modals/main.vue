@@ -1,7 +1,9 @@
 <template>
     <div>
         <!-- Modal -->
-        <Modal :width="width" :title="title" v-model="modalVisible" :mask-closable="true" 
+        <Modal :width="width" :title="title" v-model="modalVisible" 
+               :closable="showCloseBtn"
+               :mask-closable="modalClosable" 
                :footer-hide="!okText && !cancelText"
                @on-visible-change="detectClose">
 
@@ -46,6 +48,14 @@
             cancelText:{
                 type: String,   
                 default: null,             
+            },
+            showCloseBtn:{
+                type: Boolean,
+                default: true,
+            },
+            modalClosable:{
+                type: Boolean,
+                default: true,
             }
         },
         data(){
