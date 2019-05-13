@@ -31,7 +31,7 @@
     Layout used by authenticated users to access their dashboard
     Contains Header, SideMenu, Content and Footer
   -->
-  <div class="layout" :style="blurBackground ? 'filter:blur(0px);' : ''">
+  <div class="layout" :style="blurBackground ? 'filter:blur(2px);' : ''">
 
       <Layout>
           <!-- Dashboard Header -->
@@ -51,9 +51,9 @@
                             This is a modal that pops up once the user has created their account and now needs
                             to complete the setup process
                     -->
-                    <!--
+                  
                     <updateProfileAfterSignUpModal v-if="!assignedCompany"></updateProfileAfterSignUpModal>
-                    -->
+                    
 
                   <!-- Put Profile, Jobcards, Staff e.t.c resource content here -->
                   <!-- Only authenticated users can access this content -->

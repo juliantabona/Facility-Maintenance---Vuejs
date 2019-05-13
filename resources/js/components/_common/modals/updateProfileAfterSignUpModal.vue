@@ -275,7 +275,7 @@
                             <!-- Add Mobile Number Button  -->
                             <Button type="primary" size="large" @click="nextStep()"
                                     class="d-block mr-auto ml-auto mt-2">
-                                <span class="mr-1">Add Mobile Number</span>
+                                <span class="mr-1">Continue</span>
                             </Button>
 
                         </focusRipple>

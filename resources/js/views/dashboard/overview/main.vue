@@ -20,10 +20,10 @@
 }
 
 .slide-leave-active {
-   -moz-transition-duration: 0.15s;
-   -webkit-transition-duration: 0.15s;
-   -o-transition-duration: 0.15s;
-   transition-duration: 0.15s;
+   -moz-transition-duration: 0.5s;
+   -webkit-transition-duration: 0.5s;
+   -o-transition-duration: 0.5s;
+   transition-duration: 0.5s;
    -moz-transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
    -webkit-transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
    -o-transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
@@ -40,6 +40,23 @@
    max-height: 0;
 }
 
+.tool-image{
+    display: block;
+    font-size: 25px;
+    width: 65px;
+    margin: -40px auto 0;
+    padding: 10px;
+    background: #fff;
+}
+
+  .ivu-badge >>> .ivu-badge-count {
+    font-family: inherit !important;
+    font-weight: 600 !important;
+    min-width: 35px !important;
+    height: 20px !important;
+    z-index: 1 !important;
+  }
+
 </style>
 
 <template>
@@ -50,17 +67,18 @@
     
             <Card @click.native="clicked()" class="pb-4 mb-2">
                 <Row :gutter="20">
-                    <Col span="24">
+                    <Col span="24" class="mb-3">
                         <Divider orientation="left">
-                            <i class="icon-wallet icons d-inline-block mr-2" :style="{ fontSize:'20px' }"></i>
+                            <Icon type="ios-cash-outline" class="d-inline-block mr-2" :size="24"></Icon>
                             <span class="font-weight-bold">Accounts & Billing</span>
                         </Divider>
                     </Col>
                     <Col span="8">
-                        <Card class="pb-2 mb-1"
+                        <Card class="pb-0 mb-1"
                               @mouseenter.native="show_create_quotation_btn = true"
                               @mouseleave.native="show_create_quotation_btn = false">
-                            <img src="/images/assets/icons/paper-and-calculator.png" style="display: block;font-size: 25px;width: 45px;margin: auto;">
+                            <Badge :show-zero="true" :count="202" type="primary" style="float: right;"></Badge>
+                            <img src="/images/assets/icons/paper-and-calculator.png" class="tool-image">
                             <span class="d-block font-weight-bold mt-2 text-center" style=" font-size: 18px; ">Quotations</span>
                             <!-- Subscribe button -->
                             <transition name="slide">
@@ -68,17 +86,18 @@
                                             customClass="w-100 mt-3" :style="{ position:'relative' }"
                                             type="success" size="small" 
                                             :ripple="false"
-                                            @click.native="clicked()">
-                                    Create Quotation
+                                            @click.native="$router.push({name:'create-quotation'})">
+                                    + Create Quotation
                                 </basicButton>
                             </transition>
                         </Card>
                     </Col>
                     <Col span="8">
-                        <Card class="pb-2 mb-1"
+                        <Card class="pb-0 mb-1"
                               @mouseenter.native="show_create_invoice_btn = true"
                               @mouseleave.native="show_create_invoice_btn = false">
-                            <img src="/images/assets/icons/hand-payment.png" style="display: block;font-size: 25px;width: 45px;margin: auto;">
+                            <Badge :show-zero="true" :count="0" type="primary" style="float: right;"></Badge>
+                            <img src="/images/assets/icons/hand-payment.png" class="tool-image">
                             <span class="d-block font-weight-bold mt-2 text-center" style=" font-size: 18px; ">Invoices</span>
                             <!-- Subscribe button -->
                             <transition name="slide">
@@ -86,17 +105,18 @@
                                     customClass="w-100 mt-3" :style="{ position:'relative' }"
                                         type="success" size="small" 
                                         :ripple="false"
-                                        @click.native="clicked()">
-                                    Create Invoice
+                                        @click.native="$router.push({name:'create-invoice'})">
+                                    + Create Invoice
                                 </basicButton>
                             </transition>
                         </Card>
                     </Col>
                     <Col span="8">
-                        <Card class="pb-2 mb-1"
+                        <Card class="pb-0 mb-1"
                               @mouseenter.native="show_create_receipt_btn = true"
                               @mouseleave.native="show_create_receipt_btn = false">
-                            <img src="/images/assets/icons/cash-receipt.png" style="display: block;font-size: 25px;width: 45px;margin: auto;">
+                            <Badge :show-zero="true" :count="0" type="primary" style="float: right;"></Badge>
+                            <img src="/images/assets/icons/cash-receipt.png" class="tool-image">
                             <span class="d-block font-weight-bold mt-2 text-center" style=" font-size: 18px; ">Receipts</span>
                             <!-- Subscribe button -->
                             <transition name="slide">
@@ -104,8 +124,8 @@
                                         customClass="w-100 mt-3" :style="{ position:'relative' }"
                                         type="success" size="small" 
                                         :ripple="false"
-                                        @click.native="clicked()">
-                                    Create Receipt
+                                        @click.native="$router.push({name:'create-receipt'})">
+                                    + Create Receipt
                                 </basicButton>
                             </transition>
                         </Card>
@@ -113,62 +133,74 @@
                 </Row>
             </Card>
 
-            <Card @click.native="clicked()" class="pb-5 mb-2">
+            <Card @click.native="clicked()" class="pb-0 mb-2">
                 <Row :gutter="20">
-                    <Col span="24">
+                    <Col span="24" class="mb-3">
                         <Divider orientation="left">
-                            <Icon type="ios-calendar-outline" class="d-inline-block mr-2" :size="24"></Icon>
+                            <Icon type="ios-time-outline" class="d-inline-block mr-2" :size="24"></Icon>
                             <span class="font-weight-bold">Appointment Management</span>
                         </Divider>
                     </Col>
                     <Col span="8">
-                        <Card @click.native="clicked()" class="pb-2 mb-1">
-                            <img src="/images/assets/icons/calendar.png" style="display: block;font-size: 25px;width: 45px;margin: auto;">
+                        <Card class="pb-0 mb-1"
+                                @mouseenter.native="show_create_appointment_btn = true"
+                                @mouseleave.native="show_create_appointment_btn = false">
+                            <Badge :show-zero="true" :count="0" type="primary" style="float: right;"></Badge>
+                            <img src="/images/assets/icons/calendar.png" class="tool-image">
                             <span class="d-block font-weight-bold mt-2 text-center" style=" font-size: 18px; ">Appointments</span>
                             <!-- Subscribe button -->
-                            <basicButton customClass="w-100 mt-3" :style="{ position:'relative' }"
-                                        type="success" size="small" 
-                                        :ripple="false"
-                                        @click.native="clicked()">
-                                Create Appointment
-                            </basicButton>
+                            <transition name="slide">
+                                <basicButton v-if="show_create_appointment_btn" 
+                                            customClass="w-100 mt-3" :style="{ position:'relative' }"
+                                            type="success" size="small" 
+                                            :ripple="false"
+                                            @click.native="$router.push({name:'create-appointment'})">
+                                    + Create Appointment
+                                </basicButton>
+                            </transition>
                         </Card>
                     </Col>
                     <Col span="8">
-                        <p>-- Accepted Appointments --</p>
+                    
                     </Col>
                     <Col span="8">
-                        <p>-- Declined Appointments --</p>
+                    
                     </Col>
                 </Row>
             </Card>
 
-            <Card @click.native="clicked()" class="pb-5 mb-2">
+            <Card @click.native="clicked()" class="pb-0 mb-2">
                 <Row :gutter="20">
-                    <Col span="24">
+                    <Col span="24" class="mb-3">
                         <Divider orientation="left">
                             <Icon type="ios-copy-outline" class="icon-wallet icons d-inline-block mr-2" :size="24"></Icon>
                             <span class="font-weight-bold">Jobcard Management</span>
                         </Divider>
                     </Col>
                     <Col span="8">
-                        <Card @click.native="clicked()" class="pb-2 mb-1">
-                            <img src="/images/assets/icons/checklist.png" style="display: block;font-size: 25px;width: 45px;margin: auto;">
+                        <Card class="pb-0 mb-1"
+                                @mouseenter.native="show_create_jobcard_btn = true"
+                                @mouseleave.native="show_create_jobcard_btn = false">
+                            <Badge :show-zero="true" :count="0" type="primary" style="float: right;"></Badge>
+                            <img src="/images/assets/icons/checklist.png" class="tool-image">
                             <span class="d-block font-weight-bold mt-2 text-center" style=" font-size: 18px; ">Jobcards</span>
                             <!-- Subscribe button -->
-                            <basicButton customClass="w-100 mt-3" :style="{ position:'relative' }"
-                                        type="success" size="small" 
-                                        :ripple="false"
-                                        @click.native="clicked()">
-                                Create Jobcard
-                            </basicButton>
+                            <transition name="slide">
+                                <basicButton v-if="show_create_jobcard_btn" 
+                                            customClass="w-100 mt-3" :style="{ position:'relative' }"
+                                            type="success" size="small" 
+                                            :ripple="false"
+                                            @click.native="$router.push({name:'create-jobcard'})">
+                                    + Create Jobcard
+                                </basicButton>
+                            </transition>
                         </Card>
                     </Col>
                     <Col span="8">
-                        <p>-- Pending Jobcards --</p>
+                    
                     </Col>
                     <Col span="8">
-                        <p>-- Expired Jobcards --</p>
+                    
                     </Col>
                 </Row>
             </Card>
@@ -228,7 +260,7 @@
                     <Col span="6">
                         <!-- Subscribe button -->
                         <span @click="showSubcriptions = !showSubcriptions" class="btn btn-link d-inline-block m-0 p-0 mt-3" style="font-size: 12px; float: right;">
-                            <Icon :type="showSubcriptions ? 'ios-remove' : 'ios-add'" :size="20" />
+                            <Icon type="ios-remove" :size="20" />
                             <span>{{ showSubcriptions ? 'Hide' : 'Show' }}</span>
                         </span>
                     </Col>
@@ -407,6 +439,8 @@
                 show_create_quotation_btn: false,
                 show_create_invoice_btn: false,
                 show_create_receipt_btn: false,
+                show_create_appointment_btn: false,
+                show_create_jobcard_btn:false
             }
         },
         methods: {
