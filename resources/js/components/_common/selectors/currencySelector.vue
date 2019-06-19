@@ -5,8 +5,7 @@
         <Option 
             v-for="item in fetchedCurrencies" 
             :value="JSON.stringify(item)" 
-            :key="item.id">{{ item.country }} ({{ item.currency.iso.code }})
-        </Option>
+            :key="item.id">{{ item.country }} ({{ item.currency.iso.code }})</Option>
     </Select>
 
 </template>
@@ -31,13 +30,16 @@
         computed:{
             localSelectedCurrency:{
                 get(){
-                    return JSON.stringify(this.selectedCurrency);
+                    if(this.selectedCurrency){
+                        return JSON.stringify(this.selectedCurrency);
+                    }
                 },
                 set(val){
-                    console.log('stage 1');
-                    console.log(JSON.parse(val));
-                    var updatedCurrencies = JSON.parse(val);
-                    this.$emit('updated',  updatedCurrencies);
+                    if(val){
+                        console.log(JSON.parse(val));
+                        var updatedCurrencies = JSON.parse(val);
+                        this.$emit('updated',  updatedCurrencies);
+                    }
                 }
             },
             localFetchedCurrencies: function(){

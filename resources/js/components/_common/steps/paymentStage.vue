@@ -3,13 +3,13 @@
     <div>
 
         <!-- Fade loader - Shows when recording invoice payment  -->
-        <fadeLoader :loading="isRecordingPayment" msg="Recording payment, please wait..."></fadeLoader>
+        <fadeLoader :loading="isRecordingPayment" msg="Recording payment, please wait..." class="mt-1 mb-3"></fadeLoader>
 
         <!-- Fade loader - Shows when cancelling invoice payment  -->
-        <fadeLoader :loading="isCancelingPayment" msg="Cancelling payment, please wait..."></fadeLoader>
+        <fadeLoader :loading="isCancelingPayment" msg="Cancelling payment, please wait..." class="mt-1 mb-3"></fadeLoader>
 
         <!-- Fade loader - Shows when updating invoice reminders  -->
-        <fadeLoader :loading="isUpdatingReminders" msg="Updating reminders, please wait..."></fadeLoader>
+        <fadeLoader :loading="isUpdatingReminders" msg="Updating reminders, please wait..." class="mt-1 mb-3"></fadeLoader>
 
         <!-- Stage card  -->
         <stagingCard 

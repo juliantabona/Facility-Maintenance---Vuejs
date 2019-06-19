@@ -2,11 +2,22 @@
 
 namespace App\Traits;
 
+use DB;
+use App\Sms;
+use App\User;
+use App\Phone;
+use App\Invoice;
+use App\Quotation;
+use App\Document;
 use App\Notifications\CompanyCreated;
 use App\Notifications\CompanyApproved;
+use App\Traits\countryTraits;
 
 trait CompanyTraits
 {
+
+    use countryTraits;
+
     /*  initiateGetAll() method:
      *
      *  This is used to return a pagination of company results.
@@ -268,9 +279,6 @@ trait CompanyTraits
         //  Current authenticated user
         $auth_user = auth('api')->user();
 
-        //  Query data
-        $company = request('company');
-
         /*******************************************************
          *   CHECK IF USER HAS PERMISSION TO CREATE A COMPANY  *
          ******************************************************/
@@ -278,66 +286,367 @@ trait CompanyTraits
         /*********************************************
          *   VALIDATE COMPANY INFORMATION            *
          ********************************************/
+         
+        try {
+            $template = [
+                'name' => request('name'),
+                'abbreviation' => request('abbreviation') ?? null,
+                'description' => request('description') ?? null,
+                'date_of_incorporation' => request('date_of_incorporation') ?? null,
+                'type' => request('type') ?? null,
+                'industry' => request('industry') ?? null,
+                'address' => request('address') ?? null,
+                'country' => request('country') ?? null,
+                'provience' => request('provience') ?? null,
+                'city' => request('city') ?? null,
+                'postal_or_zipcode' => request('postal_or_zipcode') ?? null,
+                'email' => request('email') ?? null,
+                'additional_email' => request('additional_email') ?? null,
+                'website_link' => request('website_link') ?? null,
+                'facebook_link' => request('facebook_link') ?? null,
+                'twitter_link' => request('twitter_link') ?? null,
+                'linkedin_link' => request('linkedin_link') ?? null,
+                'instagram_link' => request('instagram_link') ?? null,
+                'bio' => request('bio') ?? null,
+            ];
 
-        if (!empty($company)) {
-            try {
-                $template = [
-                    'name' => $company['name'],
-                    'description' => $company['description'],
-                    'date_of_incorporation' => $company['date_of_incorporation'],
-                    'type' => $company['type'],
-                    'address' => $company['address'],
-                    'country' => $company['country'],
-                    'provience' => $company['provience'],
-                    'city' => $company['city'],
-                    'postal_or_zipcode' => $company['postal_or_zipcode'],
-                    'email' => $company['email'],
-                    'additional_email' => $company['additional_email'],
-                    'website_link' => $company['website_link'],
-                    'facebook_link' => $company['facebook_link'],
-                    'twitter_link' => $company['twitter_link'],
-                    'linkedin_link' => $company['linkedin_link'],
-                    'instagram_link' => $company['instagram_link'],
-                    'bio' => $company['bio'],
-                ];
+            //  Create the company
+            $company = $this->create($template);
 
-                //  Create the company
-                $company = $this->create($template);
+            //  If the company was created successfully
+            if ($company) {
 
-                //  If the company was created successfully
-                if ($company) {
-                    /*****************************
-                     *   SEND NOTIFICATIONS      *
-                     *****************************/
+                //  Check whether or not this company has a branch otherwise create a new one
+                $this->checkOrCreateNewBranch($company);
 
-                    $auth_user->notify(new CompanyCreated($company));
+                //  Check whether or not to update the auth user as belonging to this company
+                $this->checkAndAssignCompanyToAuth($company);
 
-                    /*****************************
-                     *   RECORD ACTIVITY         *
-                     *****************************/
+                //  Check whether or not the auth company has a relationship with the created company e.g) client/supplier
+                $this->checkAndCreateRelationship($company);
 
-                    $status = 'created';
+                //  Check whether or not the company has any logo to upload
+                $this->checkAndUploadLogo($company);
 
-                    $companyCreatedActivity = oq_saveActivity($company, $auth_user, $status, $template);
+                //  Check if the company has an sms credit record otherwise create a new credit record
+                $this->checkAndCreateSmsCredit($company);
 
-                    //  refetch the created company
-                    $company = $company->fresh();
+                //  Check if the company has any settings otherwise create new settings
+                $this->checkAndCreateSettings($company);
 
-                    //  If the company was updated successfully
-                    if ($company) {
-                        //  Action was executed successfully
-                        return ['success' => true, 'response' => $company];
-                    }
-                }
-            } catch (\Exception $e) {
-                $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
+                //  Check if the company has any phones to add and replace
+                $this->checkAndUpdatePhones($company);
 
-                return ['success' => false, 'response' => $response];
+                //  refetch the created company
+                $company = $company->fresh();
+
+                /*****************************
+                 *   SEND NOTIFICATIONS      *
+                 *****************************/
+                $auth_user->notify(new CompanyCreated($company));
+
+                /*****************************
+                 *   RECORD ACTIVITY         *
+                 *****************************/
+
+                $status = 'created';
+
+                $companyCreatedActivity = oq_saveActivity($company, $auth_user, $status, $template);
+
+                //  Action was executed successfully
+                return ['success' => true, 'response' => $company];
             }
-        } else {
-            //  No resource found
-            $response = oq_api_notify_no_resource();
+        } catch (\Exception $e) {
+            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
 
+            return ['success' => false, 'response' => $response];
+        }
+    
+    }
+
+    public function checkOrCreateNewBranch($company)
+    {
+        $branches = $company->branches()->count();
+
+        if(!$branches){
+            //  Create a new branch and return a fresh record
+            $branch = $company->branches()->create([
+                'name' => request('name') . ' - Branch 1',
+            ])->fresh();
+
+            return $branch; 
+        }
+
+    }
+
+    public function checkAndAssignCompanyToAuth($company)
+    {
+        $auth_user = auth('api')->user();
+
+        /*  auth_assign:
+         *  This is a variable used to determine if we should use the current company
+         *  as the users company. Sometimes we want to assign the company being created to
+         *  the current authenticated user. We can do this if the auth_assign variable has
+         *  been set to a value equal to 1. This will update the users details and list the
+         *  company as the one that the authenticated user belongs to.
+         */
+        $auth_assign = request('auth_assign');
+
+        if (isset($auth_assign) && $auth_assign == 1) {
+            //  Asssign the company and branch to the auth user
+            User::find($auth_user->id)->update([
+                'company_id' => $company->id,
+                'company_branch_id' => $branch->id,
+            ]);
+        }
+    }
+
+    public function checkAndCreateRelationship($company)
+    {
+        $auth_user = auth('api')->user();
+
+        /*  relationship:
+         *  This is a variable used to determine if the current company being created has 
+         *  a relationship as a client/supplier to the auth users main company. Sometimes
+         *  when creating a new company, we may want to assign that company as either a 
+         *  client/supplier to the company directory. We can do this if the relationship
+         *  variable has been set with the appropriate type (client/supplier)
+         */
+        $relationship = request('relationship') ?? null;
+
+        if (isset($relationship) && !empty($relationship)) {
+            
+            //  Delete any previous relationship
+            DB::table('company_directory')->where([
+                ['company_id', $company->id],                           //  id of the current company
+                ['owning_company_id', $auth_user->company_id]           //  id of the owning company
+            ])->delete();
+
+            //  Add to company directory
+            DB::table('company_directory')->insert([
+                'company_id' => $company->id,                           //  id of the current company
+                'owning_branch_id' => $auth_user->company_branch_id,    //  id of the owning company branch
+                'owning_company_id' => $auth_user->company_id,          //  id of the owning company 
+                'type' => request('relationship'),                      //  relationship type e.g client/supplier
+                'created_at' => DB::raw('now()'),                       
+                'updated_at' => DB::raw('now()')
+            ]);
+        }
+    }
+
+    public function checkAndUploadLogo($company)
+    {
+        /*  logo:
+         *  This is a variable used to determine if the current company being created has
+         *  a logo file to upload. Sometimes when creating a new company, we may want to 
+         *  also upload the logo at the same time. We can do this if the logo variable
+         *  has been set with the image file (type=binary)
+         */
+        $File = request('logo');
+
+        if (isset($File) && !empty($File) && request()->hasFile('logo')) {
+
+            //  Start upload process of files
+            $data = ( new Document() )->saveDocument( request(), $company->id, 'company', $File, 'company_logos', 'logo', true );
+
+        }
+    }
+
+    public function checkAndCreateSmsCredit($company)
+    {
+        //  Check if the company has an sms credit record
+        $smsCredit = $company->smsCredits()->count();
+
+        if (!$smsCredit) {
+            //  Add sms credits to the new company
+            $smsCredits = $company->smsCredits()->create([
+                'count' => (new Sms())->defaultCredit,
+            ]);
+        }
+    }
+
+    public function checkAndCreateSettings($company)
+    {
+        //  Check if the company has any settings
+        $settings = $company->settings()->count();
+
+        if (!$settings) {
+            //  Create new settings for the company
+            $settings = $company->settings()->create([
+                'details' => $this->settingsTemplate($company),
+            ]);
+        }
+    }
+
+    public function checkAndUpdatePhones($company)
+    {
+        /*  phones:
+         *  This is a variable used to determine if the current company being created has 
+         *  any phones to be added. Sometimes when creating a new company, we may want to 
+         *  add and replace existing phones to that company. We can do this if the phones
+         *  variable has been set with an array list of phone numbers.
+         */
+        //  Get any associated phones if any
+        $phones = json_decode( request('phones'), true);
+        
+        if (isset($phones) && !empty($phones)) {
+            //  Add new phone numbers
+            $phoneInstance = new Phone();
+
+            $data = $phoneInstance->initiateCreate($company->id, 'company', $phones, $replace=true);
+            $success = $data['success'];
+            $phones = $data['response'];
+            
+            if($success){
+                return $phones;
+            }
+        }
+
+        //  Phones not added
+        return false;
+    }
+
+    public function settingsTemplate($company)
+    {
+        return [
+            //  Get the general settings
+            'general' => [
+                //  Get the currency mathing the company country
+                'currency_type' => $this->predictCurrency($company)
+            ],
+
+            //  Get settings for creating quotations
+            'quotationTemplate' => (new Quotation())->sampleTemplate(),
+
+            //  Get settings for creating invoices
+            'invoiceTemplate' => (new Invoice())->sampleTemplate(),
+            
+        ];
+    }
+
+    public function predictCurrency($company)
+    {
+        //  Get all existing currencies
+        $currencies = $this->getCurrencies();
+
+        //  Variable to hold the selected currency matching the company country
+        $selectedCurrency = null;
+
+        //  Foreach currency, check if it matches the current company country
+        foreach($currencies as $currency){
+            //  If it matches the company country
+            if($currency['country'] == $company->country){
+                //  Select the currency
+                $selectedCurrency = $currency;
+            }
+        }
+
+        //  Return selected currency
+        return $selectedCurrency;
+    }
+
+    /*  initiateUpdate() method:
+     *
+     *  This is used to update an existing company. It also works
+     *  to store the update activity and broadcasting of
+     *  notifications to users concerning the update of
+     *  the company.
+     *
+     */
+    public function initiateUpdate($company_id)
+    {
+        //  Current authenticated user
+        $auth_user = auth('api')->user();
+
+        /*******************************************************
+         *   CHECK IF USER HAS PERMISSION TO UPDATE A COMPANY  *
+         ******************************************************/
+
+        /*********************************************
+         *   VALIDATE COMPANY INFORMATION            *
+         ********************************************/
+         
+        $template = [
+            'name' => request('name'),
+            'abbreviation' => request('abbreviation') ?? null,
+            'description' => request('description') ?? null,
+            'date_of_incorporation' => request('date_of_incorporation') ?? null,
+            'type' => request('type') ?? null,
+            'industry' => request('industry') ?? null,
+            'address' => request('address') ?? null,
+            'country' => request('country') ?? null,
+            'provience' => request('provience') ?? null,
+            'city' => request('city') ?? null,
+            'postal_or_zipcode' => request('postal_or_zipcode') ?? null,
+            'email' => request('email') ?? null,
+            'additional_email' => request('additional_email') ?? null,
+            'website_link' => request('website_link') ?? null,
+            'facebook_link' => request('facebook_link') ?? null,
+            'twitter_link' => request('twitter_link') ?? null,
+            'linkedin_link' => request('linkedin_link') ?? null,
+            'instagram_link' => request('instagram_link') ?? null,
+            'bio' => request('bio') ?? null,
+        ];
+
+        try {
+            //  Update the company
+            $company = $this->where('id', $company_id)->first()->update($template);
+
+            //  If the company was updated successfully
+            if ($company) {
+                //  re-retrieve the instance to get all of the fields in the table.
+                $company = $this->where('id', $company_id)->first();
+
+                //  Check whether or not this company has a branch otherwise create a new one
+                $this->checkOrCreateNewBranch($company);
+
+                //  Check whether or not to update the auth user as belonging to this company
+                $this->checkAndAssignCompanyToAuth($company);
+
+                //  Check whether or not the auth company has a relationship with the created company e.g) client/supplier
+                $this->checkAndCreateRelationship($company);
+
+                //  Check whether or not the company has any logo to upload
+                $this->checkAndUploadLogo($company);
+
+                //  Check if the company has an sms credit record otherwise create a new credit record
+                $this->checkAndCreateSmsCredit($company);
+
+                //  Check if the company has any settings otherwise create new settings
+                $this->checkAndCreateSettings($company);
+
+                //  Check if the company has any phones to add and replace
+                $this->checkAndUpdatePhones($company);
+
+                //  Refresh company
+                $company = $company->fresh();
+
+                /*****************************
+                 *   SEND NOTIFICATIONS      *
+                 *****************************/
+
+                // $auth_user->notify(new CompanyUpdated($company));
+
+                /*****************************
+                 *   RECORD ACTIVITY         *
+                 *****************************/
+
+                //  Record activity of company updated
+                $status = 'updated';
+                $companyUpdatedActivity = oq_saveActivity($company, $auth_user, $status, ['company' => $company->summarize()]);
+
+                //  Action was executed successfully
+                return ['success' => true, 'response' => $company];
+
+            } else {
+                //  No resource found
+                return ['success' => false, 'response' => oq_api_notify_no_resource()];
+            }
+        } catch (\Exception $e) {
+            //  Log the error
+            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+            //  Return the error response
             return ['success' => false, 'response' => $response];
         }
     }

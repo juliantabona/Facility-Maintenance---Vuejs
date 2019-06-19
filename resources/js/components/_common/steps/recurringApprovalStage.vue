@@ -3,7 +3,7 @@
     <div>
 
         <!-- Fade loader - Shows when approving the recurring  -->
-        <fadeLoader :loading="isSavingApproval" :msg="'Approving recurring '+resourceName+', please wait...'"></fadeLoader>
+        <fadeLoader :loading="isSavingApproval" :msg="'Approving recurring '+resourceName+', please wait...'" class="mt-1 mb-3"></fadeLoader>
 
         <!-- Stage card  -->
         <stagingCard 

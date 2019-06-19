@@ -3,7 +3,7 @@
     <div>
 
         <!-- Fade loader - Shows when Converting quotation  -->
-        <fadeLoader :loading="isConvertingQuotation" msg="Converting, please wait..."></fadeLoader>
+        <fadeLoader :loading="isConvertingQuotation" msg="Converting, please wait..." class="mt-1 mb-3"></fadeLoader>
         
         <!-- Stage card  -->
         <stagingCard 

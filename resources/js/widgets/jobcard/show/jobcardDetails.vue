@@ -481,11 +481,8 @@
                     jobcard: this.formData
                 };
 
-                //  Additional data to eager load along with the jobcard found
-                var connections = '?connections=phones';
-
                 //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/companies'+connections, jobcardData)
+                api.call('post', '/api/companies', jobcardData)
                     .then(({data}) => {
                         
                         console.log(data);

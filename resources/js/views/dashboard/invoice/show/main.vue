@@ -2,7 +2,12 @@
 
     <Row :gutter="20">
         
-        <Col span="20" offset="2">
+        <Col v-if="isLoading" span="8" offset="8">
+            <!-- Loader -->
+            <Loader v-if="true" :loading="true" type="text" class="text-left" theme="white">Loading invoice...</Loader>
+        </Col>
+
+        <Col v-else span="20" offset="2">
 
             <!-- Get the page toolbar with back button and page title -->
             <pageToolbar :fallbackRoute="{ name: 'invoices' }"></pageToolbar>
@@ -18,19 +23,25 @@
 
 <script>
 
+    /*  Loaders   */
+    import Loader from './../../../../components/_common/loaders/Loader.vue'; 
+
+    /*  Toolbars   */
     import pageToolbar from './../../../../components/_common/toolbars/pageToolbar.vue';
+
+    /*  Widgets   */
     import invoiceSummaryWidget from './../../../../widgets/invoice/show/main.vue';
 
 
     export default {
         components: { 
-          pageToolbar, invoiceSummaryWidget
+          Loader, pageToolbar, invoiceSummaryWidget
         },
         data(){
             return {
                 renderKey: 1,
                 invoice: null,
-                isLoadingInvoice: false,
+                isLoading: false,
             }
         },
         watch: {
@@ -52,7 +63,7 @@
                     const self = this;
 
                     //  Start loader
-                    self.isLoadingInvoice = true;
+                    self.isLoading = true;
 
                     console.log('Start getting invoice details...');
 
@@ -63,7 +74,7 @@
                             console.log(data);
 
                             //  Stop loader
-                            self.isLoadingInvoice = false;
+                            self.isLoading = false;
 
                             //  Store the invoice data
                             self.invoice = data;
@@ -75,7 +86,7 @@
                         .catch(response => { 
 
                             //  Stop loader
-                            self.isLoadingInvoice = false;
+                            self.isLoading = false;
 
                             //  Error Location
                             console.log('dashboard/invoice/show/main.vue - Error getting invoice details...');

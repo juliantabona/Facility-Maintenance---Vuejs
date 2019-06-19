@@ -18,6 +18,7 @@ Relation::morphMap([
     'priority' => 'App\Priority',
     'costcenter' => 'App\CostCenter',
     'document' => 'App\Document',
+    'product' => 'App\Product',
 
     'phone' => 'App\Phone',
     'user' => 'App\User',

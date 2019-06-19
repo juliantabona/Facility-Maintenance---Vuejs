@@ -32,6 +32,31 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 trait InvoiceTraits
 {
+
+    public function sampleTemplate()
+    {
+        //  Current authenticated user
+        $auth_user = auth('api')->user();
+
+        //  Invoice Sample Template
+        return [
+            'heading' => 'INVOICE',
+            'reference_no_title' => 'Invoice Number',
+            'created_date_title' => 'Invoice Date',
+            'expiry_date_title' => 'Due Date',
+            'sub_total_title' => 'Total',
+            'grand_total_title' => 'Grand Total',
+            'invoice_to_title' => 'INVOICE TO',
+            'table_columns' => ['Services', 'Quantity', 'Unit Price', 'Amount'],
+            'notes' => [
+                'title' => 'Payment Information',
+                'details' => '<p><b>Note that all payments must be made before the invoice expiry date since invoice prices are subject to change. Payments can be made in cash, cheque or via bank transfer'
+            ],
+            'colors' => ['#017BB8', '#EEF4FF'],
+            'footer' => 'Terms & Conditions Apply',
+        ];
+    }
+
     /*  initiateGetAll() method:
      *
      *  This is used to return a pagination of invoice results.
@@ -608,7 +633,7 @@ trait InvoiceTraits
      *  recorded as a recent activity with the phone and sms saved.
      *
      */
-    public function sendInvoiceAsSMS($invoice, $phones = null, $smsMessage = null, $user = null)
+    public function sendInvoiceAsSMS($invoice, $phones = null, $smsMessage = null, $user = null, $sampleSms = false)
     {
         //  Provided User Or Current authenticated user
         $auth_user = $user ?? auth('api')->user();
@@ -637,10 +662,10 @@ trait InvoiceTraits
         if (!empty($phones) && !empty($smsMessage)) {
             //  Foreach phone number provided
             foreach ($phones as $phone) {
-                //  If $phone['show'] = true it is an active phone number
+                //  If $phone['show'] = true it is an active phone number or is the show index is not set
                 //  If $phone['show'] = false it is not an active phone number
                 //  We only send messages to phone numbers set to active
-                if ($phone['show']) {
+                if (!isset($phone['show']) || $phone['show'] == true) {
                     //  Get the calling code
                     $callingCode = '+'.$phone['calling_code']['calling_code'];
 
@@ -657,10 +682,14 @@ trait InvoiceTraits
                     //  Structure mail template
                     $sms = ['phone' => $phone, 'message' => $smsMessage];
 
-                    //  Record activity of invoice sent receipt
-                    $invoiceSentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'sms' => $sms]);
+                    if(!$sampleSms){
+                        //  Record activity of invoice sent receipt
+                        $invoiceSentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'sms' => $sms]);
+                    }
                 }
             }
+
+            return ['success' => true, 'response' => ['phones'=>$phones, 'sms_message'=> $smsMessage]];
         }
     }
 
@@ -668,15 +697,14 @@ trait InvoiceTraits
     {
         $items = '';
         $referenceNo = $invoice->reference_no_value;
-        $currency = $invoice['currency_type']['currency']['symbol'];
+        $currency = $invoice->currency_type->currency->symbol;
         $grand_total = $currency.number_format($invoice->grand_total_value, 2, ',', '.');
         $expiry_date = (new Carbon($invoice->expiry_date_value))->format('M d Y');
-        $client = $invoice->customized_client_details;
-        $company = $invoice->customized_company_details;
+        $company = collect($invoice->customized_company_details);
 
         foreach ($invoice->items as $x => $item) {
             $x == 0 ? $items .= '' : $items .= ' ';
-            $items .= ($item['quantity'].'x '.($item['name']));
+            $items .= (collect($item)['quantity'].'x '.(collect($item)['name']));
         }
 
         $characterLimit = 160;

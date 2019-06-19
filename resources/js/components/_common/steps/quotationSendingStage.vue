@@ -3,8 +3,8 @@
     <div>
 
         <!-- Fade loader - Shows when sending/skipping to send the quotation  -->
-        <fadeLoader :loading="isSendingQuotation" msg="Sending, please wait..."></fadeLoader>
-        <fadeLoader :loading="isSkippingSendingQuotation" msg="Skipping, please wait..."></fadeLoader>
+        <fadeLoader :loading="isSendingQuotation" msg="Sending, please wait..." class="mt-1 mb-3"></fadeLoader>
+        <fadeLoader :loading="isSkippingSendingQuotation" msg="Skipping, please wait..." class="mt-1 mb-3"></fadeLoader>
         
         <!-- Stage card  -->
         <stagingCard 

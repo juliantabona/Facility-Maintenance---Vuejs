@@ -27,7 +27,7 @@ class Auth {
         console.log('Auth.js - Verfiy and update the authenticated user');
 
         //  Make an Api call to get the authenticated user with the assigned auth token
-        api.call('get', '/api/user')
+        return api.call('get', '/api/user')
             .then(({data}) => {
                 //  Update the user details
                 this.user = data;

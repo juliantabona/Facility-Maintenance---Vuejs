@@ -5,8 +5,9 @@
 
         <!-- Button  -->
         <Button :type="type" :size="size" :class="customClass">
+            <Icon v-if="showIcon && iconDirection == 'left'" :type="icon" :size="20" style="margin-top: -4px;"/>
             <span><slot></slot></span>
-            <Icon v-if="showIcon" type="ios-send-outline" :size="20" style="margin-top: -4px;"/>
+            <Icon v-if="showIcon && iconDirection == 'right'" :type="icon" :size="20" style="margin-top: -4px;"/>
         </Button>
 
     </focusRipple>
@@ -27,6 +28,14 @@
             size: {
                 type: String,
                 default: 'small'
+            },
+            icon: {
+                type: String,
+                default: 'ios-send-outline'
+            },
+            iconDirection: {
+                type: String,
+                default: 'right'
             },
             showIcon: {
                 type: Boolean,

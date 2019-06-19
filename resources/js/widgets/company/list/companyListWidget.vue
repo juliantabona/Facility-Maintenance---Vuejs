@@ -160,11 +160,8 @@
                 //  Get the status e.g) client, supplier, e.t.c
                 var type = this.type ? 'type='+this.type : '';
 
-                //  Additional data to eager load along with each company found
-                var connections = (type ? '&' : '') + 'connections=phones';
-
                 //  Url generated for the filterable Api call  
-                var url = '/api/companies?' + type + connections;
+                var url = '/api/companies?' + type;
 
                 //  Assign url to the filterable object
                 this.filterable.url = url;

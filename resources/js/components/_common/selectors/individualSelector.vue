@@ -2,7 +2,7 @@
 
     <!-- Individual Selector -->
     <div>
-        <Loader v-if="isLoading" :loading="isLoading" type="text" class="text-left">Loading individuals...</Loader>
+        <Loader v-if="isLoading" :loading="isLoading" type="text" class="text-left">Loading...</Loader>
         <Select v-if="localfetchedUsers.length" 
                 v-model="localSelectedUser" 
                 placeholder="Select individual" 

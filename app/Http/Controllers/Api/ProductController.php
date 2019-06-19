@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Company;
 use App\CompanyBranch;
-use App\ProductOrService;
+use App\Product;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
-class ProductOrServiceController extends Controller
+class ProductController extends Controller
 {
     public function index(Request $request)
     {
@@ -68,7 +68,7 @@ class ProductOrServiceController extends Controller
             $company = Company::where('id', $companyId)->first();
 
             if ($company) {
-                $productsOrServices = $company->productsOrServices();
+                $products = $company->productAndServices();
             } else {
                 return oq_api_notify_error('Specified company was not found', 1, 404);
             }
@@ -98,7 +98,7 @@ class ProductOrServiceController extends Controller
             $branch = CompanyBranch::where('id', $branchId)->first();
 
             if ($branch) {
-                $productsOrServices = $branch->productsOrServices();
+                $products = $branch->productAndServices();
             } else {
                 return oq_api_notify_error('Specified branch was not found', null, 404);
             }
@@ -113,9 +113,9 @@ class ProductOrServiceController extends Controller
             *  CHECK IF THE USER IS AUTHORIZED TO VIEW ALL PRODUCTS OR SERVICES    *
             /***********************************************************************/
 
-            /*   Create a new ProductOrService() instance that can be used to retrieve all products or services
+            /*   Create a new Product() instance that can be used to retrieve all products or services
              */
-            $productsOrServices = new ProductOrService();
+            $products = new Product();
         } else {
             return oq_api_notify_error('Model query must be "company" or "branch". Provided model is incorrect', null, 404);
         }
@@ -124,7 +124,7 @@ class ProductOrServiceController extends Controller
          *  e.g) Get only products / Get only services
          */
         if ($productOrServiceType == 'product' || $productOrServiceType == 'service') {
-            $productsOrServices = $productsOrServices->where('type', $productOrServiceType);
+            $products = $products->where('type', $productOrServiceType);
         } elseif ($productOrServiceType != 'all') {
             return oq_api_notify_error('Type query must be "product" or "service". Provided type is incorrect', null, 404);
         }
@@ -148,22 +148,22 @@ class ProductOrServiceController extends Controller
             //  Get all and trashed
             if (request('withtrashed') == 1) {
                 //  Run query
-                $productsOrServices = $productsOrServices->withTrashed()->advancedFilter(['order_join' => $order_join]);
+                $products = $products->withTrashed()->advancedFilter(['order_join' => $order_join]);
             //  Get only trashed
             } elseif (request('onlytrashed') == 1) {
                 //  Run query
-                $productsOrServices = $productsOrServices->onlyTrashed()->advancedFilter(['order_join' => $order_join]);
+                $products = $products->onlyTrashed()->advancedFilter(['order_join' => $order_join]);
             //  Get all except trashed
             } else {
                 //  Run query
-                $productsOrServices = $productsOrServices->advancedFilter(['order_join' => $order_join]);
+                $products = $products->advancedFilter(['order_join' => $order_join]);
             }
 
             //  If we have any products or services so far
-            if ($productsOrServices) {
+            if ($products) {
                 //  Eager load other relationships wanted if specified
                 if (request('connections')) {
-                    $productsOrServices->load(oq_url_to_array(request('connections')));
+                    $products->load(oq_url_to_array(request('connections')));
                 }
             }
         } catch (\Exception $e) {
@@ -171,6 +171,85 @@ class ProductOrServiceController extends Controller
         }
 
         //  Action was executed successfully
-        return oq_api_notify($productsOrServices, 200);
+        return oq_api_notify($products, 200);
     }
+
+    public function show($product_id)
+    {
+        //  Product Instance
+        $data = ( new Product() )->initiateShow($product_id);
+        $success = $data['success'];
+        $response = $data['response'];
+
+        //  If the product was found successfully
+        if ($success) {
+            //  If this is a success then we have the product
+            $product = $response;
+
+            //  Action was executed successfully
+            return oq_api_notify($product, 200);
+        }
+
+        //  If the data was not a success then return the response
+        return $response;
+    }
+
+    public function store(Request $request)
+    {
+        //  Start creating the product
+        $data = ( new Product() )->initiateCreate();
+        $success = $data['success'];
+        $response = $data['response'];
+
+        //  If the product was created successfully
+        if ($success) {
+            //  If this is a success then we have a product returned
+            $product = $response;
+
+            //  Action was executed successfully
+            return oq_api_notify($product, 200);
+        }
+
+        //  If the data was not a success then return the response
+        return $response;
+    }
+
+    public function update($product_id)
+    {
+        //  Product Instance
+        $data = ( new Product() )->initiateUpdate($product_id);
+        $success = $data['success'];
+        $response = $data['response'];
+
+        //  If the product was updated successfully
+        if ($success) {
+            //  If this is a success then we have a product returned
+            $product = $response;
+
+            //  Action was executed successfully
+            return oq_api_notify($product, 200);
+        }
+
+        //  If the data was not a success then return the response
+        return $response;
+    }
+
+    public function getImage(Request $request, $product_id)
+    {
+        try {
+            //  Get the associated product
+            $product = Product::where('id', $product_id)->first();
+            $productImage = $product->primaryImage;
+
+            //  Action was executed successfully
+            return oq_api_notify($productImage, 200);
+
+        } catch (\Exception $e) {
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+
+        //  No resource found
+        return oq_api_notify_no_resource();
+    }
+
 }

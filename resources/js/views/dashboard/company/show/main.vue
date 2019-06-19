@@ -2,7 +2,7 @@
 
     <Row :gutter="20">
         
-        <Col v-if="!company" span="20" offset="2">
+        <Col v-if="isLoading" span="8" offset="8">
             <!-- Loader -->
             <Loader v-if="true" :loading="true" type="text" class="text-left" theme="white">Loading company...</Loader>
         </Col>
@@ -53,12 +53,12 @@
             '$route.params.id': function (id) {
                 
                 // react to route changes by fetching the associated company...
-                this.fetchInvoice();
+                this.fetchCompany();
 
             }
         },
         methods: {
-            fetchInvoice() {
+            fetchCompany() {
 
                 //  If we have the route id set
                 if( this.$route.params.id ){
@@ -108,7 +108,7 @@
         },
         created(){
             //  Fetch the company
-            this.fetchInvoice();
+            this.fetchCompany();
         }
     };
 </script>

@@ -115,7 +115,7 @@
             <!-- Activity cards & Jobcard Steps -->
             <Row :gutter="20" key="activity_n_steps" class="animated">
                 <!-- White overlay when creating/saving jobcard -->
-                <Spin size="large" fix v-if="isSavingJobcard || isCreatingJobcard"></Spin>
+                <Spin size="large" fix v-if="isSavingJobcard || isCreatingJobcard" style="border-radius: 15px;"></Spin>
 
                 <!-- Acitvity cards for showing summary of activities, sent companies, and sent receipt -->
                 <Col v-if="localJobcard.has_approved" :span="5">
@@ -165,7 +165,7 @@
                     <Card :style="{ width: '100%' }">
                         
                         <!-- White overlay when creating/saving jobcard -->
-                        <Spin size="large" fix v-if="isSavingJobcard || isCreatingJobcard"></Spin>
+                        <Spin size="large" fix v-if="isSavingJobcard || isCreatingJobcard" style="border-radius: 15px;"></Spin>
 
                         <!-- Main header -->
                         <div slot="title">

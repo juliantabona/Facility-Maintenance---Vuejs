@@ -143,7 +143,7 @@
             <!-- Activity cards & Company Steps -->
             <Row :gutter="20" key="activity_n_steps" class="animated">
                 <!-- White overlay when creating/saving company -->
-                <Spin size="large" fix v-if="isSavingCompany || isCreatingCompany"></Spin>
+                <Spin size="large" fix v-if="isSavingCompany || isCreatingCompany" style="border-radius: 15px;"></Spin>
 
                 <!-- Acitvity cards for showing summary of activities, sent companies, and sent receipt -->
                 <Col v-if="localCompany.has_approved" :span="5">
@@ -182,7 +182,7 @@
                     <Card :style="{ width: '100%' }">
                         
                         <!-- White overlay when creating/saving company -->
-                        <Spin size="large" fix v-if="isSavingCompany || isCreatingCompany"></Spin>
+                        <Spin size="large" fix v-if="isSavingCompany || isCreatingCompany" style="border-radius: 15px;"></Spin>
 
                         <!-- Main header -->
                         <div slot="title">

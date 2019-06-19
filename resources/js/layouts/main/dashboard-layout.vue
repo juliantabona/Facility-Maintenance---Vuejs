@@ -51,8 +51,7 @@
                             This is a modal that pops up once the user has created their account and now needs
                             to complete the setup process
                     -->
-                  
-                    <updateProfileAfterSignUpModal v-if="!assignedCompany"></updateProfileAfterSignUpModal>
+                    <updateProfileAfterSignUpModal v-if="!user.setup"></updateProfileAfterSignUpModal>
                     
 
                   <!-- Put Profile, Jobcards, Staff e.t.c resource content here -->
@@ -97,7 +96,8 @@
     data(){
       return {
         moment: moment,
-        isCollapsed: false
+        isCollapsed: false,
+        user: auth.user
       }
     },
     computed:{
@@ -105,7 +105,8 @@
         return (this.user || {}).company_id ? true : false;
       },
       blurBackground: function(){
-        return !this.assignedCompany;
+        //  If the account setup process is not completed then blur the background
+        return !this.user.setup ? true : false;
       },
     }
   }

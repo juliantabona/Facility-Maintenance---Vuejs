@@ -29,6 +29,31 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 trait QuotationTraits
 {
+
+    public function sampleTemplate()
+    {
+        //  Current authenticated user
+        $auth_user = auth('api')->user();
+
+        //  Quotation Sample Template
+        return [
+            'heading' => 'QUOTATION',
+            'reference_no_title' => 'Quote Number',
+            'created_date_title' => 'Quote Date',
+            'expiry_date_title' => 'Due Date',
+            'sub_total_title' => 'Total',
+            'grand_total_title' => 'Grand Total',
+            'quotation_to_title' => 'QUOTE TO',
+            'table_columns' => ['Services', 'Quantity', 'Unit Price', 'Amount'],
+            'notes' => [
+                'title' => 'Payment Information',
+                'details' => '<p><b>Note that all payments must be made before the quotation expiry date since quotation prices are subject to change. Payments can be made in cash, cheque or via bank transfer'
+            ],
+            'colors' => ['#017BB8', '#EEF4FF'],
+            'footer' => 'Terms & Conditions Apply',
+        ];
+    }
+
     /*  initiateGetAll() method:
      *
      *  This is used to return a pagination of quotation results.

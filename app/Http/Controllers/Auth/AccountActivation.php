@@ -126,4 +126,28 @@ class AccountActivation extends Controller
             }
         }
     }
+
+    public function completeSetup(Request $request)
+    {
+        //  Current authenticated user
+        $auth_user = auth('api')->user();
+
+        try {
+
+            //  Set the account setup to true meaning that the account has been fully completed
+            $auth_user->update([
+                'setup' => true
+            ]);
+        
+            //  Return the user
+            return oq_api_notify($auth_user, 200);
+
+        } catch (\Exception $e) {
+
+            //  Log the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+        }
+
+    }
 }

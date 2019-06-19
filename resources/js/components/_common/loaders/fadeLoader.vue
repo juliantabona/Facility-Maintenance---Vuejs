@@ -15,7 +15,7 @@
 <template>
 
     <!-- Loader -->
-    <div v-if="loading" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">{{ msg }}</div>
+    <div v-if="loading" class="text-center text-uppercase font-weight-bold text-success animate-opacity">{{ msg }}</div>
 
 </template>
 

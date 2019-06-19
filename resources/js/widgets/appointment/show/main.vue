@@ -90,7 +90,7 @@
                     <Row v-show="showRecurringSettings" key="dynamic" class="animated mb-3">
 
                         <!-- White overlay when creating/saving appointment -->
-                        <Spin size="large" fix v-if="isSavingAppointment || isCreatingAppointment"></Spin>
+                        <Spin size="large" fix v-if="isSavingAppointment || isCreatingAppointment" style="border-radius: 15px;"></Spin>
 
                         <Col span="24">
                             <div style="background:#eee;padding: 20px">
@@ -113,7 +113,7 @@
             <!-- Activity cards & Appointment Steps -->
             <Row :gutter="20" key="activity_n_steps" class="animated">
                 <!-- White overlay when creating/saving appointment -->
-                <Spin size="large" fix v-if="isSavingAppointment || isCreatingAppointment"></Spin>
+                <Spin size="large" fix v-if="isSavingAppointment || isCreatingAppointment" style="border-radius: 15px;"></Spin>
 
                 <!-- Acitvity cards for showing summary of activities, sent companies, and sent receipt -->
                 <Col v-if="localAppointment.has_approved" :span="5">
@@ -156,7 +156,7 @@
                     <Card :style="{ width: '100%' }">
                         
                         <!-- White overlay when creating/saving appointment -->
-                        <Spin size="large" fix v-if="isSavingAppointment || isCreatingAppointment"></Spin>
+                        <Spin size="large" fix v-if="isSavingAppointment || isCreatingAppointment" style="border-radius: 15px;"></Spin>
 
                         <!-- Main header -->
                         <div slot="title">

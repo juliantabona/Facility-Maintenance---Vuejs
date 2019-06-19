@@ -2,7 +2,7 @@
 
     <Row :gutter="20">
         
-        <Col v-if="!appointment" span="20" offset="2">
+        <Col v-if="isLoading" span="8" offset="8">
             <!-- Loader -->
             <Loader v-if="true" :loading="true" type="text" class="text-left" theme="white">Loading appointment...</Loader>
         </Col>

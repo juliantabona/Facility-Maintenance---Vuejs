@@ -302,7 +302,7 @@ router.beforeEach((to, from, next) => {
             console.log('Routes.js - Page only for Guest users ('+to.fullPath+')');
             //  Go to Dashboard overview page
             next({
-                path: '/dashboard'
+                path: '/overview'
             });
 
             return;

@@ -3,8 +3,8 @@
     <div>
 
         <!-- Fade loader - Shows when sending/skipping to send the appointment  -->
-        <fadeLoader :loading="isSendingAppointment" msg="Sending, please wait..."></fadeLoader>
-        <fadeLoader :loading="isSkippingSendingAppointment" msg="Skipping, please wait..."></fadeLoader>
+        <fadeLoader :loading="isSendingAppointment" msg="Sending, please wait..." class="mt-1 mb-3"></fadeLoader>
+        <fadeLoader :loading="isSkippingSendingAppointment" msg="Skipping, please wait..." class="mt-1 mb-3"></fadeLoader>
         
         <!-- Stage card  -->
         <stagingCard 

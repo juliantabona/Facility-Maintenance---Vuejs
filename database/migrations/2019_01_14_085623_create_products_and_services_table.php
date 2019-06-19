@@ -16,9 +16,8 @@ class CreateProductsAndServicesTable extends Migration
             $table->string('name')->nullable();
             $table->string('description')->nullable();
             $table->string('type')->nullable();
-            $table->float('price')->nullable();
-            $table->boolean('buy')->default(0);
-            $table->boolean('sell')->default(0);
+            $table->float('purchase_price')->nullable();
+            $table->float('selling_price')->nullable();
             $table->unsignedInteger('company_branch_id');
             $table->unsignedInteger('company_id');
             $table->softDeletes();

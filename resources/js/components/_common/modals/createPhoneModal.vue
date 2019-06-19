@@ -36,6 +36,7 @@
                     <TabPane v-if="!editablePhone" label="Existing Phones" name="existingPhonesTab" :style="{ minHeight: '250px' }">
 
                         <div :style="{ padding: '30px', boxShadow: 'inset 1px 1px 5px 1px #d6d6d6' }">
+                            <b class="d-block mb-1">Select Phone</b>
                             <existingPhoneSelector
                                 :modelId="modelId"
                                 :modelType="modelType"
@@ -258,10 +259,10 @@
                 //  template
                 return this.editablePhone ? Object.assign({}, this.editablePhone) : 
                         {
-                            calling_code: '',
-                            number:'',
-                            provider:'',
-                            type:'',
+                            calling_code: null,
+                            number: null,
+                            provider: this.selectedServiceProvider,
+                            type: this.selectedType,
                         };
             },
             storedPhone(){
@@ -324,7 +325,7 @@
 
                 //  Login data to send
                 let phoneData = {
-                    phone: self.localPhone
+                    phones: [ self.localPhone ]
                 };
 
                 if(this.modelId && this.modelType){

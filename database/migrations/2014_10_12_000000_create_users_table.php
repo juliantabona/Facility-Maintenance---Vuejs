@@ -32,6 +32,7 @@ class CreateUsersTable extends Migration
             $table->string('username')->nullable();
             $table->string('password')->nullable();
             $table->boolean('verified')->default(false);
+            $table->boolean('setup')->default(false);
             $table->unsignedInteger('company_branch_id')->nullable();
             $table->unsignedInteger('company_id')->nullable();
             $table->string('position')->nullable();

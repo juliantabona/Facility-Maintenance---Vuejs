@@ -53,15 +53,26 @@ Route::post('/login', 'Auth\LoginController@login');
 Route::post('/register', 'Auth\RegisterController@register');
 Route::post('/activate-account', 'Auth\AccountActivation@activate');
 Route::post('/resend-activation', 'Auth\AccountActivation@resend');
+Route::post('/setup-completed', 'Auth\AccountActivation@completeSetup');
 
 Route::middleware('auth:api')->get('/user', 'Api\UserController@getUser');
 Route::middleware('auth:api')->get('/user/settings', 'Api\UserController@getUserSettings');
 Route::middleware('auth:api')->post('/user/settings', 'Api\UserController@updateUserSettings');
+
 Route::middleware('auth:api')->get('/users', 'Api\UserController@index');
+Route::middleware('auth:api')->post('/users', 'Api\UserController@create');
 Route::middleware('auth:api')->get('/users/stats', 'Api\UserController@getEstimatedStats');
 Route::middleware('auth:api')->get('/users/{user_id}', 'Api\UserController@show');
 Route::middleware('auth:api')->post('/users/{user_id}', 'Api\UserController@update');
-Route::middleware('auth:api')->post('/users', 'Api\UserController@create');
+Route::middleware('auth:api')->get('/users/{user_id}/image', 'Api\UserController@getImage');
+
+
+
+
+/*   APPOINTMENT RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::post('/upload', 'Api\UploadController@upload');
 
 /*   COMPANY RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
@@ -75,6 +86,8 @@ Route::post('companies/{company_id}', 'Api\CompanyController@update');
 Route::post('companies/{company_id}/approve', 'Api\CompanyController@approve');  //  ok
 Route::get('companies/{company_id}/settings', 'Api\CompanyController@settings');
 Route::get('companies/{company_id}/wallets', 'Api\CompanyController@getWallets');
+Route::get('companies/{company_id}/clients', 'Api\CompanyController@getClients');
+Route::get('companies/{company_id}/logo', 'Api\CompanyController@getLogo');
 
 /*   PROCESS FORM RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
@@ -187,10 +200,19 @@ Route::post('invoices/{invoice_id}/recurring/update-delivery-plan', 'Api\Invoice
 Route::post('invoices/{invoice_id}/recurring/update-payment-plan', 'Api\InvoiceController@updateRecurringSettingsPaymentPlan');
 Route::post('invoices/{invoice_id}/recurring/approve', 'Api\InvoiceController@approveRecurringSettings');
 
+/*   INVOICE RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::post('sample-sms', 'Api\SmsController@sendSampleSms');
+
 /*   PRODUCT/SERVICE RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
 */
-Route::get('products', 'Api\ProductOrServiceController@index');
+Route::get('products', 'Api\ProductController@index');
+Route::post('products', 'Api\ProductController@store');
+Route::get('products/{product_id}', 'Api\ProductController@show');
+Route::post('products/{product_id}', 'Api\ProductController@update');
+Route::get('products/{product_id}/image', 'Api\ProductController@getImage');
 
 /*   TAXES RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete

@@ -1,5 +1,4 @@
 <style scoped>
-
     .white {
         background-color: white !important;
     }
@@ -8,9 +7,10 @@
 
 <template>
 
-    <Button :type="type" :loading="loading" :long="long" size="large" :class="theme">
+    <div v-show="loading" :style="customStyle" :class="theme">
+        <img src="/images/assets/icons/star_loader.svg" alt="Loader" style=" width: 40px;">
         <slot>Loading...</slot>
-    </Button>
+    </div>
 
 </template>
 
@@ -22,13 +22,14 @@
             type: Boolean,
             default: false
         },
-        long: {
-            type: Boolean,
-            default: true
-        },
-        type: {
-            type: String,
-            default: 'dashed'
+        customStyle:{
+            type: Object,
+            default: function (){ 
+                return {
+                    paddingLeft: '5px',
+                    borderRadius:'4px'
+                }
+            }
         },
         theme: {
             type: String,

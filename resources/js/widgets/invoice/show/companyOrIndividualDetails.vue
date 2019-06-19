@@ -16,15 +16,6 @@
         <!-- Profile Information -->
         <div v-if="localProfile">
 
-            <!-- View button -->
-            <basicButton v-if="!localEditMode && (localProfile.model_type == 'company' || localProfile.model_type == 'user')"
-                            :style="{ position:'absolute', bottom:'10px', right:'10px' }" 
-                            type="primary" size="small" 
-                            :ripple="false"
-                            @click.native="$router.push({ name: (localProfile.model_type == 'company' ? 'show-company': 'show-user'), params: { id: localProfile.id } })">
-                {{ 'View '+ refName }}
-            </basicButton>
-
             <!-- Edit button -->
             <Poptip v-if="localEditMode" class="mt-2 mb-2" trigger="hover" :content="'Edit '+(localProfile.model_type == 'company' ? 'company' : 'profile')+' details?'">
                 <Button class="mt-1 ml-1" icon="ios-create-outline" type="dashed" size="small" @click="editCompanyOrIndividual()">{{ 'Edit '+(localProfile.model_type == 'company' ? 'company' : 'profile')+' details' }}</Button>
@@ -52,11 +43,10 @@
             <!-- Profile Address -->
             <p v-if="!localEditMode && localProfile.address" class="mt-1">{{ localProfile.address }}</p>
 
-            <!-- Profile City -->
-            <p v-if="!localEditMode && localProfile.city" class="mt-1">{{ localProfile.city }}</p>
-
-            <!-- Profile Country -->
-            <p v-if="!localEditMode && localProfile.country" class="mt-1">{{ localProfile.country }}</p>
+            <!-- Profile Country And City -->
+            <p v-if="!localEditMode && (localProfile.country || localProfile.city)" class="mt-1">
+                {{ localProfile.country + (localProfile.city ? ', ' + localProfile.city : '') }}
+            </p>
 
             <div class="clearfix"></div>
             
@@ -66,7 +56,8 @@
                         :modelId="localProfile.id" 
                         :modelType="localProfile.model_type" 
                         :phones="localProfile.phones" 
-                        :numberLimit="5"
+                        :minLimit="1"
+                        :maxLimit="3"
                         selectedType="mobile"
                         :disabledTypes="[]"   
                         selectedServiceProvider="Orange"
@@ -82,6 +73,16 @@
                         poptipMsg="Turn on to show"
                         @updated="updatePhoneChanges($event)">
             </phoneInput>
+
+            <!-- View button -->
+            <basicButton v-if="!localEditMode && (localProfile.model_type == 'company' || localProfile.model_type == 'user')"
+                            class="mt-1"
+                            type="primary" size="small" 
+                            :ripple="false"
+                            @click.native="$router.push({ name: (localProfile.model_type == 'company' ? 'show-company': 'show-user'), params: { id: localProfile.id } })">
+                {{ 'View '+ refName }}
+            </basicButton>
+
 
         </div>
 
@@ -114,6 +115,9 @@
     
     import lodash from 'lodash';
     Event.prototype._ = lodash;
+
+    /*  Loaders  */
+    import Loader from './../../../components/_common/loaders/Loader.vue';
 
     /*  Inputs  */
     import phoneInput from './../../../components/_common/inputs/phoneInput.vue';   
@@ -174,7 +178,7 @@
                 default: true                
             },
         },
-        components: { phoneInput, citySelector, countrySelector, createOrEditCompanyOrIndividualModal, showModeSwitch, basicButton },
+        components: { phoneInput, citySelector, countrySelector, createOrEditCompanyOrIndividualModal, showModeSwitch, basicButton, Loader},
         data() {
             return {
                 localProfile: this.profile,

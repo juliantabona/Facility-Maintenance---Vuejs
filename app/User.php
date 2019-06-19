@@ -30,6 +30,8 @@ class User extends Authenticatable
         'date_of_birth',
     ];
 
+    protected $with = ['profileImage', 'phones'];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -38,7 +40,7 @@ class User extends Authenticatable
     protected $fillable = [
         'first_name', 'last_name', 'date_of_birth', 'gender', 'address', 'country', 'provience', 'city',
         'postal_or_zipcode', 'email', 'additional_email', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link',
-        'bio', 'username', 'password', 'verified', 'company_branch_id', 'company_id', 'position', 'accessibility',
+        'bio', 'username', 'password', 'verified', 'setup', 'company_branch_id', 'company_id', 'position', 'accessibility',
     ];
 
     protected $allowedFilters = [
@@ -77,6 +79,21 @@ class User extends Authenticatable
         return $this->morphOne('App\Setting', 'trackable');
     }
 
+    /*  Get the documents relating to this user. These are various files such as document files, images and so on. 
+     *  Basically any file/image that belongs to the user is stored in this relation
+     */
+
+    public function documents()
+    {
+        return $this->morphMany('App\Document', 'documentable');
+    }
+
+    public function profileImage()
+    {
+        return $this->documents()->where('type', 'profile_image')->take(1);
+    }
+
+
     public function company()
     {
         return $this->belongsTo('App\Company', 'company_id');
@@ -91,11 +108,6 @@ class User extends Authenticatable
     public function companyBranch()
     {
         return $this->belongsTo('App\CompanyBranch', 'company_branch_id');
-    }
-
-    public function documents()
-    {
-        return $this->morphMany('App\Document', 'documentable');
     }
 
     public function phones()

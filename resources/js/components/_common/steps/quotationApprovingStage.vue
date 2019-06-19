@@ -3,7 +3,7 @@
     <div>
         
         <!-- Fade loader - Shows when approving quotation  -->
-        <fadeLoader :loading="isApprovingQuotation" msg="Approving, please wait..."></fadeLoader>
+        <fadeLoader :loading="isApprovingQuotation" msg="Approving, please wait..." class="mt-1 mb-3"></fadeLoader>
         
         <!-- Stage card  -->
         <stagingCard 

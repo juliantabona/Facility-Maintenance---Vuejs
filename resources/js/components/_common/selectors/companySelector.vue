@@ -2,7 +2,7 @@
 
     <!-- Company Selector -->
     <div>
-        <Loader v-if="isLoading" :loading="isLoading" type="text" class="text-left">Loading companies...</Loader>
+        <Loader v-if="isLoading" :loading="isLoading" type="text" class="text-left">Loading...</Loader>
         <Select v-if="localfetchedCompanies.length" 
                 v-model="localSelectedCompany" 
                 placeholder="Select company" 
@@ -53,6 +53,7 @@
         },
         methods: {
             fetch() {
+
                 const self = this;
 
                 //  Start loader
@@ -60,14 +61,11 @@
 
                 console.log('Start getting companies...');
 
-                //  Additional data to eager load along with each user found
-                var connections = '&connections=phones';
-
                 //  Settings to prevent pagination
-                var pagination = (connections ? '&': '') + 'paginate=0';
+                var pagination = '&paginate=0';
 
                 //  Use the api call() function located in resources/js/api.js
-                api.call('get', '/api/companies?allocation=company&type=client,supplier'+connections+pagination)
+                api.call('get', '/api/companies?allocation=company&type=client,supplier'+pagination)
                     .then(({data}) => {
                         
                         console.log(data);

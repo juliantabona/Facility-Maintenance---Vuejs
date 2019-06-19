@@ -484,11 +484,8 @@
                     appointment: this.formData
                 };
 
-                //  Additional data to eager load along with the appointment found
-                var connections = '?connections=phones';
-
                 //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/companies'+connections, appointmentData)
+                api.call('post', '/api/companies', appointmentData)
                     .then(({data}) => {
                         
                         console.log(data);

@@ -3,7 +3,7 @@
     <div>
         
         <!-- Fade loader - Shows when saving the recurring schedule plan  -->
-        <fadeLoader :loading="isSavingRecurringSchedulePlan" msg="Saving schedule plan, please wait..."></fadeLoader>
+        <fadeLoader :loading="isSavingRecurringSchedulePlan" msg="Saving schedule plan, please wait..." class="mt-1 mb-3"></fadeLoader>
 
         <!-- Stage card  -->
         <stagingCard 

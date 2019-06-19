@@ -27,7 +27,7 @@
 
     <div>
         <!-- Fade loader - Shows when saving the recurring invoice payment plan  -->
-        <fadeLoader :loading="isSavingRecurringPaymentPlan" msg="Saving payment plan, please wait..."></fadeLoader>
+        <fadeLoader :loading="isSavingRecurringPaymentPlan" msg="Saving payment plan, please wait..." class="mt-1 mb-3"></fadeLoader>
         
         <!-- Stage card  -->
         <stagingCard 

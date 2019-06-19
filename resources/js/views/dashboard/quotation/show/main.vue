@@ -2,14 +2,19 @@
 
     <Row :gutter="20">
         
-        <Col span="20" offset="2">
+        <Col v-if="isLoading" span="8" offset="8">
+            <!-- Loader -->
+            <Loader v-if="true" :loading="true" type="text" class="text-left" theme="white">Loading quotation...</Loader>
+        </Col>
+
+        <Col v-else span="20" offset="2">
 
             <!-- Get the page toolbar with back button and page title -->
             <pageToolbar :fallbackRoute="{ name: 'quotations' }"></pageToolbar>
 
             <!-- Get the quotation details -->
-            <quotationSummaryWidget v-if="quotation" :quotation="quotation" :key="renderKey"></quotationSummaryWidget>
-            
+            <quotationSummaryWidget :quotation="quotation" :key="renderKey"></quotationSummaryWidget>
+
         </Col>
 
     </Row>
@@ -18,19 +23,25 @@
 
 <script>
 
+    /*  Loaders   */
+    import Loader from './../../../../components/_common/loaders/Loader.vue'; 
+
+    /*  Toolbars   */
     import pageToolbar from './../../../../components/_common/toolbars/pageToolbar.vue';
+
+    /*  Widgets   */
     import quotationSummaryWidget from './../../../../widgets/quotation/show/main.vue';
 
 
     export default {
         components: { 
-          pageToolbar, quotationSummaryWidget
+          Loader, pageToolbar, quotationSummaryWidget
         },
         data(){
             return {
                 renderKey: 1,
                 quotation: null,
-                isLoadingQuotation: false,
+                isLoading: false,
             }
         },
         watch: {
@@ -52,7 +63,7 @@
                     const self = this;
 
                     //  Start loader
-                    self.isLoadingQuotation = true;
+                    self.isLoading = true;
 
                     console.log('Start getting quotation details...');
 
@@ -63,7 +74,7 @@
                             console.log(data);
 
                             //  Stop loader
-                            self.isLoadingQuotation = false;
+                            self.isLoading = false;
 
                             //  Store the quotation data
                             self.quotation = data;
@@ -75,7 +86,7 @@
                         .catch(response => { 
 
                             //  Stop loader
-                            self.isLoadingQuotation = false;
+                            self.isLoading = false;
 
                             //  Error Location
                             console.log('dashboard/quotation/show/main.vue - Error getting quotation details...');

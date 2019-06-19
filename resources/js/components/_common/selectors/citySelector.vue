@@ -47,9 +47,9 @@
                 handler: function (val, oldVal) {
                     //  Re-fetch the country associated cities
                     this.fetchCities();
-                }
+                },
+                deep: true
             }
-
         },
         computed:{
             localSelectedCity:{

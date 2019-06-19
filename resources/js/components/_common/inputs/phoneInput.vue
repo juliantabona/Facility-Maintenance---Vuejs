@@ -33,7 +33,7 @@
                         </toggleSwitch>
 
                         <!-- Delete button -->
-                        <Poptip v-if="deletable" confirm title="Are you sure you want to delete this phone number?"
+                        <Poptip v-if="deletable && ((localPhones || {}).length > minLimit)" confirm title="Are you sure you want to delete this phone number?"
                                 ok-text="Yes" cancel-text="No" @on-ok="deletePhone(localPhones[i], i)" placement="left-start">
                                 <Icon class="field-icon mr-2" type="ios-trash-outline" :size="20"/>
                         </Poptip>
@@ -44,7 +44,7 @@
                         </Poptip>
 
                         <!-- Remove button -->
-                        <Poptip v-if="removable" confirm title="Are you sure you want to remove this phone number?"
+                        <Poptip v-if="removable && ((localPhones || {}).length > minLimit)" confirm title="Are you sure you want to remove this phone number?"
                                 ok-text="Yes" cancel-text="No" @on-ok="removePhone(localPhones[i], i)" placement="left-start">
                                 <Icon class="field-icon" type="ios-close" :size="20" 
                                       :style="{ fontSize: '16px',background: '#ed4014', border: '3px solid #e4e9f1',color: '#fff',borderRadius: '100%' }"/>
@@ -139,6 +139,10 @@
             editable: {
                 type: Boolean,
                 default: false,
+            },
+            minLimit:{
+                type: Number,
+                default: 0,
             },
             numberLimit: {
                 type: Number,

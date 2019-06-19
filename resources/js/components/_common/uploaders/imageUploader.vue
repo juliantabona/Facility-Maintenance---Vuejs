@@ -10,8 +10,9 @@
 
     .image-uploader{
         display: inline-block;
-        width: 60px;
-        height: 60px;
+        width: 100% !important;
+        height: auto !important;
+        min-height:150px;
         text-align: center;
         line-height: 60px;
         border-radius: 4px;
@@ -19,11 +20,16 @@
         background: #fff;
         position: relative;
         margin-right: 4px;
+
+        background-image: url(/images/assets/icons/star_loader.svg);
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 65px;
     }
 
     .highlight-line{
         border: 1px solid transparent;
-        box-shadow: 0 1px 1px rgba(0,0,0,.2);
+        box-shadow: 0px 1px 4px rgba(0,0,0,.2);
     }
 
     .image-uploader img{
@@ -53,12 +59,41 @@
         transform: translate(-50%, -50%);
     }
 
+    .image-preview{
+        max-width:180px;
+        margin:auto;
+    }
+
+    .image-preview img{
+        width:100% !important;
+        height:auto !important;
+        margin: auto;
+        display: block;
+    }
+
+    .no-image-box{
+        line-height: 135px;
+        border: 1px dashed #e8eaec;
+        text-align: center;
+    }
+
 </style>
 
 <template>
     <div>
-        <div :class="'image-uploader' + ( allowUpload ? ' highlight-line' : '')" v-for="item in uploadList" :style="thumbnailStyle">
-            <template v-if="item.status === 'finished'">
+        
+        <!-- Loader for when loading the docs -->
+        <Loader v-if="isLoadingDocs" :loading="true" type="text" class="mt-2 mb-2">Loading...</Loader>
+        <Loader v-if="isUploadingDocs" :loading="true" type="text" class="mt-2 mb-2">Uploading...</Loader>
+    
+        <div v-if="previewImage && !isLoadingDocs && !isUploadingDocs" class="image-preview">
+            <img :src="previewImage" :style="{ width:'150px',  }">
+        </div>
+
+        <div v-if="!isLoadingDocs && !isUploadingDocs && uploadList.length"
+             v-for="item in uploadList" :style="thumbnailStyle"
+             :class="'image-uploader' + ( allowUpload ? ' highlight-line' : '')">
+            <template v-if="item.url">
                 <img :src="item.url">
                 <div class="image-uploader-cover">
                     <Icon type="ios-eye-outline" @click.native="handleView(item)"></Icon>
@@ -68,12 +103,12 @@
                 <Progress v-if="item.showProgress" :percent="item.percentage" hide-info></Progress>
             </template>
         </div>
-        <Poptip v-show="allowUpload" word-wrap width="200" trigger="hover" :content="uploadMsg" class="image_upload_poptip">
+
+        <Poptip v-show="allowUpload && !isLoadingDocs && !isUploadingDocs" word-wrap width="200" trigger="hover" :content="uploadMsg" class="image_upload_poptip">
             
             <Upload
                 ref="upload"
                 :show-upload-list="false"
-                :default-file-list="defaultList"
                 :on-success="handleSuccess"
                 :format="['jpg','jpeg','png']"
                 :max-size="2048"
@@ -82,24 +117,47 @@
                 :before-upload="handleBeforeUpload"
                 :multiple="multiple"
                 type="drag"
-                action="//jsonplaceholder.typicode.com/posts/"
+                :data="postData"
+                action="/api/upload"
                 style="display: inline-block;width:58px;">
                 
-                <div style="line-height: 135px;">
+                <div v-if="uploadList.length || previewImage">
+                    <span class="btn btn-link">Change Logo</span>
+                </div>
+
+                <div v-else style="line-height: 135px;">
                     <Icon type="ios-image-outline" size="70"></Icon>
                     <span class="">Add Logo</span>
                 </div>
                 
             </Upload>
         </Poptip>
-        <Modal title="View Image" v-model="visible">
+        <div v-show="!allowUpload && !isLoadingDocs && !isUploadingDocs && !uploadList.length" class="no-image-box">
+            <Icon type="ios-image-outline" size="70"></Icon>
+            <span class="">No Image</span>
+        </div>
+        <Modal v-model="visible">
             <img :src="imgUrl" v-if="visible" style="width: 100%">
         </Modal>
     </div>
 </template>
 <script>
+
+
+    /*  Loaders  */
+    import Loader from './../loaders/Loader.vue';
+
     export default {
+        components: { Loader },
         props:{
+            docUrl: {
+                type: String,
+                default: null
+            },
+            postData: {
+                type: Object,
+                default: null
+            },
             allowUpload: {
                 type: Boolean,
                 default: true
@@ -112,27 +170,20 @@
                 type: Boolean,
                 default: false
             },
-            imageList: {
-                type: Array,
-                default: []
-            },
             thumbnailStyle: {
                 type: Object,
                 default: {}
-            },
+            }
         },
         data () {
             return {
-                defaultList: this.imageList,
                 imgName: '',
                 imgUrl: '',
                 visible: false,
-                uploadList: []
-            }
-        },
-        watch: {
-            allowUpload: function (newValue) {
-
+                uploadList: [],
+                isLoadingDocs: false,
+                isUploadingDocs: false,
+                previewImage: null,
             }
         },
         methods: {
@@ -146,32 +197,136 @@
                 this.$refs.upload.fileList.splice(fileList.indexOf(file), 1);
             },
             handleSuccess (res, file) {
-                file.url = 'https://o5wwk8baw.qnssl.com/7eb99afb9d5f317c912f08b5212fd69a/avatar';
-                file.name = '7eb99afb9d5f317c912f08b5212fd69a';
+                //  Stop loader
+                this.isUploadingDocs = false;
+
+                //  If we don't allow multiple files, then clear the upload list
+                if(!this.multiple){
+                    this.uploadList = [];
+                }
+                
+                //  Add the new file to the upload list
+                this.uploadList.push(res);
+
+                //  Remove preview
+                this.removePreview();
+
+                //  Notify success message
+                this.$Notice.success({
+                    title: 'Upload completed!'
+                });
+
+                this.$emit('updated', res);
+
             },
             handleFormatError (file) {
                 this.$Notice.warning({
                     title: 'The file format is incorrect',
                     desc: 'File format of ' + file.name + ' is incorrect, please select jpg or png.'
                 });
+
+                //  Remove preview
+                this.removePreview();
             },
             handleMaxSize (file) {
                 this.$Notice.warning({
                     title: 'Exceeding file size limit',
                     desc: 'File  ' + file.name + ' is too large, no more than 2M.'
                 });
+
+                //  Remove preview
+                this.removePreview();
             },
-            handleBeforeUpload () {
-                const check = this.uploadList.length < 5;
-                if (!check) {
-                    this.$Notice.warning({
-                        title: 'Up to five pictures can be uploaded.'
-                    });
+            handleBeforeUpload (file) {
+
+                if( (this.postData || {}).modelId && (this.postData || {}).modelType ){
+
+                    //  Start loader
+                    this.isUploadingDocs = true;
+
+                    //  Handle Validation
+                    const check = this.uploadList.length < 5;
+
+                    if (!check) {
+                        this.$Notice.warning({
+                            title: 'Up to five pictures can be uploaded.'
+                        });
+                    }
+
+                    return check;
+
+                }else{
+
+                    //  Create a preview of the file
+                    this.createPreview(file);
+
+                    //  Emit the file
+                    this.$emit('fileBeforeUpload', file);
+
+                    //  Do not allow the upload to proceed
+                    return false;
+
                 }
-                return check;
-            }
+            },
+            createPreview(file){
+                
+                //  Make a preview image
+                var self = this;
+                var reader  = new FileReader();
+
+                reader.addEventListener("load", function () {
+                    self.previewImage = reader.result;
+                }, false);
+
+                reader.readAsDataURL(file);
+
+            },
+            removePreview(){
+
+                //  Remove preview image
+                this.previewImage = null;
+
+            },
+            getDocs() {
+                
+                if(this.docUrl){
+                    
+                    const self = this;
+
+                    //  Start loader
+                    self.isLoadingDocs = true;
+
+                    console.log('Start getting docs...');
+
+                    //  Additional data to eager load along with docs found
+                    var connections = '';
+                    
+                    //  Use the api call() function located in resources/js/api.js
+                    return api.call('get', this.docUrl + connections)
+                            .then(({data}) => {
+                                
+                                console.log(data);
+
+                                //  Stop loader
+                                self.isLoadingDocs = false;
+
+                                self.uploadList = data;
+                                
+                            })         
+                            .catch(response => { 
+
+                                //  Stop loader
+                                self.isLoadingDocs = false;
+
+                                console.log('imageUploader.vue - Error getting docs...');
+                                console.log(response);    
+                            });
+                }
+            },
+
         },
         mounted () {
+            this.getDocs();
             this.uploadList = this.$refs.upload.fileList;
             
         }

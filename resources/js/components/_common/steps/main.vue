@@ -97,7 +97,7 @@
             </Row>
 
             <!-- White overlay when creating/saving invoice -->
-            <Spin size="large" fix v-if="isSaving"></Spin>
+            <Spin size="large" fix v-if="isSaving" style="border-radius: 15px;"></Spin>
 
             <!-- Center Content  -->
             <Row :gutter="20">

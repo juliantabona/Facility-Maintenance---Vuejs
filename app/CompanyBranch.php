@@ -75,9 +75,19 @@ class CompanyBranch extends Model
                     ->where('user_directory.type', 'staff');
     }
 
-    public function productsOrServices()
+    public function productAndServices()
     {
-        return $this->hasMany('App\ProductOrService');
+        return $this->hasMany('App\Product');
+    }
+
+    public function isProduct()
+    {
+        return productAndServices()->where('type', 'product');
+    }
+
+    public function isServices()
+    {
+        return productAndServices()->where('type', 'service');
     }
 
     public function quotations()

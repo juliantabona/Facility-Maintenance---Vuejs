@@ -3,7 +3,7 @@
     <div>
 
         <!-- Fade loader - Shows when Converting jobcard  -->
-        <fadeLoader :loading="isSavingNextStepJobcard" msg="Saving lifecycle, please wait..."></fadeLoader>
+        <fadeLoader :loading="isSavingNextStepJobcard" msg="Saving lifecycle, please wait..." class="mt-1 mb-3"></fadeLoader>
         
         <!-- Stage card  -->
         <stagingCard 

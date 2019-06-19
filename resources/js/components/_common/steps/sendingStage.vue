@@ -3,8 +3,8 @@
     <div>
 
         <!-- Fade loader - Shows when sending/skipping to send the invoice  -->
-        <fadeLoader :loading="isSendingInvoice" msg="Sending, please wait..."></fadeLoader>
-        <fadeLoader :loading="isSkippingSendingInvoice" msg="Skipping, please wait..."></fadeLoader>
+        <fadeLoader :loading="isSendingInvoice" msg="Sending, please wait..." class="mt-1 mb-3"></fadeLoader>
+        <fadeLoader :loading="isSkippingSendingInvoice" msg="Skipping, please wait..." class="mt-1 mb-3"></fadeLoader>
         
         <!-- Stage card  -->
         <stagingCard 

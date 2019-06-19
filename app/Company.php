@@ -24,13 +24,16 @@ class Company extends Model
     ];
 
     protected $table = 'companies';
+
+    protected $with = ['logo', 'phones'];
+
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
-        'name', 'description', 'date_of_incorporation', 'type', 'address', 'country', 'provience', 'city', 'postal_or_zipcode',
+        'name', 'abbreviation', 'description', 'date_of_incorporation', 'type', 'industry', 'address', 'country', 'provience', 'city', 'postal_or_zipcode',
         'email', 'additional_email', 'website_link', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link',
         'bio', 'currency_type',
     ];
@@ -53,6 +56,11 @@ class Company extends Model
      *  as the history (Recent Activities) describing the series of events building the jobcard
      */
 
+    public function smsCredits()
+    {
+        return $this->hasOne('App\Sms');
+    }
+
     /**
      * Get the company associated lifecycle.
      */
@@ -61,19 +69,19 @@ class Company extends Model
         return $this->hasMany('App\Lifecycle');
     }
 
-    public function jobcards()
+    public function outgoingJobcards()
     {
         return $this->hasManyThrough('App\Jobcard', 'App\CompanyBranch', 'company_id', 'company_branch_id', 'id')
                 //  Select everything and make the jobcard id the primary id
                ->select('*', 'jobcards.id as id');
     }
 
-    public function clientJobcards()
+    public function incomingJobcards()
     {
         return $this->morphOne('App\Jobcard', 'client');
     }
 
-    public function appointments()
+    public function outgoingAppointments()
     {
         return $this->hasMany('App\Appointment', 'company_id');
     }
@@ -141,9 +149,19 @@ class Company extends Model
                     ->where('user_directory.type', 'staff');
     }
 
-    public function productsOrServices()
+    public function productAndServices()
     {
-        return $this->hasMany('App\ProductOrService');
+        return $this->hasMany('App\Product');
+    }
+
+    public function isProduct()
+    {
+        return productAndServices()->where('type', 'product');
+    }
+
+    public function isServices()
+    {
+        return productAndServices()->where('type', 'service');
     }
 
     public function taxes()
@@ -151,24 +169,28 @@ class Company extends Model
         return $this->hasMany('App\Tax');
     }
 
-    public function quotations()
-    {
-        return $this->hasMany('App\Quotation');
-    }
-
-    public function clientQuotations()
+    //  Quotes where this company is the client
+    public function incomingQuotations()
     {
         return $this->hasMany('App\Quotation', 'client_id');
     }
 
-    public function invoices()
+    //  Quotes where this company is not the client
+    public function outgoingQuotations()
     {
-        return $this->hasMany('App\Invoice');
+        return $this->hasMany('App\Quotation', 'company_id');
     }
 
-    public function clientInvoices()
+    //  Invoices where this company is the client
+    public function incomingInvoices()
     {
         return $this->hasMany('App\Invoice', 'client_id');
+    }
+
+    //  Invoices where this company is not the client
+    public function outgoingInvoices()
+    {
+        return $this->hasMany('App\Invoice', 'company_id');
     }
 
     public function phones()
@@ -212,7 +234,11 @@ class Company extends Model
                             'model_type', 'phone_list',
                             'last_approved_activity',
                             'has_approved',
-                            'current_activity_status', 'activity_count', 'quotation_count', 'invoice_count',
+                            'current_activity_status', 'activity_count',
+                            'incoming_quotation_count', 'outgoing_quotation_count',
+                            'incoming_invoice_count', 'outgoing_invoice_count',
+                            'incoming_jobcard_count', 'outgoing_jobcard_count',
+                            'outgoing_appointment_count',
                         ];
 
     //  Getter for the type of model
@@ -266,9 +292,9 @@ class Company extends Model
         return $count ? $count->only(['total']) : ['total' => 0];
     }
 
-    public function getQuotationCountAttribute()
+    public function getIncomingQuotationCountAttribute()
     {
-        $count = $this->clientQuotations()->select(DB::raw('count(*) as total'))
+        $count = $this->incomingQuotations()->select(DB::raw('count(*) as total'))
                                           ->where('client_id', $this->id)
                                           ->groupBy('client_id')
                                           ->first();
@@ -276,11 +302,62 @@ class Company extends Model
         return $count ? $count->only(['total']) : ['total' => 0];
     }
 
-    public function getInvoiceCountAttribute()
+    public function getOutgoingQuotationCountAttribute()
     {
-        $count = $this->clientInvoices()->select(DB::raw('count(*) as total'))
+        $count = $this->outgoingQuotations()->select(DB::raw('count(*) as total'))
+                                        ->where('company_id', $this->id)
+                                        ->groupBy('company_id')
+                                        ->first();
+
+        return $count ? $count->only(['total']) : ['total' => 0];
+    }
+
+    public function getIncomingInvoiceCountAttribute()
+    {
+        $count = $this->incomingInvoices()->select(DB::raw('count(*) as total'))
+                                          ->where('client_id', $this->id)
+                                          ->groupBy('client_id')
+                                          ->first();
+
+        return $count ? $count->only(['total']) : ['total' => 0];
+    }
+
+    public function getOutgoingInvoiceCountAttribute()
+    {
+        $count = $this->outgoingInvoices()->select(DB::raw('count(*) as total'))
+                                        ->where('company_id', $this->id)
+                                        ->groupBy('company_id')
+                                        ->first();
+
+        return $count ? $count->only(['total']) : ['total' => 0];
+    }
+
+    public function getIncomingJobcardCountAttribute()
+    {
+        $count = $this->incomingJobcards()->select(DB::raw('count(*) as total'))
                                         ->where('client_id', $this->id)
+                                        ->where('client_type', 'company')
                                         ->groupBy('client_id')
+                                        ->first();
+
+        return $count ? $count->only(['total']) : ['total' => 0];
+    }
+
+    public function getOutgoingJobcardCountAttribute()
+    {
+        $count = $this->incomingJobcards()->select(DB::raw('count(*) as total'))
+                                        ->where('company_id', $this->id)
+                                        ->groupBy('company_id')
+                                        ->first();
+
+        return $count ? $count->only(['total']) : ['total' => 0];
+    }
+
+    public function getOutgoingAppointmentCountAttribute()
+    {
+        $count = $this->outgoingAppointments()->select(DB::raw('count(*) as total'))
+                                        ->where('company_id', $this->id)
+                                        ->groupBy('company_id')
                                         ->first();
 
         return $count ? $count->only(['total']) : ['total' => 0];
@@ -297,14 +374,24 @@ class Company extends Model
         return $this->morphMany('App\Creator', 'creatable');
     }
 
-    /*  Get the documents relating to this company. These are various files such as company profiles,
-     *  scanned files, images and so on. Basically any file the user wants to save to this company is
+    /*  Get the documents relating to this company. These are various files such as logos, company profiles,
+     *  scanned files, images and so on. Basically any file/image the user wants to save to this company is
      *  stored in this relation
      */
 
     public function documents()
     {
         return $this->morphMany('App\Document', 'documentable');
+    }
+
+    public function logo()
+    {
+        return $this->documents()->where('type', 'logo')->take(1);
+    }
+
+    public function files()
+    {
+        return $this->documents()->where('type', 'file');
     }
 
     /*  Get the profiles of users related to this company  Get them in relation to the company branches
@@ -366,18 +453,11 @@ class Company extends Model
                     ->withTimestamps();
     }
 
-    public function logos()
+    /**
+     * Get the post's image.
+     */
+    public function image()
     {
-        return $this->documents()->where('type', 'logo');
-    }
-
-    public function logo()
-    {
-        return $this->logos()->take(1);
-    }
-
-    public function quotation()
-    {
-        return $this->documents()->where('type', 'quotation');
+        return $this->morphOne('App\Image', 'imageable');
     }
 }

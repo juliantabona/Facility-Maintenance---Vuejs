@@ -3,13 +3,13 @@
     <div>
 
         <!-- Fade loader - Shows when recording appointment confirmation  -->
-        <fadeLoader :loading="isRecordingConfirmation" msg="Confirming, please wait..."></fadeLoader>
+        <fadeLoader :loading="isRecordingConfirmation" msg="Confirming, please wait..." class="mt-1 mb-3"></fadeLoader>
 
         <!-- Fade loader - Shows when cancelling appointment confirmation  -->
-        <fadeLoader :loading="isCancelingConfirmation" msg="Cancelling confirmation, please wait..."></fadeLoader>
+        <fadeLoader :loading="isCancelingConfirmation" msg="Cancelling confirmation, please wait..." class="mt-1 mb-3"></fadeLoader>
 
         <!-- Fade loader - Shows when updating appointment reminders  -->
-        <fadeLoader :loading="isUpdatingReminders" msg="Updating reminders, please wait..."></fadeLoader>
+        <fadeLoader :loading="isUpdatingReminders" msg="Updating reminders, please wait..." class="mt-1 mb-3"></fadeLoader>
 
         <!-- Stage card  -->
         <stagingCard 

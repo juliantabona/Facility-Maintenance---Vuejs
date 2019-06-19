@@ -24,7 +24,7 @@
 <template>
 
     <div id="quotation-widget">
-
+        
         <!-- Get the summary header to display the quotation #, status, due date, amount due and menu options -->
         <overview 
             v-if="!createMode && localQuotation.has_approved"
@@ -33,19 +33,24 @@
         </overview>
 
         <!-- Loaders for creating/saving quotation -->
-        <Row v-if="createMode">
+        <Row>
             <Col :span="24">
-                <div v-if="isCreatingQuotation" class="mt-1 mb-5 text-center text-uppercase font-weight-bold text-success animate-opacity">Creating, please wait...</div>
-                <div v-if="isSavingQuotation" class="mt-1 mb-5 text-center text-uppercase font-weight-bold text-success animate-opacity">Saving, please wait...</div>
+                <!-- Fade loader - Shows when creating quotation  -->
+                <fadeLoader :loading="isCreatingQuotation && createMode" msg="Creating, please wait..." class="mt-3 mb-1"></fadeLoader>
+                <!-- Fade loader - Shows when saving quotation  -->
+                <fadeLoader :loading="isSavingQuotation && createMode" msg="Saving, please wait..." class="mt-3 mb-1"></fadeLoader>
             </Col>
         </Row>
         
         <transition-group name="fade">
 
             <!-- Activity cards & Quotation Steps -->
-            <Row :gutter="20" key="activity_n_steps" class="animated">
+            <Row :gutter="20" key="activity_n_steps" class="animated mr-0 ml-0" :style="(isSavingQuotation ? 'padding-top: 15px;' : '')">
                 <!-- White overlay when creating/saving quotation -->
-                <Spin size="large" fix v-if="isSavingQuotation || isCreatingQuotation"></Spin>
+                <Spin size="large" fix v-if="(isSavingQuotation || isCreatingQuotation) && localQuotation.has_approved" style="border-radius: 15px;">
+                    <!-- Icon to show as loader  -->
+                    <clockLoader></clockLoader>
+                </Spin>
 
                 <!-- Acitvity cards for showing summary of activities, sent quotations, and sent receipt -->
                 <Col v-if="localQuotation.has_approved" :span="5">
@@ -85,8 +90,10 @@
             <!-- Loaders for creating/saving quotation -->
             <Row v-if="!createMode" key="create_n_save_loaders" class="animated">
                 <Col :span="24">
-                    <div v-if="isCreatingQuotation" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Creating, please wait...</div>
-                    <div v-if="isSavingQuotation" class="mt-1 mb-3 text-center text-uppercase font-weight-bold text-success animate-opacity">Saving, please wait...</div>
+                    <!-- Fade loader - Shows when creating quotation  -->
+                    <fadeLoader :loading="isCreatingQuotation" msg="Creating, please wait..." class="mt-4 mb-4"></fadeLoader>
+                    <!-- Fade loader - Shows when saving quotation  -->
+                    <fadeLoader :loading="isSavingQuotation" msg="Saving, please wait..." class="mt-4 mb-4"></fadeLoader>
                 </Col>
             </Row>
 
@@ -96,7 +103,10 @@
                     <Card :style="{ width: '100%' }">
                         
                         <!-- White overlay when creating/saving quotation -->
-                        <Spin size="large" fix v-if="isSavingQuotation || isCreatingQuotation"></Spin>
+                        <Spin size="large" fix v-if="isSavingQuotation || isCreatingQuotation" style="border-radius: 15px 15px 4px 4px;">
+                            <!-- Icon to show as loader  -->
+                            <clockLoader></clockLoader>
+                        </Spin>
 
                         <!-- Main header -->
                         <div slot="title">
@@ -139,28 +149,31 @@
 
                             </Col>
 
-                            <Col span="12">
+                            <Col span="6">
 
                                 <!-- Company logo -->
                                 <imageUploader 
                                     uploadMsg="Upload or change logo"
-                                    :thumbnailStyle="{ width:'200px', height:'auto' }"
                                     :allowUpload="editMode"
                                     :multiple="false"
-                                    :imageList="
-                                        [{
-                                            'name': 'Company Logo',
-                                            'url': '/images/assets/logo/OQ-B.png'
-                                        }]">
+                                    :docUrl="'/api/companies/'+user.company_id+'/logo'"
+                                    :postData="{ 
+                                        modelId: ((this.localQuotation || {}).customized_company_details || {}).id,
+                                        modelType: 'company',
+                                        location:  'company_logos', 
+                                        type: 'logo',
+                                        replaceable: true
+                                    }"
+                                    :thumbnailStyle="{ width:'200px', height:'auto' }">
                                 </imageUploader>
+                                
                             </Col>
 
-                            <Col v-if="company" span="12" class="pr-4">
+                            <Col v-if="company" span="12" :offset="6" class="pr-4">
                                 
                                 <!-- Quotation Title -->
                                 <mainTitle :quotation="localQuotation" :editMode="editMode"></mainTitle>
                                 
-                                <!-- Company information -->
                                 <!-- Company information -->
                                 <companyOrIndividualDetails 
                                     :editMode="editMode"
@@ -199,7 +212,10 @@
                                 </companyOrIndividualDetails>
 
                                 <!-- Client selector -->
-                                <clientSelector :style="{maxWidth: '250px'}" class="mt-2"
+                                <clientSelector 
+                                    v-if="editMode"
+                                    :style="{maxWidth: '250px'}" class="mt-2"
+                                    :companyId="user.company_id"
                                     @updated="changeClient($event)">
                                 </clientSelector>
 
@@ -286,6 +302,10 @@
     /*  Countdown  */
     import basicCoutdown from './../../../components/_common/countdowns/basicCoutdown.vue';
 
+    /*  Fade Loader  */
+    import fadeLoader from './../../../components/_common/loaders/fadeLoader.vue';
+    import clockLoader from './../../../components/_common/loaders/clockLoader.vue';
+
     import lodash from 'lodash';
     Event.prototype._ = lodash;
 
@@ -295,7 +315,8 @@
             mainTitle, companyOrIndividualDetails, summaryDetails, toolbar,
             items, totalBreakDown, notes, mainFooter,
             basicButton, toggleSwitch, editModeSwitch,
-            Loader, imageUploader, clientSelector, IconAndCounterCard, basicCoutdown
+            Loader, imageUploader, clientSelector, IconAndCounterCard, basicCoutdown,
+            fadeLoader, clockLoader
         },
         props: {
             quotation: {
@@ -362,6 +383,7 @@
                 //  Loading States
                 isSavingQuotation: false,
                 isCreatingQuotation: false,
+                isLoadingQuotationTemplate: false,
 
                 //  Local Quotation and state changes
                 localQuotation: (this.quotation || {}),
@@ -428,12 +450,13 @@
 
                 if(newClient.model_type == 'user'){
                     this.$Notice.success({
-                        title: 'Client changed to ' + newClient.first_name +  ' ' + newClient.last_name
+                        title: 'Client changed to ' + 
+                                (newClient.first_name || newClient.last_name) ? ((newClient.first_name || '') +  ' ' + (newClient.last_name || '')) : 'unkwown' 
                     });
 
                 }else if(newClient.model_type == 'company'){
                     this.$Notice.success({
-                        title: 'Client changed to ' + newClient.name
+                        title: 'Client changed to ' + (newClient.name || 'unkwown')
                     });
                 }
 
@@ -442,7 +465,6 @@
                 this.quotationHasChanged = this.checkIfquotationHasChanged();
 
             },
-
             updateClient(newClientDetails){
 
                 this.client = this.$set(this.localQuotation, 'customized_client_details', newClientDetails);
@@ -450,7 +472,6 @@
                 this.quotationHasChanged = this.checkIfquotationHasChanged();
 
             },
-
             updateCompany(newCompanyDetails){
                 
                 this.company = this.localQuotation.customized_company_details = newCompanyDetails;
@@ -458,7 +479,6 @@
                 this.quotationHasChanged = this.checkIfquotationHasChanged();
 
             },
-
             updatePhoneChanges(companyOrIndividual, phones){
                 
                 companyOrIndividual.phones = phones;
@@ -488,7 +508,7 @@
                             self.isLoadingQuotationTemplate = false;
 
                             //  Get currencies
-                            var template = (((data || {}).details || {}).quotationTemplate || null);
+                            var template = (data || {}).details;
 
                             if(template){
                                 //  Activate edit mode
@@ -515,22 +535,25 @@
                 var mm = ('0' + (date.getMonth() + 1)).slice(-2);
                 var yy = date.getFullYear();
                 
+                var generalSettings = ((template || {}).general || {});
+                var quotationSettings = ((template || {}).quotationTemplate || {});
+
                 //  Update Quotation Object Using Template Data
 
-                this.localQuotation.status = template.status;
-                this.localQuotation.heading = template.heading;
-                this.localQuotation.reference_no_title = template.reference_no_title;
-                this.localQuotation.created_date_title = template.created_date_title;
-                this.localQuotation.expiry_date_title = template.expiry_date_title;
-                this.localQuotation.sub_total_title = template.sub_total_title;
-                this.localQuotation.grand_total_title = template.grand_total_title;
-                this.localQuotation.currency_type = template.currency_type;
-                this.localQuotation.quotation_to_title = template.quotation_to_title;
-                this.localQuotation.table_columns = template.table_columns;
-                this.localQuotation.items = template.items;
-                this.localQuotation.notes = template.notes;
-                this.localQuotation.colors = template.colors;
-                this.localQuotation.footer = template.footer;
+                this.localQuotation.status = quotationSettings.status;
+                this.localQuotation.heading = quotationSettings.heading;
+                this.localQuotation.reference_no_title = quotationSettings.reference_no_title;
+                this.localQuotation.created_date_title = quotationSettings.created_date_title;
+                this.localQuotation.expiry_date_title = quotationSettings.expiry_date_title;
+                this.localQuotation.sub_total_title = quotationSettings.sub_total_title;
+                this.localQuotation.grand_total_title = quotationSettings.grand_total_title;
+                this.localQuotation.currency_type = generalSettings.currency_type;
+                this.localQuotation.quotation_to_title = quotationSettings.quotation_to_title;
+                this.localQuotation.table_columns = quotationSettings.table_columns;
+                this.localQuotation.items = quotationSettings.items;
+                this.localQuotation.notes = quotationSettings.notes;
+                this.localQuotation.colors = quotationSettings.colors;
+                this.localQuotation.footer = quotationSettings.footer;
 
                 //  Update Quotation Dates Using Current Dates
                 
@@ -694,12 +717,9 @@
                     self.isLoadingCompanyInfo = true;
 
                     console.log('Start getting company details...');
-
-                    //  Additional data to eager load along with company found
-                    var connections = '&connections=phones';
                     
                     //  Use the api call() function located in resources/js/api.js
-                    return api.call('get', '/api/companies/'+companyId+'?model=Company'+connections)
+                    return api.call('get', '/api/companies/'+companyId+'?model=Company')
                             .then(({data}) => {
                                 
                                 console.log(data);
@@ -721,11 +741,20 @@
                                 console.log(response);    
                             });
                 }
-            },
+            }
         },
         mounted: function () {
             //  Only after everything has loaded
             this.$nextTick(function () {
+
+                //  If we don't have the company details
+                if( !this.localQuotation.customized_company_details ){
+                    //  Fetch the associated company
+                    var self = this;
+                    this.fetchCompanyInfo(this.user.company_id).then( data => {
+                        self.company = self.$set(self.localQuotation, 'customized_company_details', data);
+                    });
+                }
 
                 if(this.createMode){
                     //  Activate create mode

@@ -10,7 +10,7 @@
 
         /** Extra personal styles **/
         font-size:12px;
-        background-color: #000;
+        background-color: #dadada;
         color: white;
         text-align: center;
         line-height: 30px;
@@ -20,7 +20,7 @@
 
 <template>
 
-    <footer :style="'background-color:'+primaryColor+';'">
+    <footer :style="'background-color:'+primaryColor+';border-radius: 0 0 4px 4px;'">
         <div class="mt-1">
             <span v-if="!editMode">{{ localInvoice.footer }}</span>
             <el-input v-if="editMode" :placeholder="'e.g) Terms And Conditions Apply'" v-model="localInvoice.footer" size="mini" :style="{ width:'50%', margin:'0 auto' }"></el-input>

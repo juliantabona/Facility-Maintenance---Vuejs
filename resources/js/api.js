@@ -9,9 +9,9 @@ class Api {
      *  method after call as you would with axios, the 401 condition won't be overridden.
      */
 
-    call (requestType, url, data = null) {
+    call (requestType, url, data = null, config = null) {
         return new Promise((resolve, reject) => {
-            axios[requestType](url, data)
+            axios[requestType](url, data, config)
                 .then(response => {
                     resolve(response);
                 })

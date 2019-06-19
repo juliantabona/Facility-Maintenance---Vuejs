@@ -8,7 +8,7 @@
                @on-visible-change="detectClose">
 
             <!-- White overlay when loading -->
-            <Spin size="large" fix v-if="isSaving"></Spin>
+            <Spin size="large" fix v-if="isSaving" style="border-radius: 15px;"></Spin>
 
             <slot name="content"></slot>
 

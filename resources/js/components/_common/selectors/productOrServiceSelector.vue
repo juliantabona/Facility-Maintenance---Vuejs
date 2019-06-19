@@ -1,45 +1,75 @@
 <template>
+
+    <!-- Category Selector -->
     <div>
-        <!-- Modal -->
-        <mainModal 
-            v-bind="$props" 
-            :isSaving="isSaving" 
-            :hideModal="hideModal"
-            title="Products/Services"
-            okText="Add" cancelText="Cancel"
-            @on-ok="saveChanges()" 
-            @visibility="$emit('visibility', $event)">
-
-            <template slot="content">
-
-                <!-- Loader -->
-                <Loader v-if="isLoading" :loading="isLoading" type="text" :style="{ marginTop:'40px' }">Loading...</Loader>
-                
-                <!-- Product/Service Selector -->
-                <Select v-if="!isLoading && fetchedProductsAndServices" v-model="productsAndServices" :style="{ width:'100%' }" placeholder="Select product/service" multiple filterable not-found-text="No products/services found">
-                    <Option v-for="item in fetchedProductsAndServices" :value="JSON.stringify(item)" :key="item.id">{{ item.name }} ({{ item.type }}) - {{ item.price }}</Option>
-                </Select>
-
-            </template>
-            
-        </mainModal>    
+        <Loader v-if="isLoading" :loading="isLoading" type="text" class="text-left">Loading products...</Loader>
+        <Select v-if="!isLoading && fetchedProductsAndServices" 
+                v-model="localProduct" 
+                :key="renderKey"
+                :style="{ width:'100%' }" 
+                placeholder="Select product or service" 
+                filterable not-found-text="No products/services found">
+            <Option 
+                v-for="item in fetchedProductsAndServices" 
+                :value="JSON.stringify(item)" 
+                :key="item.id">{{ item.name }} ({{ item.type }})</Option>
+        </Select>
+        
     </div>
+
 </template>
+
 <script>
 
-    import mainModal from './main.vue';
-    import Loader from './../loaders/Loader.vue';
+    /*  Loaders  */
+    import Loader from './../loaders/Loader.vue'; 
 
     export default {
-        components: { mainModal, Loader },
+        props: {
+            selectedProduct:{
+                type: Object,
+                default: null
+            },
+            clearable:{
+                type: Boolean,
+                default: false
+            },
+        },
+        components: { Loader },
         data(){
-            return{
-                productsAndServices: [],
+            return {
                 fetchedProductsAndServices: [],
-
-                hideModal: false,
+                renderKey: 0,
                 isLoading: false,
-                isSaving: false
+            }
+        },
+        watch: {
+
+            //  Watch for changes on the selected product
+            selectedProduct: {
+                handler: function (val, oldVal) {
+                    this.localProduct = JSON.stringify(val);
+
+                }
+            }
+        },
+        computed:{
+            localProduct:{
+                get(){
+                    return JSON.stringify(this.selectedProduct);
+                },
+                set(val){
+                    if(val != null){
+                        
+                        this.$emit('updated', JSON.parse(val));
+
+                        if(this.clearable){
+                            this.localProduct = null;
+                            this.renderKey = this.renderKey + 1;
+                        }
+
+                    }
+                }
             }
         },
         methods: {
@@ -65,7 +95,7 @@
 
                     })         
                     .catch(response => { 
-                        console.log('getProductsAndServicesModal.vue - Error getting products and services...');
+                        console.log('selectedProductSelector.vue - Error getting products and services...');
                         console.log(response);
 
                         //  Stop loader
@@ -105,5 +135,5 @@
         created () {
             this.fetch();
         }
-    }
+    };
 </script>

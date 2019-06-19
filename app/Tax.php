@@ -34,18 +34,18 @@ class Tax extends Model
     /**
      * Get all of the tax associated products and services.
      */
-    public function productsOrServices()
+    public function productAndServices()
     {
-        return $this->belongsToMany('App\ProductOrService', 'products_and_services_taxes', 'tax_id', 'product_service_id');
+        return $this->belongsToMany('App\Product', 'products_and_services_taxes', 'tax_id', 'product_service_id');
     }
 
-    public function products()
+    public function isProduct()
     {
-        return productsOrServices()->where('type', 'product');
+        return productAndServices()->where('type', 'product');
     }
 
-    public function services()
+    public function isServices()
     {
-        return productsOrServices()->where('type', 'service');
+        return productAndServices()->where('type', 'service');
     }
 }

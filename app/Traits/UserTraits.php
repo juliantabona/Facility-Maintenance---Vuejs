@@ -2,12 +2,16 @@
 
 namespace App\Traits;
 
+use DB;
 use Mail;
 use App\User;
+use App\Phone;
+use App\Document;
 use App\VerifyUser;
 use App\Mail\ActivateAccount;
 use Illuminate\Support\Facades\URL;
 use App\Notifications\UserCreated;
+use App\Notifications\UserUpdated;
 
 trait UserTraits
 {
@@ -85,17 +89,17 @@ trait UserTraits
         /*  If user indicated to only return client dierctories
         */
         if ($type == 'client') {
-            $users = $model->userClients();
+            $auth_users = $model->userClients();
 
         /*  If user indicated to only return supplier dierctories
         */
         } elseif ($type == 'supplier') {
-            $users = $model->userSuppliers();
+            $auth_users = $model->userSuppliers();
 
         /*  If user indicated to only return staff dierctories
         */
         } elseif ($type == 'staff') {
-            $users = $model->userStaff();
+            $auth_users = $model->userStaff();
 
         /*  If user did not indicate any specific group
         */
@@ -104,9 +108,9 @@ trait UserTraits
             $type = explode(',', $type);
 
             if (count($type)) {
-                $users = $model->userDirectory()->whereIn('user_directory.type', $type);
+                $auth_users = $model->userDirectory()->whereIn('user_directory.type', $type);
             } else {
-                $users = $model->userDirectory();
+                $auth_users = $model->userDirectory();
             }
         }
 
@@ -129,33 +133,33 @@ trait UserTraits
             //  Get all and trashed
             if (request('withtrashed') == 1) {
                 //  Run query
-                $users = $users->withTrashed()->advancedFilter(['order_join' => $order_join, 'paginate' => $config['paginate']]);
+                $auth_users = $auth_users->withTrashed()->advancedFilter(['order_join' => $order_join, 'paginate' => $config['paginate']]);
             //  Get only trashed
             } elseif (request('onlytrashed') == 1) {
                 //  Run query
-                $users = $users->onlyTrashed()->advancedFilter(['order_join' => $order_join, 'paginate' => $config['paginate']]);
+                $auth_users = $auth_users->onlyTrashed()->advancedFilter(['order_join' => $order_join, 'paginate' => $config['paginate']]);
             //  Get all except trashed
             } else {
                 //  Run query
-                $users = $users->advancedFilter(['order_join' => $order_join, 'paginate' => $config['paginate']]);
+                $auth_users = $auth_users->advancedFilter(['order_join' => $order_join, 'paginate' => $config['paginate']]);
             }
 
             //  If we are not paginating then
             if (!$config['paginate']) {
                 //  Get the collection
-                $users = $users->get();
+                $auth_users = $auth_users->get();
             }
 
             //  If we have any users so far
-            if ($users) {
+            if ($auth_users) {
                 //  Eager load other relationships wanted if specified
                 if (strtolower(request('connections'))) {
-                    $users->load(oq_url_to_array(strtolower(request('connections'))));
+                    $auth_users->load(oq_url_to_array(strtolower(request('connections'))));
                 }
             }
 
             //  Action was executed successfully
-            return ['success' => true, 'response' => $users];
+            return ['success' => true, 'response' => $auth_users];
         } catch (\Exception $e) {
             //  Log the error
             $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
@@ -163,6 +167,251 @@ trait UserTraits
             //  Return the error response
             return ['success' => false, 'response' => $response];
         }
+    }
+
+    public function initiateCreate()
+    {
+        //  Current authenticated user
+        $auth_user = auth('api')->user();
+
+        /*******************************************************
+         *   CHECK IF USER HAS PERMISSION TO CREATE A USER     *
+         ******************************************************/
+
+        /*********************************************
+         *   VALIDATE USER INFORMATION              *
+         ********************************************/
+
+        try {
+            $template = [
+                'first_name' => request('first_name') ?? null,
+                'last_name' => request('last_name') ?? null,
+                'date_of_birth' => request('date_of_birth') ?? null,
+                'abbreviation' => request('abbreviation') ?? null,
+                'gender' => request('gender') ?? null,
+                'address' => request('address') ?? null,
+                'country' => request('country') ?? null,
+                'provience' => request('provience') ?? null,
+                'city' => request('city') ?? null,
+                'postal_or_zipcode' => request('postal_or_zipcode') ?? null,
+                'email' => request('email') ?? null,
+                'additional_email' => request('additional_email') ?? null,
+                'facebook_link' => request('facebook_link') ?? null,
+                'twitter_link' => request('twitter_link') ?? null,
+                'linkedin_link' => request('linkedin_link') ?? null,
+                'instagram_link' => request('instagram_link') ?? null,
+                'bio' => request('bio') ?? null,
+                'position' => request('position') ?? null,
+                'accessibility' => request('accessibility') ?? null
+            ];
+
+            //  Create the user
+            $user = $this->create($template);
+
+            //  If the user was created successfully
+            if ($user) {
+
+                //  Check whether or not the auth company has a relationship with the created user e.g) client/supplier
+                $this->checkAndCreateRelationship($user);
+
+                //  Check if the user has any phones to add and replace
+                $this->checkAndUpdatePhones($user);
+
+                //  Check whether or not the product has any image to upload
+                $this->checkAndUploadImage($user);
+
+                //  refetch the updated user
+                $user = $user->fresh();
+
+                /*****************************
+                 *   SEND NOTIFICATIONS      *
+                 *****************************/
+
+                //  $auth_user->notify(new UserCreated($user));
+
+                //  Record activity of a user created
+                $status = 'created';
+
+                $userCreatedActivity = oq_saveActivity($user, $auth_user, $status, $template);
+                
+                //  Action was executed successfully
+                return ['success' => true, 'response' => $user];
+            }
+        } catch (\Exception $e) {
+            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+            return ['success' => false, 'response' => $response];
+        }
+    }
+
+    /*  initiateUpdate() method:
+     *
+     *  This is used to update an existing company. It also works
+     *  to store the update activity and broadcasting of
+     *  notifications to users concerning the update of
+     *  the company.
+     *
+     */
+    public function initiateUpdate($user_id)
+    {
+        //  Current authenticated user
+        $auth_user = auth('api')->user();
+
+        /*******************************************************
+         *   CHECK IF USER HAS PERMISSION TO UPDATE A USER     *
+         ******************************************************/
+
+        /*********************************************
+         *   VALIDATE USER INFORMATION              *
+         ********************************************/
+
+        $template = [
+            'first_name' => request('first_name') ?? null,
+            'last_name' => request('last_name') ?? null,
+            'date_of_birth' => request('date_of_birth') ?? null,
+            'abbreviation' => request('abbreviation') ?? null,
+            'gender' => request('gender') ?? null,
+            'address' => request('address') ?? null,
+            'country' => request('country') ?? null,
+            'provience' => request('provience') ?? null,
+            'city' => request('city') ?? null,
+            'postal_or_zipcode' => request('postal_or_zipcode') ?? null,
+            'email' => request('email') ?? null,
+            'additional_email' => request('additional_email') ?? null,
+            'facebook_link' => request('facebook_link') ?? null,
+            'twitter_link' => request('twitter_link') ?? null,
+            'linkedin_link' => request('linkedin_link') ?? null,
+            'instagram_link' => request('instagram_link') ?? null,
+            'bio' => request('bio') ?? null,
+            'position' => request('position') ?? null,
+            'accessibility' => request('accessibility') ?? null
+        ];
+
+        try {
+            //  Update the user
+            $user = $this->where('id', $user_id)->first()->update($template);
+
+            //  If the user was updated successfully
+            if ($user) {
+
+                //  Check whether or not the auth company has a relationship with the created user e.g) client/supplier
+                $this->checkAndCreateRelationship($user);
+
+                //  Check if the user has any phones to add and replace
+                $this->checkAndUpdatePhones($user);
+
+                //  Check whether or not the product has any image to upload
+                $this->checkAndUploadImage($user);
+
+
+                //  refetch the updated user
+                $user = $user->fresh();
+
+                /*****************************
+                 *   SEND NOTIFICATIONS      *
+                 *****************************/
+
+                //  $auth_user->notify(new UserUpdated($user));
+
+                //  Record activity of a user created
+                $status = 'updated';
+
+                $userUpdatedActivity = oq_saveActivity($user, $auth_user, $status, $template);
+                
+                //  Action was executed successfully
+                return ['success' => true, 'response' => $user];
+
+            } else {
+                //  No resource found
+                return ['success' => false, 'response' => oq_api_notify_no_resource()];
+            }
+        } catch (\Exception $e) {
+            //  Log the error
+            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+            //  Return the error response
+            return ['success' => false, 'response' => $response];
+        }
+    }
+
+
+    public function checkAndCreateRelationship($user)
+    {
+        $auth_user = auth('api')->user();
+
+        /*  relationship:
+         *  This is a variable used to determine if the current user being created has 
+         *  a relationship as a client/supplier to the auth users main company. Sometimes
+         *  when creating a new user, we may want to assign that user as either a 
+         *  client/supplier to the user directory. We can do this if the relationship
+         *  variable has been set with the appropriate type (client/supplier)
+         */
+        $relationship = request('relationship') ?? null;
+
+        if (isset($relationship) && !empty($relationship)) {
+            
+            //  Delete any previous relationship
+            DB::table('user_directory')->where([
+                ['user_id', $user->id],                           //  id of the current user
+                ['owning_company_id', $auth_user->user_id]        //  id of the owning company
+            ])->delete();
+
+            //  Add to user directory
+            DB::table('user_directory')->insert([
+                'user_id' => $user->id,                                 //  id of the current user
+                'owning_branch_id' => $auth_user->company_branch_id,    //  id of the owning company branch
+                'owning_company_id' => $auth_user->company_id,          //  id of the owning company 
+                'type' => request('relationship'),                      //  relationship type e.g client/supplier
+                'created_at' => DB::raw('now()'),                       
+                'updated_at' => DB::raw('now()')
+            ]);
+        }
+    }
+
+    public function checkAndUploadImage($auth_user)
+    {
+        /*  profile_image:
+         *  This is a variable used to determine if the current user being created has
+         *  an image file to upload. Sometimes when creating a new user, we may want to 
+         *  also upload the user image at the same time. We can do this if the
+         *  profile_image variable has been set with the image file (type=binary)
+         */
+        $File = request('profile_image');
+
+        if (isset($File) && !empty($File) && request()->hasFile('profile_image')) {
+
+            //  Start upload process of files
+            $data = ( new Document() )->saveDocument( request(), $auth_user->id, 'user', $File, 'profile_images', 'profile_image', true );
+
+        }
+    }
+
+    public function checkAndUpdatePhones($auth_user)
+    {
+        /*  phones:
+         *  This is a variable used to determine if the current user being created has 
+         *  any phones to be added. Sometimes when creating a new user, we may want to 
+         *  add and replace existing phones to that user. We can do this if the phones
+         *  variable has been set with an array list of phone numbers.
+         */
+        //  Get any associated phones if any
+        $phones = json_decode( request('phones'), true);
+        
+        if (isset($phones) && !empty($phones)) {
+            //  Add new phone numbers
+            $phoneInstance = new Phone();
+
+            $data = $phoneInstance->initiateCreate($auth_user->id, 'user', $phones, $replace=true);
+            $success = $data['success'];
+            $phones = $data['response'];
+            
+            if($success){
+                return $phones;
+            }
+        }
+
+        //  Phones not added
+        return false;
     }
 
     /*  getStatistics() method:
@@ -236,7 +485,7 @@ trait UserTraits
         if ($success) {
             try {
                 //  Get all the available users so far
-                $users = $data['response'];
+                $auth_users = $data['response'];
 
                 //  From the list of users we will group them by their directory_type e.g) client, supplier, e.t.c
                 //  After this we will map through each group (client, supplier, e.t.c) and get the status name, total sum of
@@ -259,7 +508,7 @@ trait UserTraits
                  *
                  */
 
-                $availableStats = collect($users)->groupBy('directory_type')->map(function ($companyGroup, $key) {
+                $availableStats = collect($auth_users)->groupBy('directory_type')->map(function ($companyGroup, $key) {
                     return [
                         'name' => ucwords($key),                                //  e.g) Client, Supplier, Staff e.t.c
                         'total_count' => collect($companyGroup)->count(),       //  12
@@ -383,13 +632,13 @@ trait UserTraits
      *  by permanent deleting.
      *
      */
-    public function initiateSendAccountActivationMail($userId = null)
+    public function initiateSendAccountActivationMail($auth_userId = null)
     {
         //  Use the current user's model id otherwise use the provided id
-        $userId = $this->id ?? $userId;
+        $auth_userId = $this->id ?? $auth_userId;
 
         //  Check if the account id was provided
-        if (empty($userId)) {
+        if (empty($auth_userId)) {
             //  If this is an API request
             if (oq_viaAPI($request)) {
                 return ['success' => false, 'response' => oq_api_notify_error('Account could not be identified', 'no_user_id', 404)];
@@ -397,40 +646,40 @@ trait UserTraits
         }else{
 
             //  Get the associated user
-            $user = User::find($userId);
+            $auth_user = User::find($auth_userId);
 
             //  If the user does not exist
-            if ($user) {
+            if ($auth_user) {
  
                 //  Check if the user is already verified
-                if ($user->verified) {
-                    return ['success' => true, 'response' => $user];
+                if ($auth_user->verified) {
+                    return ['success' => true, 'response' => $auth_user];
                 }
 
                 //  Delete any possible existing tokens
-                VerifyUser::where('user_id', $user->id)->delete();
+                VerifyUser::where('user_id', $auth_user->id)->delete();
 
                 //  Create a new account verification token
                 $verification = VerifyUser::create([
-                    'user_id' => $user->id,
+                    'user_id' => $auth_user->id,
                     'token' => sha1(time()),
                 ]);
 
                 //  Send verification email
-                Mail::to($user->email)->send(new ActivateAccount($user));
+                Mail::to($auth_user->email)->send(new ActivateAccount($auth_user));
 
                 //  If verification email sent successfully
                 if( !Mail::failures() ){
                     //  Update the status
                     $status = 'veriication mail sent';
-                    $verificationMailSentActivity = oq_saveActivity($user, $user, $status, null);
-                    return ['success' => true, 'response' => $user];
+                    $verificationMailSentActivity = oq_saveActivity($auth_user, $auth_user, $status, null);
+                    return ['success' => true, 'response' => $auth_user];
 
                 //  If verification email sending failed
                 }else{
                     //  Update the status
                     $status = 'veriication mail failed';
-                    $verificationMailFailedActivity = oq_saveActivity($user, $user, $status, null);
+                    $verificationMailFailedActivity = oq_saveActivity($auth_user, $auth_user, $status, null);
                     return ['success' => false, 'response' => oq_api_notify_error('Something went wrong trying to send the verification email. Please try again', 'failed_sending_email', 404)];
                 }
 
@@ -442,80 +691,4 @@ trait UserTraits
         }
     }
 
-    public function initiateCreate()
-    {
-        //  Current authenticated user
-        $user = auth('api')->user();
-
-        //  Query data
-        $profile = request('profile');
-
-        /*******************************************************
-         *   CHECK IF USER HAS PERMISSION TO CREATE A USER     *
-         ******************************************************/
-
-        /*********************************************
-         *   VALIDATE USER INFORMATION              *
-         ********************************************/
-
-        if (!empty($profile)) {
-            try {
-                $template = [
-                    'first_name' => $profile['first_name'],
-                    'last_name' => $profile['last_name'],
-                    'date_of_birth' => $profile['date_of_birth'],
-                    'gender' => $profile['gender'],
-                    'address' => $profile['address'],
-                    'country' => $profile['country'],
-                    'provience' => $profile['provience'],
-                    'city' => $profile['city'],
-                    'postal_or_zipcode' => $profile['postal_or_zipcode'],
-                    'email' => $profile['email'],
-                    'additional_email' => $profile['additional_email'],
-                    'facebook_link' => $profile['facebook_link'],
-                    'twitter_link' => $profile['twitter_link'],
-                    'linkedin_link' => $profile['linkedin_link'],
-                    'instagram_link' => $profile['instagram_link'],
-                    'bio' => $profile['bio'],
-                    'position' => $profile['position'],
-                    'accessibility' => $profile['accessibility'],
-                ];
-
-                //  Create the user
-                $profile = $this->create($template);
-
-                //  If the user was created successfully
-                if ($profile) {
-                    /*****************************
-                     *   SEND NOTIFICATIONS      *
-                     *****************************/
-
-                    $user->notify(new UserCreated($profile));
-
-                    //  Record activity of a user created
-                    $status = 'created';
-
-                    $profileCreatedActivity = oq_saveActivity($profile, $user, $status, $template);
-
-                    //  refetch the updated user
-                    $profile = $profile->fresh();
-                }
-
-                //  If the profile was updated successfully
-                if ($profile) {
-                    //  Action was executed successfully
-                    return ['success' => true, 'response' => $profile];
-                }
-            } catch (\Exception $e) {
-                $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
-
-                return ['success' => false, 'response' => $response];
-            }
-        } else {
-            //  No resource found
-            $response = oq_api_notify_no_resource();
-
-            return ['success' => false, 'response' => $response];
-        }
-    }
 }
