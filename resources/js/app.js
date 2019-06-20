@@ -130,6 +130,9 @@ require('enjoyhint/jquery.enjoyhint.js');
 import enjoyhint from 'enjoyhint';
 Object.defineProperty(Vue.prototype, '$enjoyhint', { value: enjoyhint });
 
+//  Import VueYouTubeEmbed for dynamic video players
+import VueYouTubeEmbed from 'vue-youtube-embed'
+Vue.use(VueYouTubeEmbed);
 
 const app = new Vue({
     el: '#app',

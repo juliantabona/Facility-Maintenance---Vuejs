@@ -152,7 +152,7 @@
     }
 
     .intergration-card >>> .image-box.mobile-money-image-box{
-        background: #19be6b;
+        background: #04ce27;
     }
 
     .intergration-card >>> .image-box .tool-image{
@@ -169,6 +169,42 @@
 
     .intergration-card >>> .body{
         margin: 0 10px;
+    }
+
+    .subscrption-progress{
+        width: 180px;
+    }
+
+    .video-topic{
+        position: relative;
+    }
+
+    .topic-sideline-connect{
+        position: absolute;
+        width: 2px;
+        left: 22px;
+        top: 0px;
+        background: #19be6b;
+        transition: height 1.5s linear;
+    }
+
+    .topic-sideline-dot{
+        width: 10px;
+        height: 10px;
+        margin: 0 5px;
+        border-radius: 50%;
+        background: #ffffff;
+        border:1px solid #a7a7a7;
+        transition:all 0.3s ease-in;
+    }
+
+    .topic-sideline-active{
+        background:#19be6b;
+        border:1px solid #ffffff;
+    }
+
+    .topic-sideline-active.topic-sideline-connect{
+        background:#19be6b;
     }
 
 </style>
@@ -214,7 +250,7 @@
                                 <basicButton customClass="tool-btn mt-3 ml-auto mr-auto" :style="{ position:'relative' }"
                                                 type="success" size="small" 
                                                 :ripple="false"
-                                                @click.native="$router.push({name:'create-quotation'})">
+                                                @click.native="$router.push({name:'create-invoice'})">
                                     + Create Invoice
                                 </basicButton>
                             </slide>
@@ -228,7 +264,7 @@
                                 <basicButton customClass="tool-btn mt-3 ml-auto mr-auto" :style="{ position:'relative' }"
                                                 type="success" size="small" 
                                                 :ripple="false"
-                                                @click.native="$router.push({name:'create-quotation'})">
+                                                @click.native="$router.push({name:'create-appointment'})">
                                     + Create Appointment
                                 </basicButton>
                             </slide>
@@ -256,7 +292,7 @@
                                 <basicButton customClass="tool-btn mt-3 ml-auto mr-auto" :style="{ position:'relative' }"
                                                 type="success" size="small" 
                                                 :ripple="false"
-                                                @click.native="$router.push({name:'create-quotation'})">
+                                                @click.native="$router.push({name:'create-jobcard'})">
                                     + Create Jobcard
                                 </basicButton>
                             </slide>
@@ -269,18 +305,19 @@
             
             <Row :gutter="20" class="mt-3 mr-0 ml-0">
                 <Col :span="8" class="mt-0 mb-0 pl-0">
-                    <Card class="intergration-card">
+                    <Card class="intergration-card" style="box-shadow: 3px 5px 5px #cacaca;">
 
                         <div class="image-box premium-image-box">
                             <img src="/images/assets/icons/rocket-blast.svg" class="tool-image">
                         </div>
                         <span class="d-block font-weight-bold mt-2 text-center heading" style=" font-size: 18px; ">Go Premium</span>
-                        <span data-v-af064eb6="" class="d-block mt-2 text-center body">Get access to unlimited communication, reporting, suggestions to boast sales and customer satisfaction.</span>
+                        <span data-v-af064eb6="" class="d-block mt-2 text-center body">Get unlimited access with better tools and more features to boost your business</span>
                         <basicButton customClass="d-block mt-3 ml-auto mr-auto" :style="{ position:'relative' }"
                                         type="success" size="small" 
                                         :ripple="false"
                                         @click.native="$router.push({name:'create-quotation'})">
-                            Get Premium
+                            <Icon type="ios-flash" :size="20" />
+                            <span>Get Premium</span>
                         </basicButton>
 
                     </Card>
@@ -297,7 +334,8 @@
                                         type="success" size="small" 
                                         :ripple="false"
                                         @click.native="$router.push({name:'create-quotation'})">
-                            Subscribe
+                            <span class="mr-1">Start Subscribing</span>
+                            <Icon type="md-arrow-forward" />
                         </basicButton>
 
                     </Card>
@@ -315,8 +353,62 @@
                                         type="success" size="small" 
                                         :ripple="false"
                                         @click.native="$router.push({name:'create-quotation'})">
-                            Connect
+                            <span class="mr-1">Start Getting Paid</span>
+                            <Icon type="md-arrow-forward" />
                         </basicButton>
+
+                    </Card>
+                </Col>
+            </Row>
+
+            <Row :gutter="20" class="mt-3">
+                <Col :span="24" class="mt-0 mb-0 pr-0">
+                    <Card>
+
+                        <Row :gutter="20">
+
+                            <Col :span="24" class="mt-0 mb-0 pr-0">
+                                <span v-for="(videoLink, ix1) in videoLinks" :key="ix1"
+                                        @click="updateTutorialVideos(videoLink)">
+                                    {{ videoLink.heading }}
+                                </span>
+                            </Col>
+
+                            <Col :span="8" class="mt-0 mb-0 pr-0 pt-3">
+                                <template v-for="videoLink in videoLinks">
+                                    <template v-if="videoLink.heading == activeVideoTitle">
+                                        <div v-for="(topic, ix1) in videoLink.topics" :key="ix1">
+                                            <h5>
+                                                <Icon :type="activeVideoCurrentTime <= getLastVideoTime(topic.videos) ? 'ios-add' : 'ios-checkmark'" />
+                                                <span>{{ topic.heading }}</span>
+                                            </h5>
+                                            <div v-if="activeVideoCurrentTime <= getLastVideoTime(topic.videos)" class="video-topic mb-4 mt-4">
+                                                <div class="topic-sideline-connect" :style="'height:'+ getVideoTimelineProgress(topic.videos) +'%;'">
+                                                </div>  
+                                                <span v-for="(video, ix2) in topic.videos" :key="ix2"
+                                                        class="btn btn-link" @click="setVideoPlayer(video.time)"
+                                                        :style="(ix2 == 0 ? 'margin-top:-20px;' : '') + (ix2 == topic.videos.length - 1 ? 'margin-bottom:-20px;' : '')">  
+                                                    <div :class="'d-inline-block topic-sideline-dot'  
+                                                        + ((video.time < activeVideoCurrentTime) ? ' topic-sideline-active' : '')">
+                                                    </div>
+                                                    <span class="d-inline">{{ video.name }} {{ getVideoTimelineProgress(topic.videos) }}</span>
+                                                
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </template>
+                            </Col>
+
+                            <Col :span="16" class="mt-0 mb-0 pr-0">
+                                <h3 class="mb-2">{{ activeVideoTitle }}</h3>
+                                <youtube 
+                                    :video-id="activeVideoId" 
+                                    player-width="100%"
+                                    @ready="videoReady($event)">
+                                </youtube>
+                            </Col>
+                        </Row>
 
                     </Card>
                 </Col>
@@ -380,21 +472,26 @@
                                 <span>{{ showSubcriptions ? 'Hide' : 'Show' }}</span>
                             </span>
                         </Col>
-                        <Col span="24">
+                        <Col v-if="showSubcriptions" span="24">
                             <Divider class="d-block mt-2 mb-2" />
-                            <Alert v-if="showSubcriptions" type="success" class="clearfix mb-2">
-                                <template slot="desc">
-                                    <!-- Active Subscriptions -->
-                                    <div>
-                                        <span class="d-inline-block">1) Daily Report - 75993221</span>
-                                        <span class="btn btn-link d-inline-block m-0 p-0" style="font-size: 12px; float: right; ">View</span>
-                                    </div>
-                                    <div>
-                                        <span class="d-inline-block">2) Client Tracker - 75993221</span>
-                                        <span class="btn btn-link d-inline-block m-0 p-0" style="font-size: 12px; float: right; ">View</span>
-                                    </div>
-                                </template>
-                            </Alert>
+                            <!-- Active Subscriptions -->
+                            <existingPhoneSelector
+                                v-if="((userMobilePhones || {}).length)"
+                                class="mb-3"
+                                :availablePhones="userMobilePhones"
+                                :selectedPhone="((userMobilePhones || [])[0] || null)"
+                                @selected:phone="userSelectedMobile = $event">
+                            </existingPhoneSelector>
+                            <div class="mb-2">
+                                <span class="d-block" style="font-size:12px;">Daily Report <span>(3days Left)</span></span>
+                                <i-progress :percent="45" status="active" hide-info class="subscrption-progress"></i-progress>
+                                <span class="btn btn-link d-inline-block m-0 p-0" style="font-size: 12px; float: right; ">View</span>
+                            </div>
+                            <div class="mb-2">
+                                <span class="d-inline-block" style="font-size:12px;">Client Tracker <span>(4hrs Left)</span></span>
+                                <i-progress :percent="5" status="wrong" hide-info class="subscrption-progress"></i-progress>
+                                <span class="btn btn-link d-inline-block m-0 p-0" style="font-size: 12px; float: right; ">View</span>
+                            </div>
                             <basicButton class="float-right mt-1 mb-0" :style="{ position:'relative' }"
                                         type="success" size="small" 
                                         :ripple="false"
@@ -433,6 +530,103 @@
                 </Card>
             </Poptip>
 
+            <Poptip v-if="false" word-wrap width="250" trigger="hover" placement="left" class="cardPoptips" 
+                    content="Connect to your Mobile Money accounts to make payments or get paid by your clients"
+                    :style="{ width: '100%' }">
+
+                <Divider orientation="left"><i class="icon-wallet icons d-inline-block mr-2" :style="{ fontSize:'20px' }"></i><span>Mobile Money</span></Divider>
+                
+                <Tabs class="wallet-tabs">
+                    <TabPane :label="orangeWalletlabel">
+
+                        <Card @click.native="clicked()" class="pb-0 mb-1">
+                            <Row :gutter="20">
+                                <Col :span="24">
+
+                                    <Alert type="success" class="mb-0">
+                                        <img src="/images/samples/orange_money_logo.png" style="display: inline-block !important;font-size: 25px;color: rgb(255, 255, 255);background: rgb(255, 102, 0);border-radius: 50%;padding: 2px;width: 45px;height: 45px;margin-top: -10px;">
+                                        <div style="display: inline-block;">
+                                            <h4 style="font-size: 18px;margin: 10px 0 0 5px;">Orange Money</h4>
+                                        </div>
+                                        <template slot="desc">
+                                            <Divider class="mt-2 mb-2" />
+                                            <p><b>Name:</b> Julian B Tabona</p>
+                                            <p><b>Number:</b> (+267) 75993221</p>
+                                            <p><b>Status:</b> Active</p>
+                                        </template>
+                                    </Alert>
+
+                                    <span class="btn btn-link" @click="isOpenChangeMobileMoneyAccountModal = !isOpenChangeMobileMoneyAccountModal">
+                                        <Icon type="ios-repeat" :size="20" class="mr-1"></Icon>
+                                        <span>Change Account</span>
+                                    </span>
+
+                                </Col>
+                            </Row>
+                        </Card>
+
+                    </TabPane>
+                    <TabPane :label="mascomWalletlabel">
+                        
+                        <Card @click.native="clicked()" class="pb-0 mb-1">
+                            <Row :gutter="20">
+                                <Col :span="24">
+
+                                    <Alert type="success" class="clearfix mb-0">
+                                        <img src="/images/samples/myzaka_logo.png" style="display: inline-block !important;font-size: 25px;color: rgb(255, 255, 255);background: rgb(255, 102, 0);border-radius: 50%;padding: 2px;width: 45px;height: 45px;margin-top: -10px;">
+                                        <div style="display: inline-block;">
+                                            <h4 style="font-size: 18px;margin: 10px 0 0 5px;">MyZaka</h4>
+                                        </div>
+                                        <template slot="desc">
+                                            <Divider class="mt-2 mb-2" />
+                                            <!-- Connect To Myzaka button -->
+                                            <basicButton class="float-right" :style="{ position:'relative' }"
+                                                        type="success" size="small" 
+                                                        :ripple="false"
+                                                        @click.native="clicked()">
+                                                <Icon type="ios-add" :size="20" class="mr-1"></Icon>
+                                                <span>Connect To Myzaka</span>
+                                            </basicButton>
+                                        </template>
+                                    </Alert>
+
+                                </Col>
+                            </Row>
+                        </Card>
+
+                    </TabPane>
+                    <TabPane :label="btcWalletlabel">
+                        
+                        <Card @click.native="clicked()" class="pb-0 mb-1">
+                            <Row :gutter="20">
+                                <Col :span="24">
+
+                                    <Alert type="success" class="clearfix mb-0">
+                                        <img src="/images/samples/btc_logo.jpg" style="display: inline-block !important;font-size: 25px;color: rgb(255, 255, 255);background: rgb(34, 130, 11);border-radius: 50%;padding: 2px;width: 45px;height: 45px;margin-top: -10px;">
+                                        <div style="display: inline-block;">
+                                            <h4 style="font-size: 18px;margin: 10px 0 0 5px;">SMEGA</h4>
+                                        </div>
+                                        <template slot="desc">
+                                            <Divider class="mt-2 mb-2" />
+                                            <!-- Connect To SMEGA button -->
+                                            <basicButton class="float-right" :style="{ position:'relative' }"
+                                                        type="success" size="small" 
+                                                        :ripple="false"
+                                                        @click.native="clicked()">
+                                                <Icon type="ios-add" :size="20" class="mr-1"></Icon>
+                                                <span>Connect To SMEGA</span>
+                                            </basicButton>
+                                        </template>
+                                    </Alert>
+
+                                </Col>
+                            </Row>
+                        </Card>
+
+                    </TabPane>
+                </Tabs>
+
+            </Poptip>
             
         </Col>
 
@@ -448,8 +642,10 @@
     import basicButton from './../../../components/_common/buttons/basicButton.vue';
     import Loader from './../../../components/_common/loaders/Loader.vue';
 
+    import existingPhoneSelector from './../../../components/_common/selectors/existingPhoneSelector.vue'; 
+
     export default {
-        components: { basicButton, Loader, Carousel3d, Slide },
+        components: { basicButton, Loader, Carousel3d, Slide, existingPhoneSelector },
         data(){
             return {
                 user: auth.user,
@@ -496,6 +692,42 @@
                         h('span', 'BTC')
                     ])
                 },
+
+                videoPlayer: null,
+                videoId: 'CF605aWZb-U',
+                videoAutoPlay: 0,
+                activeVideoId: 'CF605aWZb-U',
+                activeVideoTitle: 'Sales',
+                videoCheckEverySecond: null,
+                activeVideoCurrentTime: 0,
+                activeVideoDurationTime: 0,
+                videoLinks: [
+                    {
+                        heading: 'Sales',
+                        videoId: 'CF605aWZb-U',
+                        topics: [
+                            {
+                                heading: 'Quotations',
+                                videos: [
+                                    { time: 0, name: 'Creating quotations' },
+                                    { time: 10, name: 'Sending quotations' },
+                                    { time: 20, name: 'Converting to invoices' }
+                                ]
+                            },
+                            {
+                                heading: 'Invoices',
+                                videos: [
+                                    { time: 30, name: 'Creating invoices' },
+                                    { time: 40, name: 'Sending invoices' },
+                                    { time: 50, name: 'Payment reminders' },
+                                    { time: 60, name: 'Recording payments' },
+                                    { time: 70, name: 'Sending receipts' }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+
                 show_create_quotation_btn: false,
                 show_create_invoice_btn: false,
                 show_create_receipt_btn: false,
@@ -506,6 +738,57 @@
         methods: {
             clicked(){
                 //  Do something
+            },
+            videoReady (event) {
+                this.videoPlayer = event.target;
+
+                //  Set a time interval to run every one second
+                this.videoCheckEverySecond = setInterval(() => {
+                    //  Update the current video time
+                    this.activeVideoCurrentTime = this.videoPlayer.getCurrentTime();
+                    this.activeVideoDurationTime =  this.videoPlayer.getDuration();
+                }, 1000);
+
+            },
+            setVideoPlayer(time){
+
+                //  Go to the specified time in video
+                this.videoPlayer.seekTo(time);
+
+                //  Play the video
+                this.videoPlayer.playVideo();
+            },
+            updateTutorialVideos(videoLink){
+                this.activeVideoTitle = videoLink.heading;
+                this.activeVideoId = videoLink.videoId;
+            },
+            getVideoTimelineProgress(videos){
+                //  Calculate percentage progress of the timeline line
+                if( this.activeVideoCurrentTime >= this.getFirstVideoTime(videos) &&
+                    this.getLastVideoTime(videos) >= this.getFirstVideoTime(videos) ){
+
+                    var progressPercentage = (this.activeVideoCurrentTime - this.getFirstVideoTime(videos)) 
+                                                / (this.getLastVideoTime(videos) - this.getFirstVideoTime(videos)) 
+                                                    * 100;
+                    console.log('stage 1');
+                    //  return a value strictly between 0 - 100 since its a percentage
+                    return (progressPercentage <= 100 ? progressPercentage : 100);
+
+                }
+
+                //  Otherwise return percentage as 0
+                return 0;
+            },
+            getFirstVideoTime(videos){
+                return ((videos[0] || {}).time || 0);
+            },
+            getLastVideoTime(videos){
+                var finalTime = 0;
+                for(var x=0; x < (videos || {}).length; x++){
+                    finalTime = videos[x].time;
+                }
+
+                return finalTime;
             },
             fetchCompany() {
 
@@ -602,6 +885,9 @@
                 //  Re-render the component
                 this.renderKey++;
             }
+        },
+        beforeDestroy () {
+            clearInterval(this.videoCheckEverySecond);
         },
         created(){
             //  Fetch the company

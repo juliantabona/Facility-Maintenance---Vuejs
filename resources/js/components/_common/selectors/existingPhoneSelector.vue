@@ -68,7 +68,7 @@
             //  Watch for changes on the selected phone
             selectedPhone: {
                 handler: function (val, oldVal) {
-                    this.localSelectedPhone = val;
+                    this.localSelectedPhone = val ? JSON.stringify(val) : val;
                 }
             },
 
@@ -83,10 +83,12 @@
         computed:{
             localSelectedPhone:{
                 get(){
-                    return JSON.stringify(this.selectedPhone);
+                    if(this.selectedPhone){
+                        return JSON.stringify(this.selectedPhone);   
+                    }
                 },
                 set(val){
-                    if(val != ''){
+                    if(val && val != ''){
                         var updatedPhone = JSON.parse(val);
                         this.$emit('selected:phone',  updatedPhone );
                     }
