@@ -134,6 +134,10 @@ Object.defineProperty(Vue.prototype, '$enjoyhint', { value: enjoyhint });
 import VueYouTubeEmbed from 'vue-youtube-embed'
 Vue.use(VueYouTubeEmbed);
 
+//  Import nanoscrollbar for elegant scroll
+import Vuebar from 'vuebar';
+Vue.use(Vuebar);
+
 const app = new Vue({
     el: '#app',
     //  Render the main app view

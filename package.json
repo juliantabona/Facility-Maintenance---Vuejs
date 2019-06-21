@@ -49,6 +49,7 @@
         "vue-summernote": "^1.0.3",
         "vue-youtube-embed": "^2.2.1",
         "vue2-filters": "^0.4.1",
+        "vuebar": "0.0.20",
         "vuedraggable": "^2.16.0"
     }
 }

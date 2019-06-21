@@ -175,38 +175,6 @@
         width: 180px;
     }
 
-    .video-topic{
-        position: relative;
-    }
-
-    .topic-sideline-connect{
-        position: absolute;
-        width: 2px;
-        left: 22px;
-        top: 0px;
-        background: #19be6b;
-        transition: height 1.5s linear;
-    }
-
-    .topic-sideline-dot{
-        width: 10px;
-        height: 10px;
-        margin: 0 5px;
-        border-radius: 50%;
-        background: #ffffff;
-        border:1px solid #a7a7a7;
-        transition:all 0.3s ease-in;
-    }
-
-    .topic-sideline-active{
-        background:#19be6b;
-        border:1px solid #ffffff;
-    }
-
-    .topic-sideline-active.topic-sideline-connect{
-        background:#19be6b;
-    }
-
 </style>
 
 <template>
@@ -361,58 +329,7 @@
                 </Col>
             </Row>
 
-            <Row :gutter="20" class="mt-3">
-                <Col :span="24" class="mt-0 mb-0 pr-0">
-                    <Card>
-
-                        <Row :gutter="20">
-
-                            <Col :span="24" class="mt-0 mb-0 pr-0">
-                                <span v-for="(videoLink, ix1) in videoLinks" :key="ix1"
-                                        @click="updateTutorialVideos(videoLink)">
-                                    {{ videoLink.heading }}
-                                </span>
-                            </Col>
-
-                            <Col :span="8" class="mt-0 mb-0 pr-0 pt-3">
-                                <template v-for="videoLink in videoLinks">
-                                    <template v-if="videoLink.heading == activeVideoTitle">
-                                        <div v-for="(topic, ix1) in videoLink.topics" :key="ix1">
-                                            <h5>
-                                                <Icon :type="activeVideoCurrentTime <= getLastVideoTime(topic.videos) ? 'ios-add' : 'ios-checkmark'" />
-                                                <span>{{ topic.heading }}</span>
-                                            </h5>
-                                            <div v-if="activeVideoCurrentTime <= getLastVideoTime(topic.videos)" class="video-topic mb-4 mt-4">
-                                                <div class="topic-sideline-connect" :style="'height:'+ getVideoTimelineProgress(topic.videos) +'%;'">
-                                                </div>  
-                                                <span v-for="(video, ix2) in topic.videos" :key="ix2"
-                                                        class="btn btn-link" @click="setVideoPlayer(video.time)"
-                                                        :style="(ix2 == 0 ? 'margin-top:-20px;' : '') + (ix2 == topic.videos.length - 1 ? 'margin-bottom:-20px;' : '')">  
-                                                    <div :class="'d-inline-block topic-sideline-dot'  
-                                                        + ((video.time < activeVideoCurrentTime) ? ' topic-sideline-active' : '')">
-                                                    </div>
-                                                    <span class="d-inline">{{ video.name }} {{ getVideoTimelineProgress(topic.videos) }}</span>
-                                                
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </template>
-                                </template>
-                            </Col>
-
-                            <Col :span="16" class="mt-0 mb-0 pr-0">
-                                <h3 class="mb-2">{{ activeVideoTitle }}</h3>
-                                <youtube 
-                                    :video-id="activeVideoId" 
-                                    player-width="100%"
-                                    @ready="videoReady($event)">
-                                </youtube>
-                            </Col>
-                        </Row>
-
-                    </Card>
-                </Col>
-            </Row>
+            <videoPlaylist :videoPlaylists="videoPlaylists"></videoPlaylist>
 
         </Col>
 
@@ -643,9 +560,10 @@
     import Loader from './../../../components/_common/loaders/Loader.vue';
 
     import existingPhoneSelector from './../../../components/_common/selectors/existingPhoneSelector.vue'; 
+    import videoPlaylist from './../../../components/_common/videoPlayers/videoPlaylist.vue'; 
 
     export default {
-        components: { basicButton, Loader, Carousel3d, Slide, existingPhoneSelector },
+        components: { basicButton, Loader, Carousel3d, Slide, existingPhoneSelector, videoPlaylist },
         data(){
             return {
                 user: auth.user,
@@ -692,16 +610,7 @@
                         h('span', 'BTC')
                     ])
                 },
-
-                videoPlayer: null,
-                videoId: 'CF605aWZb-U',
-                videoAutoPlay: 0,
-                activeVideoId: 'CF605aWZb-U',
-                activeVideoTitle: 'Sales',
-                videoCheckEverySecond: null,
-                activeVideoCurrentTime: 0,
-                activeVideoDurationTime: 0,
-                videoLinks: [
+                videoPlaylists: [
                     {
                         heading: 'Sales',
                         videoId: 'CF605aWZb-U',
@@ -725,9 +634,59 @@
                                 ]
                             }
                         ]
+                    },
+                    {
+                        heading: 'Appointments',
+                        videoId: 'y9_QU8rZVHE',
+                        topics: [
+                            {
+                                heading: 'Getting Started',
+                                videos: [
+                                    { time: 0, name: 'Creating appointments' },
+                                    { time: 10, name: 'Sending appointments' },
+                                    { time: 20, name: 'Setting future reminders' },
+                                    { time: 30, name: 'Recurring appointments' }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        heading: 'Ecommerce',
+                        videoId: 'y9_QU8rZVHE',
+                        topics: [
+                            {
+                                heading: 'Products',
+                                videos: [
+                                    { time: 0, name: 'Creating products' },
+                                    { time: 10, name: 'Adding products to shop' },
+                                    { time: 20, name: 'Tracking product sales' }
+                                ]
+                            },
+                            {
+                                heading: 'Shop',
+                                videos: [
+                                    { time: 30, name: 'Customizing shop' },
+                                    { time: 40, name: 'Managing orders' },
+                                    { time: 50, name: 'Managing payments' }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        heading: 'Jobcards',
+                        videoId: 'oSknJ3lHpwQ',
+                        topics: [
+                            {
+                                heading: 'Getting Started',
+                                videos: [
+                                    { time: 0, name: 'Creating jobcards' },
+                                    { time: 10, name: 'Sending jobcards' },
+                                    { time: 20, name: 'Monitoring jobcards' }
+                                ]
+                            }
+                        ]
                     }
                 ],
-
                 show_create_quotation_btn: false,
                 show_create_invoice_btn: false,
                 show_create_receipt_btn: false,
@@ -738,57 +697,6 @@
         methods: {
             clicked(){
                 //  Do something
-            },
-            videoReady (event) {
-                this.videoPlayer = event.target;
-
-                //  Set a time interval to run every one second
-                this.videoCheckEverySecond = setInterval(() => {
-                    //  Update the current video time
-                    this.activeVideoCurrentTime = this.videoPlayer.getCurrentTime();
-                    this.activeVideoDurationTime =  this.videoPlayer.getDuration();
-                }, 1000);
-
-            },
-            setVideoPlayer(time){
-
-                //  Go to the specified time in video
-                this.videoPlayer.seekTo(time);
-
-                //  Play the video
-                this.videoPlayer.playVideo();
-            },
-            updateTutorialVideos(videoLink){
-                this.activeVideoTitle = videoLink.heading;
-                this.activeVideoId = videoLink.videoId;
-            },
-            getVideoTimelineProgress(videos){
-                //  Calculate percentage progress of the timeline line
-                if( this.activeVideoCurrentTime >= this.getFirstVideoTime(videos) &&
-                    this.getLastVideoTime(videos) >= this.getFirstVideoTime(videos) ){
-
-                    var progressPercentage = (this.activeVideoCurrentTime - this.getFirstVideoTime(videos)) 
-                                                / (this.getLastVideoTime(videos) - this.getFirstVideoTime(videos)) 
-                                                    * 100;
-                    console.log('stage 1');
-                    //  return a value strictly between 0 - 100 since its a percentage
-                    return (progressPercentage <= 100 ? progressPercentage : 100);
-
-                }
-
-                //  Otherwise return percentage as 0
-                return 0;
-            },
-            getFirstVideoTime(videos){
-                return ((videos[0] || {}).time || 0);
-            },
-            getLastVideoTime(videos){
-                var finalTime = 0;
-                for(var x=0; x < (videos || {}).length; x++){
-                    finalTime = videos[x].time;
-                }
-
-                return finalTime;
             },
             fetchCompany() {
 
@@ -885,9 +793,6 @@
                 //  Re-render the component
                 this.renderKey++;
             }
-        },
-        beforeDestroy () {
-            clearInterval(this.videoCheckEverySecond);
         },
         created(){
             //  Fetch the company

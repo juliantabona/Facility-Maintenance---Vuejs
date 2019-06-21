@@ -37,6 +37,67 @@
       background: #f3f3f3;
     }
 
+    .ivu-menu-vertical >>> .ivu-menu-submenu-title-icon {
+      margin-right: 20px;
+    }
+
+    .support-btn{
+      color: #fff;
+      background: #19be6b;
+    }
+
+    .support-btn:hover{
+      color: #fff;
+      background: #00dc6d;
+    }
+
+    .vb >>> .vb-dragger {
+        z-index: 1000;
+        width: 10px;
+        right: 0;
+    }
+
+    .vb >>> .vb-dragger > .vb-dragger-styler {
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        -webkit-transform: rotate3d(0,0,0,0);
+        transform: rotate3d(0,0,0,0);
+        -webkit-transition:
+            background-color 100ms ease-out,
+            margin 100ms ease-out,
+            height 100ms ease-out;
+        transition:
+            background-color 100ms ease-out,
+            margin 100ms ease-out,
+            height 100ms ease-out;
+        background-color: rgba(48, 121, 244,.1);
+        margin: 5px 5px 5px 0;
+        border-radius: 20px;
+        height: calc(100% - 10px);
+        display: block;
+    }
+
+    .vb.vb-scrolling-phantom >>> .vb-dragger > .vb-dragger-styler {
+        background-color: rgba(48, 121, 244,.3);
+    }
+
+    .vb >>> .vb-dragger:hover > .vb-dragger-styler {
+        background-color: rgba(48, 121, 244,.5);
+        margin: 0px;
+        height: 100%;
+    }
+
+    .vb.vb-dragging >>> .vb-dragger > .vb-dragger-styler {
+        background-color: rgba(48, 121, 244,.5);
+        margin: 0px;
+        height: 100%;
+    }
+
+    .vb.vb-dragging-phantom >>> .vb-dragger > .vb-dragger-styler {
+        background-color: rgba(48, 121, 244,.5);
+    }
+
+
 </style>
 
 <template>
@@ -45,171 +106,69 @@
          hide-trigger :style="{ background: '#fff', position: 'relative' }">
       
       <!--  Main Menu -->
-      <Menu :class="menuitemClasses"
-            :style="{ width: (isCollapsedState ? '78px' : '200px'), overflowY:'scroll',position: 'fixed', top: '64px', bottom: 0, paddingTop: '22px', zIndex: '4' }" 
-            :active-name="activeLink" :open-names="['1']" theme="light">
+      <div v-bar :style="{ width: (isCollapsedState ? '78px' : '200px') , top: '64px', bottom: 0, zIndex: '4' }" >
+        <Menu :class="menuitemClasses"
+              :style="{ maxHeight: '500px', paddingTop: '30px' }" 
+              :active-name="activeLink" :open-names="['1']" theme="light">
 
-          <router-link :to="{name:'overview'}">
-            <MenuItem name="overview">
-              <Icon type="ios-analytics-outline" :size="20"/>
-              <span>Overview</span>
-            </MenuItem>
-          </router-link>
+            <router-link :to="{name:'overview'}">
+              <MenuItem name="overview">
+                <Icon type="ios-analytics-outline" :size="24"/>
+                <span>Overview</span>
+              </MenuItem>
+            </router-link>
 
-          <router-link :to="{ name: 'users', query: { status: 'Staff', location: 'bottom' } }">
-            <MenuItem name="staff">
-              <Icon type="ios-man-outline" :size="20"/>
-              <span>Staff</span>
-            </MenuItem>
-          </router-link>
+            <router-link :to="{name:'overview'}">
+              <MenuItem name="subscriptions">
+                <Icon type="ios-chatboxes-outline" :size="24"/>
+                <span>Subscriptions</span>
+              </MenuItem>
+            </router-link>
 
-          <Submenu name="3" style="color:#2d8cf0;">
+            <router-link :to="{name:'overview'}">
+              <MenuItem name="tools">
+               <Icon type="ios-bulb-outline" :size="24"/>
+                <span>Business Tools</span>
+              </MenuItem>
+            </router-link>
 
-              <template slot="title">
-                  <Icon type="ios-happy-outline" :size="20"/>
-                  <span>Clients</span>
-              </template>
+            <router-link :to="{name:'overview'}">
+              <MenuItem name="customers">
+               <Icon type="ios-people-outline" :size="26"/>
+                <span>Customers</span>
+              </MenuItem>
+            </router-link>
 
-              <router-link :to="{ name: 'companies', query: { status: 'Client', location: 'bottom' } }">
-                <MenuItem name="companies">Companies</MenuItem>
-              </router-link>
+            <router-link :to="{name:'overview'}">
+              <MenuItem name="products">
+               <Icon type="ios-basket-outline" :size="24"/>
+                <span>Products</span>
+              </MenuItem>
+            </router-link>
 
-              <router-link :to="{ name: 'users', query: { status: 'Client', location: 'bottom' } }">
-                <MenuItem name="individuals">Individuals</MenuItem>
-              </router-link>
+            <router-link :to="{name:'overview'}">
+              <MenuItem name="staff">
+               <Icon type="ios-man-outline" :size="24"/>
+                <span>Users</span>
+              </MenuItem>
+            </router-link>
 
-          </Submenu>
+            <router-link :to="{name:'overview'}">
+              <MenuItem name="settings">
+                <Icon type="ios-settings-outline" :size="24"/>
+                <span>Settings</span>
+              </MenuItem>
+            </router-link>
 
-          <Submenu name="4" style="color:#2d8cf0;">
+            <router-link :to="{name:'overview'}">
+              <MenuItem name="support" class="support-btn mt-4 d-block">
+                <Icon type="ios-help-buoy-outline" :size="24"/>
+                <span>Support</span></el-menu-item>
+              </MenuItem>
+            </router-link>
 
-              <template slot="title">
-                  <Icon type="ios-briefcase-outline" :size="20"/>
-                  <span>Suppliers</span>
-              </template>
-
-              <router-link :to="{ name: 'companies', query: { status: 'Supplier', location: 'bottom' } }">
-                <MenuItem name="companies">Companies</MenuItem>
-              </router-link>
-
-              <router-link :to="{ name: 'users', query: { status: 'Supplier', location: 'bottom' } }">
-                <MenuItem name="individuals">Individuals</MenuItem>
-              </router-link>
-
-          </Submenu>
-
-          <router-link :to="{ name:'appointments' }">
-            <MenuItem name="appointment">
-              <Icon type="ios-man-outline" :size="20"/>
-              <span>Appointment</span>
-            </MenuItem>
-          </router-link>
-
-          <Submenu name="5" style="color:#2d8cf0;">
-
-              <template slot="title">
-                  <Icon type="ios-cash-outline" :size="20"/>
-                  <span>Sales</span>
-              </template>
-
-              <router-link :to="{ name:'create-quotation' }">
-                <MenuItem name="4-1">
-                    <Button type="primary" size="small">
-                        + Create Quotation
-                    </Button>
-                </MenuItem>
-              </router-link>
-
-              <router-link :to="{name:'quotations'}">
-                <MenuItem name="quotations">Quotations</MenuItem>
-              </router-link>
-
-              <router-link :to="{name:'invoices'}">
-                <MenuItem name="invoices">Invoices</MenuItem>
-              </router-link>
-
-              <router-link :to="{name:'invoices'}">
-                <MenuItem name="import">Import</MenuItem>
-              </router-link>
-
-          </Submenu>
-
-          <Submenu name="6" style="color:#2d8cf0;">
-
-              <template slot="title">
-                  <Icon type="ios-copy-outline" :size="20"/>
-                  <span>Jobcards</span>
-              </template>
-
-              <router-link :to="{ name:'create-jobcard' }">
-                <MenuItem name="6-1">
-                    <Button type="primary" size="small">
-                        + Create Jobcard
-                    </Button>
-                </MenuItem>
-              </router-link>
-
-              <router-link :to="{name:'jobcards'}">
-                <MenuItem name="jobcards">Recent Jobcards</MenuItem>
-              </router-link>
-
-              <router-link :to="{name:'jobcard-calendar'}">
-                <MenuItem name="jobcardCalendar">Calendar</MenuItem>
-              </router-link>
-
-              <router-link :to="{name:'jobcards'}">
-                <MenuItem name="jobcardSettings">Settings</MenuItem>
-              </router-link>
-
-          </Submenu>
-
-          <Submenu name="7" style="color:#2d8cf0;">
-
-              <template slot="title">
-                  <Icon type="ios-filing-outline" :size="20"/>
-                  <span>Templates</span>
-              </template>
-
-              <router-link to="/jobcard/create">
-                <MenuItem name="7-1">
-                    <Button type="primary" size="small">
-                        + Create Template
-                    </Button>
-                </MenuItem>
-              </router-link>
-
-              <router-link :to="{name:'templates'}">
-                <MenuItem name="templates">All Templates</MenuItem>
-              </router-link>
-
-              <router-link :to="{name:'draggable'}">
-                <MenuItem name="draggable">Draggable</MenuItem>
-              </router-link>
-
-          </Submenu>
-
-          <router-link :to="{name:'calendar'}">
-            <MenuItem name="calendar">
-              <Icon type="ios-calendar-outline" :size="20"/>
-              <span>Calendar</span>
-            </MenuItem>
-          </router-link>
-
-          <router-link :to="{name:'reports'}">
-            <MenuItem name="reports">
-              <Icon type="ios-pie-outline" :size="20"/>
-              <span>Reports</span>
-            </MenuItem>
-          </router-link>
-          <MenuItem name="10-1">
-            <Icon type="ios-help-buoy-outline" :size="20"/>
-            <span>Support</span></el-menu-item>
-          </MenuItem>
-
-          <MenuItem name="11-1">
-            <Icon type="ios-key-outline" :size="20"/>
-            <span>User Roles</span>
-          </MenuItem>
-      </Menu>
+        </Menu>
+      </div>
 
   </Sider>
 
