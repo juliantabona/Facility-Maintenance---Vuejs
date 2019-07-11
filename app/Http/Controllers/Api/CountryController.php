@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Traits\countryTraits;
+use App\Traits\CountryTraits;
 
 class CountryController extends Controller
 {
 
-    use countryTraits;
+    use CountryTraits;
 
     public function countries()
     {

@@ -226,7 +226,7 @@ let routes = [
     meta: { layout: 'Dashboard', middlewareAuth: true },
     component: require('./views/dashboard/appointment/create/main.vue'),
     props: true
-},,
+},
 {
     //  Show one appointment
     path: '/appointments/:id', name: 'show-appointment',
@@ -234,6 +234,75 @@ let routes = [
     component: require('./views/dashboard/appointment/show/main.vue'),
     props: true
 },
+    /**************************************
+    *  PRODUCTS
+    **************************************/  
+   {
+        //  Products
+        path: '/products', name: 'products',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/products/list/main.vue')
+    },
+    {
+        //  Create Products
+        path: '/products/create', name: 'create-product',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/products/create/main.vue'),
+    },
+    {
+        //  Show one product
+        path: '/products/:id', name: 'show-product',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/products/show/main.vue'),
+        props: true
+    },
+    /**************************************
+    *  SHOP
+    **************************************/  
+   {
+        //  Store
+        path: '/store', name: 'store',
+        meta: { layout: 'Store', middlewareAuth: false },
+        component: require('./views/dashboard/store/list/main.vue')
+    },
+    {
+        //  Cart
+        path: '/cart', name: 'cart',
+        meta: { layout: 'Store', middlewareAuth: false },
+        component: require('./views/dashboard/store/cart/main.vue')
+    },
+    {
+        //  Checkout
+        path: '/checkout', name: 'checkout',
+        meta: { layout: 'Store', middlewareAuth: false },
+        component: require('./views/dashboard/store/checkout/main.vue')
+    },
+    {
+        //  Single Product
+        path: '/store/products/:id', name: 'single-product',
+        meta: { layout: 'Store', middlewareAuth: false },
+        component: require('./views/dashboard/store/single-product/main.vue')
+    },
+
+    /**************************************
+    *  CUSTOMERS
+    **************************************/  
+   {
+        //  Customers
+        path: '/customers', name: 'customers',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/customer/list/main.vue')
+    },
+    /**************************************
+    *  BUSINESS TOOLS
+    **************************************/  
+   {
+        //  Business Tools
+        path: '/business-tools', name: 'business-tools',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/business-tools/list/main.vue')
+},
+
 ];
 
 const router = new VueRouter({

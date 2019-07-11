@@ -212,12 +212,12 @@
                                 </companyOrIndividualDetails>
 
                                 <!-- Client selector -->
-                                <clientSelector 
+                                <clientOrVendorSelector 
                                     v-if="editMode"
                                     :style="{maxWidth: '250px'}" class="mt-2"
                                     :companyId="user.company_id"
                                     @updated="changeClient($event)">
-                                </clientSelector>
+                                </clientOrVendorSelector>
 
                             </Col>
                             
@@ -291,7 +291,7 @@
     import Loader from './../../../components/_common/loaders/Loader.vue';
 
     /*  Selectors  */
-    import clientSelector from './../../../components/_common/selectors/clientSelector.vue';   
+    import clientOrVendorSelector from './../../../components/_common/selectors/clientOrVendorSelector.vue';   
 
     /*  Image Uploader  */
     import imageUploader from './../../../components/_common/uploaders/imageUploader.vue';
@@ -315,7 +315,7 @@
             mainTitle, companyOrIndividualDetails, summaryDetails, toolbar,
             items, totalBreakDown, notes, mainFooter,
             basicButton, toggleSwitch, editModeSwitch,
-            Loader, imageUploader, clientSelector, IconAndCounterCard, basicCoutdown,
+            Loader, imageUploader, clientOrVendorSelector, IconAndCounterCard, basicCoutdown,
             fadeLoader, clockLoader
         },
         props: {

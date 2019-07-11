@@ -23,8 +23,10 @@
         "vue": "^2.5.17"
     },
     "dependencies": {
+        "@intera/vue-zoom-on-hover": "git+https://github.com/Intera/vue-zoom-on-hover.git",
         "@tinymce/tinymce-vue": "^1.1.0",
         "chart.js": "^2.7.3",
+        "css-loader": "^3.0.0",
         "element-ui": "^2.4.11",
         "enjoyhint": "^1.0.1",
         "iview": "^3.1.5",
@@ -46,6 +48,7 @@
         "vue-router": "^3.0.2",
         "vue-scrollto": "^2.13.0",
         "vue-slick": "^1.1.15",
+        "vue-style-loader": "^4.1.2",
         "vue-summernote": "^1.0.3",
         "vue-youtube-embed": "^2.2.1",
         "vue2-filters": "^0.4.1",

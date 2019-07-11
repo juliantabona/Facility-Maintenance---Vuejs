@@ -39,12 +39,12 @@ class Tax extends Model
         return $this->belongsToMany('App\Product', 'products_and_services_taxes', 'tax_id', 'product_service_id');
     }
 
-    public function isProduct()
+    public function onlyProducts()
     {
         return productAndServices()->where('type', 'product');
     }
 
-    public function isServices()
+    public function onlyServices()
     {
         return productAndServices()->where('type', 'service');
     }

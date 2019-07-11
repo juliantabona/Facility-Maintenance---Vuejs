@@ -2,6 +2,9 @@
 
 namespace App\Traits;
 
+use App\Product;
+use App\Company;
+
 trait CategoryTraits
 {
     /*  initiateGetAll() method:
@@ -30,7 +33,7 @@ trait CategoryTraits
 
         /*
          *  $allocation = all, company, branch
-        /*
+         *
          *  The $allocation variable is used to determine where the data is being
          *  pulled from. The user may request data from three possible sources.
          *  1) Data may come from the associated authenticated user branch
@@ -42,41 +45,95 @@ trait CategoryTraits
         $allocation = request('allocation');
 
         /*
-         *  $modelType = jobcard, asset, e.t.c
-        /*
-         *  The $modelType variable only get data specificaclly related to
-         *  the specified model. It is useful for scenerios where we
-         *  want only categories of that model only.
+         *  $categoryType = product, appointment, jobcard, e.t.c
+         *
+         *  The $categoryType variable is used to determine which type of category to pull.
+         *  The user may request data of type.
+         *  1) product: A categories related to only products
+         *  2) appointment: A categories related to only appointments
+         *  and so on...
          */
-        $modelType = request('modelType');
+        $categoryType = strtolower(request('categoryType'));
 
-        //  Apply filter by allocation
-        if ($allocation == 'all') {
-            /***********************************************************
-            *  CHECK IF THE USER IS AUTHORIZED TO ALL PRIORITIES         *
-            /**********************************************************/
+        /*
+         *  $companyId = 1, 2, 3, e.t.c
+         *
+         *  The $companyId variable only get data specificaclly related to
+         *  the specified company id. It is useful for scenerios where we
+         *  want only categories of that company only
+         */
+        $companyId = request('companyId');
 
-            //  Get the current category instance
-            $categories = $this;
-        } elseif ($allocation == 'branch') {
-            /*************************************************************
-            *  CHECK IF THE USER IS AUTHORIZED TO GET BRANCH PRIORITIES    *
-            /*************************************************************/
+        /*
+         *  $productId = 1, 2, 3, e.t.c
+         *
+         *  The $productId variable only get data specificaclly related to
+         *  the specified product id. It is useful for scenerios where we
+         *  want only categories of that product only
+         */
+        $productId = request('productId');
 
-            // Only get categories associated to the company branch
-            $categories = $auth_user->companyBranch->categories();
-        } else {
-            /**************************************************************
-            *  CHECK IF THE USER IS AUTHORIZED TO GET COMPANY PRIORITIES    *
-            /**************************************************************/
+        if( isset($companyId) && !empty($companyId) ){
 
-            //  Only get categories associated to the company
-            $categories = $auth_user->company->categories();
+            //  Only get specific company data only if specified
+            if ($companyId) {
+                /************************************************************************
+                *  CHECK IF THE USER IS AUTHORIZED TO GET SPECIFIED COMPANY PRODUCTS    *
+                /***********************************************************************/
+
+                $categories = Company::find($companyId)->categories();
+            }
+
+        }else if( isset($productId) && !empty($productId) ){
+
+            //  Only get specific product data only if specified
+            if ($productId) {
+                /************************************************************************
+                *  CHECK IF THE USER IS AUTHORIZED TO GET SPECIFIED PRODUCT CATEGORIES  *
+                /***********************************************************************/
+
+                $categories = Product::find($productId)->categories();
+            }
+
+        }else{
+
+            //  Apply filter by allocation
+            if ($allocation == 'all') {
+                /***********************************************************
+                *  CHECK IF THE USER IS AUTHORIZED TO ALL PRODUCTS         *
+                /**********************************************************/
+
+                //  Get the current product instance
+                $categories = $this;
+
+            } elseif ($allocation == 'branch') {
+                /*************************************************************
+                *  CHECK IF THE USER IS AUTHORIZED TO GET BRANCH PRODUCTS    *
+                /*************************************************************/
+
+                // Only get products associated to the company branch
+                $categories = $auth_user->companyBranch->categories();
+            } else {
+                /**************************************************************
+                *  CHECK IF THE USER IS AUTHORIZED TO GET COMPANY PRODUCTS    *
+                /**************************************************************/
+
+                //  Only get products associated to the company
+                $categories = $auth_user->company->categories();
+            }
+
         }
+        
+        //  Flter to the $categoryType type
+        if ($categoryType) {
+            //  If the $categoryType is a list e.g) product,appointment
+            $type = explode(',', $categoryType);
 
-        //  Flter to the model type
-        if ($modelType) {
-            $categories = $categories->where('type', $modelType);
+            if (count($type)) {
+                $categories = $categories->whereIn('type', $type);
+            } else {
+                $categories = $categories->where('type', $categoryType);
+            }
         }
 
         /*  To avoid sql order_by error for ambigious fields e.g) created_at
@@ -98,32 +155,45 @@ trait CategoryTraits
             //  Get all and trashed
             if (request('withtrashed') == 1) {
                 //  Run query
-                $categories = $categories->withTrashed()->advancedFilter(['order_join' => $order_join, 'paginate' => false]);
+                $categories = $categories->withTrashed()->advancedFilter(['order_join' => $order_join, 'paginate' => $config['paginate']]);
             //  Get only trashed
             } elseif (request('onlytrashed') == 1) {
                 //  Run query
-                $categories = $categories->onlyTrashed()->advancedFilter(['order_join' => $order_join, 'paginate' => false]);
+                $categories = $categories->onlyTrashed()->advancedFilter(['order_join' => $order_join, 'paginate' => $config['paginate']]);
             //  Get all except trashed
             } else {
                 //  Run query
-                $categories = $categories->advancedFilter(['order_join' => $order_join, 'paginate' => false]);
-            }
-
-            //  If we are not paginating then
-            if (!$config['paginate']) {
-                //  Get the collection
-                $categories = $categories->get();
-            } else {
                 $categories = $categories->advancedFilter(['order_join' => $order_join, 'paginate' => $config['paginate']]);
             }
 
-            //  Eager load other relationships wanted if specified
-            if (request('connections')) {
-                $categories->load(oq_url_to_array(request('connections')));
+            //  If we only want to know how many were returned
+            if( request('count') == 1 ){
+                //  If the categories are paginated
+                if($config['paginate']){
+                    $categories = $categories->total ?? 0;
+                //  If the categories are not paginated
+                }else{
+                    $categories = $categories->count() ?? 0;
+                }
+            }else{
+                //  If we are not paginating then
+                if (!$config['paginate']) {
+                    //  Get the collection
+                    $categories = $categories->get();
+                }
+
+                //  If we have any categories so far
+                if ($categories) {
+                    //  Eager load other relationships wanted if specified
+                    if (strtolower(request('connections'))) {
+                        $categories->load(oq_url_to_array(strtolower(request('connections'))));
+                    }
+                }
             }
 
             //  Action was executed successfully
             return ['success' => true, 'response' => $categories];
+            
         } catch (\Exception $e) {
             //  Log the error
             $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);

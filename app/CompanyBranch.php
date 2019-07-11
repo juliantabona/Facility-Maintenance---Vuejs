@@ -80,12 +80,12 @@ class CompanyBranch extends Model
         return $this->hasMany('App\Product');
     }
 
-    public function isProduct()
+    public function onlyProducts()
     {
         return productAndServices()->where('type', 'product');
     }
 
-    public function isServices()
+    public function onlyServices()
     {
         return productAndServices()->where('type', 'service');
     }

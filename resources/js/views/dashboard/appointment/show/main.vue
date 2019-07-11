@@ -4,7 +4,7 @@
         
         <Col v-if="isLoading" span="8" offset="8">
             <!-- Loader -->
-            <Loader v-if="true" :loading="true" type="text" class="text-left" theme="white">Loading appointment...</Loader>
+            <Loader :loading="true" type="text" class="text-left" theme="white">Loading appointment...</Loader>
         </Col>
 
         <Col v-else span="20" offset="2">

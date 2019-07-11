@@ -103,37 +103,43 @@ trait InvoiceTraits
          */
         $companyId = request('companyId');
 
-        //  Apply filter by allocation
-        if ($allocation == 'all') {
-            /***********************************************************
-            *  CHECK IF THE USER IS AUTHORIZED TO ALL INVOICES         *
-            /**********************************************************/
+        if( isset($companyId) && !empty($companyId) ){
 
-            //  Get the current invoice instance
-            $invoices = $this;
-        } elseif ($allocation == 'branch') {
-            /*************************************************************
-            *  CHECK IF THE USER IS AUTHORIZED TO GET BRANCH INVOICES    *
-            /*************************************************************/
+            //  Only get specific company data only if specified
+            if ($companyId) {
+                /************************************************************************
+                *  CHECK IF THE USER IS AUTHORIZED TO GET SPECIFIED COMPANY INVOICES    *
+                /***********************************************************************/
 
-            // Only get invoices associated to the company branch
-            $invoices = $auth_user->companyBranch->invoices();
-        } else {
-            /**************************************************************
-            *  CHECK IF THE USER IS AUTHORIZED TO GET COMPANY INVOICES    *
-            /**************************************************************/
+                $invoices = $this->where('client_id', $companyId);
+            }
 
-            //  Only get invoices associated to the company
-            $invoices = $auth_user->company->invoices();
-        }
+        }else{
 
-        //  Only get specific company data only if specified
-        if ($companyId) {
-            /************************************************************************
-            *  CHECK IF THE USER IS AUTHORIZED TO GET SPECIFIED COMPANY INVOICES    *
-            /***********************************************************************/
+            //  Apply filter by allocation
+            if ($allocation == 'all') {
+                /***********************************************************
+                *  CHECK IF THE USER IS AUTHORIZED TO ALL INVOICES         *
+                /**********************************************************/
 
-            $invoices = $invoices->where('client_id', $companyId);
+                //  Get the current invoice instance
+                $invoices = $this;
+            } elseif ($allocation == 'branch') {
+                /*************************************************************
+                *  CHECK IF THE USER IS AUTHORIZED TO GET BRANCH INVOICES    *
+                /*************************************************************/
+
+                // Only get invoices associated to the company branch
+                $invoices = $auth_user->companyBranch->invoices();
+            } else {
+                /**************************************************************
+                *  CHECK IF THE USER IS AUTHORIZED TO GET COMPANY INVOICES    *
+                /**************************************************************/
+
+                //  Only get invoices associated to the company
+                $invoices = $auth_user->company->invoices();
+            }
+
         }
 
         /*  To avoid sql order_by error for ambigious fields e.g) created_at

@@ -179,9 +179,6 @@
                 //  Check if we have the time specified otherwise default to zero
                 var specifiedtTime = time ? time : 0;
 
-                //  Stop Video
-                this.videoPlayer.stopVideo();
-
                 //  Go to the specified time in video
                 this.videoPlayer.seekTo(specifiedtTime);
 

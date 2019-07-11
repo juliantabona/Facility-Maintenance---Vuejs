@@ -403,8 +403,8 @@
                         description: item.description,
                         type: item.type,
                         taxes: item.taxes,
-                        purchasePrice: item.purchase_price,
-                        unitPrice: item.selling_price,
+                        purchasePrice: item.cost_per_item,
+                        unitPrice: item.price,
                         quantity: 1
                     }
             },

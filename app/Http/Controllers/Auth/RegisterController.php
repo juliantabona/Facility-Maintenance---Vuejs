@@ -76,51 +76,8 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
-        $user = User::create([
-            'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
-            'username' => $data['username'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-        ]);
-
-        //  If the user was created successfully
-        if ($user) {
-
-            //  Create and send an account activation token and email
-            $user->initiateSendAccountActivationMail();
-
-            /*  Validate and Create the new company and associated branch and upload related documents
-            *  [e.g logo, company profile, other documents]. Update recent activities
-            *
-            *  @param $request - The request with all the parameters to create
-            *  @param $company - The company model if we are updating, in this case it must be null
-            *  @param $user - The user creating/updating the company
-            *
-            *  @return SQL Error - If SQL Execution failed
-            *  @return Company - If successful
-            */
-
-    //        $response = oq_createOrUpdateCompany($data, null, $user);
-
-            //  If validation passed but we had issues while trying to create the company
-            //  E.g SQL related issues.
-    //        if (oq_failed_sql($response)) {
-                //  Return failed sql error with an alert or json response if API request
-    //            return oq_failed_sql_return($request, $response);
-    //        }
-
-            //  At this point we are certain we have a company
-    //        $company = $response;
-        }
-
-        $user = User::where('id', $user->id)->with([
-            'companyBranch' => function ($query) {
-                $query->with('company');
-            }, ])->first();
-
-        //  Return new user
-        return $user;
+        //  Register the user
+        return ( new User )->initiateRegistration();
     }
 
 

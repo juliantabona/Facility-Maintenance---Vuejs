@@ -154,14 +154,14 @@ class Company extends Model
         return $this->hasMany('App\Product');
     }
 
-    public function isProduct()
+    public function onlyProducts()
     {
-        return productAndServices()->where('type', 'product');
+        return productAndServices()->where('type', 'physical');
     }
 
-    public function isServices()
+    public function onlyServices()
     {
-        return productAndServices()->where('type', 'service');
+        return productAndServices()->where('type', 'virtual');
     }
 
     public function taxes()
@@ -432,7 +432,17 @@ class Company extends Model
 
     public function categories()
     {
-        return $this->hasMany('App\Category');
+        return $this->hasMany('App\Category')->whereNull('parent_category_id');
+    }
+    /*  Get the categories related to this company. Categories are job sorting classes that help organise
+     *  scheduled work. They are meant of organise work based on the kind of work to be done. Examples are
+     *  "Electrical", "Mechanical", "Construction", "Renovation", "Maintenance & Repair", "Heating",
+     *  "Ventilation", "Air-conditioning", "Painting", "Plumbing", "Cleaning"
+     */
+
+    public function tags()
+    {
+        return $this->hasMany('App\Tag');
     }
 
     public function branches()

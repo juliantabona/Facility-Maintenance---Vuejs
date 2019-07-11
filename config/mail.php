@@ -120,4 +120,18 @@ return [
         ],
     ],
 
+    /*  REMOVE THIS Stream Code For Secure Emails, I Only Included It Because the
+        Localhost gmail was not working, but applying these settings helped as
+        i could now send emails without a live server. I found the solution
+        to my problem on this site:
+        https://stackoverflow.com/questions/32693528/expected-response-code-220-but-got-code-with-message-in-laravel
+    */
+    'stream' => [
+        'ssl' => [
+            'allow_self_signed' => true,
+            'verify_peer' => false,
+            'verify_peer_name' => false,
+        ],
+    ]
+
 ];

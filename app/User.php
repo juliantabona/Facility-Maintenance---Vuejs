@@ -38,19 +38,36 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'first_name', 'last_name', 'date_of_birth', 'gender', 'address', 'country', 'provience', 'city',
-        'postal_or_zipcode', 'email', 'additional_email', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link',
-        'bio', 'username', 'password', 'verified', 'setup', 'company_branch_id', 'company_id', 'position', 'accessibility',
+        /*  Basic Info  */
+        'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 
+        
+        /*  Address Info  */
+        'address_1', 'address_2', 'country', 'provience', 'city', 'postal_or_zipcode', 
+        
+        /*  Address Info  */
+        'email', 'additional_email',  'username', 'password', 'verified', 'setup', 
+        
+        /*  Social Info  */
+        'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link',
+
+        /*  Company Info  */
+        'company_branch_id', 'company_id'
     ];
 
     protected $allowedFilters = [
-        'id', 'first_name', 'last_name', 'date_of_birth', 'gender', 'address', 'country', 'provience', 'city',
-        'postal_or_zipcode', 'email', 'additional_email', 'position', 'accessibility', 'created_at',
+        'id', 'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 
+        'address_1', 'address_2', 'country', 'provience', 'city', 'postal_or_zipcode', 
+        'email', 'additional_email',  'username', 'password', 'verified', 'setup', 
+        'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link',
+        'company_branch_id', 'company_id', 'created_at',
     ];
 
     protected $orderable = [
-        'id', 'first_name', 'last_name', 'date_of_birth', 'gender', 'address', 'country', 'provience', 'city',
-        'postal_or_zipcode', 'email', 'additional_email', 'position', 'accessibility', 'created_at',
+        'id', 'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 
+        'address_1', 'address_2', 'country', 'provience', 'city', 'postal_or_zipcode', 
+        'email', 'additional_email',  'username', 'password', 'verified', 'setup', 
+        'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link',
+        'company_branch_id', 'company_id', 'created_at',
     ];
 
     /**

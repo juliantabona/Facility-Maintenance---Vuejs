@@ -4,7 +4,7 @@
     <focusRipple :ripple="ripple">
 
         <!-- Button  -->
-        <Button :type="type" :size="size" :class="customClass">
+        <Button :type="type" :size="size" :disabled="disabled" :class="customClass">
             <Icon v-if="showIcon && iconDirection == 'left'" :type="icon" :size="20" style="margin-top: -4px;"/>
             <span><slot></slot></span>
             <Icon v-if="showIcon && iconDirection == 'right'" :type="icon" :size="20" style="margin-top: -4px;"/>
@@ -45,10 +45,14 @@
                 type: Boolean,
                 default: false
             },
+            disabled: {
+                type: Boolean,
+                default: false
+            },
             customClass: {
                 type: String,
                 default: ''
-            },
+            }
         },
         components: { focusRipple }
     }

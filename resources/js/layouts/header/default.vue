@@ -20,12 +20,13 @@
 
   /*  Style icons */
   .main-header >>> .icon-border {
-    height:30px;
+    height: 30px;
     font-size: 14px;
     border-radius: 100%;
     padding: 4px;
     border: 1px solid #0066ff3b;
-    color: #297eff;
+    color: #297eff !important;
+    line-height: 60px !important;
   }
 
   .main-header >>> .icon-border i {
@@ -38,17 +39,20 @@
   }
 
   .main-header >>> .profile-image .roundedShape {
-    width: 50px;
-    height: 50px;
-    padding: 2px;
-    border: 1px solid #c5c5c5;
-    border-radius: 100%;
-    display: block;
+    padding: 8px 0 0 15px;
+    color: #2d8cf0;
   }
 
   .main-header >>> .profile-image h1.roundedShape{
-    padding: 8px 0 0 15px;
     color: #2d8cf0;
+    width: 50px;
+    height: 50px;
+    border: 1px solid #c5c5c5;
+    padding: 8px 0 0 15px;
+    margin:0;
+    border-radius: 100%;
+    font-size: 2em;
+    display: block;
   }
 
   .notification-bar span{

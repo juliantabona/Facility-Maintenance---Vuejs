@@ -13,11 +13,22 @@ class CreateProductsAndServicesTable extends Migration
     {
         Schema::create('products_and_services', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('name')->nullable();
+            $table->string('title')->nullable();
             $table->string('description')->nullable();
             $table->string('type')->nullable();
-            $table->float('purchase_price')->nullable();
-            $table->float('selling_price')->nullable();
+            $table->float('cost_per_item')->nullable()->default(0);
+            $table->float('price')->nullable()->default(0);
+            $table->float('sale_price')->nullable()->default(0);
+            $table->string('sku')->nullable();
+            $table->string('barcode')->nullable();
+            $table->unsignedInteger('quantity')->nullable();
+            $table->boolean('allow_inventory')->default(0);
+            $table->boolean('auto_track_inventory')->default(1);
+            $table->json('variants')->nullable();
+            $table->json('variant_attributes')->nullable();
+            $table->boolean('allow_variants')->default(0);
+            $table->boolean('allow_downloads')->default(0);
+            $table->boolean('show_on_store')->default(1);
             $table->unsignedInteger('company_branch_id');
             $table->unsignedInteger('company_id');
             $table->softDeletes();

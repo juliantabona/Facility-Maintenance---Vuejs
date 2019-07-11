@@ -11,12 +11,12 @@ use App\Quotation;
 use App\Document;
 use App\Notifications\CompanyCreated;
 use App\Notifications\CompanyApproved;
-use App\Traits\countryTraits;
+use App\Traits\CountryTraits;
 
 trait CompanyTraits
 {
 
-    use countryTraits;
+    use CountryTraits;
 
     /*  initiateGetAll() method:
      *
@@ -248,18 +248,28 @@ trait CompanyTraits
                 //  Run query
                 $staff = $staff->advancedFilter(['order_join' => $order_join, 'paginate' => $config['paginate']]);
             }
+            //  If we only want to know how many were returned
+            if( request('count') == 1 ){
+                //  If the staff are paginated
+                if($config['paginate']){
+                    $staff = $staff->total ?? 0;
+                //  If the staff are not paginated
+                }else{
+                    $staff = $staff->count() ?? 0;
+                }
+            }else{
+                //  If we are not paginating then
+                if (!$config['paginate']) {
+                    //  Get the collection
+                    $staff = $staff->get();
+                }
 
-            //  If we are not paginating then
-            if (!$config['paginate']) {
-                //  Get the collection
-                $staff = $staff->get();
-            }
-
-            //  If we have any staff so far
-            if ($staff) {
-                //  Eager load other relationships wanted if specified
-                if (strtolower(request('connections'))) {
-                    $staff->load(oq_url_to_array(strtolower(request('connections'))));
+                //  If we have any staff so far
+                if ($staff) {
+                    //  Eager load other relationships wanted if specified
+                    if (strtolower(request('connections'))) {
+                        $staff->load(oq_url_to_array(strtolower(request('connections'))));
+                    }
                 }
             }
 

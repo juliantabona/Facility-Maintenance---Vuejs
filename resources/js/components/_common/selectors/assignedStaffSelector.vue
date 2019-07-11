@@ -96,7 +96,7 @@
                 var pagination = (this.modelType || connections ? '&': '') + 'paginate=0';
 
                 //  Use the api call() function located in resources/js/api.js
-                api.call('get', '/api/companies/staff?'+modelType+connections+pagination)
+                api.call('get', '/api/staff?'+modelType+connections+pagination)
                     .then(({data}) => {
                         
                         console.log(data);

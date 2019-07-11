@@ -80,7 +80,6 @@ Route::post('/upload', 'Api\UploadController@upload');
 Route::get('companies', 'Api\CompanyController@index');
 Route::post('companies', 'Api\CompanyController@store');
 Route::get('companies/stats', 'Api\CompanyController@getEstimatedStats');
-Route::get('companies/staff', 'Api\CompanyController@getStaff');  //  ok
 Route::get('companies/{company_id}', 'Api\CompanyController@show');
 Route::post('companies/{company_id}', 'Api\CompanyController@update');
 Route::post('companies/{company_id}/approve', 'Api\CompanyController@approve');  //  ok
@@ -88,6 +87,17 @@ Route::get('companies/{company_id}/settings', 'Api\CompanyController@settings');
 Route::get('companies/{company_id}/wallets', 'Api\CompanyController@getWallets');
 Route::get('companies/{company_id}/clients', 'Api\CompanyController@getClients');
 Route::get('companies/{company_id}/logo', 'Api\CompanyController@getLogo');
+
+/*   STAFF RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::get('staff', 'Api\StaffController@index');
+
+/*   CUSTOMER RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::get('/customers', 'Api\CustomerController@index');
+
 
 /*   PROCESS FORM RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
@@ -151,6 +161,12 @@ Route::get('directories', 'Api\DirectoryController@index');
      -  Get, Show, Update, Trash, Delete
 */
 Route::get('categories', 'Api\CategoryController@index');
+
+/*   CATEGORY RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::get('tags', 'Api\TagController@index');
+Route::post('tags', 'Api\TagController@store');
 
 /*   COSTCENTERS RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete

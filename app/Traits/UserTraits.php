@@ -12,6 +12,7 @@ use App\Mail\ActivateAccount;
 use Illuminate\Support\Facades\URL;
 use App\Notifications\UserCreated;
 use App\Notifications\UserUpdated;
+use Illuminate\Support\Facades\Hash;
 
 trait UserTraits
 {
@@ -169,10 +170,35 @@ trait UserTraits
         }
     }
 
-    public function initiateCreate()
+    public function initiateRegistration(){
+        
+        //  Start registration process
+        $data = $this->initiateCreate(true);
+        $success = $data['success'];
+        $response = $data['response'];
+
+        //  If the user was created successfully
+        if ($success) {
+
+            //  If this is a success then we have the user
+            $user = $response;
+
+            //  Create and send an account activation token and email
+            $user->initiateSendAccountActivationMail();
+
+            //  Action was executed successfully
+            return $user;
+
+        }
+
+        return false;
+
+    }
+
+    public function initiateCreate($selfRegistration = false)
     {
-        //  Current authenticated user
-        $auth_user = auth('api')->user();
+        //  If the user is not registering then get the current authenticated user
+        $auth_user = $selfRegistration ? null : auth('api')->user();
 
         /*******************************************************
          *   CHECK IF USER HAS PERMISSION TO CREATE A USER     *
@@ -184,25 +210,36 @@ trait UserTraits
 
         try {
             $template = [
+
+                /*  Basic Info  */
                 'first_name' => request('first_name') ?? null,
                 'last_name' => request('last_name') ?? null,
                 'date_of_birth' => request('date_of_birth') ?? null,
-                'abbreviation' => request('abbreviation') ?? null,
                 'gender' => request('gender') ?? null,
-                'address' => request('address') ?? null,
+                'bio' => request('bio') ?? null,
+
+                /*  Address Info  */
+                'address_1' => request('address_1') ?? null,
+                'address_2' => request('address_2') ?? null,
                 'country' => request('country') ?? null,
                 'provience' => request('provience') ?? null,
                 'city' => request('city') ?? null,
                 'postal_or_zipcode' => request('postal_or_zipcode') ?? null,
+
+                /*  Account Info  */
                 'email' => request('email') ?? null,
                 'additional_email' => request('additional_email') ?? null,
+                'username' => request('username') ?? null,
+                'password' => Hash::make( request('password') ) ?? null,
+                'verified' => 0,
+                'setup' => 0,
+
+                /*  Social Info  */
                 'facebook_link' => request('facebook_link') ?? null,
                 'twitter_link' => request('twitter_link') ?? null,
                 'linkedin_link' => request('linkedin_link') ?? null,
                 'instagram_link' => request('instagram_link') ?? null,
-                'bio' => request('bio') ?? null,
-                'position' => request('position') ?? null,
-                'accessibility' => request('accessibility') ?? null
+                'youtube_link' => request('youtube_link') ?? null
             ];
 
             //  Create the user
@@ -211,13 +248,19 @@ trait UserTraits
             //  If the user was created successfully
             if ($user) {
 
+                //  If th user is registering (Creating an account for themselves)
+                if($selfRegistration){
+                    //  Set the auth_user as the current created user
+                    $auth_user = $user;
+                }
+
                 //  Check whether or not the auth company has a relationship with the created user e.g) client/supplier
                 $this->checkAndCreateRelationship($user);
 
                 //  Check if the user has any phones to add and replace
                 $this->checkAndUpdatePhones($user);
 
-                //  Check whether or not the product has any image to upload
+                //  Check whether or not the user has any image to upload
                 $this->checkAndUploadImage($user);
 
                 //  refetch the updated user
@@ -616,10 +659,10 @@ trait UserTraits
         ]);
         //  Lets get an array instead of a stdObject so that we can return without errors
         $response = json_decode($response->getBody(), true);
-
+        
         return oq_api_notify([
                     'auth' => $response,                                        //  API ACCESS TOKEN
-                    'user' => $this->with('settings')->first()->toArray(),
+                    'user' => $this->load(['settings'])->toArray(),
                 ], 201);
     }
 

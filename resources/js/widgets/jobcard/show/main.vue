@@ -219,9 +219,9 @@
                             <Col span="12" class="mb-3 ml-2">
 
                                 <!-- Client selector -->
-                                <clientSelector v-if="editMode" :style="{maxWidth: '250px'}" class="clearfix mb-2"
+                                <clientOrVendorSelector v-if="editMode" :style="{maxWidth: '250px'}" class="clearfix mb-2"
                                     @updated="changeClient($event)">
-                                </clientSelector>
+                                </clientOrVendorSelector>
 
                                 <!-- Client information -->
                                 <companyOrIndividualDetails 
@@ -311,7 +311,7 @@
 
     /*  Selectors  */
     import companyOrIndividualDetails from './companyOrIndividualDetails.vue';
-    import clientSelector from './../../../components/_common/selectors/clientSelector.vue'; 
+    import clientOrVendorSelector from './../../../components/_common/selectors/clientOrVendorSelector.vue'; 
 
     /*  Lifecycles  */
     import jobcardLifecycle from './../../../components/_common/lifecycles/jobcardLifecycle.vue';
@@ -325,7 +325,7 @@
             overview, steps, mainHeader, jobcardWidget,
             basicButton, toggleSwitch, editModeSwitch,
             Loader, IconAndCounterCard, companyOrIndividualDetails,
-            clientSelector, jobcardLifecycle
+            clientOrVendorSelector, jobcardLifecycle
         },
         props: {
             jobcard: {

@@ -4,7 +4,7 @@
         
         <Col v-if="!company" span="20" offset="2">
             <!-- Loader -->
-            <Loader v-if="true" :loading="true" type="text" class="text-left" theme="white">Loading quotations...</Loader>
+            <Loader :loading="true" type="text" class="text-left" theme="white">Loading quotations...</Loader>
         </Col>
 
         <Col v-else>

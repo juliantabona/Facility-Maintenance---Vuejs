@@ -91,9 +91,6 @@
     /*  Loaders  */
     import Loader from './../loaders/Loader.vue';
 
-    /*  Selectors  */
-    import companyOrUserSelector from './../selectors/companyOrUserSelector.vue'; 
-
     /*  Modal Structure  */
     import mainModal from './main.vue';
 
@@ -126,13 +123,13 @@
                 default: null
             }
         },
-        components: { Loader, companyOrUserSelector, mainModal, individualWidget, companyWidget, IconAndCounterCard, basicButton  },
+        components: { Loader, mainModal, individualWidget, companyWidget, IconAndCounterCard, basicButton  },
         data(){
             return{
                 //  The selectedClientType must be the entity model type e.g) company/user
                 //  Sometimes the user may provide the "editableCompanyOrIndividual" which
                 //  we can then extract the model type. If its not provided then we leave
-                //  it empty so that the user can specify using the "companyOrUserSelector"
+                //  it empty so that the user can specify
                 selectedClientType: (this.editableCompanyOrIndividual || {}).model_type,
                 availableChoices: [
                     {

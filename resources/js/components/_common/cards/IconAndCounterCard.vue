@@ -29,7 +29,7 @@
 
     <Card @click.native="clicked()" :style="cardStyle">
 
-        <div style="padding: 0px 15px;">
+        <div :style="innerBoxStyle ? innerBoxStyle : 'padding: 0px 15px;'">
             <Badge :show-zero="showZero" :count="count" :type="type" style="width:100%;">
                 <img v-if="imageSrc" :src="imageSrc" :style="imageStyle ? imageStyle : { width: '60px', margin: '0 auto', display: 'block' }">
                 <Icon v-if="icon" :type="icon" size="45" class="text-center" style="display: block;"/>
@@ -87,6 +87,10 @@
                 default: null
             },
             imageStyle: {
+                type: Object,
+                default: null
+            },
+            innerBoxStyle: {
                 type: Object,
                 default: null
             },

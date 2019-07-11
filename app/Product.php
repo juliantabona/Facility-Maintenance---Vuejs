@@ -13,9 +13,26 @@ class Product extends Model
     use Dataviewer;
     use ProductTraits;
 
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $casts = [
+        'variants' => 'array',
+        'variant_attributes' => 'array',
+
+        //  Return the following 1/0 as true/false
+        'allow_inventory' => 'boolean',
+        'auto_track_inventory' => 'boolean',
+        'allow_variants' => 'boolean',
+        'allow_downloads' => 'boolean',
+        'show_on_store' => 'boolean',
+    ];
+
     protected $table = 'products_and_services';
 
-    protected $with = ['taxes'];
+    protected $with = ['categories', 'tags', 'taxes', 'primaryImage', 'galleryImages'];
 
     /**
      * The attributes that are mass assignable.
@@ -23,18 +40,22 @@ class Product extends Model
      * @var array
      */
     protected $fillable = [
-        'name', 'description', 'type', 'purchase_price', 'selling_price', 'company_branch_id', 'company_id',
+        'title', 'description', 'type', 'cost_per_item', 'price', 'sale_price',
+        'sku', 'barcode', 'quantity', 'allow_inventory', 'auto_track_inventory', 'variants', 'variant_attributes', 'allow_variants',
+        'downloads', 'allow_downloads', 'show_on_store', 'company_branch_id', 'company_id',
     ];
 
+
+
     protected $allowedFilters = [
-        'id', 'name', 'description', 'type', 'purchase_price', 'selling_price', 'created_at',
+        'id', 'title', 'description', 'type', 'cost_per_item', 'price', 'created_at',
 
         // nested filters
         //  'taxes.id', 'taxes.name',
     ];
 
     protected $orderable = [
-        'id', 'name', 'description', 'type', 'purchase_price', 'selling_price', 'created_at',
+        'id', 'title', 'description', 'cost_per_item', 'price', 'created_at',
     ];
 
     /*  Get the documents relating to this product. These are various files such as images, downloadable documents,
@@ -51,9 +72,25 @@ class Product extends Model
         return $this->documents()->where('type', 'primary')->take(1);
     }
 
-    public function secondaryImages()
+    public function galleryImages()
     {
-        return $this->documents()->where('type', 'secondary');
+        return $this->documents()->where('type', 'gallery');
+    }
+
+    /**
+     * Get all of the categories for the jobcard.
+     */
+    public function categories()
+    {
+        return $this->morphToMany('App\Category', 'trackable', 'category_allocations');
+    }
+
+    /**
+     * Get all of the categories for the jobcard.
+     */
+    public function tags()
+    {
+        return $this->morphToMany('App\Tag', 'trackable', 'tag_allocations');
     }
 
     /**
@@ -72,4 +109,30 @@ class Product extends Model
                     ->orderBy('created_at', 'desc');
     }
 
+    /* ATTRIBUTES */
+
+    public function setAllowInventoryAttribute($value)
+    {
+        $this->attributes['allow_inventory'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+    }
+
+    public function setAutoTrackInventoryAttribute($value)
+    {
+        $this->attributes['auto_track_inventory'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+    }
+
+    public function setAllowVariantsAttribute($value)
+    {
+        $this->attributes['allow_variants'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+    }
+
+    public function setAllowDownloadsAttribute($value)
+    {
+        $this->attributes['allow_downloads'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+    }
+
+    public function setShowOnStoreAttribute($value)
+    {
+        $this->attributes['show_on_store'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+    }
 }

@@ -125,29 +125,29 @@
               </MenuItem>
             </router-link>
 
-            <router-link :to="{name:'overview'}">
-              <MenuItem name="tools">
+            <router-link :to="{name:'business-tools'}">
+              <MenuItem name="business-tools">
                <Icon type="ios-bulb-outline" :size="24"/>
                 <span>Business Tools</span>
               </MenuItem>
             </router-link>
 
-            <router-link :to="{name:'overview'}">
+            <router-link :to="{name:'customers'}">
               <MenuItem name="customers">
                <Icon type="ios-people-outline" :size="26"/>
                 <span>Customers</span>
               </MenuItem>
             </router-link>
 
-            <router-link :to="{name:'overview'}">
+            <router-link :to="{name:'products'}">
               <MenuItem name="products">
                <Icon type="ios-basket-outline" :size="24"/>
                 <span>Products</span>
               </MenuItem>
             </router-link>
 
-            <router-link :to="{name:'overview'}">
-              <MenuItem name="staff">
+            <router-link :to="{name:'users'}">
+              <MenuItem name="users">
                <Icon type="ios-man-outline" :size="24"/>
                 <span>Users</span>
               </MenuItem>

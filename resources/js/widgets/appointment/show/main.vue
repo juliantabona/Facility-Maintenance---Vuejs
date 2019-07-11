@@ -210,9 +210,9 @@
                             <Col span="12" class="mb-3">
 
                                 <!-- Client selector -->
-                                <clientSelector v-if="editMode" :style="{maxWidth: '250px'}" class="clearfix mb-2"
+                                <clientOrVendorSelector v-if="editMode" :style="{maxWidth: '250px'}" class="clearfix mb-2"
                                     @updated="changeClient($event)">
-                                </clientSelector>
+                                </clientOrVendorSelector>
 
                                 <!-- Client information -->
                                 <companyOrIndividualDetails 
@@ -303,7 +303,7 @@
 
     /*  Selectors  */
     import companyOrIndividualDetails from './companyOrIndividualDetails.vue';
-    import clientSelector from './../../../components/_common/selectors/clientSelector.vue'; 
+    import clientOrVendorSelector from './../../../components/_common/selectors/clientOrVendorSelector.vue'; 
     
     import lodash from 'lodash';
     Event.prototype._ = lodash;
@@ -313,7 +313,7 @@
             overview, steps, mainHeader, appointmentWidget,
             basicButton, toggleSwitch, editModeSwitch,
             Loader, IconAndCounterCard, companyOrIndividualDetails,
-            clientSelector, recurringSettingsSteps
+            clientOrVendorSelector, recurringSettingsSteps
         },
         props: {
             appointment: {

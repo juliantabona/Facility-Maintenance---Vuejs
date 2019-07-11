@@ -6,7 +6,7 @@ use PragmaRX\Countries\Package\Countries;
 use Carbon\Carbon;
 use Swap;
 
-trait countryTraits
+trait CountryTraits
 {
 
     public function getCountries()

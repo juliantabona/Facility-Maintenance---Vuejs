@@ -5,9 +5,9 @@
             not-found-text="No types found"
             @on-change="$emit('on-change', $event)">
         <Option 
-            v-for="(client, i) in clientTypes" 
-            :value="client.value" 
-            :key="i">{{ client.name }}
+            v-for="(product, i) in productTypes" 
+            :value="product.value" 
+            :key="i">{{ product.name }}
         </Option>
     </Select>
 
@@ -24,9 +24,13 @@
         data(){
             return{
                 localSelectedType: this.selectedType,
-                clientTypes: [
-                    { name: 'Product', value: 'product'},
-                    { name: 'Service', value: 'service'}
+                productTypes: [
+                    { name: 'Physical', value: 'physical'},
+                    { name: 'Service', value: 'service'},
+                    { name: 'Event', value: 'event'},
+                    { name: 'Ticket', value: 'ticket'},
+                    { name: 'Donation', value: 'donation'},
+                    { name: 'Membership', value: 'membership'}
                 ]
             }
         },
