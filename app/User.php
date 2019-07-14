@@ -88,6 +88,11 @@ class User extends Authenticatable
         return $this->hasOne('App\VerifyUser');
     }
 
+    public function passwordResetTokens()
+    {
+        return $this->hasOne('App\PasswordResetTokens', 'email', 'email');
+    }
+
     /**
      * Get the user's settings.
      */

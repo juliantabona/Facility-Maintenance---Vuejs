@@ -102,6 +102,7 @@
                                                                     
                                                                     <!-- Login Form -->
                                                                     <checkoutLoginForm
+                                                                        :resetPasswordRedirectTo="{ name: 'checkout' }"
                                                                         @loginSuccess="handleLoginSuccess()">
                                                                     </checkoutLoginForm>
 
@@ -127,7 +128,9 @@
                                                         <Col :span="24">
                                                             <!-- Register Form -->
                                                             <checkoutRegisterForm
-                                                                @RegisterSuccess="handleRegisterSuccess()">
+                                                                registerBtnText="Register And Pay"
+                                                                route="/api/register"
+                                                                @success="handleRegisterSuccess()">
                                                             </checkoutRegisterForm>
                                                         </Col>
                                                     </Row>
@@ -147,35 +150,32 @@
                                     <Row :gutter="12" class="pt-4 pb-4 pr-2 pl-2 mr-1 ml-1" :style="{ background: '#f5f7f9', borderRadius:'10px' }">
                                         <Col :span="24">
                                             
-                                            <!-- Authenticated User Details -->
-                                            <Row v-if="user" :gutter="12" class="mb-4">
-                                                <Col :span="12" :offset="6">
+                                            <!-- Authenticated User Delivery Details. Show if...
+                                                    1 - We have the user details and
+                                                    2 - We set showDeliveryForm = false -->
+                                            <Row v-if="user && !showDeliveryForm" :gutter="12" class="mb-4">
+                                                <Col :span="16" :offset="4">
                                                     <!-- Account Summary -->
                                                     <Card>
                                                         
                                                         <!-- Change/Edit Account buttons -->
                                                         <div class="clearfix">
-                                                            <a href="#" @click="selectedAccountTab = 'register'" class="float-right">
+                                                            <a href="#" @click="showDeliveryForm = true" class="float-right">
                                                                 <Icon type="ios-create-outline" :size="20" class="mr-1" />
                                                                 <span>Edit</span>
                                                             </a>
                                                         </div>
                                                         
                                                         <!-- Receiver Name -->
-                                                        <div class="pb-1 mt-1 mb-1" style="border-bottom: 1px dashed #d6d9dc;">
+                                                        <div class="pb-2 mt-1 mb-2" style="border-bottom: 1px dashed #d6d9dc;">
                                                             <span class="font-weight-bold">Deliver To: <span>{{ user.first_name }} {{ user.last_name }}</span></span>
-                                                        </div>
-
-                                                        <!-- Receiver Contacts -->
-                                                        <div class="pb-1 mb-1" style="border-bottom: 1px dashed #d6d9dc;">
-                                                            <span class="font-weight-bold d-block mb-1">Email: <span>{{ user.email }}</span></span>
-                                                            <span class="font-weight-bold d-block mb-1">Mobile: <span>(+267) 759932xx</span></span>
                                                         </div>
                                                             
                                                         <!-- Receiver Address -->
-                                                        <div class="pb-1 mb-1" style="border-bottom: 1px dashed #d6d9dc;">
+                                                        <div class="pb-2 mb-2" style="border-bottom: 1px dashed #d6d9dc;">
                                                             <span class="font-weight-bold d-block mb-1">Address: <span>{{ user.address_1 }}</span></span>
                                                             <span class="font-weight-bold d-block mb-1">Country: <span>{{ user.country }}</span></span>
+                                                            <span class="font-weight-bold d-block mb-1">Provience: <span>{{ user.provience }}</span></span>
                                                             <span class="font-weight-bold d-block mb-1">City: <span>{{ user.city }}</span></span>
                                                         </div>
 
@@ -204,93 +204,28 @@
                                                 </Col>
                                             </Row>
 
-                                            <!-- Delivery Form -->
+                                            <!-- Delivery Form. Show if...
+                                                    1 - We we don't have the user delivery details or
+                                                    2 - We set showDeliveryForm = true -->
                                             <Row v-else :gutter="12">
+                                                <!-- Instructions -->
+                                                <Col :span="24" class="mb-3">
+                                                    <h5 class="d-block pb-2">Change delivery details</h5>
+                                                </Col>
                                                 <Col :span="24">
-                                                    <Alert>
-                                                        <span class="font-weight-bold">Delivery Address</span>
-                                                        <template slot="desc">Some products listed require delivery. Complete your information below and continue to payment</template>
-                                                    </Alert>
+                                                    <!-- Register Form -->
+                                                    <checkoutRegisterForm
+                                                        registerBtnText="Save Address"
+                                                        :existingUser="user"
+                                                        :showLoader="showDeliveryFormLoader"
+                                                        :route="user ? '/api/users/'+user.id : null"
+                                                        :hiddenFields="['first_name', 'last_name', 'email', 'username', 'phone', 'password', 'confirm_password']"
+                                                        :additionalParams="[]"
+                                                        :showCancelBtn="true"
+                                                        @cancel="showDeliveryForm = false"
+                                                        @success="handleSavedAddressSuccess()">
+                                                    </checkoutRegisterForm>
                                                 </Col>
-
-                                                <Col :span="12">
-                                                    <!-- First Name -->
-                                                    <el-form-item label="First Name" prop="first_name" class="mb-2">
-                                                        <el-input v-model="formData.first_name" size="small" style="width:100%" placeholder="Enter first name"></el-input>
-                                                    </el-form-item>
-                                                </Col>
-
-                                                <Col :span="12">
-                                                    <!-- Last Name -->
-                                                    <el-form-item label="Last Name" prop="last_name" class="mb-2">
-                                                        <el-input v-model="formData.last_name" size="small" style="width:100%" placeholder="Enter last name"></el-input>
-                                                    </el-form-item>
-                                                </Col>
-
-                                                <Col :span="12">
-                                                    <!-- Address 1 -->
-                                                    <el-form-item label="Address 1" prop="address" class="mb-2">
-                                                        <el-input v-model="formData.address" size="small" style="width:100%" placeholder="Enter primary address"></el-input>
-                                                    </el-form-item>
-                                                </Col>
-
-                                                <Col :span="12">
-                                                    <!-- Address 2 -->
-                                                    <el-form-item label="Address 2 (Optional):" prop="address_2" class="mb-2">
-                                                        <el-input v-model="formData.address_2" size="small" style="width:100%" placeholder="Enter secondary address"></el-input>
-                                                    </el-form-item>
-                                                </Col>
-
-                                                <Col :span="12">
-                                                    <!-- Country Selector -->
-                                                    <el-form-item label="Country" prop="country" class="mb-2">
-                                                        <countrySelector
-                                                            :selectedCountry="formData.country"
-                                                            @updated="updateCountryChanges($event)">
-                                                        </countrySelector>
-                                                    </el-form-item>
-                                                </Col>
-
-                                                <Col :span="12">
-                                                    <!-- Cities Selector -->
-                                                    <el-form-item label="City/Town" prop="city" class="mb-2">
-                                                        <citySelector
-                                                            :selectedCountry="formData.country"
-                                                            :selectedCity="formData.city"
-                                                            @updated="updateCityChanges($event)">
-                                                        </citySelector>
-                                                    </el-form-item>
-                                                </Col>
-
-                                                <Col :span="12">
-                                                    <!-- Postal Code -->
-                                                    <el-form-item label="Postal Code" prop="postal_or_zipcode" class="mb-2">
-                                                        <el-input v-model="formData.postal_or_zipcode" size="small" style="width:100%" placeholder="Enter postal code"></el-input>
-                                                    </el-form-item>
-                                                </Col>
-
-                                                <Col :span="24" class="clearfix">
-                                                    <!-- Continue button -->
-                                                    <basicButton
-                                                        class="float-right mb-2 ml-3" 
-                                                        type="success" size="large" 
-                                                        :ripple="true"
-                                                        @click.native="checkoutProgress = checkoutProgress + 1">
-                                                        <span>Continue</span>
-                                                        <Icon type="md-arrow-forward" class="ml-1" />
-                                                    </basicButton>
-
-                                                    <!-- Back button -->
-                                                    <basicButton
-                                                        class="float-right mb-2 ml-3" 
-                                                        type="default" size="large" 
-                                                        :ripple="false"
-                                                        @click.native="checkoutProgress = checkoutProgress - 1">
-                                                        <Icon type="md-arrow-back" class="mr-1" />
-                                                        <span>Back</span>
-                                                    </basicButton>
-                                                </Col>
-
                                             </Row>
 
                                         </Col>
@@ -307,7 +242,7 @@
                                         <Col :span="24" class="mb-5">
                                             <Alert class="mb-4">
                                                 <span class="font-weight-bold">Select Payment Method</span>
-                                                <template slot="desc">Select any prefered payment method to pay</template>
+                                                <template slot="desc">How would yout like to pay? Select any prefered payment method to pay</template>
                                             </Alert>
                                             <Row :gutter="20">
 
@@ -400,7 +335,7 @@
 
                     <div class="tt-shopcart-btn">
                         <div class="col-left">
-                            <a class="btn-link" href="#"><i class="icon-e-19"></i>CONTINUE SHOPPING</a>
+                            <a class="btn_link" href="#"><i class="icon-e-19"></i>CONTINUE SHOPPING</a>
                         </div>
                     </div>
                 </div>
@@ -503,6 +438,8 @@
                 checkoutProgress: 0,
 
                 showLoginForm: false,
+                showDeliveryForm: false,
+                showDeliveryFormLoader: false,
                 formData: {
 
                     /*  Basic Info  */
@@ -552,6 +489,8 @@
                     password: '',
                     confirm_password: ''
                 }, 
+
+                resetToken: ((this.$route || {}).query || {}).resetToken
             }
         },
         watch: {
@@ -579,6 +518,31 @@
 
                 //  Go to the login tab
                 this.selectedAccountTab = 'login';
+            },
+            handleSavedAddressSuccess(user){
+
+                var self = this;
+
+                //  Show the delivery form loader
+                this.showDeliveryFormLoader = true;
+
+                //  Update the auth user details
+                auth.getUser().then( data => {
+
+                    //  Lets update the user details
+                    self.user = auth.user;
+
+                    //  Hide the delivery form loader
+                    self.showDeliveryFormLoader = false;
+
+                    //  Hide the delivery address form
+                    self.showDeliveryForm = false;
+                });
+            }
+        },
+        created(){
+            if(this.resetToken){
+                this.showLoginForm = true;
             }
         }
     };

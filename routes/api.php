@@ -33,6 +33,7 @@ use Illuminate\Http\Request;
 /*   AUTH ROUTES
      -  Login
      -  Register
+     -  Reset Password
      -  Account Activation
      -  Get Authenticated User
     -   Logout
@@ -54,6 +55,13 @@ Route::post('/register', 'Auth\RegisterController@register');
 Route::post('/activate-account', 'Auth\AccountActivation@activate');
 Route::post('/resend-activation', 'Auth\AccountActivation@resend');
 Route::post('/setup-completed', 'Auth\AccountActivation@completeSetup');
+
+/*   PASSWORD RESET ROUTES  */
+
+//  Send email to user requesting password reset
+Route::post('/password/email', 'Auth\ForgotPasswordController@customSendForgotPasswordEmail');
+//  Reset using token, email and new password 
+Route::post('/password/reset', 'Auth\ResetPasswordController@reset');
 
 Route::middleware('auth:api')->get('/user', 'Api\UserController@getUser');
 Route::middleware('auth:api')->get('/user/settings', 'Api\UserController@getUserSettings');
@@ -97,12 +105,6 @@ Route::get('staff', 'Api\StaffController@index');
      -  Get, Show, Update, Trash, Delete
 */
 Route::get('/customers', 'Api\CustomerController@index');
-
-
-/*   PROCESS FORM RESOURCE ROUTES
-     -  Get, Show, Update, Trash, Delete
-*/
-Route::post('/process-forms', 'Api\ProcessFormController@store');
 
 /*   JOBCARD RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete

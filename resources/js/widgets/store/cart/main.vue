@@ -59,11 +59,10 @@
                         </table>
                         <div class="tt-shopcart-btn">
                             <div class="col-left">
-                                <a class="btn-link" href="#"><i class="icon-e-19"></i>CONTINUE SHOPPING</a>
+                                <a class="btn_link" href="#"><i class="icon-e-19"></i>CONTINUE SHOPPING</a>
                             </div>
                             <div class="col-right">
-                                <a class="btn-link" href="#"><i class="icon-h-02"></i>CLEAR SHOPPING CART</a>
-                                
+                                <a class="btn_link" href="#"><i class="icon-h-02"></i>CLEAR SHOPPING CART</a>
                             </div>
                         </div>
                     </div>

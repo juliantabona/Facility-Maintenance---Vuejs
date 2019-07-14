@@ -8,7 +8,9 @@ use App\User;
 use App\Phone;
 use App\Document;
 use App\VerifyUser;
+use App\PasswordResetTokens;
 use App\Mail\ActivateAccount;
+use App\Mail\ResetPassword;
 use Illuminate\Support\Facades\URL;
 use App\Notifications\UserCreated;
 use App\Notifications\UserUpdated;
@@ -170,8 +172,8 @@ trait UserTraits
         }
     }
 
-    public function initiateRegistration(){
-        
+    public function initiateRegistration()
+    {
         //  Start registration process
         $data = $this->initiateCreate(true);
         $success = $data['success'];
@@ -179,7 +181,6 @@ trait UserTraits
 
         //  If the user was created successfully
         if ($success) {
-
             //  If this is a success then we have the user
             $user = $response;
 
@@ -188,11 +189,9 @@ trait UserTraits
 
             //  Action was executed successfully
             return $user;
-
         }
 
         return false;
-
     }
 
     public function initiateCreate($selfRegistration = false)
@@ -210,7 +209,6 @@ trait UserTraits
 
         try {
             $template = [
-
                 /*  Basic Info  */
                 'first_name' => request('first_name') ?? null,
                 'last_name' => request('last_name') ?? null,
@@ -230,7 +228,7 @@ trait UserTraits
                 'email' => request('email') ?? null,
                 'additional_email' => request('additional_email') ?? null,
                 'username' => request('username') ?? null,
-                'password' => Hash::make( request('password') ) ?? null,
+                'password' => Hash::make(request('password')) ?? null,
                 'verified' => 0,
                 'setup' => 0,
 
@@ -239,7 +237,7 @@ trait UserTraits
                 'twitter_link' => request('twitter_link') ?? null,
                 'linkedin_link' => request('linkedin_link') ?? null,
                 'instagram_link' => request('instagram_link') ?? null,
-                'youtube_link' => request('youtube_link') ?? null
+                'youtube_link' => request('youtube_link') ?? null,
             ];
 
             //  Create the user
@@ -247,9 +245,8 @@ trait UserTraits
 
             //  If the user was created successfully
             if ($user) {
-
                 //  If th user is registering (Creating an account for themselves)
-                if($selfRegistration){
+                if ($selfRegistration) {
                     //  Set the auth_user as the current created user
                     $auth_user = $user;
                 }
@@ -276,7 +273,7 @@ trait UserTraits
                 $status = 'created';
 
                 $userCreatedActivity = oq_saveActivity($user, $auth_user, $status, $template);
-                
+
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $user];
             }
@@ -309,26 +306,48 @@ trait UserTraits
          ********************************************/
 
         $template = [
+            /*  Basic Info  */
             'first_name' => request('first_name') ?? null,
             'last_name' => request('last_name') ?? null,
             'date_of_birth' => request('date_of_birth') ?? null,
-            'abbreviation' => request('abbreviation') ?? null,
             'gender' => request('gender') ?? null,
-            'address' => request('address') ?? null,
+            'bio' => request('bio') ?? null,
+
+            /*  Address Info  */
+            'address_1' => request('address_1') ?? null,
+            'address_2' => request('address_2') ?? null,
             'country' => request('country') ?? null,
             'provience' => request('provience') ?? null,
             'city' => request('city') ?? null,
             'postal_or_zipcode' => request('postal_or_zipcode') ?? null,
+
+            /*  Account Info  */
             'email' => request('email') ?? null,
             'additional_email' => request('additional_email') ?? null,
+            'username' => request('username') ?? null,
+            'password' => Hash::make(request('password')) ?? null,
+            'verified' => 0,
+            'setup' => 0,
+
+            /*  Social Info  */
             'facebook_link' => request('facebook_link') ?? null,
             'twitter_link' => request('twitter_link') ?? null,
             'linkedin_link' => request('linkedin_link') ?? null,
             'instagram_link' => request('instagram_link') ?? null,
-            'bio' => request('bio') ?? null,
-            'position' => request('position') ?? null,
-            'accessibility' => request('accessibility') ?? null
+            'youtube_link' => request('youtube_link') ?? null,
         ];
+
+        //  Foreach of the template fields
+        foreach ($template as $key => $value) {
+            //  Get all the available request parameters provided by the user
+            $requestParams = collect( request()->all() )->keys()->toArray() ?? [];
+
+            //  If the user did not specify a field in the template then remove that field from the template
+            if (!in_array($key, $requestParams)) {
+                //  Remove the field
+                unset($template[$key]);
+            }
+        }
 
         try {
             //  Update the user
@@ -336,6 +355,8 @@ trait UserTraits
 
             //  If the user was updated successfully
             if ($user) {
+
+                $user = User::find($user_id);
 
                 //  Check whether or not the auth company has a relationship with the created user e.g) client/supplier
                 $this->checkAndCreateRelationship($user);
@@ -345,7 +366,6 @@ trait UserTraits
 
                 //  Check whether or not the product has any image to upload
                 $this->checkAndUploadImage($user);
-
 
                 //  refetch the updated user
                 $user = $user->fresh();
@@ -360,10 +380,9 @@ trait UserTraits
                 $status = 'updated';
 
                 $userUpdatedActivity = oq_saveActivity($user, $auth_user, $status, $template);
-                
+
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $user];
-
             } else {
                 //  No resource found
                 return ['success' => false, 'response' => oq_api_notify_no_resource()];
@@ -377,36 +396,34 @@ trait UserTraits
         }
     }
 
-
     public function checkAndCreateRelationship($user)
     {
         $auth_user = auth('api')->user();
 
         /*  relationship:
-         *  This is a variable used to determine if the current user being created has 
+         *  This is a variable used to determine if the current user being created has
          *  a relationship as a client/supplier to the auth users main company. Sometimes
-         *  when creating a new user, we may want to assign that user as either a 
+         *  when creating a new user, we may want to assign that user as either a
          *  client/supplier to the user directory. We can do this if the relationship
          *  variable has been set with the appropriate type (client/supplier)
          */
         $relationship = request('relationship') ?? null;
 
         if (isset($relationship) && !empty($relationship)) {
-            
             //  Delete any previous relationship
             DB::table('user_directory')->where([
                 ['user_id', $user->id],                           //  id of the current user
-                ['owning_company_id', $auth_user->user_id]        //  id of the owning company
+                ['owning_company_id', $auth_user->user_id],        //  id of the owning company
             ])->delete();
 
             //  Add to user directory
             DB::table('user_directory')->insert([
                 'user_id' => $user->id,                                 //  id of the current user
                 'owning_branch_id' => $auth_user->company_branch_id,    //  id of the owning company branch
-                'owning_company_id' => $auth_user->company_id,          //  id of the owning company 
+                'owning_company_id' => $auth_user->company_id,          //  id of the owning company
                 'type' => request('relationship'),                      //  relationship type e.g client/supplier
-                'created_at' => DB::raw('now()'),                       
-                'updated_at' => DB::raw('now()')
+                'created_at' => DB::raw('now()'),
+                'updated_at' => DB::raw('now()'),
             ]);
         }
     }
@@ -415,40 +432,38 @@ trait UserTraits
     {
         /*  profile_image:
          *  This is a variable used to determine if the current user being created has
-         *  an image file to upload. Sometimes when creating a new user, we may want to 
+         *  an image file to upload. Sometimes when creating a new user, we may want to
          *  also upload the user image at the same time. We can do this if the
          *  profile_image variable has been set with the image file (type=binary)
          */
         $File = request('profile_image');
 
         if (isset($File) && !empty($File) && request()->hasFile('profile_image')) {
-
             //  Start upload process of files
-            $data = ( new Document() )->saveDocument( request(), $auth_user->id, 'user', $File, 'profile_images', 'profile_image', true );
-
+            $data = ( new Document() )->saveDocument(request(), $auth_user->id, 'user', $File, 'profile_images', 'profile_image', true);
         }
     }
 
     public function checkAndUpdatePhones($auth_user)
     {
         /*  phones:
-         *  This is a variable used to determine if the current user being created has 
-         *  any phones to be added. Sometimes when creating a new user, we may want to 
+         *  This is a variable used to determine if the current user being created has
+         *  any phones to be added. Sometimes when creating a new user, we may want to
          *  add and replace existing phones to that user. We can do this if the phones
          *  variable has been set with an array list of phone numbers.
          */
         //  Get any associated phones if any
-        $phones = json_decode( request('phones'), true);
-        
+        $phones = json_decode(request('phones'), true);
+
         if (isset($phones) && !empty($phones)) {
             //  Add new phone numbers
             $phoneInstance = new Phone();
 
-            $data = $phoneInstance->initiateCreate($auth_user->id, 'user', $phones, $replace=true);
+            $data = $phoneInstance->initiateCreate($auth_user->id, 'user', $phones, $replace = true);
             $success = $data['success'];
             $phones = $data['response'];
-            
-            if($success){
+
+            if ($success) {
                 return $phones;
             }
         }
@@ -659,7 +674,7 @@ trait UserTraits
         ]);
         //  Lets get an array instead of a stdObject so that we can return without errors
         $response = json_decode($response->getBody(), true);
-        
+
         return oq_api_notify([
                     'auth' => $response,                                        //  API ACCESS TOKEN
                     'user' => $this->load(['settings'])->toArray(),
@@ -686,14 +701,12 @@ trait UserTraits
             if (oq_viaAPI($request)) {
                 return ['success' => false, 'response' => oq_api_notify_error('Account could not be identified', 'no_user_id', 404)];
             }
-        }else{
-
+        } else {
             //  Get the associated user
             $auth_user = User::find($auth_userId);
 
             //  If the user does not exist
             if ($auth_user) {
- 
                 //  Check if the user is already verified
                 if ($auth_user->verified) {
                     return ['success' => true, 'response' => $auth_user];
@@ -712,26 +725,81 @@ trait UserTraits
                 Mail::to($auth_user->email)->send(new ActivateAccount($auth_user));
 
                 //  If verification email sent successfully
-                if( !Mail::failures() ){
+                if (!Mail::failures()) {
                     //  Update the status
                     $status = 'veriication mail sent';
                     $verificationMailSentActivity = oq_saveActivity($auth_user, $auth_user, $status, null);
+
                     return ['success' => true, 'response' => $auth_user];
 
                 //  If verification email sending failed
-                }else{
+                } else {
                     //  Update the status
                     $status = 'veriication mail failed';
                     $verificationMailFailedActivity = oq_saveActivity($auth_user, $auth_user, $status, null);
+
                     return ['success' => false, 'response' => oq_api_notify_error('Something went wrong trying to send the verification email. Please try again', 'failed_sending_email', 404)];
                 }
-
             } else {
                 //  No resource found
-                return ['success' => false, 'response' => oq_api_notify_error('Account does exist', 'no_account_found', 404)];
+                return ['success' => false, 'response' => oq_api_notify_error('Account does not exist', 'no_account_found', 404)];
             }
-
         }
     }
 
+    public function initiateSendForgotPasswordEmail()
+    {
+        //  Use the current user's model id otherwise use the provided id
+        $user_email = request('email');
+
+        //  Get the redirect route for when the user clicks the 
+        $redirectTo = request('redirectTo') ?? '';
+
+        //  Check if the account id was provided
+        if (empty($user_email)) {
+            //  If this is an API request
+            if (oq_viaAPI($request)) {
+                return ['success' => false, 'response' => oq_api_notify_error('Provide your email', 'no_email', 404)];
+            }
+        } else {
+            //  Get the associated user
+            $user = User::where('email', $user_email)->whereNotNull('password')->first();
+
+            //  If the user does not exist
+            if ( !is_null($user) ) {
+
+                //  Delete any possible past existing tokens
+                DB::table('password_resets')->where('email', $user_email)->delete();
+
+                //  Create a new password reset token
+                $verification = PasswordResetTokens::create([
+                                    'email' => $user_email,
+                                    'token' => sha1(time()),
+                                ]);
+
+                //  Send reset password email
+                Mail::to($user->email)->send(new ResetPassword($user, $redirectTo));
+
+                //  If reset email sent successfully
+                if (!Mail::failures()) {
+                    //  Update the status
+                    $status = 'password reset mail sent';
+                    $verificationMailSentActivity = oq_saveActivity($user, $user, $status, null);
+
+                    return ['success' => true, 'response' => $user];
+
+                //  If verification email sending failed
+                } else {
+                    //  Update the status
+                    $status = 'password reset mail failed';
+                    $verificationMailFailedActivity = oq_saveActivity($user, $user, $status, null);
+
+                    return ['success' => false, 'response' => oq_api_notify_error('Something went wrong trying to send the password reset email. Please try again', 'failed_sending_password_reset_email', 404)];
+                }
+            } else {
+                //  No resource found
+                return ['success' => false, 'response' => oq_api_notify_error('Account does not exist', 'no_account_found', 404)];
+            }
+        }
+    }
 }

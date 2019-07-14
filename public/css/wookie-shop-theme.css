@@ -2333,7 +2333,7 @@ header {
           margin-top: 4px; }
           header .tt-cart .tt-dropdown-menu .tt-cart-layout .tt-cart-content .tt-cart-btn .tt-item {
             margin-top: 20px; }
-          header .tt-cart .tt-dropdown-menu .tt-cart-layout .tt-cart-content .tt-cart-btn .btn {
+          header .tt-cart .tt-dropdown-menu .tt-cart-layout .tt-cart-content .tt-cart-btn .btn_2 {
             font-weight: 500; }
           header .tt-cart .tt-dropdown-menu .tt-cart-layout .tt-cart-content .tt-cart-btn .btn:not(.btn-border) {
             font-size: 12px; }
@@ -2741,7 +2741,7 @@ header {
       header .tt-cart .tt-cart-layout .tt-cart-content .tt-cart-btn .tt-item {
         margin-top: 11px;
         width: 100%; }
-      header .tt-cart .tt-cart-layout .tt-cart-content .tt-cart-btn .btn {
+      header .tt-cart .tt-cart-layout .tt-cart-content .tt-cart-btn .btn_2 {
         padding-left: 13px;
         padding-right: 13px;
         width: 100%; }
@@ -5348,7 +5348,7 @@ footer {
             -moz-border-radius-bottomright: 0px;
             border-top-right-radius: 0px;
             border-bottom-right-radius: 0px; }
-          footer .tt-footer-col .tt-newsletter .tt-collapse-content .form-inline .form-group .btn {
+          footer .tt-footer-col .tt-newsletter .tt-collapse-content .form-inline .form-group .btn_2 {
             -webkit-border-top-left-radius: 0px;
             -webkit-border-bottom-left-radius: 0px;
             -moz-border-radius-topleft: 0px;
@@ -5584,7 +5584,7 @@ footer {
                 -moz-border-radius-bottomright: 0px;
                 border-top-right-radius: 0px;
                 border-bottom-right-radius: 0px; }
-              footer .tt-footer-center .tt-newsletter .tt-collapse-content .form-inline .form-group .btn {
+              footer .tt-footer-center .tt-newsletter .tt-collapse-content .form-inline .form-group .btn_2 {
                 -webkit-border-top-left-radius: 0px;
                 -webkit-border-bottom-left-radius: 0px;
                 -moz-border-radius-topleft: 0px;
@@ -5666,7 +5666,7 @@ footer {
         -moz-border-radius-bottomright: 0px;
         border-top-right-radius: 0px;
         border-bottom-right-radius: 0px; }
-      footer .tt-footer-default .tt-newsletter .form-default .form-group .btn {
+      footer .tt-footer-default .tt-newsletter .form-default .form-group .btn_2 {
         -webkit-border-top-left-radius: 0px;
         -webkit-border-bottom-left-radius: 0px;
         -moz-border-radius-topleft: 0px;
@@ -5917,7 +5917,7 @@ footer {
         color: #777777; }
       footer .tt-color-scheme-01 .tt-newsletter :-ms-input-placeholder {
         color: #777777; }
-      footer .tt-color-scheme-01 .tt-newsletter .btn {
+      footer .tt-color-scheme-01 .tt-newsletter .btn_2 {
         background: #2879fe;
         color: #ffffff; }
       footer .tt-color-scheme-01 .tt-newsletter .btn:hover {
@@ -5960,7 +5960,7 @@ footer {
         color: #777777; }
       footer .tt-color-scheme-02 .tt-newsletter :-ms-input-placeholder {
         color: #777777; }
-      footer .tt-color-scheme-02 .tt-newsletter .btn {
+      footer .tt-color-scheme-02 .tt-newsletter .btn_2 {
         background: #303030;
         color: #ffffff; }
       footer .tt-color-scheme-02 .tt-newsletter .btn:hover {
@@ -6014,7 +6014,7 @@ footer {
         color: #777777; }
       footer .tt-color-scheme-03 .tt-newsletter :-ms-input-placeholder {
         color: #777777; }
-      footer .tt-color-scheme-03 .tt-newsletter .btn {
+      footer .tt-color-scheme-03 .tt-newsletter .btn_2 {
         background: #2879fe;
         color: #ffffff; }
       footer .tt-color-scheme-03 .tt-newsletter .btn:hover {
@@ -6055,7 +6055,7 @@ footer {
         color: #777777; }
       footer .tt-color-scheme-04 .tt-newsletter :-ms-input-placeholder {
         color: #777777; }
-      footer .tt-color-scheme-04 .tt-newsletter .btn {
+      footer .tt-color-scheme-04 .tt-newsletter .btn_2 {
         background: #2879fe;
         color: #ffffff; }
       footer .tt-color-scheme-04 .tt-newsletter .btn:hover {
@@ -6281,7 +6281,7 @@ footer {
           margin-bottom: 0; }
           footer .tt-newsletter form .form-group .form-control {
             width: 100%; }
-        footer .tt-newsletter form .btn {
+        footer .tt-newsletter form .btn_2 {
           margin-top: 10px;
           width: 100%;
           text-align: center;
@@ -6311,7 +6311,7 @@ footer {
         color: #777777; }
       footer .tt-newsletter :-ms-input-placeholder {
         color: #777777; }
-      footer .tt-newsletter .btn {
+      footer .tt-newsletter .btn_2 {
         background: #2879fe;
         color: #ffffff; }
       footer .tt-newsletter .btn:hover {
@@ -7312,7 +7312,7 @@ html:not(.ie) .tt-blog-thumb .tt-title-description .tt-background {
 .tt-aside-subscribe-box .form-default .form-group {
   margin-bottom: 10px; }
 
-.tt-aside-subscribe-box .btn {
+.tt-aside-subscribe-box .btn_2 {
   width: 100%;
   display: block; }
 
@@ -8226,7 +8226,7 @@ html.edge .tt-portfolio-content figure:hover figcaption {
       -webkit-flex: 1 1 auto;
       -ms-flex: 1 1 auto;
       flex: 1 1 auto; }
-    .tt-product-single-info .tt-row-custom-01 .btn {
+    .tt-product-single-info .tt-row-custom-01 .btn_2 {
       width: 100%; }
     .tt-product-single-info .tt-row-custom-01 .btn.btn-lg {
       font-size: 14px; }
@@ -9461,7 +9461,7 @@ html.ie.gecko body.modal-open {
       padding-right: 52px; }
     .tt-modal-addtocart.desctope .row > div:last-child {
       padding-left: 49px; }
-      .tt-modal-addtocart.desctope .row > div:last-child .btn {
+      .tt-modal-addtocart.desctope .row > div:last-child .btn_2 {
         width: 100%; }
   .tt-modal-addtocart.desctope .tt-modal-messages {
     font-family: "Hind", sans-serif;
@@ -9514,9 +9514,9 @@ html.ie.gecko body.modal-open {
       .tt-modal-addtocart.desctope .tt-cart-total .tt-total .tt-price {
         color: #2879fe;
         font-size: 24px; }
-  .tt-modal-addtocart.desctope [class^="col"] .btn {
+  .tt-modal-addtocart.desctope [class^="col"] .btn_2 {
     margin-top: 20px; }
-  .tt-modal-addtocart.desctope [class^="col"] .tt-cart-total + .btn {
+  .tt-modal-addtocart.desctope [class^="col"] .tt-cart-total + .btn_2 {
     margin-top: 25px; }
   .tt-modal-addtocart.desctope [class^="col"] > *:nth-child(1) {
     margin-top: 0; }
@@ -9768,7 +9768,7 @@ html.ie.gecko body.modal-open {
     color: #2879fe; }
 
 @media (min-width: 501px) {
-  .tt-modal-newsletter .subscribe-form .input-group .btn {
+  .tt-modal-newsletter .subscribe-form .input-group .btn_2 {
     -webkit-border-top-left-radius: 0px;
     -webkit-border-bottom-left-radius: 0px;
     -moz-border-radius-topleft: 0px;
@@ -13993,7 +13993,7 @@ html:not(.ie) .tt-promo-box .tt-description .tt-description-wrapper .tt-backgrou
       -webkit-align-items: center;
       -ms-flex-align: center;
       align-items: center; }
-      .tt-shopcart-table .tt-shopcart-btn .col-right .btn-link:first-child {
+      .tt-shopcart-table .tt-shopcart-btn .col-right .btn_link:first-child {
         -webkit-order: 2;
         -ms-flex-order: 2;
         order: 2; }
@@ -14244,7 +14244,7 @@ table + *[class^="btn"] {
       -webkit-align-items: center;
       -ms-flex-align: center;
       align-items: center; }
-      .tt-shopcart-table-02 .tt-shopcart-btn .col-right .btn-link:first-child {
+      .tt-shopcart-table-02 .tt-shopcart-btn .col-right .btn_link:first-child {
         -webkit-order: 2;
         -ms-flex-order: 2;
         order: 2; }
@@ -15906,10 +15906,10 @@ html.ie #tt-boxedbutton .rtlbutton-color:hover .box-description {
         color: #ffffff; }
   .tt-wishlist-box .tt-wishlist-list .tt-item .tt-col-btn > * {
     margin-left: 12px; }
-  .tt-wishlist-box .tt-wishlist-list .tt-item .tt-col-btn .btn-link {
+  .tt-wishlist-box .tt-wishlist-list .tt-item .tt-col-btn .btn_link {
     top: -4px;
     position: relative; }
-    .tt-wishlist-box .tt-wishlist-list .tt-item .tt-col-btn .btn-link .icon-f-73 {
+    .tt-wishlist-box .tt-wishlist-list .tt-item .tt-col-btn .btn_link .icon-f-73 {
       top: 4px; }
   @media (max-width: 1024px) {
     .tt-wishlist-box .tt-wishlist-list .tt-item .tt-col-btn {
@@ -16924,7 +16924,7 @@ a:focus {
   text-decoration: none;
   outline: none; }
 
-.btn {
+.btn_2 {
   background: #2879fe;
   font-family: "Hind", sans-serif;
   border: none;
@@ -16948,7 +16948,7 @@ a:focus {
   -webkit-transition: all 0.2s linear;
   -o-transition: all 0.2s linear; }
   @media (max-width: 575px) {
-    .btn {
+    .btn_2 {
       font-size: 12px;
       padding-left: 25px;
       padding-right: 25px;
@@ -17057,8 +17057,8 @@ button:focus {
   color: #ffffff;
   outline-color: #191919; }
 
-.btn-link,
-.btn-link:focus {
+.btn_link,
+.btn_link:focus {
   display: inline-block;
   font-size: 14px;
   color: #2879fe;
@@ -17070,14 +17070,14 @@ button:focus {
   -o-transition: color 0.2s linear;
   -webkit-transition: color 0.2s linear;
   transition: color 0.2s linear; }
-  .btn-link *[class^="icon-"],
-  .btn-link:focus *[class^="icon-"] {
+  .btn_link *[class^="icon-"],
+  .btn_link:focus *[class^="icon-"] {
     margin-right: 7px;
     font-size: 20px;
     position: relative;
     top: 3px; }
 
-.btn-link:hover {
+.btn_link:hover {
   text-decoration: none;
   color: #191919; }
 
@@ -18580,7 +18580,7 @@ input[type=checkbox]:checked ~ label .check {
   margin-top: 39px; }
   .contact-form textarea {
     height: 160px; }
-  .contact-form .btn {
+  .contact-form .btn_2 {
     margin-top: 20px; }
   @media (max-width: 575px) {
     .contact-form {
@@ -18711,7 +18711,7 @@ input[type=checkbox]:checked ~ label .check {
   .tt-page404 p {
     margin-top: 2px;
     font-size: 15px; }
-  .tt-page404 .btn {
+  .tt-page404 .btn_2 {
     margin-top: 34px; }
   @media (max-width: 1024px) {
     .tt-page404 img {
@@ -18733,7 +18733,7 @@ input[type=checkbox]:checked ~ label .check {
       font-size: 23px;
       line-height: 32px;
       margin: 28px 0 0 0; }
-    .tt-page404 .btn {
+    .tt-page404 .btn_2 {
       margin-top: 25px; } }
   .tt-page404 > *:nth-child(1) {
     margin-top: 0; }
@@ -18764,7 +18764,7 @@ input[type=checkbox]:checked ~ label .check {
     font-size: 26px;
     line-height: 1.3;
     font-weight: 400; }
-  .tt-empty-wishlist .btn {
+  .tt-empty-wishlist .btn_2 {
     margin-top: 34px; }
   @media (max-width: 1024px) {
     .tt-empty-wishlist {
@@ -18806,7 +18806,7 @@ input[type=checkbox]:checked ~ label .check {
   .tt-empty-cart p {
     margin-top: 2px;
     font-size: 15px; }
-  .tt-empty-cart .btn {
+  .tt-empty-cart .btn_2 {
     margin-top: 34px; }
   @media (max-width: 1024px) {
     .tt-empty-cart {
@@ -18849,7 +18849,7 @@ input[type=checkbox]:checked ~ label .check {
   .tt-empty-search p {
     margin-top: 2px;
     font-size: 15px; }
-  .tt-empty-search .btn {
+  .tt-empty-search .btn_2 {
     margin-top: 34px; }
   @media (max-width: 1024px) {
     .tt-empty-search {
@@ -18913,7 +18913,7 @@ input[type=checkbox]:checked ~ label .check {
     -moz-border-radius-bottomright: 0px;
     border-top-right-radius: 0px;
     border-bottom-right-radius: 0px; }
-  .tt-coming-soon form .btn {
+  .tt-coming-soon form .btn_2 {
     margin-top: 20px;
     -webkit-border-top-left-radius: 0px;
     -webkit-border-bottom-left-radius: 0px;
@@ -18972,7 +18972,7 @@ input[type=checkbox]:checked ~ label .check {
       .tt-coming-soon .description {
         margin-bottom: 27px; }
       .tt-coming-soon form .form-control,
-      .tt-coming-soon form .btn {
+      .tt-coming-soon form .btn_2 {
         margin-top: 13px; }
       .tt-coming-soon form .form-group {
         margin-bottom: 13px; } }
@@ -18990,7 +18990,7 @@ input[type=checkbox]:checked ~ label .check {
         display: block; }
       .tt-coming-soon form .form-control {
         margin-top: 13px; }
-      .tt-coming-soon form .btn {
+      .tt-coming-soon form .btn_2 {
         margin-top: 13px; }
       .tt-coming-soon form .form-group {
         margin-bottom: 7px; }
@@ -18998,7 +18998,7 @@ input[type=checkbox]:checked ~ label .check {
         -webkit-border-radius: 6px;
         -moz-border-radius: 6px;
         border-radius: 6px; }
-      .tt-coming-soon form .btn {
+      .tt-coming-soon form .btn_2 {
         -webkit-border-radius: 6px;
         -moz-border-radius: 6px;
         border-radius: 6px; } }
@@ -19090,7 +19090,7 @@ input[type=checkbox]:checked ~ label .check {
       margin-bottom: 5px; }
     .tt-login-form .tt-item .btn-top {
       margin-top: 25px; }
-    .tt-login-form .tt-item .btn {
+    .tt-login-form .tt-item .btn_2 {
       margin-right: 12px; }
     .tt-login-form .tt-item .additional-links {
       list-style: none;
@@ -19754,7 +19754,7 @@ body:not(.touch-device) .arrow-location-center-02.tt-arrow-hover:hover .slick-ar
       height: auto; }
   .tt-gift-layout .btn-border {
     margin-top: 62px; }
-  .tt-gift-layout .btn-link {
+  .tt-gift-layout .btn_link {
     margin-top: 32px; }
   @media (max-width: 1024px) {
     .tt-gift-layout {
@@ -19772,7 +19772,7 @@ body:not(.touch-device) .arrow-location-center-02.tt-arrow-hover:hover .slick-ar
         margin-top: 31px; }
       .tt-gift-layout .btn-border {
         margin-top: 40px; }
-      .tt-gift-layout .btn-link {
+      .tt-gift-layout .btn_link {
         margin-top: 23px; } }
   @media (max-width: 575px) {
     .tt-gift-layout {
@@ -19795,7 +19795,7 @@ body:not(.touch-device) .arrow-location-center-02.tt-arrow-hover:hover .slick-ar
         margin-top: 24px; }
       .tt-gift-layout .btn-border {
         margin-top: 31px; }
-      .tt-gift-layout .btn-link {
+      .tt-gift-layout .btn_link {
         margin-top: 18px; } }
   .tt-gift-layout > *:nth-child(1) {
     margin-top: 0; }
