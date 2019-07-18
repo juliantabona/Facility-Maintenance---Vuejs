@@ -86,7 +86,7 @@ trait QuotationTraits
          *  1) Data may come from the associated authenticated user branch
          *  2) Data may come from the associated authenticated user company
          *  3) Data may come from the whole bucket meaning outside the scope of the
-         *     authenticated user. This means we can access all possible models
+         *     authenticated user. This means we can access all possible records
          *     available. This is usually useful for users acting as superadmins.
          */
         $allocation = strtolower(request('allocation'));
@@ -94,7 +94,7 @@ trait QuotationTraits
         /*
          *  $companyId = 1, 2, 3, e.t.c
         /*
-         *  The $companyId variable only get data specificaclly related to
+         *  The $companyId variable only get data specifically related to
          *  the specified company id. It is useful for scenerios where we
          *  want only quotations of that company only
          */

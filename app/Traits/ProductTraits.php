@@ -45,25 +45,25 @@ trait ProductTraits
          *  1) Data may come from the associated authenticated user branch
          *  2) Data may come from the associated authenticated user company
          *  3) Data may come from the whole bucket meaning outside the scope of the
-         *     authenticated user. This means we can access all possible models
+         *     authenticated user. This means we can access all possible records
          *     available. This is usually useful for users acting as superadmins.
          */
         $allocation = request('allocation');
 
         /*
-         *  $produtType = physical, virtual
+         *  $productType = physical, virtual
         /*
-         *  The $produtType variable is used to determine which type of product to pull.
+         *  The $productType variable is used to determine which type of product to pull.
          *  The user may request data of type.
          *  1) physical: A product that is listed as a physical entity
          *  2) virtual: A product that is listed as a virtual entity
          */
-        $produtType = strtolower(request('produtType'));
+        $productType = strtolower(request('productType'));
 
         /*
          *  $companyId = 1, 2, 3, e.t.c
         /*
-         *  The $companyId variable only get data specificaclly related to
+         *  The $companyId variable only get data specifically related to
          *  the specified company id. It is useful for scenerios where we
          *  want only products of that company only
          */
@@ -78,7 +78,6 @@ trait ProductTraits
                 /***********************************************************************/
 
                 $model = Company::find($companyId);
-                return ['success' => true, 'response' => 'stage 1'];
 
             }
 
@@ -92,7 +91,6 @@ trait ProductTraits
 
                 //  Get the current product instance
                 $model = $this;
-                return ['success' => true, 'response' => 'stage 2'];
 
             } elseif ($allocation == 'branch') {
                 /*************************************************************
@@ -101,7 +99,6 @@ trait ProductTraits
 
                 // Only get products associated to the company branch
                 $model = $auth_user->companyBranch;
-                return ['success' => true, 'response' => 'stage 3'];
             } else {
                 /**************************************************************
                 *  CHECK IF THE USER IS AUTHORIZED TO GET COMPANY PRODUCTS    *
@@ -115,26 +112,26 @@ trait ProductTraits
 
         /*  If user indicated to only return specific types of products
         */
-        if ($produtType == 'physical') {
+        if ($productType == 'physical') {
             $products = $model->onlyProducts();
 
         /*  If user indicated to only return virtual products
         */
-        } elseif ($produtType == 'virtual') {
+        } elseif ($productType == 'virtual') {
             $products = $model->onlyServices();
 
         /*  If user did not indicate any specific group
         */
         } else {
 
-            if( isset($produtTypes) && !empty( $produtTypes ) ){
+            if( isset($productTypes) && !empty( $productTypes ) ){
 
-                //  If the $produtType is a list e.g) virtual,pysical, ... e.t.c
-                $produtTypes = explode(',', $produtType );
+                //  If the $productType is a list e.g) virtual,pysical, ... e.t.c
+                $productTypes = explode(',', $productType );
 
-                if (count($produtTypes)) {
+                if (count($productTypes)) {
                     //  Get products listed
-                    $products = $model->productAndServices()->whereIn('type', $produtTypes);
+                    $products = $model->productAndServices()->whereIn('type', $productTypes);
                 }
 
             } else {
@@ -187,7 +184,7 @@ trait ProductTraits
             if( request('count') == 1 ){
                 //  If the products are paginated
                 if($config['paginate']){
-                    $products = $products->total ?? 0;
+                    $products = $products->total() ?? 0;
                 //  If the products are not paginated
                 }else{
                     $products = $products->count() ?? 0;

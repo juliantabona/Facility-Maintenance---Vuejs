@@ -45,8 +45,6 @@ class Product extends Model
         'downloads', 'allow_downloads', 'show_on_store', 'company_branch_id', 'company_id',
     ];
 
-
-
     protected $allowedFilters = [
         'id', 'title', 'description', 'type', 'cost_per_item', 'price', 'created_at',
 

@@ -12,6 +12,8 @@ Relation::morphMap([
     'company' => 'App\Company',
     'jobcard' => 'App\Jobcard',
     'product' => 'App\Product',
+    'store' => 'App\Store',
+    'order' => 'App\Order',
 ]);
 
 class Document extends Model

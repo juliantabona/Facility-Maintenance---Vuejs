@@ -20,9 +20,10 @@ Relation::morphMap([
     'document' => 'App\Document',
     'product' => 'App\Product',
     'tag' => 'App\Tag',
-
     'phone' => 'App\Phone',
     'user' => 'App\User',
+    'store' => 'App\Store'
+    'order' => 'App\Order'
 ]);
 
 class RecentActivity extends Model

@@ -10,7 +10,7 @@
                             <tbody>
                                 <tr v-for="(product, index) in [[1, 220], [2, 450], [3, 340]]" :key="key">
                                     <td>
-                                        <a href="#" class="tt-btn-close"></a>
+                                        <span class="tt-btn-close"></span>
                                     </td>
                                     <td>
                                         <div class="tt-product-img">
@@ -19,7 +19,7 @@
                                     </td>
                                     <td>
                                         <h2 class="tt-title">
-                                            <a href="#">Flared Shift Dress</a>
+                                            <span>Flared Shift Dress</span>
                                         </h2>
                                         <ul class="tt-list-parameters">
                                             <li>
@@ -59,10 +59,10 @@
                         </table>
                         <div class="tt-shopcart-btn">
                             <div class="col-left">
-                                <a class="btn_link" href="#"><i class="icon-e-19"></i>CONTINUE SHOPPING</a>
+                                <span class="btn btn-link"><i class="icon-e-19"></i>CONTINUE SHOPPING</span>
                             </div>
                             <div class="col-right">
-                                <a class="btn_link" href="#"><i class="icon-h-02"></i>CLEAR SHOPPING CART</a>
+                                <span class="btn btn-link"><i class="icon-h-02"></i>CLEAR SHOPPING CART</span>
                             </div>
                         </div>
                     </div>
@@ -94,8 +94,8 @@
                                     </tr>
                                 </tfoot>
                             </table>
-                            <a href="#" class="btn btn-border mb-3"><span class="icon icon-check_circle"></span>DOWNLOAD QUOTATION</a><a href="#" class="btn btn-lg"><span class="icon icon-check_circle"></span>PROCEED TO CHECKOUT</a>
-
+                            <span class="btn btn-outline-dark mb-3"><span class="icon icon-check_circle"></span>DOWNLOAD QUOTATION</span>
+                            <span class="btn btn-primary mb-3"><span class="icon icon-check_circle"></span>PROCEED TO CHECKOUT</span>
                         </div>
                     </div>
                 </div>

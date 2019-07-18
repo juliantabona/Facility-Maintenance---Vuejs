@@ -40,7 +40,7 @@ trait AppointmentTraits
          *  1) Data may come from the associated authenticated user branch
          *  2) Data may come from the associated authenticated user appointment
          *  3) Data may come from the whole bucket meaning outside the scope of the
-         *     authenticated user. This means we can access all possible models
+         *     authenticated user. This means we can access all possible records
          *     available. This is usually useful for users acting as superadmins.
          */
         $allocation = strtolower(request('allocation'));

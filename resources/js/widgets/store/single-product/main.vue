@@ -69,13 +69,13 @@
                                 </div>
                             </div>
                             <div class="col-item">
-                                <a href="#" class="btn btn-lg"><i class="icon-f-39"></i>ADD TO CART</a>
+                                <span class="btn btn-primary mt-1 pt-2 pb-2 pl-4 pr-4"><span class="icon icon-check_circle"></span>ADD TO CART</span>
                             </div>
                         </div>
                     </div>
                     <div class="tt-wrapper">
                         <ul class="tt-list-btn">
-                            <li><a class="btn_link" href="#"><i class="icon-n-072"></i>ADD TO WISH LIST</a></li>
+                            <li><a class="wookie-btn-link" href="#"><i class="icon-n-072"></i>ADD TO WISH LIST</a></li>
                         </ul>
                     </div>
                     <div class="tt-wrapper">
@@ -177,7 +177,7 @@
                                             <textarea class="form-control" id="textarea" placeholder="Enter your review" rows="3"></textarea>
                                         </div>
                                         <div class="form-group">
-                                            <button type="submit" class="btn">SUBMIT</button>
+                                            <button type="submit" class="wookie-btn">SUBMIT</button>
                                         </div>
                                     </form>
                                 </div>

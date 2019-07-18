@@ -52,99 +52,25 @@ class ForgotPasswordController extends Controller
         return $response;
     }
 
-    public function activate(Request $request)
+    public function customResetPassword()
     {
-        //  Check if the mail token exists
-        if (empty(request('token'))) {
-            //  API Response
-            if (oq_viaAPI($request)) {
-                return oq_api_notify([
-                    'message' => 'Activation token not provided',
-                ], 422);
-            } else {
-                //  Notify the user that the token does not exist
-                oq_notify('Activation token not provided');
+       //  User Instance
+       $data = ( new User() )->initiateResetPassword();
+       $success = $data['success'];
+       $response = $data['response'];
 
-                //  Go to login page
-                return redirect()->route('login');
-            }
-        }
+       //  If the password was reset successfully
+       if ($success) {
+           //  If this is a success then we have the user data returned
+           $user = $response;
 
-        //  Get the mail token
-        $mailToken = request('token');
+           //  Action was executed successfully
+           return oq_api_notify(null, 201);
+       }
 
-        $token = VerifyUser::where('token', $mailToken)->first();
+       //  If the data was not a success then return the response
+       return $response;
 
-        //  Check if the token exists
-        if (count($token)) {
-            //  Check if user exists
-            $userExists = count($token->user);
-
-            if (!$userExists) {
-                //  API Response
-                if (oq_viaAPI($request)) {
-                    return oq_api_notify([
-                        'message' => 'Token does not match any account. Request a new token.',
-                    ], 422);
-                } else {
-                    //  Notify the user that the account associated to the token does not exist
-                    oq_notify('Token does not match any account. Request a new token');
-
-                    //  Go to login page
-                    return redirect()->route('login');
-                }
-            }
-
-            //  Get the associated user
-            $user = $token->user;
-
-            //  If the user hasn't been verified
-            if (!$user->verified) {
-                //  Verify the user account
-                $user->verified = 1;
-                $user->save();
-
-                //  API Response
-                if (oq_viaAPI($request)) {
-                    return oq_api_notify([
-                        'message' => 'Account verified. You can now login',
-                        'user' => $user,
-                    ], 200);
-                } else {
-                    //  Notify the user that their account is verified
-                    oq_notify('Account verified. You can now login', 'success');
-
-                    //  Go to login page
-                    return redirect()->route('login');
-                }
-            } else {
-                //  API Response
-                if (oq_viaAPI($request)) {
-                    return oq_api_notify([
-                        'message' => 'Account already verified. You can login.',
-                        'user' => $user,
-                    ], 200);
-                } else {
-                    //  Notify the user that their account is already verified
-                    oq_notify('Account already verified. You can login.', 'success');
-
-                    //  Go to login page
-                    return redirect()->route('login');
-                }
-            }
-        } else {
-            //  API Response
-            if (oq_viaAPI($request)) {
-                return oq_api_notify([
-                    'message' => 'Invalid Token',
-                ], 422);
-            } else {
-                //  Notify the user that their account is already verified
-                oq_notify('Invalid Token', 'warning');
-                //  Go to login page
-                return redirect()->route('login');
-            }
-        }
     }
 
 }

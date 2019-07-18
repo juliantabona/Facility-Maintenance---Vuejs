@@ -49,9 +49,9 @@
                                                                         
                                                                         <!-- Change/Edit Account buttons -->
                                                                         <div class="clearfix">
-                                                                            <a href="#" @click="selectedAccountTab = 'register'" class="float-right">Edit</a>
+                                                                            <span @click="selectedAccountTab = 'register'" class="float-right btn btn-link d-inline-block m-0 p-0">Edit</span>
                                                                             <span class="float-right ml-1 mr-1">|</span>
-                                                                            <a href="#" @click="showLoginForm = true" class="float-right">Change Account</a>
+                                                                            <span @click="showLoginForm = true" class="float-right btn btn-link d-inline-block m-0 p-0">Change Account</span>
                                                                         </div>
                                                                         
                                                                         <!-- Account Name -->
@@ -88,16 +88,16 @@
                                                                 <Col :span="12" :offset="6">
                                                                     
                                                                     <!-- Instructions -->
-                                                                    <span v-if="!user" class="d-block mb-3">Login or <a href="#" @click="selectedAccountTab = 'register'">Create Account</a></span>
+                                                                    <span v-if="!user" class="d-block mb-3">Login or <span @click="selectedAccountTab = 'register'" class="btn btn-link d-inline-block m-0 p-0">Create Account</span></span>
                                                                     <span v-else class="d-block mb-3">
                                                                         Login
                                                                         <span>/</span>
-                                                                        <a href="#" @click="showLoginForm = false">
+                                                                        <span @click="showLoginForm = false" class="btn btn-link d-inline-block m-0 p-0">
                                                                             <Icon type="ios-contact-outline" :size="30" />
                                                                             <span>{{ user.first_name }} {{ user.last_name }}</span>
-                                                                        </a> 
+                                                                        </span> 
                                                                         <span>/</span>
-                                                                        <a href="#" @click="selectedAccountTab = 'register'">Create Account</a>
+                                                                        <span @click="selectedAccountTab = 'register'" class="btn btn-link d-inline-block m-0 p-0">Create Account</span>
                                                                     </span>
                                                                     
                                                                     <!-- Login Form -->
@@ -123,7 +123,7 @@
                                                     <Row :gutter="12">
 
                                                         <Col :span="24" class="mb-3">
-                                                            <span>Create account or <a href="#" @click="selectedAccountTab = 'login'">Login</a></span>
+                                                            <span>Create account or <span href="#" @click="selectedAccountTab = 'login'" class="btn btn-link d-inline-block m-0 p-0">Login</span></span>
                                                         </Col>
                                                         <Col :span="24">
                                                             <!-- Register Form -->
@@ -160,10 +160,10 @@
                                                         
                                                         <!-- Change/Edit Account buttons -->
                                                         <div class="clearfix">
-                                                            <a href="#" @click="showDeliveryForm = true" class="float-right">
+                                                            <span @click="showDeliveryForm = true" class="float-right">
                                                                 <Icon type="ios-create-outline" :size="20" class="mr-1" />
                                                                 <span>Edit</span>
-                                                            </a>
+                                                            </span>
                                                         </div>
                                                         
                                                         <!-- Receiver Name -->
@@ -335,7 +335,7 @@
 
                     <div class="tt-shopcart-btn">
                         <div class="col-left">
-                            <a class="btn_link" href="#"><i class="icon-e-19"></i>CONTINUE SHOPPING</a>
+                            <span class="btn btn-link"><i class="icon-e-19"></i>CONTINUE SHOPPING</span>
                         </div>
                     </div>
                 </div>
@@ -376,7 +376,7 @@
                                     </tr>
                                 </tfoot>
                             </table>
-                            <a href="#" class="btn btn-border mb-3"><span class="icon icon-check_circle"></span>DOWNLOAD QUOTATION</a>
+                            <span class="btn btn-outline-dark mb-3"><span class="icon icon-check_circle"></span>DOWNLOAD QUOTATION</span>
                         </div>
                     </div>
                 </div>

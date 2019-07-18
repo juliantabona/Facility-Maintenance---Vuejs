@@ -39,7 +39,7 @@ trait TagTraits
          *  1) Data may come from the associated authenticated user branch
          *  2) Data may come from the associated authenticated user company
          *  3) Data may come from the whole bucket meaning outside the scope of the
-         *     authenticated user. This means we can access all possible models
+         *     authenticated user. This means we can access all possible records
          *     available. This is usually useful for users acting as superadmins.
          */
         $allocation = request('allocation');
@@ -58,7 +58,7 @@ trait TagTraits
         /*
          *  $companyId = 1, 2, 3, e.t.c
          *
-         *  The $companyId variable only get data specificaclly related to
+         *  The $companyId variable only get data specifically related to
          *  the specified company id. It is useful for scenerios where we
          *  want only tags of that company only
          */
@@ -67,7 +67,7 @@ trait TagTraits
         /*
          *  $productId = 1, 2, 3, e.t.c
          *
-         *  The $productId variable only get data specificaclly related to
+         *  The $productId variable only get data specifically related to
          *  the specified product id. It is useful for scenerios where we
          *  want only tags of that product only
          */
@@ -170,7 +170,7 @@ trait TagTraits
             if( request('count') == 1 ){
                 //  If the tags are paginated
                 if($config['paginate']){
-                    $tags = $tags->total ?? 0;
+                    $tags = $tags->total() ?? 0;
                 //  If the tags are not paginated
                 }else{
                     $tags = $tags->count() ?? 0;

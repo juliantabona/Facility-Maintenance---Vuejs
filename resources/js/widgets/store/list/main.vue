@@ -1,113 +1,65 @@
 <template>
 
-    <!-- Product View/Editor -->
-    <Row :gutter="20" id="product-summary"  key="product_template" class="animated mb-5">
-        <Col :xs="24" :sm="6" :md="5" :lg="5" class="mb-2">
-            
-            <Card>
-                <div class="mb-4">
-                    <img src="/images/samples/dress_me_logo.png" style="width: 100%;" class="mb-4">
-                    <h4 class="tt-title mb-2">About</h4>
-                    <span class="d-block">
-                        <span class="d-block-inline">Welcome to the Dress-me online clothing store for all your fabulous dresses</span>
-                    </span>
-                </div>
-                <div>
-                    <h4 class="tt-title mb-2">Contact</h4>
-                    <span class="d-block">
-                        <span class="d-block-inline font-weight-bold mr-1 mb-1">Phone:</span>
-                        <span class="d-block-inline">(+267) 3990867</span>
-                    </span>
-                    <span class="d-block">
-                        <span class="d-block-inline font-weight-bold mr-1 mb-1">Email:</span>
-                        <span class="d-block-inline">enquiries@dressme.co.bw</span>
-                    </span>
-                    <span class="d-block">
-                        <span class="d-block-inline font-weight-bold mr-1 mb-1">Website:</span>
-                        <span class="d-block-inline">www.dressme.co.bw</span>
-                    </span>
-                </div>
-            </Card>
+    <Row :gutter="20">
 
-        </Col>
-        <Col :xs="24" :sm="18" :md="19" :lg="19" class="mb-2">
+        <Col :span="20" :offset="2">
+            <div class="pb-3 border-bottom">
+                <h2>Stores</h2>
+            </div>
+
             <Row :gutter="20">
 
-                <Col v-for="(product, index) in [[1, 220], [2, 450], [3, 340], [4, 225], [5, 520], [6, 360], [7,420], [8,260], [9,280], [10,450], [11,385], [12,350]]" :key="index" :xs="24" :sm="12" :md="8" :lg="6" class="mb-2">
-                    <div class="tt-product thumbprod-center hovered" style="height: 487px;">
-                        <div class="tt-image-box">
-                            <Poptip trigger="hover" content="Quick View" placement="left" class="tt-btn-quickview">
-                                <a href="#"></a>
-                            </Poptip>
-                            <Poptip trigger="hover" content="Add to Wishlist" placement="left" class="tt-btn-wishlist">
-                                <a href="#"></a>
-                            </Poptip>
-                            <Poptip trigger="hover" content="Add to Compare" placement="left" class="tt-btn-compare">
-                                <a href="#"></a>
-                            </Poptip>
-                            <a href="product.html" tabindex="0">
-                                <span class="tt-img"><img :src="'images/samples/dress_'+product[0]+'.jpg'" alt="" class="loading" data-was-processed="true"></span>
-                                <span class="tt-img-roll-over"><img :src="'images/samples/dress_'+product[0]+'.jpg'" alt="" class="loading" data-was-processed="true"></span>
-                                <span class="tt-label-location">
-                                    <span class="tt-label-new">New</span>
-                                </span>
-                            </a>
-                            <div v-if="false" class="tt-countdown_box" style="bottom: 0px;">
-                                <div class="tt-countdown_inner">
-                                    <div class="tt-countdown" data-date="2018-11-01" data-year="Yrs" data-month="Mths" data-week="Wk" data-day="Day" data-hour="Hrs" data-minute="Min" data-second="Sec">
-                                        <span class="countdown-row">
-                                            <span class="countdown-section">
-                                                <span class="countdown-amount">0</span>
-                                                <span class="countdown-period">Day</span>
-                                            </span>
-                                            <span class="countdown-section">
-                                                <span class="countdown-amount">0</span>
-                                                <span class="countdown-period">Hrs</span>
-                                            </span>
-                                            <span class="countdown-section">
-                                                <span class="countdown-amount">0</span>
-                                                <span class="countdown-period">Min</span>
-                                            </span>
-                                            <span class="countdown-section">
-                                                <span class="countdown-amount">0</span>
-                                                <span class="countdown-period">Sec</span>
-                                            </span>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="tt-description" style="top: 0px;">
-                            <div class="tt-row">
-                                <ul class="tt-add-info">
-                                    <li><a href="#" tabindex="0">Dresses</a></li>
-                                </ul>
-                                <Rate allow-half :value="2.5" class="tt-rating-stars" />
-                            </div>
-                            <h2 class="tt-title"><a href="product.html" tabindex="0">Flared Shift Dress</a></h2>
-                            <div class="tt-price mt-2">P{{ product[1] }}</div>
-                            <div class="tt-option-block">
-                                <ul class="tt-options-swatch">
-                                    <li><a class="options-color tt-color-bg-01" href="#" tabindex="0"></a></li>
-                                    <li><a class="options-color tt-color-bg-02" href="#" tabindex="0"></a></li>
-                                </ul>
-                            </div>
-                            <div class="tt-product-inside-hover" style="opacity: 0;">
-                                <div class="tt-row-btn">
-                                    <a href="#" class="tt-btn-addtocart thumbprod-button-bg" data-toggle="modal" data-target="#modalAddToCartProduct" tabindex="0">ADD TO CART</a>
-                                </div>
-                                <div class="tt-row-btn">
-                                    <a href="#" class="tt-btn-quickview" data-toggle="modal" data-target="#ModalquickView" tabindex="0"></a>
-                                    <a href="#" class="tt-btn-wishlist" tabindex="0"></a>
-                                    <a href="#" class="tt-btn-compare" tabindex="0"></a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Show when we have stores -->
+                <Col v-if="isLoadingStores" :span="8">
+                
+                    <!-- Loader -->
+                    <Loader :loading="true" type="text" class="mt-5 text-left" theme="white">Loading stores...</Loader>
+
                 </Col>
 
+                <!-- Show when we have stores -->
+                <Col v-if="(stores || {}).length && !isLoadingStores" :span="8">
+                
+                    <div class="mt-5 mb-3 pb-3 clearfix border-bottom">
+                        <div class="mb-3">
+                            <Card v-for="(store, key) in stores" :key="key"
+                                  @click.native="$router.push({ name:'store-overview', params:{ id: store.id } })"
+                                  class="mb-2">
+                                <span>{{ store.name }}</span>
+                                <Icon type="md-arrow-forward" :size="15" class="float-right mt-1"/>
+                            </Card>
+                        </div>
+                    </div>
+
+                    <!-- Add Store Button -->
+                    <basicButton @click.native="$router.push({ name:'create-store' })" 
+                                    size="large" class="float-left mb-3 mr-1">
+                                    <span>+ Add Store</span>
+                    </basicButton>
+
+                </Col>
+
+                <!-- Show when we don't have stores -->
+                <Col v-if="!(stores || {}).length && !isLoadingStores" :span="8">
+                    <div class="mt-5 mb-2 pt-5 pb-3 clearfix border-bottom">
+                        <h1 class="mb-3">Add your store</h1>
+                        <p class="mb-3" style="font-size:14px;">Get started by creating your first store to sell products, services, events, memberships and even collect donations.</p>
+
+                        <!-- Add Store Button -->
+                        <basicButton @click.native="$router.push({ name:'create-store' })" 
+                                     size="large" class="float-left mb-3 mr-1">
+                                     <span>+ Add Store</span>
+                        </basicButton>
+
+                    </div>
+                     <span>Need help? <a href="#" class="font-weight-bold">Learn more <Icon type="ios-share-alt-outline" :size="20" style="margin-top: -9px;"/></a></span>
+                </Col>
+                <Col :span="16">
+                    <img style="width:100%;" class="mt-4" src="/images/backgrounds/mobile-ecommerce.png">
+                </Col>
             </Row>
         </Col>
+
     </Row>
 
 </template>
@@ -117,9 +69,6 @@
     /*  Buttons  */
     import basicButton from './../../../components/_common/buttons/basicButton.vue';
 
-    /*  Switches  */
-    import toggleSwitch from './../../../components/_common/switches/toggleSwitch.vue';
-
     /*  Loaders  */
     import Loader from './../../../components/_common/loaders/Loader.vue';  
     
@@ -128,34 +77,59 @@
 
     export default {
         components: { 
-            basicButton, toggleSwitch, Loader
-        },
-        props: {
-            products: {
-                type: Array,
-                default: function(){
-                    return [];
-                }
-            }
+            basicButton, Loader
         },
         data(){
             return {
-
-                user: auth.user,
-                localProducts: this.products
-                
-            }
-        },
-        watch: {
-            products: {
-                handler: function (val, oldVal) {
-                    this.localProducts = val;
-                },
-                deep: true
+                stores: null,
+                isLoadingStores: false,
             }
         },
         methods: {
-            
+            fetchStore() {
+
+                //  Hold constant reference to the vue instance
+                const self = this;
+
+                //  Start loader
+                self.isLoadingStores = true;
+
+                //  Console log to acknowledge the start of api process
+                console.log('Start getting stores...');
+
+                //  Additional data to eager load along with the store found
+                var connections = '';
+
+                //  Use the api call() function located in resources/js/api.js
+                api.call('get', '/api/stores'+connections)
+                    .then(({data}) => {
+                        
+                        //  Console log the data returned
+                        console.log(data);
+
+                        //  Stop loader
+                        self.isLoadingStores = false;
+
+                        //  Store the stores data
+                        self.stores = (data || {}).data || [];
+
+                    })         
+                    .catch(response => { 
+
+                        //  Stop loader
+                        self.isLoadingStores = false;
+
+                        //  Console log Error Location
+                        console.log('dashboard/store/show/main.vue - Error getting stores...');
+
+                        //  Log the responce
+                        console.log(response);    
+                    });
+            }
+        },
+        created(){
+            //  Fetch the store
+            this.fetchStore();
         }
     };
   

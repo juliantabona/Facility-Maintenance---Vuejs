@@ -33,9 +33,21 @@ class Company extends Model
      * @var array
      */
     protected $fillable = [
-        'name', 'abbreviation', 'description', 'date_of_incorporation', 'type', 'industry', 'address', 'country', 'provience', 'city', 'postal_or_zipcode',
-        'email', 'additional_email', 'website_link', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link',
-        'bio', 'currency_type',
+
+        /*  Basic Info  */
+        'name', 'abbreviation', 'description', 'date_of_incorporation', 'type', 'industry',
+        
+        /*  Address Info  */
+        'address_1', 'address_2', 'country', 'provience', 'city', 'postal_or_zipcode', 
+        
+        /*  Address Info  */
+        'email', 'additional_email',
+        
+        /*  Social Info  */
+        'website_link', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link',
+
+        /*  Currency Info  */
+        'currency_type'
     ];
 
     protected $allowedFilters = [
@@ -59,6 +71,22 @@ class Company extends Model
     public function smsCredits()
     {
         return $this->hasOne('App\Sms');
+    }
+
+    /**
+     * Get the stores associated.
+     */
+    public function stores()
+    {
+        return $this->hasMany('App\Store');
+    }
+
+    /**
+     * Get the ecommerce orders
+     */
+    public function orders()
+    {
+        return $this->hasMany('App\Order', 'company_id');
     }
 
     /**

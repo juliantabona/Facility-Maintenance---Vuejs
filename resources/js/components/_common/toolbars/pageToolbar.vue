@@ -1,25 +1,35 @@
 <template>
     
-    
-    <Row :gutter="20" class="border-bottom mb-3 pb-3">
-        <Col :span="4">
-            <!-- Go Back Button -->
-            <Button v-if="showBackBtn" type="primary" @click.native="handleBack()">
-                <Icon type="md-arrow-back" :size="16"></Icon>
-                <span>Back</span>
-            </Button>
-        </Col>
-        <Col :span="showBackBtn ? '12': '8'" :offset="showBackBtn ? '0': '8'">
-            <div v-if="$slots['title']" class="text-center" :style="{ boxShadow: 'inset 0px 0px 5px #bdc9d4', borderRadius: '30px', padding: '10px 5px', marginTop: '-5px' }">
-                <!-- Main Title -->
-                <slot name="title"></slot>
-            </div>
-        </Col>
-        <Col :span="8">
-            <!-- Extra e.g) Buttons -->
-            <slot name="extra"></slot>
-        </Col>
-    </Row>
+    <div>
+
+        <!-- Toolbar With Only Back Button -->
+        <Button v-if="onlyBackBtn" type="primary" @click.native="handleBack()">
+            <Icon type="md-arrow-back" :size="16"></Icon>
+            <span>Back</span>
+        </Button>
+
+        <!-- Toolbar With Main Title, Back Button And Extra Content Slot -->
+        <Row v-else :gutter="20" class="border-bottom mb-3 pb-3">
+            <Col :span="4">
+                <!-- Go Back Button -->
+                <Button v-if="showBackBtn" type="primary" @click.native="handleBack()">
+                    <Icon type="md-arrow-back" :size="16"></Icon>
+                    <span>Back</span>
+                </Button>
+            </Col>
+            <Col :span="showBackBtn ? '12': '8'" :offset="showBackBtn ? '0': '8'">
+                <div v-if="$slots['title']" class="text-center" :style="{ boxShadow: 'inset 0px 0px 5px #bdc9d4', borderRadius: '30px', padding: '10px 5px', marginTop: '-5px' }">
+                    <!-- Main Title -->
+                    <slot name="title"></slot>
+                </div>
+            </Col>
+            <Col :span="8">
+                <!-- Extra e.g) Buttons -->
+                <slot name="extra"></slot>
+            </Col>
+        </Row>
+        
+    </div>
 
 </template>
 <script>
@@ -28,6 +38,10 @@
         showBackBtn: {
             type: Boolean,
             default: true    
+        },
+        onlyBackBtn:{
+            type: Boolean,
+            default: false 
         },
         fallbackRoute: {
             type: Object,

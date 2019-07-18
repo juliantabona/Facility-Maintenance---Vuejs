@@ -23,7 +23,7 @@ function getLoginCustomErrorFields() {
     return getLoginFormFields();
 }
 
-function resetCustomErrors(self) {
+function resetLoginCustomErrorFields(self) {
     self.loginCustomErrors = getLoginCustomErrorFields();
 }
 
@@ -55,8 +55,19 @@ function getForgotPasswordCustomErrorFields() {
     return getForgotPasswordFormFields();
 }
 
-function resetCustomErrors(self) {
+function resetForgotPasswordCustomErrorFields(self) {
     self.forgotPasswordCustomErrors = getForgotPasswordCustomErrorFields();
+}
+
+function resetURL(self){
+    //  Change the browser url to remove the reset token and email
+    let query = Object.assign({}, self.$route.query);
+    //  Delete the reset token
+    delete query.resetToken;
+    //  Delet the reset email
+    delete query.resetEmail;
+    //  Update the url
+    self.$router.replace({ query });
 }
 
 export default {
@@ -66,6 +77,7 @@ export default {
     getForgotPasswordFormFields,
     getForgotPasswordFormRules,
     getForgotPasswordCustomErrorFields,
+    resetURL,
     initiateLogin(self) {
         
         var validation;
@@ -86,7 +98,7 @@ export default {
         if(validation){
             
             //  Reset all our custom server errors
-            resetCustomErrors(self);
+            resetLoginCustomErrorFields(self);
 
             //  Start loader
             self.isLoggingIn = true;
@@ -193,7 +205,7 @@ export default {
         if(validation){
             
             //  Reset all our custom server errors
-            resetCustomErrors(self);
+            resetForgotPasswordCustomErrorFields(self);
 
             //  Start loader
             self.isSendingForgotPasswordEmail = true;
@@ -227,7 +239,7 @@ export default {
                     self.isSendingForgotPasswordEmail = false;     
                 
                     /* 
-                    *  422: Validation failed. Incorrect credentials
+                    *  422: Validation failed.
                     */
                     if(response.status === 422){
                         
@@ -244,6 +256,99 @@ export default {
                                 var value = Object.values(errors)[i][0];
                                 //  Dynamically update the customErrors for Element UI to display the error to the user
                                 self.forgotPasswordCustomErrors[prop] = value;
+                            }
+
+                        }
+                    }
+
+                    return false;
+
+                });
+
+        }
+
+        return false;
+
+    },
+    initiateSavePasswordReset(self) {
+        
+        var validation;
+
+        //  Lets validate the current form
+        self.$refs['forgotPasswordForm'].validate((valid) => {
+            //  If the form is not valid
+            if(valid){
+                //  Set validation to true
+                validation = true;
+            }else{
+                //  Set validation to false
+                validation = false;
+            }    
+        });
+
+        /*  IF THIS FORM IS VALID LETS SUBMIT THE PASSWORD RESET INFO */
+        if(validation){
+            
+            //  Reset all our custom server errors
+            resetForgotPasswordCustomErrorFields(self);
+
+            //  Start loader
+            self.isSavingForgotPassword = true;
+
+            console.log('Attempt to save password using the following...');   
+
+            //  Login data to send
+            let resetData = {
+                password: self.forgotPasswordForm.password,
+                email: self.resetEmail,
+                token: self.resetToken,
+                redirectTo: window.location.origin + "/" + self.$router.resolve(self.resetPasswordRedirectTo).href
+            };
+
+            console.log(resetData);
+
+            //  Use the api call() function located in resources/js/api.js
+            return api.call('post', '/api/password/reset', resetData)
+                .then(({data}) => {
+
+                    //  Stop loader
+                    self.isSavingForgotPassword = false;
+
+                    console.log(data);
+                    
+                })         
+                .catch(response => { 
+                    
+                    console.log('components/_common/login-user/main.js - Error sending password reset email...');
+                    console.log(response);
+
+                    //  Stop loader
+                    self.isSavingForgotPassword = false;     
+                
+                    /* 
+                    *  422: Validation failed.
+                    */
+                    if(response.status === 422 || response.status === 404){
+                        
+                        var errors = (((response || {}).data || {}).errors || {});
+
+                        console.log('response.status: ' + response.status)
+                        console.log('errors: ' + errors)
+
+                        //  If we have errors
+                        if(_.size(errors)){
+                            
+                            //  Foreach error
+                            for (var i = 0; i < _.size(errors); i++) {
+                                //  Get the error key e.g 'identity', 'password'
+                                var prop = Object.keys(errors)[i];
+                                //  Get the error value e.g 'These credentials do not match our records.'
+                                var value = Object.values(errors)[i][0];
+                                console.log('prop: ' + prop)
+                                console.log('value: ' + value)
+                                //  Dynamically update the customErrors for Element UI to display the error to the user
+                                self.forgotPasswordCustomErrors[prop] = value;
+                                console.log(self.forgotPasswordCustomErrors)
                             }
 
                         }

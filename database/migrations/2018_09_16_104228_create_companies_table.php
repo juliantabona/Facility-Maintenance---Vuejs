@@ -12,27 +12,38 @@ class CreateCompaniesTable extends Migration
     public function up()
     {
         Schema::create('companies', function (Blueprint $table) {
-            $table->increments('id');
+            /*  Basic Info  */
             $table->string('name')->nullable();
             $table->string('abbreviation')->nullable();
             $table->string('description')->nullable();
             $table->timestampTz('date_of_incorporation')->nullable();
             $table->string('type')->nullable();
             $table->string('industry')->nullable();
-            $table->string('address')->nullable();
+
+            /*  Address Info  */
+            $table->string('address_1')->nullable();
+            $table->string('address_2')->nullable();
             $table->string('country')->nullable();
             $table->string('provience')->nullable();
             $table->string('city')->nullable();
             $table->string('postal_or_zipcode')->nullable();
+
+            /*  Account Info  */
             $table->string('email')->nullable();
             $table->string('additional_email')->nullable();
+
+            /*  Social Info  */
             $table->string('website_link')->nullable();
             $table->string('facebook_link')->nullable();
             $table->string('twitter_link')->nullable();
             $table->string('linkedin_link')->nullable();
             $table->string('instagram_link')->nullable();
-            $table->text('bio')->nullable();
+            $table->string('youtube_link')->nullable();
+
+            /*  Currency Info  */
             $table->json('currency_type')->nullable();
+            
+            $table->rememberToken();
             $table->softDeletes();
             $table->timestamps();
         });

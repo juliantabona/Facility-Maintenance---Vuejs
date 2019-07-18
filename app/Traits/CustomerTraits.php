@@ -42,7 +42,7 @@ trait CustomerTraits
          *  1) Data may come from the associated authenticated user branch
          *  2) Data may come from the associated authenticated user company
          *  3) Data may come from the whole bucket meaning outside the scope of the
-         *     authenticated user. This means we can access all possible models
+         *     authenticated user. This means we can access all possible records
          *     available. This is usually useful for users acting as superadmins.
          */
         $allocation = request('allocation');
@@ -60,7 +60,7 @@ trait CustomerTraits
         /*
          *  $companyId = 1, 2, 3, e.t.c
         /*
-         *  The $companyId variable only get customers specificaclly related to
+         *  The $companyId variable only get customers specifically related to
          *  the specified company id. It is useful for scenerios where we
          *  want only customers of that company
          */
@@ -177,7 +177,7 @@ trait CustomerTraits
                 if( request('count') == 1 ){
                     //  If the customers are paginated
                     if($config['paginate']){
-                        $customerArray[$key] = $customers->total ?? 0;
+                        $customerArray[$key] = $customers->total() ?? 0;
                     //  If the customers are not paginated
                     }else{
                         $customerArray[$key] = $customers->count() ?? 0;

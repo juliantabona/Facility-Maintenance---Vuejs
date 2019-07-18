@@ -165,7 +165,7 @@
                                                 <table border="0" cellspacing="0" cellpadding="0" class="mobile-button-container">
                                                     <tr>
                                                         <td align="center" style="border-radius: 3px;">
-                                                            <a href="{{ $token = $redirectTo .'?resetToken='.$user->passwordResetTokens->token.'&email='.urlencode($user->email) }}" target="_blank" 
+                                                            <a href="{{ $token = $redirectTo .'?resetToken='.$user->passwordResetTokens->token.'&resetEmail='.urlencode($user->email) }}" target="_blank" 
                                                             style=" font-size: 16px;
                                                                     font-family: Helvetica,Arial,sans-serif;
                                                                     color: #ffffff;

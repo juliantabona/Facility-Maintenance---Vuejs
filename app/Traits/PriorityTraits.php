@@ -36,7 +36,7 @@ trait PriorityTraits
          *  1) Data may come from the associated authenticated user branch
          *  2) Data may come from the associated authenticated user company
          *  3) Data may come from the whole bucket meaning outside the scope of the
-         *     authenticated user. This means we can access all possible models
+         *     authenticated user. This means we can access all possible records
          *     available. This is usually useful for users acting as superadmins.
          */
         $allocation = request('allocation');
@@ -44,7 +44,7 @@ trait PriorityTraits
         /*
          *  $modelType = jobcard, asset, e.t.c
         /*
-         *  The $modelType variable only get data specificaclly related to
+         *  The $modelType variable only get data specifically related to
          *  the specified model. It is useful for scenerios where we
          *  want only priorities of that model only.
          */

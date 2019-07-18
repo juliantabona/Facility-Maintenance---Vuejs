@@ -100,7 +100,7 @@ function oq_api_notify($data, $status)
     return response()->json($data, $status);
 }
 
-function oq_api_notify_error($msg, $error, $status)
+function oq_api_notify_error($msg = '', $error = [], $status = 404)
 {
     return oq_api_notify([
         //  Return the usual laravel error format

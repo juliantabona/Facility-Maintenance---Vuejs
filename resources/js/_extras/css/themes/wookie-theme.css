@@ -2333,9 +2333,9 @@ header {
           margin-top: 4px; }
           header .tt-cart .tt-dropdown-menu .tt-cart-layout .tt-cart-content .tt-cart-btn .tt-item {
             margin-top: 20px; }
-          header .tt-cart .tt-dropdown-menu .tt-cart-layout .tt-cart-content .tt-cart-btn .btn_2 {
+          header .tt-cart .tt-dropdown-menu .tt-cart-layout .tt-cart-content .tt-cart-btn .wookie-btn-2 {
             font-weight: 500; }
-          header .tt-cart .tt-dropdown-menu .tt-cart-layout .tt-cart-content .tt-cart-btn .btn:not(.btn-border) {
+          header .tt-cart .tt-dropdown-menu .tt-cart-layout .tt-cart-content .tt-cart-btn .wookie-btn:not(.wookie-btn-border) {
             font-size: 12px; }
         header .tt-cart .tt-dropdown-menu .tt-cart-layout .tt-cart-content .tt-cart-total-title {
           letter-spacing: 0.02em; } }
@@ -2741,7 +2741,7 @@ header {
       header .tt-cart .tt-cart-layout .tt-cart-content .tt-cart-btn .tt-item {
         margin-top: 11px;
         width: 100%; }
-      header .tt-cart .tt-cart-layout .tt-cart-content .tt-cart-btn .btn_2 {
+      header .tt-cart .tt-cart-layout .tt-cart-content .tt-cart-btn .wookie-btn-2 {
         padding-left: 13px;
         padding-right: 13px;
         width: 100%; }
@@ -4475,11 +4475,11 @@ body:not(.touch-device) .tt-menu-toggle:not(.stylization-02):hover i {
       .tt-promo-02 .tt-description.tt-point-v-t {
         padding: 26px 28px 26px 28px; } }
 
-.tt-promo-02:hover .btn-underline,
-.tt-promo-02:hover .btn-underline.tt-white-color {
+.tt-promo-02:hover .wookie-btn-underline,
+.tt-promo-02:hover .wookie-btn-underline.tt-white-color {
   border-color: transparent !important; }
 
-.tt-promo-02:hover .btn-underline.tt-white-color {
+.tt-promo-02:hover .wookie-btn-underline.tt-white-color {
   color: #ffffff; }
 
 .desctop-menu-large .tt-desktop-header .tt-obj-menu {
@@ -5348,7 +5348,7 @@ footer {
             -moz-border-radius-bottomright: 0px;
             border-top-right-radius: 0px;
             border-bottom-right-radius: 0px; }
-          footer .tt-footer-col .tt-newsletter .tt-collapse-content .form-inline .form-group .btn_2 {
+          footer .tt-footer-col .tt-newsletter .tt-collapse-content .form-inline .form-group .wookie-btn-2 {
             -webkit-border-top-left-radius: 0px;
             -webkit-border-bottom-left-radius: 0px;
             -moz-border-radius-topleft: 0px;
@@ -5584,7 +5584,7 @@ footer {
                 -moz-border-radius-bottomright: 0px;
                 border-top-right-radius: 0px;
                 border-bottom-right-radius: 0px; }
-              footer .tt-footer-center .tt-newsletter .tt-collapse-content .form-inline .form-group .btn_2 {
+              footer .tt-footer-center .tt-newsletter .tt-collapse-content .form-inline .form-group .wookie-btn-2 {
                 -webkit-border-top-left-radius: 0px;
                 -webkit-border-bottom-left-radius: 0px;
                 -moz-border-radius-topleft: 0px;
@@ -5666,7 +5666,7 @@ footer {
         -moz-border-radius-bottomright: 0px;
         border-top-right-radius: 0px;
         border-bottom-right-radius: 0px; }
-      footer .tt-footer-default .tt-newsletter .form-default .form-group .btn_2 {
+      footer .tt-footer-default .tt-newsletter .form-default .form-group .wookie-btn-2 {
         -webkit-border-top-left-radius: 0px;
         -webkit-border-bottom-left-radius: 0px;
         -moz-border-radius-topleft: 0px;
@@ -5917,10 +5917,10 @@ footer {
         color: #777777; }
       footer .tt-color-scheme-01 .tt-newsletter :-ms-input-placeholder {
         color: #777777; }
-      footer .tt-color-scheme-01 .tt-newsletter .btn_2 {
+      footer .tt-color-scheme-01 .tt-newsletter .wookie-btn-2 {
         background: #2879fe;
         color: #ffffff; }
-      footer .tt-color-scheme-01 .tt-newsletter .btn:hover {
+      footer .tt-color-scheme-01 .tt-newsletter .wookie-btn:hover {
         background: #000000;
         color: #ffffff; }
       footer .tt-color-scheme-01 .tt-social-icon li a {
@@ -5960,10 +5960,10 @@ footer {
         color: #777777; }
       footer .tt-color-scheme-02 .tt-newsletter :-ms-input-placeholder {
         color: #777777; }
-      footer .tt-color-scheme-02 .tt-newsletter .btn_2 {
+      footer .tt-color-scheme-02 .tt-newsletter .wookie-btn-2 {
         background: #303030;
         color: #ffffff; }
-      footer .tt-color-scheme-02 .tt-newsletter .btn:hover {
+      footer .tt-color-scheme-02 .tt-newsletter .wookie-btn:hover {
         background: #000000;
         color: #ffffff; }
       footer .tt-color-scheme-02 .tt-social-icon li a {
@@ -6014,10 +6014,10 @@ footer {
         color: #777777; }
       footer .tt-color-scheme-03 .tt-newsletter :-ms-input-placeholder {
         color: #777777; }
-      footer .tt-color-scheme-03 .tt-newsletter .btn_2 {
+      footer .tt-color-scheme-03 .tt-newsletter .wookie-btn-2 {
         background: #2879fe;
         color: #ffffff; }
-      footer .tt-color-scheme-03 .tt-newsletter .btn:hover {
+      footer .tt-color-scheme-03 .tt-newsletter .wookie-btn:hover {
         background: #000000;
         color: #ffffff; }
     footer .tt-color-scheme-04 {
@@ -6055,10 +6055,10 @@ footer {
         color: #777777; }
       footer .tt-color-scheme-04 .tt-newsletter :-ms-input-placeholder {
         color: #777777; }
-      footer .tt-color-scheme-04 .tt-newsletter .btn_2 {
+      footer .tt-color-scheme-04 .tt-newsletter .wookie-btn-2 {
         background: #2879fe;
         color: #ffffff; }
-      footer .tt-color-scheme-04 .tt-newsletter .btn:hover {
+      footer .tt-color-scheme-04 .tt-newsletter .wookie-btn:hover {
         background: #000000;
         color: #ffffff; } }
   @media (max-width: 789px) {
@@ -6281,7 +6281,7 @@ footer {
           margin-bottom: 0; }
           footer .tt-newsletter form .form-group .form-control {
             width: 100%; }
-        footer .tt-newsletter form .btn_2 {
+        footer .tt-newsletter form .wookie-btn-2 {
           margin-top: 10px;
           width: 100%;
           text-align: center;
@@ -6311,10 +6311,10 @@ footer {
         color: #777777; }
       footer .tt-newsletter :-ms-input-placeholder {
         color: #777777; }
-      footer .tt-newsletter .btn_2 {
+      footer .tt-newsletter .wookie-btn-2 {
         background: #2879fe;
         color: #ffffff; }
-      footer .tt-newsletter .btn:hover {
+      footer .tt-newsletter .wookie-btn:hover {
         background: #000000;
         color: #ffffff; }
       footer .tt-list li a {
@@ -7265,7 +7265,7 @@ html:not(.ie) .tt-blog-thumb .tt-title-description .tt-background {
       height: auto; }
   .tt-aside-info p {
     margin-top: 12px; }
-  .tt-aside-info .btn-top {
+  .tt-aside-info .wookie-btn-top {
     margin-top: 18px; }
 
 /* tt-list-inline (blog aside, listing aside)*/
@@ -7312,7 +7312,7 @@ html:not(.ie) .tt-blog-thumb .tt-title-description .tt-background {
 .tt-aside-subscribe-box .form-default .form-group {
   margin-bottom: 10px; }
 
-.tt-aside-subscribe-box .btn_2 {
+.tt-aside-subscribe-box .wookie-btn-2 {
   width: 100%;
   display: block; }
 
@@ -7423,7 +7423,7 @@ html:not(.ie) .tt-blog-thumb .tt-title-description .tt-background {
       color: #2879fe; }
   .tt-pagination ul li.active a {
     color: #2879fe; }
-  .tt-pagination .btn-pagination {
+  .tt-pagination .wookie-btn-pagination {
     font-family: "wokiee";
     font-size: 20px;
     line-height: 1;
@@ -7436,11 +7436,11 @@ html:not(.ie) .tt-blog-thumb .tt-title-description .tt-background {
     -o-transition: color 0.2s linear;
     -webkit-transition: color 0.2s linear;
     transition: color 0.2s linear; }
-  .tt-pagination .btn-pagination:hover {
+  .tt-pagination .wookie-btn-pagination:hover {
     color: #2879fe; }
-  .tt-pagination .btn-prev:before {
+  .tt-pagination .wookie-btn-prev:before {
     content: "\e9cd"; }
-  .tt-pagination .btn-next:before {
+  .tt-pagination .wookie-btn-next:before {
     content: "\e9ce"; }
   @media (max-width: 1229px) {
     .tt-pagination {
@@ -8226,11 +8226,11 @@ html.edge .tt-portfolio-content figure:hover figcaption {
       -webkit-flex: 1 1 auto;
       -ms-flex: 1 1 auto;
       flex: 1 1 auto; }
-    .tt-product-single-info .tt-row-custom-01 .btn_2 {
+    .tt-product-single-info .tt-row-custom-01 .wookie-btn-2 {
       width: 100%; }
-    .tt-product-single-info .tt-row-custom-01 .btn.btn-lg {
+    .tt-product-single-info .tt-row-custom-01 .wookie-btn.wookie-btn-lg {
       font-size: 14px; }
-      .tt-product-single-info .tt-row-custom-01 .btn.btn-lg i {
+      .tt-product-single-info .tt-row-custom-01 .wookie-btn.wookie-btn-lg i {
         font-size: 20px;
         position: relative;
         top: -3px; }
@@ -8794,17 +8794,17 @@ html.edge .tt-portfolio-content figure:hover figcaption {
   font-weight: 500;
   letter-spacing: 0.03em; }
 
-.tt-options-swatch:not(.options-large):not(.options-middle) li a:not(.options-color) {
+.tt-options-swatch:not(.options-large):not(.options-middle) li span:not(.options-color) {
   font-size: 12px;
   line-height: 16px; }
 
-.tt-options-swatch:not(.options-large):not(.options-middle) li a {
+.tt-options-swatch:not(.options-large):not(.options-middle) li span {
   min-width: 21px;
   min-height: 21px; }
-  .tt-options-swatch:not(.options-large):not(.options-middle) li a:not(.options-color) {
+  .tt-options-swatch:not(.options-large):not(.options-middle) li span:not(.options-color) {
     border-radius: 2px; }
 
-.tt-options-swatch:not(.options-large):not(.options-middle) li a.options-color {
+.tt-options-swatch:not(.options-large):not(.options-middle) li span.options-color {
   width: 21px;
   height: 21px;
   -webkit-background-size: cover;
@@ -8824,13 +8824,13 @@ html.edge .tt-portfolio-content figure:hover figcaption {
 .tt-options-swatch:not(.options-large):not(.options-middle) li.active .options-color:after {
   border-width: 2px; }
 
-.tt-options-swatch.options-large li a {
+.tt-options-swatch.options-large li span {
   min-width: 40px;
   min-height: 40px; }
-  .tt-options-swatch.options-large li a:not(.options-color) {
+  .tt-options-swatch.options-large li span:not(.options-color) {
     border-radius: 6px; }
 
-.tt-options-swatch.options-large li a.options-color {
+.tt-options-swatch.options-large li span.options-color {
   width: 40px;
   height: 40px;
   -webkit-background-size: cover;
@@ -8844,13 +8844,13 @@ html.edge .tt-portfolio-content figure:hover figcaption {
 .tt-options-swatch.options-large li.active .options-color:before {
   border-width: 5px; }
 
-.tt-options-swatch.options-middle li a {
+.tt-options-swatch.options-middle li span {
   min-width: 31px;
   min-height: 31px; }
-  .tt-options-swatch.options-middle li a:not(.options-color) {
+  .tt-options-swatch.options-middle li span:not(.options-color) {
     border-radius: 6px; }
 
-.tt-options-swatch.options-middle li a.options-color {
+.tt-options-swatch.options-middle li span.options-color {
   width: 31px;
   height: 31px;
   -webkit-background-size: cover;
@@ -8864,13 +8864,13 @@ html.edge .tt-portfolio-content figure:hover figcaption {
 .tt-options-swatch.options-middle li.active .options-color:before {
   border-width: 5px; }
 
-html.win.ie .tt-options-swatch:not(.options-large):not(.options-middle) li a {
+html.win.ie .tt-options-swatch:not(.options-large):not(.options-middle) li span {
   line-height: 21px; }
 
-html.win.ie .tt-options-swatch.options-large li a {
+html.win.ie .tt-options-swatch.options-large li span {
   line-height: 40px; }
 
-html.win.ie .tt-options-swatch.options-middle li a {
+html.win.ie .tt-options-swatch.options-middle li span {
   line-height: 30px; }
 
 .product-information-buttons a {
@@ -8914,7 +8914,7 @@ ul.tt-options-swatch {
   margin: -10px -1px 0 -5px; }
   ul.tt-options-swatch li {
     margin: 10px 5px 0; }
-    ul.tt-options-swatch li a {
+    ul.tt-options-swatch li span {
       display: -ms-flexbox;
       display: -webkit-flex;
       display: flex;
@@ -8932,7 +8932,7 @@ ul.tt-options-swatch {
       -o-transition: all 0.2s linear;
       font-size: 14px;
       line-height: 1.1; }
-    ul.tt-options-swatch li a:not(.options-color):not(.options-color-img) {
+    ul.tt-options-swatch li span:not(.options-color):not(.options-color-img) {
       padding-left: 5px;
       padding-right: 5px; }
     ul.tt-options-swatch li img {
@@ -8940,11 +8940,11 @@ ul.tt-options-swatch {
       height: auto;
       max-width: inherit;
       border-radius: 50%; }
-  ul.tt-options-swatch li a:not(.options-color):not(.options-color-img) {
+  ul.tt-options-swatch li span:not(.options-color):not(.options-color-img) {
     background: #f7f8fa;
     color: #777777; }
-  ul.tt-options-swatch li:hover a:not(.options-color):not(.options-color-img),
-  ul.tt-options-swatch li.active a:not(.options-color):not(.options-color-img) {
+  ul.tt-options-swatch li:hover span:not(.options-color):not(.options-color-img),
+  ul.tt-options-swatch li.active span:not(.options-color):not(.options-color-img) {
     background: #2879fe;
     color: #ffffff; }
   ul.tt-options-swatch li .options-color {
@@ -9461,7 +9461,7 @@ html.ie.gecko body.modal-open {
       padding-right: 52px; }
     .tt-modal-addtocart.desctope .row > div:last-child {
       padding-left: 49px; }
-      .tt-modal-addtocart.desctope .row > div:last-child .btn_2 {
+      .tt-modal-addtocart.desctope .row > div:last-child .wookie-btn-2 {
         width: 100%; }
   .tt-modal-addtocart.desctope .tt-modal-messages {
     font-family: "Hind", sans-serif;
@@ -9514,9 +9514,9 @@ html.ie.gecko body.modal-open {
       .tt-modal-addtocart.desctope .tt-cart-total .tt-total .tt-price {
         color: #2879fe;
         font-size: 24px; }
-  .tt-modal-addtocart.desctope [class^="col"] .btn_2 {
+  .tt-modal-addtocart.desctope [class^="col"] .wookie-btn-2 {
     margin-top: 20px; }
-  .tt-modal-addtocart.desctope [class^="col"] .tt-cart-total + .btn_2 {
+  .tt-modal-addtocart.desctope [class^="col"] .tt-cart-total + .wookie-btn-2 {
     margin-top: 25px; }
   .tt-modal-addtocart.desctope [class^="col"] > *:nth-child(1) {
     margin-top: 0; }
@@ -9768,7 +9768,7 @@ html.ie.gecko body.modal-open {
     color: #2879fe; }
 
 @media (min-width: 501px) {
-  .tt-modal-newsletter .subscribe-form .input-group .btn_2 {
+  .tt-modal-newsletter .subscribe-form .input-group .wookie-btn-2 {
     -webkit-border-top-left-radius: 0px;
     -webkit-border-bottom-left-radius: 0px;
     -moz-border-radius-topleft: 0px;
@@ -10667,7 +10667,7 @@ html.ie .tt-btn-col-close {
     .tt-filter-list li.active a:before {
       color: #2879fe; }
 
-.tt-filter-list + .btn-link-02 {
+.tt-filter-list + .wookie-btn-link-02 {
   margin-top: 6px; }
 
 /* tt-list-row (aside simple list)*/
@@ -11811,7 +11811,7 @@ html.ie .tt-btn-col-close {
       -webkit-align-items: center;
       -ms-flex-align: center;
       align-items: center; }
-      .tt-product-design02:not(.tt-view).thumbprod-center .tt-description .tt-options-swatch:not(.options-large):not(.options-middle) li a:not(.options-color) {
+      .tt-product-design02:not(.tt-view).thumbprod-center .tt-description .tt-options-swatch:not(.options-large):not(.options-middle) li span:not(.options-color) {
         padding-top: 1px; }
     .tt-product-design02:not(.tt-view).thumbprod-center .tt-description .tt-product-inside-hover {
       display: block;
@@ -12042,18 +12042,18 @@ html.ie .tt-btn-col-close {
         width: 100%; }
       .tt-product-design02:not(.tt-view) .tt-description > *:nth-child(1) {
         margin-top: 0; }
-    .tt-product-design02:not(.tt-view) .tt-options-swatch li a:not(.options-color) {
+    .tt-product-design02:not(.tt-view) .tt-options-swatch li span:not(.options-color) {
       background: #ffffff;
       color: #191919; }
-    .tt-product-design02:not(.tt-view) .tt-options-swatch li a.options-color {
+    .tt-product-design02:not(.tt-view) .tt-options-swatch li span.options-color {
       font-size: 0;
       line-height: 0; }
-    .tt-product-design02:not(.tt-view) .tt-options-swatch li:hover a:not(.options-color) {
+    .tt-product-design02:not(.tt-view) .tt-options-swatch li:hover span:not(.options-color) {
       color: #ffffff;
       background: #2879fe; }
     .tt-product-design02:not(.tt-view) .tt-options-swatch li:hover .options-color:before {
       border-color: #ffffff; }
-    .tt-product-design02:not(.tt-view) .tt-options-swatch li.active a:not(.options-color) {
+    .tt-product-design02:not(.tt-view) .tt-options-swatch li.active span:not(.options-color) {
       color: #ffffff;
       background: #2879fe; }
     .tt-product-design02:not(.tt-view) .tt-options-swatch li.active .options-color:before {
@@ -13193,7 +13193,7 @@ html:not(.ie) .tt-promo-box .tt-description .tt-description-wrapper .tt-backgrou
     color: #191919; }
   .tt-promo-box:not(.hover-type-2):hover .tt-title-small {
     color: #191919; }
-  .tt-promo-box:not(.hover-type-2):hover .btn-underline {
+  .tt-promo-box:not(.hover-type-2):hover .wookie-btn-underline {
     border-color: transparent;
     color: #2879fe; }
 
@@ -13203,7 +13203,7 @@ html:not(.ie) .tt-promo-box .tt-description .tt-description-wrapper .tt-backgrou
 .tt-promo-box.hover-type-2:hover .tt-description-wrapper *:not(.tt-base-color) {
   color: #ffffff; }
 
-.tt-promo-box.hover-type-2:hover .tt-description-wrapper .btn-underline {
+.tt-promo-box.hover-type-2:hover .tt-description-wrapper .wookie-btn-underline {
   border-color: transparent; }
 
 .tt-promo-box.hover-type-3:hover .tt-description-wrapper .tt-title-large:not(.tt-base-color) {
@@ -13993,7 +13993,7 @@ html:not(.ie) .tt-promo-box .tt-description .tt-description-wrapper .tt-backgrou
       -webkit-align-items: center;
       -ms-flex-align: center;
       align-items: center; }
-      .tt-shopcart-table .tt-shopcart-btn .col-right .btn_link:first-child {
+      .tt-shopcart-table .tt-shopcart-btn .col-right .wookie-btn-link:first-child {
         -webkit-order: 2;
         -ms-flex-order: 2;
         order: 2; }
@@ -14244,7 +14244,7 @@ table + *[class^="btn"] {
       -webkit-align-items: center;
       -ms-flex-align: center;
       align-items: center; }
-      .tt-shopcart-table-02 .tt-shopcart-btn .col-right .btn_link:first-child {
+      .tt-shopcart-table-02 .tt-shopcart-btn .col-right .wookie-btn-link:first-child {
         -webkit-order: 2;
         -ms-flex-order: 2;
         order: 2; }
@@ -15906,10 +15906,10 @@ html.ie #tt-boxedbutton .rtlbutton-color:hover .box-description {
         color: #ffffff; }
   .tt-wishlist-box .tt-wishlist-list .tt-item .tt-col-btn > * {
     margin-left: 12px; }
-  .tt-wishlist-box .tt-wishlist-list .tt-item .tt-col-btn .btn_link {
+  .tt-wishlist-box .tt-wishlist-list .tt-item .tt-col-btn .wookie-btn-link {
     top: -4px;
     position: relative; }
-    .tt-wishlist-box .tt-wishlist-list .tt-item .tt-col-btn .btn_link .icon-f-73 {
+    .tt-wishlist-box .tt-wishlist-list .tt-item .tt-col-btn .wookie-btn-link .icon-f-73 {
       top: 4px; }
   @media (max-width: 1024px) {
     .tt-wishlist-box .tt-wishlist-list .tt-item .tt-col-btn {
@@ -16924,7 +16924,7 @@ a:focus {
   text-decoration: none;
   outline: none; }
 
-.btn_2 {
+.wookie-btn-2 {
   background: #2879fe;
   font-family: "Hind", sans-serif;
   border: none;
@@ -16948,88 +16948,88 @@ a:focus {
   -webkit-transition: all 0.2s linear;
   -o-transition: all 0.2s linear; }
   @media (max-width: 575px) {
-    .btn_2 {
+    .wookie-btn-2 {
       font-size: 12px;
       padding-left: 25px;
       padding-right: 25px;
       height: 39px; } }
 
 @media (min-width: 576px) {
-  .btn:not(.tt-icon-right) [class^="icon-"] {
+  .wookie-btn:not(.tt-icon-right) [class^="icon-"] {
     font-size: 20px;
     margin-right: 10px; } }
 
 @media (max-width: 575px) {
-  .btn:not(.tt-icon-right) [class^="icon-"] {
+  .wookie-btn:not(.tt-icon-right) [class^="icon-"] {
     font-size: 18px;
     margin-right: 10px; } }
 
 @media (min-width: 576px) {
-  .btn.tt-icon-right [class^="icon-"] {
+  .wookie-btn.tt-icon-right [class^="icon-"] {
     font-size: 20px;
     margin-left: 10px;
     position: relative;
     top: -2px; } }
 
 @media (max-width: 575px) {
-  .btn.tt-icon-right [class^="icon-"] {
+  .wookie-btn.tt-icon-right [class^="icon-"] {
     font-size: 18px;
     margin-left: 10px; } }
 
-.btn:active,
-.btn:visited,
-.btn:focus,
+.wookie-btn:active,
+.wookie-btn:visited,
+.wookie-btn:focus,
 button:focus {
   outline: none;
   box-shadow: none; }
 
-.btn:hover {
+.wookie-btn:hover {
   background: #2267d8;
   color: #ffffff;
   outline: none; }
 
-.btn-lg {
+.wookie-btn-lg {
   height: 50px;
   padding: 5px 31px 4px; }
 
 @media (min-width: 1101px) {
-  .btn-xl {
+  .wookie-btn-xl {
     height: 50px;
     padding: 2px 41px 0px; } }
 
 @media (min-width: 790px) and (max-width: 1100px) {
-  .btn-xl {
+  .wookie-btn-xl {
     height: 40px;
     padding-top: 2px;
     padding-bottom: 0; } }
 
 @media (max-width: 789px) {
-  .btn-xl {
+  .wookie-btn-xl {
     padding-left: 25px;
     padding-right: 25px;
     padding-top: 2px;
     padding-bottom: 0; } }
 
-.btn:focus, .btn.focus {
+.wookie-btn:focus, .wookie-btn.focus {
   box-shadow: none; }
 
-.btn.btn-white {
+.wookie-btn.wookie-btn-white {
   background: #ffffff;
   color: #191919; }
 
-.btn.btn-white:hover {
+.wookie-btn.wookie-btn-white:hover {
   background: #191919;
   color: #ffffff; }
 
-.btn.btn-dark {
+.wookie-btn.wookie-btn-dark {
   background: #191919;
   color: #ffffff; }
 
-.btn.btn-dark:hover {
+.wookie-btn.wookie-btn-dark:hover {
   background: #2879fe;
   color: #ffffff; }
 
-.btn.btn-border {
+.wookie-btn.wookie-btn-border {
   background: transparent;
   color: #2879fe;
   border: 2px solid #2879fe;
@@ -17037,12 +17037,12 @@ button:focus {
   padding-left: 29px;
   padding-right: 29px; }
 
-.btn.btn-border:hover {
+.wookie-btn.wookie-btn-border:hover {
   background: #191919;
   color: #ffffff;
   border-color: #191919; }
 
-.btn.btn-border01 {
+.wookie-btn.wookie-btn-border01 {
   background: transparent;
   color: #999999;
   border: 2px solid #999999;
@@ -17052,13 +17052,13 @@ button:focus {
   pointer-events: none;
   border-radius: 6px; }
 
-.btn.btn-border01:hover {
+.wookie-btn.wookie-btn-border01:hover {
   background: #191919;
   color: #ffffff;
   outline-color: #191919; }
 
-.btn_link,
-.btn_link:focus {
+.wookie-btn-link,
+.wookie-btn-link:focus {
   display: inline-block;
   font-size: 14px;
   color: #2879fe;
@@ -17070,19 +17070,19 @@ button:focus {
   -o-transition: color 0.2s linear;
   -webkit-transition: color 0.2s linear;
   transition: color 0.2s linear; }
-  .btn_link *[class^="icon-"],
-  .btn_link:focus *[class^="icon-"] {
+  .wookie-btn-link *[class^="icon-"],
+  .wookie-btn-link:focus *[class^="icon-"] {
     margin-right: 7px;
     font-size: 20px;
     position: relative;
     top: 3px; }
 
-.btn_link:hover {
+.wookie-btn-link:hover {
   text-decoration: none;
   color: #191919; }
 
-.btn-link-02,
-.btn-link-02:focus {
+.wookie-btn-link-02,
+.wookie-btn-link-02:focus {
   display: inline-block;
   font-size: 14px;
   color: #2879fe;
@@ -17092,11 +17092,11 @@ button:focus {
   -webkit-transition: all 0.2s linear;
   -o-transition: all 0.2s linear; }
 
-.btn-link-02:hover {
+.wookie-btn-link-02:hover {
   text-decoration: none;
   color: #191919; }
 
-.btn-underline {
+.wookie-btn-underline {
   display: inline-block;
   font-size: 14px;
   line-height: 16px;
@@ -17109,17 +17109,17 @@ button:focus {
   -ms-transition: all 0.2s linear;
   -webkit-transition: all 0.2s linear;
   -o-transition: all 0.2s linear; }
-  .btn-underline:not([class$="color"]) {
+  .wookie-btn-underline:not([class$="color"]) {
     color: #2879fe; }
-  .btn-underline:hover {
+  .wookie-btn-underline:hover {
     text-decoration: none;
     color: #191919;
     border-bottom-color: transparent; }
 
-.btn-underline.tt-white-color {
+.wookie-btn-underline.tt-white-color {
   color: #ffffff;
   border-color: #ffffff; }
-  .btn-underline.tt-white-color:hover {
+  .wookie-btn-underline.tt-white-color:hover {
     color: #191919;
     border-color: transparent; }
 
@@ -17131,15 +17131,15 @@ button:focus {
   pointer-events: none; }
 
 @media (min-width: 790px) {
-  .btn-top {
+  .wookie-btn-top {
     margin-top: 40px; } }
 
 @media (max-width: 789px) and (min-width: 576px) {
-  .btn-top {
+  .wookie-btn-top {
     margin-top: 30px; } }
 
 @media (max-width: 575px) {
-  .btn-top {
+  .wookie-btn-top {
     margin-top: 20px; } }
 
 .tt-link {
@@ -17151,13 +17151,13 @@ button:focus {
   .tt-link:hover {
     color: #191919; }
 
-.btn.btn-small {
+.wookie-btn.wookie-btn-small {
   height: 35px;
   padding: 6px 29px 3px; }
   @media (min-width: 418px) {
-    .btn.btn-small {
+    .wookie-btn.wookie-btn-small {
       padding-bottom: 5px; } }
-  .btn.btn-small [class^="icon-"] {
+  .wookie-btn.wookie-btn-small [class^="icon-"] {
     position: relative;
     top: -2px; }
 
@@ -18580,7 +18580,7 @@ input[type=checkbox]:checked ~ label .check {
   margin-top: 39px; }
   .contact-form textarea {
     height: 160px; }
-  .contact-form .btn_2 {
+  .contact-form .wookie-btn-2 {
     margin-top: 20px; }
   @media (max-width: 575px) {
     .contact-form {
@@ -18711,7 +18711,7 @@ input[type=checkbox]:checked ~ label .check {
   .tt-page404 p {
     margin-top: 2px;
     font-size: 15px; }
-  .tt-page404 .btn_2 {
+  .tt-page404 .wookie-btn-2 {
     margin-top: 34px; }
   @media (max-width: 1024px) {
     .tt-page404 img {
@@ -18733,7 +18733,7 @@ input[type=checkbox]:checked ~ label .check {
       font-size: 23px;
       line-height: 32px;
       margin: 28px 0 0 0; }
-    .tt-page404 .btn_2 {
+    .tt-page404 .wookie-btn-2 {
       margin-top: 25px; } }
   .tt-page404 > *:nth-child(1) {
     margin-top: 0; }
@@ -18764,7 +18764,7 @@ input[type=checkbox]:checked ~ label .check {
     font-size: 26px;
     line-height: 1.3;
     font-weight: 400; }
-  .tt-empty-wishlist .btn_2 {
+  .tt-empty-wishlist .wookie-btn-2 {
     margin-top: 34px; }
   @media (max-width: 1024px) {
     .tt-empty-wishlist {
@@ -18806,7 +18806,7 @@ input[type=checkbox]:checked ~ label .check {
   .tt-empty-cart p {
     margin-top: 2px;
     font-size: 15px; }
-  .tt-empty-cart .btn_2 {
+  .tt-empty-cart .wookie-btn-2 {
     margin-top: 34px; }
   @media (max-width: 1024px) {
     .tt-empty-cart {
@@ -18849,7 +18849,7 @@ input[type=checkbox]:checked ~ label .check {
   .tt-empty-search p {
     margin-top: 2px;
     font-size: 15px; }
-  .tt-empty-search .btn_2 {
+  .tt-empty-search .wookie-btn-2 {
     margin-top: 34px; }
   @media (max-width: 1024px) {
     .tt-empty-search {
@@ -18913,7 +18913,7 @@ input[type=checkbox]:checked ~ label .check {
     -moz-border-radius-bottomright: 0px;
     border-top-right-radius: 0px;
     border-bottom-right-radius: 0px; }
-  .tt-coming-soon form .btn_2 {
+  .tt-coming-soon form .wookie-btn-2 {
     margin-top: 20px;
     -webkit-border-top-left-radius: 0px;
     -webkit-border-bottom-left-radius: 0px;
@@ -18972,7 +18972,7 @@ input[type=checkbox]:checked ~ label .check {
       .tt-coming-soon .description {
         margin-bottom: 27px; }
       .tt-coming-soon form .form-control,
-      .tt-coming-soon form .btn_2 {
+      .tt-coming-soon form .wookie-btn-2 {
         margin-top: 13px; }
       .tt-coming-soon form .form-group {
         margin-bottom: 13px; } }
@@ -18990,7 +18990,7 @@ input[type=checkbox]:checked ~ label .check {
         display: block; }
       .tt-coming-soon form .form-control {
         margin-top: 13px; }
-      .tt-coming-soon form .btn_2 {
+      .tt-coming-soon form .wookie-btn-2 {
         margin-top: 13px; }
       .tt-coming-soon form .form-group {
         margin-bottom: 7px; }
@@ -18998,7 +18998,7 @@ input[type=checkbox]:checked ~ label .check {
         -webkit-border-radius: 6px;
         -moz-border-radius: 6px;
         border-radius: 6px; }
-      .tt-coming-soon form .btn_2 {
+      .tt-coming-soon form .wookie-btn-2 {
         -webkit-border-radius: 6px;
         -moz-border-radius: 6px;
         border-radius: 6px; } }
@@ -19085,12 +19085,12 @@ input[type=checkbox]:checked ~ label .check {
       margin-top: 0; }
     .tt-login-form .tt-item .form-top {
       margin-top: 17px; }
-    .tt-login-form .tt-item .btn:not(.btn-top) {
+    .tt-login-form .tt-item .wookie-btn:not(.wookie-btn-top) {
       margin-top: 4px;
       margin-bottom: 5px; }
-    .tt-login-form .tt-item .btn-top {
+    .tt-login-form .tt-item .wookie-btn-top {
       margin-top: 25px; }
-    .tt-login-form .tt-item .btn_2 {
+    .tt-login-form .tt-item .wookie-btn-2 {
       margin-right: 12px; }
     .tt-login-form .tt-item .additional-links {
       list-style: none;
@@ -19752,9 +19752,9 @@ body:not(.touch-device) .arrow-location-center-02.tt-arrow-hover:hover .slick-ar
     .tt-gift-layout .tt-gift-dissembled img {
       max-width: 100%;
       height: auto; }
-  .tt-gift-layout .btn-border {
+  .tt-gift-layout .wookie-btn-border {
     margin-top: 62px; }
-  .tt-gift-layout .btn_link {
+  .tt-gift-layout .wookie-btn-link {
     margin-top: 32px; }
   @media (max-width: 1024px) {
     .tt-gift-layout {
@@ -19770,9 +19770,9 @@ body:not(.touch-device) .arrow-location-center-02.tt-arrow-hover:hover .slick-ar
           letter-spacing: 0.04em; }
       .tt-gift-layout .tt-gift-dissembled {
         margin-top: 31px; }
-      .tt-gift-layout .btn-border {
+      .tt-gift-layout .wookie-btn-border {
         margin-top: 40px; }
-      .tt-gift-layout .btn_link {
+      .tt-gift-layout .wookie-btn-link {
         margin-top: 23px; } }
   @media (max-width: 575px) {
     .tt-gift-layout {
@@ -19793,9 +19793,9 @@ body:not(.touch-device) .arrow-location-center-02.tt-arrow-hover:hover .slick-ar
         line-height: 19px; }
       .tt-gift-layout .tt-gift-dissembled {
         margin-top: 24px; }
-      .tt-gift-layout .btn-border {
+      .tt-gift-layout .wookie-btn-border {
         margin-top: 31px; }
-      .tt-gift-layout .btn_link {
+      .tt-gift-layout .wookie-btn-link {
         margin-top: 18px; } }
   .tt-gift-layout > *:nth-child(1) {
     margin-top: 0; }
@@ -20787,6 +20787,12 @@ html:not(.mac):not(.touch-device) .tt-carousel-brands .slick-track {
     border: 1px solid #d3dbec;
     padding-bottom: 5px;
     transition:top 0.3s ease;
+}
+
+.tt-btn-quickview:not(:hover),
+.tt-btn-wishlist:not(:hover),
+.tt-btn-compare:not(:hover){
+    border:1px solid #cecece;
 }
 
 .tt-btn-quickview >>> .ivu-poptip-popper,

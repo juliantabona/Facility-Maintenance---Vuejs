@@ -23,6 +23,22 @@ class CompanyBranch extends Model
         return $this->morphMany('App\Creator', 'creatable');
     }
 
+        /**
+     * Get the stores associated.
+     */
+    public function stores()
+    {
+        return $this->hasMany('App\Store');
+    }
+
+    /**
+     * Get the ecommerce orders
+     */
+    public function orders()
+    {
+        return $this->hasMany('App\Order', 'company_branch_id');
+    }
+
     public function companyDirectory()
     {
         return $this->belongsToMany('App\Company', 'company_directory', 'owning_company_id', 'company_id')

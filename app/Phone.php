@@ -9,6 +9,7 @@ use App\Traits\PhoneTraits;
 Relation::morphMap([
     'user' => 'App\User',
     'company' => 'App\Company',
+    'store' => 'App\Store',
 ]);
 
 class Phone extends Model

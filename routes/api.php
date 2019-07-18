@@ -61,7 +61,7 @@ Route::post('/setup-completed', 'Auth\AccountActivation@completeSetup');
 //  Send email to user requesting password reset
 Route::post('/password/email', 'Auth\ForgotPasswordController@customSendForgotPasswordEmail');
 //  Reset using token, email and new password 
-Route::post('/password/reset', 'Auth\ResetPasswordController@reset');
+Route::post('/password/reset', 'Auth\ForgotPasswordController@customResetPassword');
 
 Route::middleware('auth:api')->get('/user', 'Api\UserController@getUser');
 Route::middleware('auth:api')->get('/user/settings', 'Api\UserController@getUserSettings');
@@ -222,6 +222,22 @@ Route::post('invoices/{invoice_id}/recurring/approve', 'Api\InvoiceController@ap
      -  Get, Show, Update, Trash, Delete
 */
 Route::post('sample-sms', 'Api\SmsController@sendSampleSms');
+
+/*   STORE RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::get('stores', 'Api\StoreController@index');
+Route::post('stores', 'Api\StoreController@store');
+Route::get('stores/{store_id}', 'Api\StoreController@show');
+Route::post('stores/{store_id}', 'Api\StoreController@update');
+
+/*   ORDER RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::get('orders', 'Api\OrderController@index');
+Route::post('orders', 'Api\OrderController@order');
+Route::get('orders/{order_id}', 'Api\OrderController@show');
+Route::post('orders/{order_id}', 'Api\OrderController@update');
 
 /*   PRODUCT/SERVICE RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete

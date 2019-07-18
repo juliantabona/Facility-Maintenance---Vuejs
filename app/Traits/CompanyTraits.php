@@ -50,7 +50,7 @@ trait CompanyTraits
          *  1) Data may come from the associated authenticated user branch
          *  2) Data may come from the associated authenticated user company
          *  3) Data may come from the whole bucket meaning outside the scope of the
-         *     authenticated user. This means we can access all possible models
+         *     authenticated user. This means we can access all possible records
          *     available. This is usually useful for users acting as superadmins.
          */
         $allocation = strtolower(request('allocation'));
@@ -188,7 +188,7 @@ trait CompanyTraits
          *  1) Data may come from the associated authenticated user branch
          *  2) Data may come from the associated authenticated user company
          *  3) Data may come from the whole bucket meaning outside the scope of the
-         *     authenticated user. This means we can access all possible models
+         *     authenticated user. This means we can access all possible records
          *     available. This is usually useful for users acting as superadmins.
          */
         $allocation = strtolower(request('allocation'));
@@ -252,7 +252,7 @@ trait CompanyTraits
             if( request('count') == 1 ){
                 //  If the staff are paginated
                 if($config['paginate']){
-                    $staff = $staff->total ?? 0;
+                    $staff = $staff->total() ?? 0;
                 //  If the staff are not paginated
                 }else{
                     $staff = $staff->count() ?? 0;

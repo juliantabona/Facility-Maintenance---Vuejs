@@ -260,10 +260,24 @@ let routes = [
     *  SHOP
     **************************************/  
    {
-        //  Store
-        path: '/store', name: 'store',
-        meta: { layout: 'Store', middlewareAuth: false },
+        //  Stores
+        path: '/stores', name: 'stores',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
         component: require('./views/dashboard/store/list/main.vue')
+    },
+   
+    {
+        //  Store Dashboard
+        path: '/stores/:id/overview', name: 'store-overview',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/store/overview/main.vue')
+    },
+   
+    {
+        //  Store
+        path: '/stores/:id/catalog', name: 'store',
+        meta: { layout: 'Store', middlewareAuth: false },
+        component: require('./views/dashboard/store/catalog/main.vue')
     },
     {
         //  Cart

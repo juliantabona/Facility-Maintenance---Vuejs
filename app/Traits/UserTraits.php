@@ -50,7 +50,7 @@ trait UserTraits
          *  1) Data may come from the associated authenticated user branch
          *  2) Data may come from the associated authenticated user company
          *  3) Data may come from the whole bucket meaning outside the scope of the
-         *     authenticated user. This means we can access all possible models
+         *     authenticated user. This means we can access all possible records
          *     available. This is usually useful for users acting as superadmins.
          */
         $allocation = strtolower(request('allocation'));
@@ -792,7 +792,7 @@ trait UserTraits
                 } else {
                     //  Update the status
                     $status = 'password reset mail failed';
-                    $verificationMailFailedActivity = oq_saveActivity($user, $user, $status, null);
+                    $passwordResetEmailSentActivity = oq_saveActivity($user, $user, $status, null);
 
                     return ['success' => false, 'response' => oq_api_notify_error('Something went wrong trying to send the password reset email. Please try again', 'failed_sending_password_reset_email', 404)];
                 }
@@ -802,4 +802,60 @@ trait UserTraits
             }
         }
     }
+
+    public function initiateResetPassword()
+    {
+        $token = request('token') ?? null;
+        $email = request('email') ?? null;
+        $password = request('password') ?? null;
+
+        //  Check if the mail token exists
+        if (empty($token)) {
+            //  Token not provided
+            return ['success' => false, 'response' => oq_api_notify_error(null, ['password' => ['Reset token not provided. Try sending a new pasword reset email']], 404)];
+        }else if (empty($email)) {
+            //  Email not provided
+            return ['success' => false, 'response' => oq_api_notify_error(null, ['password' => ['Account email was not provided']], 404)];
+        }else if (empty($password)) {
+            //  Password not provided
+            return ['success' => false, 'response' => oq_api_notify_error(null, ['password' => ['Password not provided']], 404)];
+        }
+
+        $resetToken = PasswordResetTokens::where('token', $token)->where('email', $email)->first();
+
+        //  Check if the token exists
+        if ( !is_null( $resetToken ) ) {
+
+            //  Get the associated user
+            $user = User::where('email', $email)->whereNotNull('password')->first();
+
+            if ( !is_null( $user ) ) {
+
+                //  Verify the account
+                $user->verified = 1;
+
+                //  Change the password
+                $user->password = Hash::make($password);
+
+                //  Save changes
+                $user->save();
+
+                //  Update the status
+                $status = 'password reset';
+                $passwordSavedActivity = oq_saveActivity($user, $user, $status, null);
+
+                return ['success' => true, 'response' => $user];
+
+            }else{
+                //  User does not exist
+                return ['success' => false, 'response' => oq_api_notify_error(null, ['password' => ['Account using email "'.$email.'" could not be found.']], 404)];
+            }
+
+        } else {
+            //  Invalid token provided
+            return ['success' => false, 'response' => oq_api_notify_error(null, ['password' => ['Invalid token. Token might have expired or been used']], 404)];
+        }
+
+    }
+
 }
