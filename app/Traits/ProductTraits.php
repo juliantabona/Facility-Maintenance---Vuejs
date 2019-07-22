@@ -320,7 +320,7 @@ trait ProductTraits
 
         try {
             //  Create the product
-            $product = $this->create($template)->fresh();
+            $product = $this->create($template);
 
             //  If the product was created successfully
             if ($product) {

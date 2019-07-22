@@ -32,7 +32,7 @@ trait PhoneTraits
         } else {
             //  Create the dynamic model
 
-            $dynamicModel = $this->generateDynamicModel($modelType);
+            $dynamicModel = oq_generateDynamicModel($modelType);
 
             //  Check if this is a valid dynamic class
             if (class_exists($dynamicModel)) {
@@ -234,21 +234,6 @@ trait PhoneTraits
 
             //  Return the error response
             return ['success' => false, 'response' => $response];
-        }
-    }
-
-    public function generateDynamicModel($modelType)
-    {
-        //  Create the dynamic model
-        $dynamicModel = ('\App\\'.ucfirst($modelType));  //  \App\User
-
-        //  Check if this is a valid dynamic class
-        if (class_exists($dynamicModel)) {
-            //  Model class does exist
-
-            return $dynamicModel;
-        } else {
-            return false;
         }
     }
 

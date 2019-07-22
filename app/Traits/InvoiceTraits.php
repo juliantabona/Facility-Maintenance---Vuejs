@@ -95,24 +95,144 @@ trait InvoiceTraits
         $allocation = request('allocation');
 
         /*
+         *  $modelId = 1, 2, 3, e.t.c
+         *
+         *  The $modelId variable only get data specifically related to
+         *  the specified model id. It is useful for scenerios where we
+         *  want only invoices of that custom model id. This works with
+         *  only when the $modelType variable is also provided
+         */
+        $modelId = request('modelId');
+
+        /*
+         *  $modelType = 1, 2, 3, e.t.c
+         *
+         *  The $modelType variable only get data specifically related to
+         *  the specified model type. It is useful for scenerios where we
+         *  want only invoices of that custom model type. This works with
+         *  only when the $modelId variable is also provided
+         */
+        $modelType = request('modelType');
+
+        /*
+         *  $storeId = 1, 2, 3, e.t.c
+         *
+         *  The $storeId variable only get data specifically related to
+         *  the specified store id. It is useful for scenerios where we
+         *  want only invoices of that store only
+         */
+        $orderId = request('orderId');
+
+        /*
+         *  $storeId = 1, 2, 3, e.t.c
+        /*
+         *  The $storeId variable only get data specifically related to
+         *  the specified store id. It is useful for scenerios where we
+         *  want only invoices of that store only
+         */
+        $orderId = request('orderId');
+
+        /*
+         *  $orderId = 1, 2, 3, e.t.c
+        /*
+         *  The $orderId variable only get data specifically related to
+         *  the specified order id. It is useful for scenerios where we
+         *  want only invoices of that order only
+         */
+        $storeId = request('storeId');
+
+        /*
+         *  $clientId = 1, 2, 3, e.t.c
+        /*
+         *  The $clientId variable only get data specifically related to
+         *  the specified clientId id. It is useful for scenerios where we
+         *  want only invoices with the client id set to the provided clientId
+         */
+        $clientId = request('clientId');
+
+        /*
+         *  $companyBranchId = 1, 2, 3, e.t.c
+        /*
+         *  The $companyBranchId variable only get data specifically related to
+         *  the specified company branch id. It is useful for scenerios where we
+         *  want only invoices of that branch only
+         */
+        $companyBranchId = request('companyBranchId');
+
+        /*
          *  $companyId = 1, 2, 3, e.t.c
         /*
          *  The $companyId variable only get data specifically related to
          *  the specified company id. It is useful for scenerios where we
-         *  want only quotations of that company only
+         *  want only invoices of that company only
          */
         $companyId = request('companyId');
+        
+        if( isset($modelId) && !empty($modelType) ){
 
-        if( isset($companyId) && !empty($companyId) ){
+            /********************************************************************
+            *  CHECK IF THE USER IS AUTHORIZED TO GET SPECIFIED STORE INVOICES    *
+            /********************************************************************/
 
-            //  Only get specific company data only if specified
-            if ($companyId) {
-                /************************************************************************
-                *  CHECK IF THE USER IS AUTHORIZED TO GET SPECIFIED COMPANY INVOICES    *
-                /***********************************************************************/
+            //  Create the dynamic model
+            $dynamicModel = oq_generateDynamicModel($modelType);
 
-                $invoices = $this->where('client_id', $companyId);
+            //  Check if this is a valid dynamic class
+            if (class_exists($dynamicModel)) {
+                //  Find the associated record by model id
+                try {
+                    $model = $dynamicModel::find($modelId);                    
+                } catch (\Exception $e) {
+                    //  Log the error
+                    $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+                    //  Return the error response
+                    return ['success' => false, 'response' => $response];
+                }
+            } else {
+                //  Model class does not exist - Log the error
+                $response = oq_api_notify_error('Invalid Model Class - e.g) must be jobcard/order', null, 404);
             }
+
+        }else if( isset($orderId) && !empty($orderId) ){
+
+            /********************************************************************
+            *  CHECK IF THE USER IS AUTHORIZED TO GET SPECIFIED STORE INVOICES    *
+            /********************************************************************/
+
+            $model = Order::find($orderId);
+
+        }else if( isset($storeId) && !empty($storeId) ){
+
+            /********************************************************************
+            *  CHECK IF THE USER IS AUTHORIZED TO GET SPECIFIED STORE INVOICES    *
+            /********************************************************************/
+
+            $model = Store::find($storeId);
+
+        }else if( isset($companyBranchId) && !empty($companyBranchId) ){
+
+            /********************************************************************
+            *  CHECK IF THE USER IS AUTHORIZED TO GET SPECIFIED BRANCH INVOICES   *
+            /********************************************************************/
+
+            $model = CompanyBranch::find($companyBranchId);
+
+        }else if( isset($clientId) && !empty($clientId) ){
+
+            /**********************************************************************
+            *  CHECK IF THE USER IS AUTHORIZED TO GET SPECIFIED COMPANY INVOICES    *
+            /**********************************************************************/
+
+            $model = Company::find($clientId);
+
+        }else if( isset($companyId) && !empty($companyId) ){
+
+            /**********************************************************************
+            *  CHECK IF THE USER IS AUTHORIZED TO GET SPECIFIED COMPANY INVOICES    *
+            /**********************************************************************/
+
+            $model = Company::find($companyId);
 
         }else{
 
@@ -123,23 +243,34 @@ trait InvoiceTraits
                 /**********************************************************/
 
                 //  Get the current invoice instance
-                $invoices = $this;
+                $model = $this;
+
             } elseif ($allocation == 'branch') {
                 /*************************************************************
                 *  CHECK IF THE USER IS AUTHORIZED TO GET BRANCH INVOICES    *
                 /*************************************************************/
 
                 // Only get invoices associated to the company branch
-                $invoices = $auth_user->companyBranch->invoices();
+                $model = $auth_user->companyBranch;
             } else {
                 /**************************************************************
                 *  CHECK IF THE USER IS AUTHORIZED TO GET COMPANY INVOICES    *
                 /**************************************************************/
 
                 //  Only get invoices associated to the company
-                $invoices = $auth_user->company->invoices();
+                $model = $auth_user->company;
             }
 
+        }
+
+        if(isset($clientId) && !empty( $clientId )){
+
+            //  Invoices where the provided model is the client
+            $invoices = $model->incomingInvoices();
+
+        } else {
+            //  Invoices where the model is not the client
+            $invoices = $model->invoices();
         }
 
         /*  To avoid sql order_by error for ambigious fields e.g) created_at
@@ -690,7 +821,7 @@ trait InvoiceTraits
 
                     if(!$sampleSms){
                         //  Record activity of invoice sent receipt
-                        $invoiceSentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'sms' => $sms]);
+                        $INVOICESentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'sms' => $sms]);
                     }
                 }
             }
@@ -818,7 +949,7 @@ trait InvoiceTraits
             $mail = ['email' => $primaryEmail, 'subject' => $subject, 'message' => $message];
 
             //  Record activity of invoice sent receipt
-            $invoiceSentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'mail' => $mail]);
+            $INVOICESentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'mail' => $mail]);
         }
     }
 
@@ -872,7 +1003,7 @@ trait InvoiceTraits
             $sms = ['phone' => $phone, 'message' => $smsMessage];
 
             //  Record activity of invoice sent receipt
-            $invoiceSentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'sms' => $sms]);
+            $INVOICESentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'sms' => $sms]);
         }
     }
 
@@ -954,7 +1085,7 @@ trait InvoiceTraits
             $mail = ['email' => $primaryEmail, 'subject' => $subject, 'message' => $message];
 
             //  Record activity of invoice sent receipt
-            $invoiceSentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'mail' => $mail]);
+            $INVOICESentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'mail' => $mail]);
         }
     }
 
@@ -1027,7 +1158,7 @@ trait InvoiceTraits
 
                 //  Record activity of invoice skipped sending
                 $status = 'skipped sending';
-                $invoiceSkipSendActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
+                $INVOICESkipSendActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
 
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $invoice];

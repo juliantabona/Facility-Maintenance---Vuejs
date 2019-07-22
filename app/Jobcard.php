@@ -30,7 +30,8 @@ class Jobcard extends Model
     ];
 
     protected $with = [
-        'client.phones',
+        'lifecycle', 'priority', 'categories', 'costcenters', 'assignedStaff',
+        'client.phones', 
     ];
 
     /**
@@ -114,11 +115,6 @@ class Jobcard extends Model
                     ->withTimestamps();
     }
 
-    public function statusLifecycle()
-    {
-        return $this->morphMany('App\FormTemplateAllocation', 'trackable');
-    }
-
     public function recentActivities()
     {
         return $this->morphMany('App\RecentActivity', 'trackable')
@@ -135,11 +131,6 @@ class Jobcard extends Model
     public function approvedActivities()
     {
         return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'jobcard')->where('type', 'approved');
-    }
-
-    public function addedLifecycleStagesActivities()
-    {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'jobcard')->where('type', 'added lifecycle stage');
     }
 
     public function updatedLifecycleStagesActivities()
@@ -242,7 +233,6 @@ class Jobcard extends Model
 
     public function getLifecycleStagesAttribute()
     {
-        //$addedLifecycleStages = $this->addedLifecycleStagesActivities()->orderBy('created_at', 'asc')->get();
         $updatedLifecycleStages = $this->updatedLifecycleStagesActivities()->orderBy('created_at', 'asc')->get();
         $reversedLifecycleStages = $this->reversedLifecycleStagesActivities()->orderBy('created_at', 'asc')->get();
 

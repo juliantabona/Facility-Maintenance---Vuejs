@@ -2,6 +2,22 @@
 
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Str;
+
+function oq_generateDynamicModel($modelType)
+{
+    //  Create the dynamic model
+    $dynamicModel = ('\App\\'.ucfirst( Str::camel($modelType) ));  //  \App\User
+
+    //  Check if this is a valid dynamic class
+    if (class_exists($dynamicModel)) {
+        //  Model class does exist
+
+        return $dynamicModel;
+    } else {
+        return false;
+    }
+}
 
 /**************************************************************
 ***************************************************************

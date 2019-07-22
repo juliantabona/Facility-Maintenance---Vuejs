@@ -43,7 +43,7 @@
                                                                     1 - We have the user details and
                                                                     2 - We set showLoginForm = false -->
                                                             <Row v-if="user && showLoginForm == false" :gutter="12">
-                                                                <Col :span="12" :offset="6">
+                                                                <Col :span="16" :offset="4">
                                                                     <!-- Account Summary -->
                                                                     <Card>
                                                                         
@@ -65,6 +65,8 @@
                                                                             <span class="font-weight-bold d-block mb-1">Mobile: <span>(+267) 75993221</span></span>
                                                                         </div>
                                                                             
+                                                                        <!-- Checkout As A Company Button -->
+
                                                                         <!-- Continue button -->
                                                                         <div class="mt-2 clearfix">
                                                                             <basicButton
@@ -75,6 +77,14 @@
                                                                                 <span>Continue</span>
                                                                                 <Icon type="md-arrow-forward" class="ml-1" />
                                                                             </basicButton>
+
+                                                                            <span @click="true" class="float-right btn btn-link d-inline-block mt-1 p-0">
+                                                                                <Poptip word-wrap width="300" trigger="hover"
+                                                                                        content="Allows you to checkout as a company so that company details appear on the order, invoices and receipts instead of your personal details">
+                                                                                    Checkout As Company?
+                                                                                </Poptip>
+                                                                            </span>
+
                                                                         </div>
                                                                     </Card>
                                                                 </Col>
@@ -246,6 +256,10 @@
                                             </Alert>
                                             <Row :gutter="20">
 
+                                                <Col :span="24">
+                                                    <Divider orientation="left">Online Payments</Divider>
+                                                </Col>
+
                                                 <Col :span="8">
                                                     <IconAndCounterCard 
                                                         title="Credit/Debit Card" 
@@ -287,6 +301,57 @@
                                                         @click.native="selectedPaymentMethod = 'mascom'">
                                                     </IconAndCounterCard>
                                                 </Col>
+
+                                            </Row>
+
+                                            <Row :gutter="20">
+
+                                                <Col :span="24" class="mt-4">
+                                                    <Divider orientation="left">Offline Payments</Divider>
+                                                </Col>
+
+                                                <Col :span="8">
+                                                    <IconAndCounterCard 
+                                                        title="Cash Deposit" 
+                                                        imageSrc="/images/assets/graphics/bank-atm-machine.png"
+                                                        :imageStyle="{ width:'60%',display:'block', margin:'auto' }"
+                                                        :innerBoxStyle="{ padding: '0' }"
+                                                        :titleStyle="{ marginTop:'10px', padding:'0' }"
+                                                        type="success"
+                                                        :showCheckMark="true"
+                                                        :checkMarkVisibility="(selectedPaymentMethod == 'cash-deposit')"
+                                                        @click.native="selectedPaymentMethod = 'cash-deposit'">
+                                                    </IconAndCounterCard>
+                                                </Col>
+
+                                                <Col :span="8">
+                                                    <IconAndCounterCard 
+                                                        title="Bank Transfer" 
+                                                        imageSrc="/images/assets/graphics/bank-atm-machine.png"
+                                                        :imageStyle="{ width:'60%',display:'block', margin:'auto' }"
+                                                        :innerBoxStyle="{ padding: '0' }"
+                                                        :titleStyle="{ marginTop:'10px', padding:'0' }"
+                                                        type="success"
+                                                        :showCheckMark="true"
+                                                        :checkMarkVisibility="(selectedPaymentMethod == 'bank-transfer')"
+                                                        @click.native="selectedPaymentMethod = 'bank-transfer'">
+                                                    </IconAndCounterCard>
+                                                </Col>
+
+                                                <Col :span="8">
+                                                    <IconAndCounterCard 
+                                                        title="Cheque" 
+                                                        imageSrc="/images/assets/graphics/cheque.png"
+                                                        :imageStyle="{ width:'100%', margin:' 20px 0 10px 0' }"
+                                                        :innerBoxStyle="{ padding: '0' }"
+                                                        :titleStyle="{ marginTop:'10px', padding:'0' }"
+                                                        type="success"
+                                                        :showCheckMark="true"
+                                                        :checkMarkVisibility="(selectedPaymentMethod == 'cheque')"
+                                                        @click.native="selectedPaymentMethod = 'cheque'">
+                                                    </IconAndCounterCard>
+                                                </Col>
+
                                             </Row>
 
                                             <!-- VCS Form -->

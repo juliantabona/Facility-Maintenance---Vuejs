@@ -163,6 +163,8 @@ class CompanyBranch extends Model
     public function recentActivities()
     {
         return $this->morphMany('App\RecentActivity', 'trackable')
+                    ->where('trackable_id', $this->id)
+                    ->where('trackable_type', 'companybranch')
                     ->orderBy('created_at', 'desc');
     }
 }

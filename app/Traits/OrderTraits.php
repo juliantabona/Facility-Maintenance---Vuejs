@@ -2,9 +2,6 @@
 
 namespace App\Traits;
 
-use DB;
-use App\Document;
-
 //  Notifications
 use App\Store;
 use App\Company;
@@ -14,7 +11,6 @@ use App\Notifications\OrderUpdated;
 
 trait OrderTraits
 {
-
     /*  initiateGetAll() method:
      *
      *  This is used to return a pagination of order results.
@@ -53,10 +49,10 @@ trait OrderTraits
         $allocation = request('allocation');
 
         /*
-         *  $orderStatus = 
+         *  $orderStatus =
         /*
          *  The $orderStatus variable is used to determine which status of orders to pull.
-         *  It represents orders with a particular status. The user may request orders 
+         *  It represents orders with a particular status. The user may request orders
          *  with a status of:
          *  1) pending: Order received but unpaid
          *  2) processing: Order received and stock reduced (order awaiting fulfilment)
@@ -95,32 +91,25 @@ trait OrderTraits
          */
         $companyId = request('companyId');
 
-        if( isset($storeId) && !empty($storeId) ){
-
+        if (isset($storeId) && !empty($storeId)) {
             /********************************************************************
             *  CHECK IF THE USER IS AUTHORIZED TO GET SPECIFIED STORE ORDERS    *
             /********************************************************************/
 
             $model = Store::find($storeId);
-
-        }else if( isset($companyBranchId) && !empty($companyBranchId) ){
-
+        } elseif (isset($companyBranchId) && !empty($companyBranchId)) {
             /********************************************************************
             *  CHECK IF THE USER IS AUTHORIZED TO GET SPECIFIED BRANCH ORDERS   *
             /********************************************************************/
 
             $model = CompanyBranch::find($companyBranchId);
-
-        }else if( isset($companyId) && !empty($companyId) ){
-
+        } elseif (isset($companyId) && !empty($companyId)) {
             /**********************************************************************
             *  CHECK IF THE USER IS AUTHORIZED TO GET SPECIFIED COMPANY ORDERS    *
             /**********************************************************************/
 
             $model = Company::find($companyId);
-
-        }else{
-
+        } else {
             //  Apply filter by allocation
             if ($allocation == 'all') {
                 /***********************************************************
@@ -129,7 +118,6 @@ trait OrderTraits
 
                 //  Get the current order instance
                 $model = $this;
-
             } elseif ($allocation == 'branch') {
                 /*************************************************************
                 *  CHECK IF THE USER IS AUTHORIZED TO GET BRANCH ORDERS    *
@@ -145,20 +133,17 @@ trait OrderTraits
                 //  Only get orders associated to the company
                 $model = $auth_user->company;
             }
-
         }
 
-        if(isset($orderStatus) && !empty( $orderStatus )){
-
+        if (isset($orderStatus) && !empty($orderStatus)) {
             //  If the $orderStatus is a list e.g) pending,processing,on-hold ... e.t.c
-            $orderStatus = explode(',', $orderStatus );
+            $orderStatus = explode(',', $orderStatus);
 
             //  If we have atleast one status
             if (count($orderStatus)) {
                 //  Get orders only with the specified status
                 $orders = $model->orders()->whereIn('status', $orderStatus);
             }
-
         } else {
             //  Otherwise get all orders
             $orders = $model->orders();
@@ -195,15 +180,15 @@ trait OrderTraits
             }
 
             //  If we only want to know how many were returned
-            if( request('count') == 1 ){
+            if (request('count') == 1) {
                 //  If the orders are paginated
-                if($config['paginate']){
+                if ($config['paginate']) {
                     $orders = $orders->total() ?? 0;
                 //  If the orders are not paginated
-                }else{
+                } else {
                     $orders = $orders->count() ?? 0;
                 }
-            }else{
+            } else {
                 //  If we are not paginating then
                 if (!$config['paginate']) {
                     //  Get the collection
@@ -221,7 +206,6 @@ trait OrderTraits
 
             //  Action was executed successfully
             return ['success' => true, 'response' => $orders];
-
         } catch (\Exception $e) {
             //  Log the error
             $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
@@ -230,7 +214,6 @@ trait OrderTraits
             return ['success' => false, 'response' => $response];
         }
     }
-
 
     /*  initiateShow() method:
      *
@@ -296,57 +279,84 @@ trait OrderTraits
         /*********************************************
          *   VALIDATE ORDER INFORMATION            *
          ********************************************/
-        
+
+        $store = Store::find(request('store_id'));
+
+        if (!$store) {
+            //  Store does not exist
+            return ['success' => false, 'response' => oq_api_notify_error(null, ['general' => ['The store does not exist']], 404)];
+        }
+
         //  Create a template to hold the order details
         $template = $template ?? [
             //  General details
-            'title' => request('title'),
-            'description' => request('description') ?? null,
-            'type' => request('type') ?? null,
-            
-            //  Pricing details
-            'cost_per_item' => request('cost_per_item') ?? 0,
-            'price' => request('price') ?? 0,
-            'sale_price' => request('sale_price') ?? 0,
+            'parent_id' => request('parent_id') ?? null,
+            'number' => request('number') ?? null,
+            'order_key' => request('order_key') ?? null,
+            'status' => request('status') ?? null,
+            'currency' => request('currency') ?? null,
+            'cart_hash' => Hash::make(request('line_items')) ?? null,
+            'meta_data' => request('meta_data') ?? null,
+            'date_completed' => request('date_completed') ?? null,
 
-            //  Inventory & Tracking details
-            'sku' => request('sku') ?? null,
-            'barcode' => request('barcode') ?? null,
-            'quantity' => request('quantity') ?? null,
-            'allow_inventory' => request('allow_inventory'),
-            'auto_track_inventory' => request('auto_track_inventory'),
-            
-            //  Variant details
-            'variants' => request('variants') ?? null,
-            'variant_attributes' => request('variant_attributes') ?? null,
-            'allow_variants' => request('allow_variants'),
-            
-            //  Download Details
-            'allow_downloads' => request('allow_downloads'),
+            //  Item Info
+            'line_items' => request('line_items') ?? null,
 
-            //  Order Details
-            'show_on_order' => request('show_on_order'),
+            //  Shipping Info
+            'shipping_lines' => request('shipping_lines') ?? null,
 
-            //  Ownership Details
-            'company_branch_id' => $auth_user->company_branch_id ?? null,
-            'company_id' => $auth_user->company_id ?? null,
+            //  Grand Total, Subtotal, Shipping Total, Discount Total
+            'cart_total' => request('cart_total') ?? null,
+            'shipping_total' => request('shipping_total') ?? null,
+            'discount_total' => request('discount_total') ?? null,
+            'grand_total' => request('grand_total') ?? null,
+
+            //  Tax Info
+            'cart_tax' => request('cart_tax') ?? null,
+            'shipping_tax' => request('shipping_tax') ?? null,
+            'discount_tax' => request('discount_tax') ?? null,
+            'grand_total_tax' => request('grand_total_tax') ?? null,
+            'prices_include_tax' => request('prices_include_tax') ?? null,
+            'tax_lines' => request('tax_lines') ?? null,
+
+            //  Customer Info
+            'customer_id' => request('customer_id') ?? null,
+            'customer_ip_address' => request('customer_ip_address') ?? null,
+            'customer_user_agent' => request('customer_user_agent') ?? null,
+            'customer_note' => request('customer_note') ?? null,
+            'billing' => request('billing') ?? null,
+            'shipping' => request('shipping') ?? null,
+
+            //  Payment Info
+            'payment_method' => request('payment_method') ?? null,
+            'payment_method_title' => request('payment_method_title') ?? null,
+            'transaction_id' => request('transaction_id') ?? null,
+            'date_paid' => request('date_paid') ?? null,
+
+            //  Store, Company & Branch Info
+            'store_id' => request('store_id') ?? null,
+            'company_branch_id' => $store->company_branch_id ?? null,
+            'company_id' => $store->company_id ?? null,
         ];
 
         try {
             //  Create the order
-            $order = $this->create($template)->fresh();
+            $order = $this->create($template);
 
             //  If the order was created successfully
             if ($order) {
 
-                //  Check whether or not the order has any image to upload
-                $this->checkAndUploadImage($order);
+                //  Check and generate the order lifecycle
+                $this->checkAndCreateLifecycle($order);
 
-                //  Check whether or not the order has any categories to add
-                $this->checkAndCreateCategories($order);
+                //  Check and generate the order invoice
+                $this->checkAndCreateInvoice($store, $order);
 
-                //  Check whether or not the order has any tags to add
-                $this->checkAndCreateTags($order);
+                //  Check and link order to client
+                $this->checkAndLinkOrderToClient($order);
+
+                //  Check whether or not to send the account details email
+                $this->checkAndSendAccountDetailsEmailOrSms($store, $order);
 
                 //  refetch the updated order
                 $order = $order->fresh();
@@ -390,7 +400,6 @@ trait OrderTraits
      */
     public function initiateUpdate($order_id)
     {
-
         //  Current authenticated user
         $auth_user = auth('api')->user();
 
@@ -408,7 +417,7 @@ trait OrderTraits
             'title' => request('title'),
             'description' => request('description') ?? null,
             'type' => request('type') ?? null,
-            
+
             //  Pricing details
             'cost_per_item' => request('cost_per_item') ?? 0,
             'price' => request('price') ?? 0,
@@ -420,12 +429,12 @@ trait OrderTraits
             'quantity' => request('quantity') ?? null,
             'allow_inventory' => request('allow_inventory'),
             'auto_track_inventory' => request('auto_track_inventory'),
-            
+
             //  Variant details
             'variants' => request('variants') ?? null,
             'variant_attributes' => request('variant_attributes') ?? null,
             'allow_variants' => request('allow_variants'),
-            
+
             //  Download Details
             'allow_downloads' => request('allow_downloads'),
 
@@ -443,18 +452,8 @@ trait OrderTraits
 
             //  If the order was updated successfully
             if ($order) {
-
                 //  re-retrieve the instance to get all of the fields in the table.
                 $order = $this->where('id', $order_id)->first();
-
-                //  Check whether or not the order has any image to upload
-                $this->checkAndUploadImage($order);
-
-                //  Check whether or not the order has any categories to add
-                $this->checkAndCreateCategories($order);
-
-                //  Check whether or not the order has any tags to add
-                $this->checkAndCreateTags($order);
 
                 //  refetch the updated order
                 $order = $order->fresh();

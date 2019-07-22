@@ -32,10 +32,10 @@
                 type: Number,
                 default: null
             },
-            modelType: {
-                type: String,
-                default: ''   
-            }
+            ApiParams:{
+                type: Object,
+                default: null
+            },
         },
         components: { Loader },
         data(){
@@ -90,14 +90,8 @@
 
                 console.log('Start getting invoices...');
 
-                //  Additional data to eager load along with each user found
-                var connections = '';
-
-                //  Settings to prevent pagination
-                var pagination = (connections ? '&': '') + 'paginate=0';
-
                 //  Use the api call() function located in resources/js/api.js
-                api.call('get', '/api/invoices?'+connections+pagination)
+                api.call('get', '/api/invoices', null, this.ApiParams)
                     .then(({data}) => {
                         
                         console.log(data);

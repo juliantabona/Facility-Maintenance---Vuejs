@@ -9,8 +9,30 @@ class Api {
      *  method after call as you would with axios, the 401 condition won't be overridden.
      */
 
-    call (requestType, url, data = null, config = null) {
+    call (requestType, url, data = null, urlParams = null, config = null) {
         return new Promise((resolve, reject) => {
+            
+            var query = '';
+
+            if(urlParams){
+                //  Get the urlParams and format for the api call
+                for(var x=0; x < Object.keys(urlParams).length; x++){
+                    //  Get the current query key
+                    let key = Object.keys(urlParams)[x];
+                    //  Get the current query value
+                    let value = Object.values(urlParams)[x];
+                    
+                    //  If this is the first query
+                    if(x == 0){
+                        query = '?'+key +'='+value;
+                    }else{
+                        query = query +'&'+ (key +'='+value);
+                    }
+                }
+                //  Update the data with the query parameters if any
+                url = url + query;
+            }
+
             axios[requestType](url, data, config)
                 .then(response => {
                     resolve(response);

@@ -114,17 +114,6 @@ class Company extends Model
         return $this->hasMany('App\Appointment', 'company_id');
     }
 
-    /*  Get the process forms related to this company.  A process form in basically a staged process in which
-     *  a company can follow to achieve a set of tasks. These processes involve collecting and monitoring data.
-     *  When we ask for a process form, we are asking the database to get the main tree that holds all the steps
-     *  of how data is going to be stored for that company
-    */
-
-    public function formTemplate()
-    {
-        return $this->hasMany('App\FormTemplate');
-    }
-
     public function companyDirectory()
     {
         return $this->belongsToMany('App\Company', 'company_directory', 'owning_company_id', 'company_id')
@@ -197,28 +186,26 @@ class Company extends Model
         return $this->hasMany('App\Tax');
     }
 
+    public function quotations()
+    {
+        return $this->hasMany('App\Quotation');
+    }
+
     //  Quotes where this company is the client
     public function incomingQuotations()
     {
-        return $this->hasMany('App\Quotation', 'client_id');
+        return $this->quotations()->where('client_id', $this->id);
     }
 
-    //  Quotes where this company is not the client
-    public function outgoingQuotations()
+    public function invoices()
     {
-        return $this->hasMany('App\Quotation', 'company_id');
+        return $this->hasMany('App\Invoice');
     }
 
     //  Invoices where this company is the client
     public function incomingInvoices()
     {
         return $this->hasMany('App\Invoice', 'client_id');
-    }
-
-    //  Invoices where this company is not the client
-    public function outgoingInvoices()
-    {
-        return $this->hasMany('App\Invoice', 'company_id');
     }
 
     public function phones()
@@ -320,42 +307,42 @@ class Company extends Model
         return $count ? $count->only(['total']) : ['total' => 0];
     }
 
-    public function getIncomingQuotationCountAttribute()
-    {
-        $count = $this->incomingQuotations()->select(DB::raw('count(*) as total'))
-                                          ->where('client_id', $this->id)
-                                          ->groupBy('client_id')
-                                          ->first();
-
-        return $count ? $count->only(['total']) : ['total' => 0];
-    }
-
     public function getOutgoingQuotationCountAttribute()
     {
-        $count = $this->outgoingQuotations()->select(DB::raw('count(*) as total'))
-                                        ->where('company_id', $this->id)
-                                        ->groupBy('company_id')
-                                        ->first();
+        $count = $this->quotations()->select(DB::raw('count(*) as total'))
+                                    ->where('company_id', $this->id)
+                                    ->groupBy('company_id')
+                                    ->first();
 
         return $count ? $count->only(['total']) : ['total' => 0];
     }
 
-    public function getIncomingInvoiceCountAttribute()
+    public function getIncomingQuotationCountAttribute()
     {
-        $count = $this->incomingInvoices()->select(DB::raw('count(*) as total'))
-                                          ->where('client_id', $this->id)
-                                          ->groupBy('client_id')
-                                          ->first();
+        $count = $this->quotations()->select(DB::raw('count(*) as total'))
+                                    ->where('client_id', $this->id)
+                                    ->groupBy('client_id')
+                                    ->first();
 
         return $count ? $count->only(['total']) : ['total' => 0];
     }
 
     public function getOutgoingInvoiceCountAttribute()
     {
-        $count = $this->outgoingInvoices()->select(DB::raw('count(*) as total'))
-                                        ->where('company_id', $this->id)
-                                        ->groupBy('company_id')
-                                        ->first();
+        $count = $this->invoices()->select(DB::raw('count(*) as total'))
+                                    ->where('company_id', $this->id)
+                                    ->groupBy('company_id')
+                                    ->first();
+
+        return $count ? $count->only(['total']) : ['total' => 0];
+    }
+
+    public function getIncomingInvoiceCountAttribute()
+    {
+        $count = $this->invoices()->select(DB::raw('count(*) as total'))
+                                  ->where('client_id', $this->id)
+                                  ->groupBy('client_id')
+                                  ->first();
 
         return $count ? $count->only(['total']) : ['total' => 0];
     }

@@ -144,6 +144,8 @@ class User extends Authenticatable
     public function recentActivities()
     {
         return $this->morphMany('App\RecentActivity', 'trackable')
+                    ->where('trackable_id', $this->id)
+                    ->where('trackable_type', 'user')
                     ->orderBy('created_at', 'desc');
     }
 

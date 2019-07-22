@@ -67,7 +67,23 @@
                                     </Col>
                                     <Col :span="6">
                                         <Select v-model="selectedOrderStatuses" filterable multiple placeholder="Filter by status">
-                                            <Option v-for="status in statuses" :value="status.value" :key="status.value">{{ status.name }}</Option>
+
+                                            <OptionGroup label="Payment status">
+                                                <Option v-for="item in ['Pending Payment', 'Failed Payment', 'Paid']" :value="item" :key="item">{{ item }}</Option>
+                                            </OptionGroup>
+
+                                            <OptionGroup label="Refund status">
+                                                <Option v-for="item in ['Pending Refund', 'Refunded']" :value="item" :key="item">{{ item }}</Option>
+                                            </OptionGroup>
+
+                                            <OptionGroup label="Delivery status">
+                                                <Option v-for="item in ['Pending Delivery', 'Delivered']" :value="item" :key="item">{{ item }}</Option>
+                                            </OptionGroup>
+
+                                            <OptionGroup label="Final status">
+                                                <Option v-for="item in ['Cancelled', 'Completed']" :value="item" :key="item">{{ item }}</Option>
+                                            </OptionGroup>
+
                                         </Select>
                                     </Col>
                                     <Col :span="4">
@@ -190,17 +206,6 @@
                 isLoadingOrders: false,
 
                 selectedOrderStatuses:[],
-                statuses: [
-                    { name:'Paid', value:'paid' },
-                    { name:'Unpaid', value:'unpaid' },
-                    { name:'Failed Payment', value:'failed-payment' },
-                    { name:'Pending Delivery', value:'pending-delivery' },
-                    { name:'Delivered', value:'delivered' },
-                    { name:'Pending Refund', value:'pending-refund' },
-                    { name:'Refunded', value:'refunded' },
-                    { name:'Cancelled', value:'cancelled' },
-                    { name:'Completed', value:'completed' },
-                ],
 
                 columns: [
                     {
@@ -209,7 +214,7 @@
                         render: (h, params) => {
                             return h(orderRowDropDown, {
                                 props: {
-                                    row: params.row
+                                    order: params.row
                                 }
                             })
                         }
@@ -313,7 +318,7 @@
                     return 'ios-checkmark-circle-outline';
                 }else if(status == 'paid') {
                     return 'ios-cash-outline';
-                }else if(status == 'unpaid') {
+                }else if(status == 'pending-payment') {
                     return 'ios-cash-outline';
                 }else if(status == 'failed-payment') {
                     return 'ios-cash-outline';
@@ -335,7 +340,7 @@
                     return 'order-status-success';
                 }else if(status == 'paid') {
                     return 'order-status-success';
-                }else if(status == 'unpaid') {
+                }else if(status == 'pending-payment') {
                     return '';
                 }else if(status == 'failed-payment') {
                     return 'order-status-fail';

@@ -11,6 +11,7 @@ use App\Traits\InvoiceTraits;
 
 Relation::morphMap([
     'jobcard' => 'App\Jobcard',
+    'order' => 'App\Order',
 ]);
 
 class Invoice extends Model

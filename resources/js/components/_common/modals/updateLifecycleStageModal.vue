@@ -5,7 +5,7 @@
             v-bind="$props" 
             :isSaving="isSaving" 
             :hideModal="hideModal"
-            title="Update Lifecycle Stage"
+            title="Update Status"
             okText="Save" cancelText="Cancel"
             @on-ok="updateLifecycle()" 
             @visibility="$emit('visibility', $event)">
@@ -13,22 +13,27 @@
             <template slot="content">
 
                 <!-- Loader -->
-                <Loader v-if="isSaving" :loading="isSaving" type="text" class="text-left">Saving Lifecycle...</Loader>
+                <Loader v-if="isSaving" :loading="true" type="text" class="text-left">Updating status...</Loader>
 
                 <div v-else>
 
                     <div v-if="localSelectedStage.type == 'payment'">
                         <Row>
-                            <Col :span="(localSelectedStage || {}).linked_invoice_id ? 18 : 24">
+                            <Col :span="((localSelectedStage || {}).meta || {}).linked_invoice_id ? 18 : 24">
                                 <span class="font-weight-bold mb-1 d-block">Link payment to invoice:</span>
                                 <invoiceSelector
-                                    :selectedInvoiceId="(localSelectedStage || {}).linked_invoice_id"
+                                    :ApiParams="{
+                                        modelId: modelId,
+                                        modelType: modelType,
+                                        paginate: 0
+                                    }"
+                                    :selectedInvoiceId="((localSelectedStage || {}).meta || {}).linked_invoice_id"
                                     @updated:invoice="updatePaymentDetails($event)">
                                 </invoiceSelector>
                             </Col>
-                            <Col :span="(localSelectedStage || {}).linked_invoice_id ? 6 : 24">
-                                <div v-if="(localSelectedStage || {}).linked_invoice_id">
-                                    <span class="btn btn-link mb-2 float-right mt-4" @click="localSelectedStage.linked_invoice_id = null">Unlink Invoice</span>
+                            <Col :span="((localSelectedStage || {}).meta || {}).linked_invoice_id ? 6 : 24">
+                                <div v-if="((localSelectedStage || {}).meta || {}).linked_invoice_id">
+                                    <span class="btn btn-link mb-2 float-right mt-4" @click="((localSelectedStage || {}).meta || {}).linked_invoice_id = null">Unlink Invoice</span>
                                     <div class="clearfix"></div>
                                 </div>
                             </Col>
@@ -36,36 +41,101 @@
 
                         <Row>
                             <Col :span="24">
-                                <div v-if="(localSelectedStage || {}).linked_invoice_id">
-                                    <h4 class="mb-2 border-top pt-3">Invoice #{{ localSelectedStage.linked_invoice_id }}</h4>
-                                    <p>Amount Paid: {{ localSelectedStage.payment_amount | currency(((localSelectedStage.currency_type || {}).currency || {}).symbol) || '___' }}</p>
-                                    <p>Payment Method: {{ localSelectedStage.payment_method || '___' }}</p>
+                                <div v-if="((localSelectedStage || {}).meta || {}).linked_invoice_id">
+                                    <h4 class="mb-2 border-top pt-3">Invoice #{{ localSelectedStage.meta.linked_invoice_id }}</h4>
+                                    <p>Amount Paid: {{ localSelectedStage.meta.payment_amount | currency(((localSelectedStage.meta.currency_type || {}).currency || {}).symbol) || '___' }}</p>
+                                    <p>Payment Method: {{ localSelectedStage.meta.payment_method || '___' }}</p>
 
                                 </div>
                             </Col>
                         </Row>
 
-                        <div v-if="!(localSelectedStage || {}).linked_invoice_id">
+                        <div v-if="!((localSelectedStage || {}).meta || {}).linked_invoice_id">
 
                             <span class="font-weight-bold mt-3 mb-1 d-block">Or complete manually:</span>
                             
                             <!-- Title -->
                                 <el-input  
-                                        v-if="!(localSelectedStage || {}).linked_invoice_id"
+                                        v-if="!((localSelectedStage || {}).meta || {}).linked_invoice_id"
                                         type="text"  
                                         placeholder="Enter amount paid e.g) 2500.00"
                                         @keypress.native="isNumber($event)" :maxlength="10"
-                                        v-model="(localSelectedStage || {}).payment_amount" 
+                                        v-model="((localSelectedStage || {}).meta || {}).payment_amount" 
                                         size="mini" class="mb-2" :style="{ maxWidth:'100%' }">
                                 </el-input>
                             
                             <!-- Payment Method -->
                             <paymentMethodSelector
-                                :selectedPaymentMethod="(localSelectedStage || {}).payment_method"
-                                @updated="(localSelectedStage || {}).payment_method">
+                                :selectedPaymentMethod="((localSelectedStage || {}).meta || {}).payment_method"
+                                @updated="((localSelectedStage || {}).meta || {}).payment_method">
                             </paymentMethodSelector>
 
                         </div>
+
+                    </div>
+
+                    <div v-if="localSelectedStage.type == 'delivery'">
+
+                        <Row :gutter="20" class="mb-3">
+                            
+                            <Col :span="12">
+                                <!-- Delivery Date -->
+                                <span>
+                                    <strong class="text-dark">Delivery Date: </strong>
+                                    <Poptip word-wrap width="200" trigger="hover" :content="'Select the date this job started'">
+                                        <el-date-picker 
+                                            v-model="((localSelectedStage || {}).meta || {}).date_delivered" 
+                                            type="datetime" placeholder="Select date" size="small"
+                                            format="MMM dd yyyy" value-format="yyyy-MM-dd">
+                                        </el-date-picker>
+                                    </Poptip>
+                                </span>
+                            </Col>
+
+                            <Col :span="12">
+                                <!-- Delivery Date -->
+                                <span>
+                                    <strong class="text-dark">Delivery Time: </strong>
+                                    <Poptip word-wrap width="200" trigger="hover" :content="'Select the time the job started'">
+                                        <el-time-picker 
+                                            v-model="((localSelectedStage || {}).meta || {}).time_delivered"
+                                            placeholder="Select time" size="small"
+                                            format="HH:mm" value-format="HH:mm:ss">
+                                        </el-time-picker>
+                                    </Poptip>
+                                </span>
+                            </Col>
+
+                            <Col :span="24" class="mt-3">
+                                <Row>
+                                    <Col :span="24">
+                                        <!-- Select Delivery Method -->
+                                        <span class="font-weight-bold mb-1 d-block">Select Delivery Method:</span>
+                                        <courierMethodSelector
+                                            :selectedCourier="((localSelectedStage || {}).meta || {}).courier"
+                                            @updated="((localSelectedStage || {}).meta || {}).courier = $event">
+                                        </courierMethodSelector>
+                                    </Col>
+
+                                    <Col :span="24" v-if="!((localSelectedStage || {}).meta || {}).courier == 'Other'">
+                                        <!-- Input For Other Custom Delivery Method -->
+                                        <el-input  
+                                                v-model="((localSelectedStage || {}).meta || {}).other_courier" 
+                                                type="text" placeholder="Enter alternative delivery method"
+                                                :maxlength="10" size="mini" class="mb-2" :style="{ maxWidth:'100%' }">
+                                        </el-input>
+                                    </Col>
+
+                                    <Col :span="24" v-if="((localSelectedStage || {}).meta || {}).courier" class="mt-3">
+                                        <!-- Summary -->
+                                        <span class="font-weight-bold mb-1 d-block">Summary:</span>
+                                        <p v-if="((localSelectedStage || {}).meta || {}).courier == 'Other'">Delivered via <span class="font-weight-bold">{{ ((localSelectedStage || {}).meta || {}).other_courier }}</span> on {{ ((localSelectedStage || {}).meta || {}).date_delivered | moment('DD MMM YYYY') || '___' }} at {{ ((localSelectedStage || {}).meta || {}).time_delivered | moment('H:mm') || '___' }}</p>
+                                        <p v-if="((localSelectedStage || {}).meta || {}).courier != 'Other'">Delivered via <span class="font-weight-bold">{{ ((localSelectedStage || {}).meta || {}).courier }}</span> on {{ ((localSelectedStage || {}).meta || {}).date_delivered | moment('DD MMM YYYY') || '___' }} at {{ ((localSelectedStage || {}).meta || {}).time_delivered | moment('H:mm') || '___' }}</p>
+                                    </Col>  
+                                </Row>
+                            </Col>
+
+                        </Row>
 
                     </div>
 
@@ -79,7 +149,7 @@
                                     <strong class="text-dark">Start Date: </strong>
                                     <Poptip word-wrap width="200" trigger="hover" :content="'Select the date this job started'">
                                         <el-date-picker 
-                                            v-model="localSelectedStage.date_started" 
+                                            v-model="((localSelectedStage || {}).meta || {}).date_started" 
                                             type="datetime" placeholder="Select date" size="small"
                                             format="MMM dd yyyy" value-format="yyyy-MM-dd">
                                         </el-date-picker>
@@ -93,7 +163,7 @@
                                     <strong class="text-dark">Start Time: </strong>
                                     <Poptip word-wrap width="200" trigger="hover" :content="'Select the time the job started'">
                                         <el-time-picker 
-                                            v-model="localSelectedStage.time_started"
+                                            v-model="((localSelectedStage || {}).meta || {}).time_started"
                                             placeholder="Select time" size="small"
                                             format="HH:mm" value-format="HH:mm:ss">
                                         </el-time-picker>
@@ -117,10 +187,9 @@
                         <Row :gutter="20" class="mb-3">
                             
                             <Col :span="24">
-                                <img src="/images/assets/icons/complete-stamp.png" :style="{ width: '150px' }" class="d-block ml-auto mr-auto mb-2">
+                                <img src="/images/assets/icons/complete-stamp.png" :style="{ width: '120px' }" class="d-block ml-auto mr-auto mb-2">
                                 <div>
-                                    <p class="text-center">Save to mark this jobcard as "Closed"</p>
-                                    <p class="text-center">This means the job has been completed successfully</p>
+                                    <p class="font-weight-bold mt-3 text-center">SAVE TO MARK AS COMPLETED</p>
                                 </div>
                             </Col>
 
@@ -145,6 +214,7 @@
 
     /*  Selectors   */
     import invoiceSelector from './../selectors/invoiceSelector.vue'; 
+    import courierMethodSelector from './../selectors/courierMethodSelector.vue'; 
     import paymentMethodSelector from './../selectors/paymentMethodSelector.vue'; 
     import assignedStaffSelector from './../selectors/assignedStaffSelector.vue'; 
 
@@ -154,8 +224,20 @@
 
     export default {
         props: {
-            jobcard: {
+            model: {
                 type: Object,
+                default: null
+            },
+            postURL:{
+                type: String,
+                default: '/api/lifecycles/stage'
+            },
+            modelId:{
+                type: Number,
+                default: null
+            },
+            modelType:{
+                type: String,
                 default: null
             },
             selectedStage: {
@@ -163,10 +245,10 @@
                 default: null
             }
         },
-        components: { mainModal, Loader, invoiceSelector, paymentMethodSelector, assignedStaffSelector, basicButton },
+        components: { mainModal, Loader, invoiceSelector, courierMethodSelector, paymentMethodSelector, assignedStaffSelector, basicButton },
         data(){
             return{
-                localJobcard: this.jobcard,
+                localJobcard: this.model,
                 localSelectedStage: this.selectedStage,
                 hideModal: false,
                 isSaving: false
@@ -174,10 +256,10 @@
         },
         methods: {
             updatePaymentDetails(invoice){
-                (this.localSelectedStage || {}).linked_invoice_id = invoice.id;
-                (this.localSelectedStage || {}).currency_type = invoice.currency_type;
-                (this.localSelectedStage || {}).payment_amount = invoice.grand_total_value;
-                (this.localSelectedStage || {}).payment_method = invoice.payment_method;
+                (this.localSelectedStage.meta || {}).linked_invoice_id = invoice.id;
+                (this.localSelectedStage.meta || {}).currency_type = invoice.currency_type;
+                (this.localSelectedStage.meta || {}).payment_amount = invoice.grand_total_value;
+                (this.localSelectedStage.meta || {}).payment_method = invoice.payment_method;
             },
             closeModal(){
                 this.hideModal = true;
@@ -199,21 +281,20 @@
                 //  Start loader
                 self.isSaving = true;
 
-                console.log('Attempt to update jobcard lifecycle...');
+                console.log('Attempt to update model lifecycle...');
                 console.log( self.localSelectedStage );
 
-                if( this.localSelectedStage ){
+                if( this.localSelectedStage && this.postURL && this.modelId && this.modelType ){
 
                     //  Stage data to save
                     let stageData = {
+                        modelId: this.modelId,
+                        modelType: this.modelType,
                         stage: this.localSelectedStage
                     };
 
-                    //  Additional data to eager load along with the jobcard found
-                    var connections = '?connections=lifecycle,priority,categories,costcenters,assignedStaff';
-
                     //  Use the api call() function located in resources/js/api.js
-                    api.call('post', '/api/jobcards/' + self.localJobcard.id + '/lifecycle/stages'+connections, stageData)
+                    api.call('post', this.postURL, stageData)
                         .then(({ data }) => {
                             
                             console.log(data);
@@ -231,7 +312,7 @@
                             //  Stop loader
                             self.isSaving = false;
 
-                            console.log('jobcardSummaryWidget.vue - Error updating jobcard lifecycle...');
+                            console.log('modelSummaryWidget.vue - Error updating model lifecycle...');
                             console.log(response);
                         });
 

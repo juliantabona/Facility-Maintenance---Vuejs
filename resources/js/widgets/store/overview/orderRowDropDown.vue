@@ -14,41 +14,37 @@
     <div>
         <Row :gutter="20">
             <Col :span="24" class="mb-2">
-                <Card>
-                    <span>
-                        <span>Mark As: </span>
-                        <Select :value="['Pending Payment']" filterable multiple  style="max-width:200px;">
+                <Card :style="{ width: '100%' }">
+                                
+                    <Row :gutter="20">
+                        <Col :span="18">
+                            <!-- Order Lifecycle -->
+                            <orderLifecycle 
+                                :model="localOrder" 
+                                :modelId="localOrder.id" 
+                                :modelType="localOrder.model_type"
+                                resourceName="Order" 
+                                @updated:lifecycle="updateOrder($event)">
+                            </orderLifecycle>
+                        </Col>
+                        <Col :span="6">
 
-                            <OptionGroup label="Payments">
-                                <Option v-for="item in ['Pending Payment', 'Failed Payment', 'Paid']" :value="item" :key="item" :disabled="item == 'Failed Payment'">{{ item }}</Option>
-                            </OptionGroup>
+                            <Divider type="vertical" />
 
-                            <OptionGroup label="Refunds">
-                                <Option v-for="item in ['Pending Refund', 'Refunded']" :value="item" :key="item">{{ item }}</Option>
-                            </OptionGroup>
-
-                            <OptionGroup label="Deliveries">
-                                <Option v-for="item in ['Pending Delivery', 'Delivery']" :value="item" :key="item">{{ item }}</Option>
-                            </OptionGroup>
-
-                            <OptionGroup label="Final">
-                                <Option v-for="item in ['Cancelled', 'Completed']" :value="item" :key="item">{{ item }}</Option>
-                            </OptionGroup>
-
-                        </Select>
-                    </span>
-                    <Divider type="vertical" />
-                    <Dropdown>
-                        <Button type="default">
-                            <Icon type="ios-mail-outline" :size="20" />
-                            <span>Send Email/Sms <Icon type="ios-arrow-down" :size="20" /></span>
-                        </Button>
-                        <DropdownMenu slot="list">
-                            <DropdownItem>Order Invoice</DropdownItem>
-                            <DropdownItem>Order Payment Receipt</DropdownItem>
-                            <DropdownItem>Bank Tranfer Details</DropdownItem>
-                        </DropdownMenu>
-                    </Dropdown>
+                            <!-- Send Email Dropdown Options -->
+                            <Dropdown>
+                                <Button type="default">
+                                    <Icon type="ios-mail-outline" :size="20" />
+                                    <span>Send Email/Sms <Icon type="ios-arrow-down" :size="20" /></span>
+                                </Button>
+                                <DropdownMenu slot="list">
+                                    <DropdownItem>Order Invoice</DropdownItem>
+                                    <DropdownItem>Order Payment Receipt</DropdownItem>
+                                    <DropdownItem>Bank Transfer Details</DropdownItem>
+                                </DropdownMenu>
+                            </Dropdown>
+                        </Col>
+                    </Row>
 
                 </Card>
             </Col>
@@ -57,13 +53,14 @@
             <Col :span="8">
                 <Card class="full-height">
                     <h4 class="text-primary mb-3">Customer</h4>
-                    <span class="d-block"><span class="font-weight-bold">Name: </span>Julian Tabona</span>
-                    <span class="d-block"><span class="font-weight-bold">Phone: </span> (+267) 75993221</span>
-                    <span class="d-block"><span class="font-weight-bold">Email: </span> brandontabona@gmail.com</span>
+                    <span class="d-block pb-2 mb-2 border-bottom"><span class="font-weight-bold"><Icon type="ios-contact-outline" :size="20"/></span> Julian Tabona</span>
+                    <span class="d-block"><span class="font-weight-bold"><Icon type="ios-call-outline" :size="20"/></span> (+267) 75993221</span>
+                    <span class="d-block"><span class="font-weight-bold"><Icon type="ios-mail-outline" :size="20" /></span> brandontabona@gmail.com</span>
                     
-                    <span class="d-block pt-2 mt-2 border-top"><span class="font-weight-bold">Address: </span> Plot 3465, Cleaveland Street</span>
-                    <span class="d-block"><span class="font-weight-bold">Country: </span> Botswana</span>
-                    <span class="d-block"><span class="font-weight-bold">City: </span> Gaborone</span>
+                    <span class="d-flex pt-2 mt-2 border-top">
+                        <Icon type="ios-pin-outline" :size="20" class="mr-1" />
+                        <span> Plot 3465, Cleaveland Street, Botswana, Gaborone</span> 
+                    </span>
                 </Card>
             </Col>
 
@@ -74,6 +71,13 @@
                     <span class="d-block"><span class="font-weight-bold">Purchased: </span>3 items</span>
                     <span class="d-block pt-2 mt-2 border-top"><span class="font-weight-bold">Amount Paid: </span>P4,500.00</span>
                     <span class="d-block"><span class="font-weight-bold">Amount Due: </span>P0.00</span>
+                    <basicButton customClass="w-100 p-2" class="d-inline-block mt-2 mb-2" :style="{ maxWidth: '250px', position:'relative' }"
+                        type="info" size="small" :ripple="false"
+                        @click.native="isOpenViewProofOfPaymentModal = true">
+                        <Icon type="ios-paper" :size="20" class="mr-1" style="margin-top: -4px;" />
+                        <span>View Proof Of Payment</span>
+                    </basicButton>
+
                     <span class="d-block pt-2 mt-2 border-top"><span class="font-weight-bold">Refunds: </span>P500.00</span>
                 </Card>
             </Col>
@@ -93,11 +97,19 @@
                 </Card>
             </Col>
         </Row>
+
+        <viewProofOfPaymentModal
+            v-if="isOpenViewProofOfPaymentModal" 
+            @visibility="isOpenViewProofOfPaymentModal = $event">
+        </viewProofOfPaymentModal>
     </div>
 </template>
 
 <script>
     
+    /*  Modals  */
+    import viewProofOfPaymentModal from './../../../components/_common/modals/viewProofOfPaymentModal.vue';
+
     /*  Buttons  */
     import basicButton from './../../../components/_common/buttons/basicButton.vue';
 
@@ -107,13 +119,23 @@
     /*  scrollBox  */
     import scrollBox from './../../../components/_common/scrollBox/scrollBox.vue';
 
+    /*  Lifecycles  */
+    import orderLifecycle from './../../../components/_common/lifecycles/orderLifecycle.vue';
+
     export default {
+        props:{
+            order: {
+                type: Object,
+                default: null
+            }
+        },
         components: { 
-            basicButton, Loader, scrollBox
+            viewProofOfPaymentModal, basicButton, Loader, scrollBox, orderLifecycle
         },
         data(){
             return {
-
+                localOrder: this.order,
+                isOpenViewProofOfPaymentModal: false
             }
         },
         methods: {

@@ -22,7 +22,7 @@ Relation::morphMap([
     'tag' => 'App\Tag',
     'phone' => 'App\Phone',
     'user' => 'App\User',
-    'store' => 'App\Store'
+    'store' => 'App\Store',
     'order' => 'App\Order'
 ]);
 

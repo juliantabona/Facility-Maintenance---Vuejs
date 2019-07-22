@@ -158,6 +158,7 @@ return [
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
         Swap\Laravel\SwapServiceProvider::class,
+        Gloudemans\Shoppingcart\ShoppingcartServiceProvider::class,
 
         /*
          * Package Service Providers...
@@ -224,5 +225,6 @@ return [
         'PDF' => Barryvdh\DomPDF\Facade::class,
         'Entrust' => Zizaco\Entrust\EntrustFacade::class,
         'Swap' => Swap\Laravel\Facades\Swap::class,
+        'Cart' => Gloudemans\Shoppingcart\Facades\Cart::class,
     ],
 ];

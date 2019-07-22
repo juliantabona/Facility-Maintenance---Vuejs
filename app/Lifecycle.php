@@ -5,14 +5,17 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use App\Traits\LifecycleTraits;
 
 Relation::morphMap([
     'jobcard' => 'App\Jobcard',
+    'order' => 'App\Order',
 ]);
 
 class Lifecycle extends Model
 {
     use Dataviewer;
+    use LifecycleTraits;
 
     protected $casts = [
         'stages' => 'array',

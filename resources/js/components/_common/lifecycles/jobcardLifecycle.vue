@@ -176,16 +176,16 @@
                     
                 </Poptip>
                 
-                <div v-for="(stage, i_1) in lifecycleStages" :key="i_1"
+                <div v-for="(stage, i) in lifecycleStages" :key="i"
                     class="float-left mt-1 ml-2">
                     
                     <Select v-if="isActiveStage(stage) && 
-                                ( dropdownOptions(stage, i_1) ).length && !isActiveStage(lifecycleStages[i_1 + 1])"
+                                ( dropdownOptions(stage, i) ).length && !isActiveStage(lifecycleStages[i + 1])"
                             v-model="selectedTriggerName" style="width:150px"
                             @on-change="handleTrigger(stage)"
                             :key="selectedTriggerRenderKey"
                             placeholder="Next step">
-                        <Option v-for="(option, i_2) in dropdownOptions(stage, i_1)" :key="i_2"
+                        <Option v-for="(option, i_2) in dropdownOptions(stage, i)" :key="i_2"
                                 :class="option.divider ? 'border-bottom' : ''" 
                                 :value="option.triggerName">
                                 <Icon v-if="option.icon" :type="option.icon" :size="20" class="mr-1"/>
@@ -235,7 +235,7 @@
         data(){
             return {
                 localJobcard: this.jobcard,
-                lifecycleStages: (((this.jobcard.lifecycle || [])[0] || {}).stages || {}),
+                lifecycleStages: (((this.jobcard.lifecycle || [])[0] || {}).stages || []),
                 localSelectedStage: null,
                 isOpenUpdateLifecycleStageModal: false,
                 selectedTriggerName: '',
@@ -262,7 +262,7 @@
                     return 'danger';
                 }else if( (stageData.pending_status || false) ){
                     return 'warning';
-                }else if( this.isActiveStage(stage) || (stage.type == 'open' && this.localJobcard.has_approved) ? 'active': '' ){
+                }else if( this.isActiveStage(stage) || (stage.type == 'open' && this.localJobcard.has_approved) ){
                     return 'active';
                 }
             },
@@ -392,7 +392,7 @@
                     
                     options.push({ name: 'Undo Close', triggerName: 'undo_close', icon:'ios-undo-outline', divider:false });
 
-                    options.push({ name: 'Notify client', triggerName: 'notify_payment', icon:'ios-chatboxes-outline', divider:false });
+                    options.push({ name: 'Notify client (Completed)', triggerName: 'notify_payment', icon:'ios-chatboxes-outline', divider:false });
 
                 }
                 return options;

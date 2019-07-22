@@ -115,13 +115,12 @@ Route::get('jobcards/stats', 'Api\JobcardController@getEstimatedStats');
 Route::get('jobcards/{jobcard_id}', 'Api\JobcardController@show');
 Route::post('jobcards/{jobcard_id}/approve', 'Api\JobcardController@approve');  //  ok
 Route::get('jobcards/{jobcard_id}/suppliers', 'Api\JobcardController@suppliers');
-Route::get('jobcards/lifecycle/templates', 'Api\JobcardController@getLifecycleTemplates');
-Route::get('jobcards/lifecycle/stages', 'Api\JobcardController@getLifecycleStages');
-Route::get('jobcards/{jobcard_id}/lifecycle', 'Api\JobcardController@getLifecycle');
-Route::post('jobcards/{jobcard_id}/lifecycle', 'Api\JobcardController@updateLifecycle');
-Route::post('jobcards/{jobcard_id}/addLifecycle', 'Api\JobcardController@addLifecycle');
-Route::post('jobcards/{jobcard_id}/lifecycle/stages', 'Api\JobcardController@updateLifecycleProgress');
-Route::post('jobcards/{jobcard_id}/lifecycle/stages/undo', 'Api\JobcardController@undoLifecycleProgress');
+
+/*   LIFECYCLE RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::post('lifecycles/stage', 'Api\LifecycleController@updateLifecycleStageProgress');
+Route::post('lifecycles/stage/undo', 'Api\LifecycleController@undoLifecycleStageProgress');
 
 /*   APPOINTMENT RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete

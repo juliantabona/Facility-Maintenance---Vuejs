@@ -302,7 +302,7 @@ trait StoreTraits
 
         try {
             //  Create the store
-            $store = $this->create($template)->fresh();
+            $store = $this->create($template);
 
             //  If the store was created successfully
             if ($store) {
