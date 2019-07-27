@@ -50,7 +50,7 @@ class Order extends Model
         'cart_tax', 'shipping_tax', 'discount_tax', 'grand_total_tax', 'prices_include_tax', 'tax_lines',
 
         /*  Customer Info  */
-        'customer_id', 'customer_ip_address', 'customer_user_agent', 'customer_note', 'billing', 'shipping',
+        'client_id', 'client_type', 'customer_ip_address', 'customer_user_agent', 'customer_note', 'billing', 'shipping',
 
         /*  Payment Info  */
         'payment_method', 'payment_method_title', 'transaction_id', 'date_paid',
@@ -90,9 +90,15 @@ class Order extends Model
         return $this->belongsTo('App\CompanyBranch', 'company_branch_id');
     }
 
-    public function customer()
+    public function client()
     {
-        return $this->belongsTo('App\User', 'customer_id');
+        //  Get the dynamic class e.g \App\User or App\Company e.t.c
+        $dynamicModel = oq_generateDynamicModel($this->client_type);
+
+        //  Check if this is a valid dynamic class
+        if (class_exists($dynamicModel)) {
+            return $this->hasOne($dynamicModel, 'id', 'client_id');
+        }
     }
 
     /*  Get the documents relating to this order. These are various files such as order documents.

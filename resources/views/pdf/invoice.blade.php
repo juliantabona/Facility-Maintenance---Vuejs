@@ -239,10 +239,11 @@
             $primaryColor = $invoice['colors'][0];
             $secondaryColor = $invoice['colors'][1]; 
             $company = $invoice['customized_company_details'];
+            $companyLogo = $company['logo'][0]['url'];
             $client = $invoice['customized_client_details'];
             $clientName = $client['name'] ?? $client['full_name'];
-            $companyPhones = isset($company['phones']) ? collect(array_filter($company['phones'], function($phone){ return $phone['show']; }))->values() : [];
-            $clientPhones = isset($client['phones']) ? collect(array_filter($client['phones'], function($phone){ return $phone['show']; }))->values() : [];
+            $companyPhones = isset($company['phones']) ? collect(array_filter($company['phones'], function($phone){ return $phone['show'] ?? false; }))->values() : [];
+            $clientPhones = isset($client['phones']) ? collect(array_filter($client['phones'], function($phone){ return $phone['show'] ?? false; }))->values() : [];
             $currencySymbol = $invoice['currency_type']['currency']['symbol'];
             $notes = $invoice['notes'];
 
@@ -250,9 +251,11 @@
 
         <main id="page_1">
 
-            <div id="p1dimg1">
-                <img id="p1img1" class="mrl3" src="/images/assets/logo/OQ-B.png">
-            </div>
+            @if($companyLogo)
+                <div id="p1dimg1">
+                    <img id="p1img1" class="mrl3" src="{{ $companyLogo }}" style="width:auto;max-height:120px;z-index:100;">
+                </div>
+            @endif
 
             <div id="id1_1">
 
@@ -267,20 +270,20 @@
                     </p>
                     <br />
                     
-                    @if($company['address'])
-                        <p class="ft2 p2">{{ $company['address'] }}</p>
+                    @if($company['address_1'] || $company['address_2'])
+                        <p class="ft2 p2">{{ $company['address_1'] ? $company['address_1'] : $company['address_2'] }}</p>
                     @endif
                     @if($company['city'])
-                        <p class="ft2 p2">{{ $company['city'] }}</p>
+                        <p class="ft2 p2">{{ $company['city'] .( $company['city'] && $company['country'] ? ', ': ''). $company['country'] }}</p>
                     @endif
                     @if($company['country'])
-                        <p class="ft2 p2">{{ $company['country'] }}</p>
+                        <p class="ft2 p2"></p>
                     @endif
 
 
                 </div>
 
-                <table cellpadding="0" cellspacing="0" class="brt mrb0 mrt1 pdb4" style="width:100%;">
+                <table cellpadding="0" cellspacing="0" class="mrb0 mrt1 pdb4" style="width:100%;">
                     <tbody>
                         <tr>
 
@@ -294,8 +297,8 @@
                                     @endif
                                 </p>
 
-                                @if($client['address'])
-                                    <p class="p4 ft2">{{ $client['address'] }}</p>
+                                @if($client['address_1'] || $client['address_2'])
+                                    <p class="ft2 p2">{{ $client['address_1'] ? $client['address_1'] : $client['address_2'] }}</p>
                                 @endif
                                 @if($client['city'])
                                     <p class="p4 ft2">{{ $client['city'] }}</p>
@@ -370,22 +373,22 @@
 
                         <tr style="background-color:{{ $primaryColor }} !important;">
                             <td colspan="7" class="pdb1 pdt1 td16">
-                                <p class="ft12 pdl4">{{ $invoice['table_columns'][0]['name'] }}</p>
+                                <p class="ft12 pdl4">{{ $invoice['table_columns'][0] }}</p>
                             </td>
 
                             <td colspan="1" class="pdb1 pdt1 td17">
-                                <p class="ft12">{{ $invoice['table_columns'][1]['name'] }}</p>
+                                <p class="ft12">{{ $invoice['table_columns'][1] }}</p>
                             </td>
 
                             <td colspan="1" class="pdb1 pdt1 td19">
-                                <p class="ft12">{{ $invoice['table_columns'][2]['name'] }}</p>
+                                <p class="ft12">{{ $invoice['table_columns'][2] }}</p>
                             </td>
 
                             <td colspan="1" class="pdb1 pdt1 td21">
-                                <p class="ft12 pdr6">{{ $invoice['table_columns'][3]['name'] }}</p>
+                                <p class="ft12 pdr6">{{ $invoice['table_columns'][3] }}</p>
                             </td>
                         </tr>
-                        @if($invoice['items'])
+                        @if( isset($invoice['items']) && !empty($invoice['items']) )
                             @foreach($invoice['items'] as $key => $item)
                                 <tr style="background-color:{{ ( ($key + 1) % 2 ) ? $secondaryColor . ' !important': '' }} ;">
                                     <td colspan="7" style="word-wrap: break-word" class="pdt1">
@@ -397,11 +400,11 @@
                                     </td>
 
                                     <td rowspan="2" colspan="1" class="pdt1">
-                                        <p class="ft2 mrt1" style="line-height:16px;margin-top: 0px;margin-bottom: 0px;">{{ number_format($item['unitPrice'],2,",",".") }}</p>
+                                        <p class="ft2 mrt1" style="line-height:16px;margin-top: 0px;margin-bottom: 0px;">{{ number_format($item['unit_price'],2,",",".") }}</p>
                                     </td>
 
                                     <td rowspan="2" colspan="1" class="pdt1">
-                                        <p class="ft2 mrt1" style="line-height:16px;margin-top: 0px;margin-bottom: 0px;">{{ number_format($item['totalPrice'],2,",",".") }}</p>
+                                        <p class="ft2 mrt1" style="line-height:16px;margin-top: 0px;margin-bottom: 0px;">{{ number_format($item['unit_price']*$item['quantity'],2,",",".") }}</p>
                                     </td>
                                 </tr>
 
@@ -429,7 +432,7 @@
                                 <p class="p10 ft2 pdr4">{{ $currencySymbol . number_format($invoice['sub_total_value'],2,",",".") }}</p>
                             </td>
                         </tr>
-                        @if($invoice['calculated_taxes'])
+                        @if(isset($invoice['calculated_taxes']) && !empty($invoice['calculated_taxes']))
                             @foreach($invoice['calculated_taxes'] as $tax)
                                 <tr>
                                     <td colspan="5" class="tr12 td31"></td>

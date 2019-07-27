@@ -8316,7 +8316,7 @@ html.edge .tt-portfolio-content figure:hover figcaption {
   max-width: 132px;
   min-width: 132px; }
   .tt-input-counter.style-01 input {
-    background: #f7f8fa;
+    background: #f1f1f1;
     display: block;
     width: 100%;
     height: 50px;
@@ -8328,7 +8328,12 @@ html.edge .tt-portfolio-content figure:hover figcaption {
     font-family: "Hind", sans-serif;
     font-weight: 500;
     color: #191919;
-    border-radius: 6px; }
+    border-radius: 6px;
+    }
+   .tt-input-counter.small input{
+     height: 35px;
+     padding-top: 3px;
+   }
   .tt-input-counter.style-01 span {
     display: inline-block;
     font-size: 27px;
@@ -8339,9 +8344,21 @@ html.edge .tt-portfolio-content figure:hover figcaption {
     height: 100%;
     text-align: center;
     top: 0;
-    color: #777777; }
+    background: rgb(126, 163, 228);
+    color: rgb(255, 255, 255);
+    }
+  .tt-input-counter span:nth-child(1){
+          border-radius: 5px 0 0 5px;
+    }
+  .tt-input-counter span:nth-child(3){
+          border-radius: 0 5px 5px 0;
+    }
   .tt-input-counter.style-01 span:hover {
-    color: #191919; }
+    opacity: 0.9;
+    color: #fff; }
+  .tt-input-counter.style-01 span:active {
+    opacity: 0.5;
+    color: #fff; }
   .tt-input-counter.style-01 span.minus-btn {
     left: 0px; }
   .tt-input-counter.style-01 span.plus-btn {
@@ -8356,7 +8373,15 @@ html.edge .tt-portfolio-content figure:hover figcaption {
     content: "\e9b2"; }
   .tt-input-counter.style-01 .plus-btn:before {
     content: "\e9b1"; }
-
+  .tt-input-counter.style-01 .minus-btn:hover {
+    opacity: 0.9; }
+  .tt-input-counter.style-01 .plus-btn:active {
+    opacity: 1;
+    }
+   .tt-input-counter.small .plus-btn:before,
+   .tt-input-counter.small .minus-btn:before{
+     line-height: 36px;
+   }
 /* tt-collapse-block */
 .tt-collapse-block .tt-item .tt-collapse-title {
   font-size: 14px;
@@ -14002,11 +14027,12 @@ html:not(.ie) .tt-promo-box .tt-description .tt-description-wrapper .tt-backgrou
 
 @media (min-width: 790px) {
   .tt-shopcart-table table td:nth-child(1) {
-    width: 28px; }
+    width: 30px; }
   .tt-shopcart-table table td:nth-child(2) {
-    width: 121px; }
+    width: 250px; }
   .tt-shopcart-table table td:nth-child(3) {
-    width: auto; }
+    width:100px;
+    }
   .tt-shopcart-table table td:nth-child(4) {
     width: 100px; }
   .tt-shopcart-table table td:nth-child(5) {
@@ -14308,7 +14334,8 @@ table + *[class^="btn"] {
   border: 1px solid #e9e7e7; }
   @media (min-width: 576px) {
     .tt-shopcart-wrapper {
-      padding: 32px 39px 35px; } }
+      padding: 0;
+      } }
   @media (max-width: 575px) {
     .tt-shopcart-wrapper {
       padding: 25px 24px 23px; } }
@@ -14316,7 +14343,9 @@ table + *[class^="btn"] {
     .tt-shopcart-wrapper .tt-shopcart-box .tt-title {
       font-size: 17px; } }
   .tt-shopcart-wrapper .tt-shopcart-box:not(:first-child) {
-    margin-top: 25px; }
+    margin-top: 25px;
+    padding: 0px 25px 0px;
+    }
   @media (max-width: 1229px) {
     .tt-shopcart-wrapper {
       margin-top: 56px; } }
@@ -20783,7 +20812,7 @@ html:not(.mac):not(.touch-device) .tt-carousel-brands .slick-track {
 }
 
 .tt-product:not(.tt-view):hover .tt-description{
-    top:-50px !important;
+    top: -15px !important;
     border: 1px solid #d3dbec;
     padding-bottom: 5px;
     transition:top 0.3s ease;
@@ -20805,4 +20834,18 @@ html:not(.mac):not(.touch-device) .tt-carousel-brands .slick-track {
 .tt-rating-stars{
     font-size:16px !important;
     margin:0 auto !important;
+}
+
+.cart-overview-widget{
+  box-shadow: 0px 5px 10px #00000080;
+  position: fixed;
+  width: 330px;
+  top: 120px;
+  right: 10px;
+  bottom: 0;
+}
+
+.cart-overview-widget .cart-overview-header{
+  background: #0071ce;
+  padding: 5px 20px;
 }

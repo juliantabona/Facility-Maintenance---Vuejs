@@ -203,7 +203,7 @@ trait AppointmentTraits
 
         try {
             //  Create the appointment
-            $appointment = $this->create($template);
+            $appointment = $this->create($template)->fresh();
 
             //  If the appointment was created successfully
             if ($appointment) {

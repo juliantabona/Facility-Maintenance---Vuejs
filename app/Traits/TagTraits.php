@@ -236,7 +236,7 @@ trait TagTraits
 
         try {
             //  Create the tag
-            $tag = $this->create($template);
+            $tag = $this->create($template)->fresh();
 
             //  If the tag was created successfully
             if ($tag) {

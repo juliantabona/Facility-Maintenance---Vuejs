@@ -460,7 +460,7 @@ trait InvoiceTraits
 
         try {
             //  Create the invoice
-            $invoice = $this->create($template);
+            $invoice = $this->create($template)->fresh();
 
             //  If the invoice was created successfully
             if ($invoice) {
@@ -821,7 +821,7 @@ trait InvoiceTraits
 
                     if(!$sampleSms){
                         //  Record activity of invoice sent receipt
-                        $INVOICESentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'sms' => $sms]);
+                        $invoiceSentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'sms' => $sms]);
                     }
                 }
             }
@@ -886,7 +886,7 @@ trait InvoiceTraits
         //  Provided User Or Current authenticated user
         $auth_user = $user ?? auth('api')->user();
 
-        /******************sendInvoiceAsSMS***********
+        /*****************************
          *   GET EMAIL DETAILS       *
          *****************************/
 
@@ -912,19 +912,7 @@ trait InvoiceTraits
         }
 
         //  Invoice PDF
-        $invoicePDF = PDF::loadView('pdf.invoice', array('invoice' => $invoice));
-
-        //  Get invoice name
-        if (!empty($invoice->details['heading']) && !empty($invoice['reference_no_value'])) {
-            //  Get the invoice name from heading, reference and date
-            $pdfName = $invoice->details['heading'].' - '.
-                       $invoice->details['reference_no_value'].' - '.
-                       Carbon::parse($invoice['created_date_value'])->format('M d Y').
-                       '.pdf';
-        } else {
-            //  Otherwise get invoice name from the invoice id
-            $pdfName = 'Invoice - '.$invoice->id.'.pdf';
-        }
+        $invoicePDF = $this->getInvoiceAsPDF($invoice);
 
         /***********************************************
          *   REPLACE SHORTCODES WITH ACTUAL CONTENT    *
@@ -938,8 +926,9 @@ trait InvoiceTraits
             /******************************
              *   SEND INVOICE VIA MAIL    *
              ******************************/
-
-            Mail::to($primaryEmail)->send(new InvoiceMail($subject, $message, $invoicePDF, $pdfName));
+            $pdf = $invoicePDF[0];
+            $pdf_name = $invoicePDF[1];
+            Mail::to($primaryEmail)->send(new InvoiceMail($subject, $message, $pdf, $pdf_name));
 
             /*****************************
              *   RECORD ACTIVITY         *
@@ -949,8 +938,23 @@ trait InvoiceTraits
             $mail = ['email' => $primaryEmail, 'subject' => $subject, 'message' => $message];
 
             //  Record activity of invoice sent receipt
-            $INVOICESentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'mail' => $mail]);
+            $invoiceSentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'mail' => $mail]);
+        
+            //  Action was executed successfully
+            return ['success' => true, 'response' => $mail];
         }
+    }
+
+    public function getInvoiceAsPDF($invoice){
+
+        return PDF::loadView('pdf.invoice', array('invoice' => $invoice));
+        
+    }
+
+    public function getInvoiceReceiptAsPDF($invoice){
+
+        return PDF::loadView('emails.send_invoice_receipt', array('invoice' => $invoice, 'msg' => null));
+
     }
 
     /*  sendInvoiceReceiptAsSMS() method:
@@ -1048,19 +1052,7 @@ trait InvoiceTraits
         $message = request('mail')['message'];
 
         //  Get Receipt PDF
-        $receiptPDF = PDF::loadView('emails.send_invoice_receipt', array('invoice' => $invoice, 'msg' => null));
-
-        //  Get invoice receipt name
-        if (!empty($invoice->details['heading']) && !empty($invoice['reference_no_value'])) {
-            //  Get the invoice receipt name from heading, reference and date
-            $pdfName = 'Receipt - '.
-                        $invoice->details['reference_no_value'].' - '.
-                        Carbon::parse($invoice['created_date_value'])->format('M d Y').
-                        '.pdf';
-        } else {
-            //  Otherwise get invoice name from the invoice id
-            $pdfName = 'Receipt - '.$invoice->id.'.pdf';
-        }
+        $receiptPDF = $this->getInvoiceReceiptAsPDF($invoice);
 
         /***********************************************
          *   REPLACE SHORTCODES WITH ACTUAL CONTENT    *
@@ -1075,7 +1067,7 @@ trait InvoiceTraits
              *   SEND INVOICE VIA MAIL    *
              ******************************/
 
-            Mail::to($primaryEmail)->send(new InvoiceReceiptMail($subject, $message, $invoice, $receiptPDF, $pdfName));
+            Mail::to($primaryEmail)->send(new InvoiceReceiptMail($subject, $message, $invoice, $receiptPDF));
 
             /*****************************
              *   RECORD ACTIVITY         *
@@ -1085,7 +1077,7 @@ trait InvoiceTraits
             $mail = ['email' => $primaryEmail, 'subject' => $subject, 'message' => $message];
 
             //  Record activity of invoice sent receipt
-            $INVOICESentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'mail' => $mail]);
+            $invoiceSentActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize(), 'mail' => $mail]);
         }
     }
 
@@ -1158,7 +1150,7 @@ trait InvoiceTraits
 
                 //  Record activity of invoice skipped sending
                 $status = 'skipped sending';
-                $INVOICESkipSendActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
+                $invoiceSkipSendActivity = oq_saveActivity($invoice, $auth_user, $status, ['invoice' => $invoice->summarize()]);
 
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $invoice];

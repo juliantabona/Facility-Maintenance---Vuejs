@@ -5,6 +5,7 @@ namespace App\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use Carbon\Carbon;
 
 class InvoiceMail extends Mailable
 {
@@ -12,18 +13,18 @@ class InvoiceMail extends Mailable
 
     public $subject;
     public $message;
+    public $invoice;
     public $invoicePDF;
-    public $pdfName;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($subject, $message, $invoicePDF, $pdfName)
+    public function __construct($subject, $message, $invoice, $invoicePDF)
     {
         $this->subject = $subject;
         $this->message = $message;
+        $this->invoice = $invoice;
         $this->invoicePDF = $invoicePDF;
-        $this->pdfName = $pdfName;
     }
 
     /**
@@ -33,10 +34,12 @@ class InvoiceMail extends Mailable
      */
     public function build()
     {
+        $pdfName = 'INVOICE '.'#'.$this->invoice->id.' - '.Carbon::parse($this->invoice['created_at'])->format('M d Y') . '.pdf';
+
         return $this->subject($this->subject)
                     ->view('emails.send_invoice')
                     ->with(['msg' => $this->message])
-                    ->attachData($this->invoicePDF->output(), $this->pdfName, [
+                    ->attachData($this->invoicePDF->output(), $pdfName, [
                         'mime' => 'application/pdf',
                     ]);
     }

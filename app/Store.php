@@ -106,6 +106,14 @@ class Store extends Model
                     ->orderBy('created_at', 'desc');
     }
 
+    /**
+     * Get the store settings.
+     */
+    public function settings()
+    {
+        return $this->morphOne('App\Setting', 'trackable');
+    }
+
     public function recentActivities()
     {
         return $this->morphMany('App\RecentActivity', 'trackable')

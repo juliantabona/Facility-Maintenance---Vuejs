@@ -43,7 +43,7 @@
 
           <Layout class="ivu-layout-has-sider" :style="{ background: '#ffffff' }">
 
-            <Layout :style="{ background: '#ffffff', marginTop: '75px', padding: '20px'}">
+            <Layout :style="{ background: '#ffffff', marginTop: '115px', padding: '10px'}">
 
                 <!-- Shop content -->
                 <Content :style="{ position: 'relative', minHeight: '1000px' }">

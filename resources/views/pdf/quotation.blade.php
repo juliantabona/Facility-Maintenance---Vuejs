@@ -397,11 +397,11 @@
                                     </td>
 
                                     <td rowspan="2" colspan="1" class="pdt1">
-                                        <p class="ft2 mrt1" style="line-height:16px;margin-top: 0px;margin-bottom: 0px;">{{ number_format($item['unitPrice'],2,",",".") }}</p>
+                                        <p class="ft2 mrt1" style="line-height:16px;margin-top: 0px;margin-bottom: 0px;">{{ number_format($item['unit_price'],2,",",".") }}</p>
                                     </td>
 
                                     <td rowspan="2" colspan="1" class="pdt1">
-                                        <p class="ft2 mrt1" style="line-height:16px;margin-top: 0px;margin-bottom: 0px;">{{ number_format($item['totalPrice'],2,",",".") }}</p>
+                                        <p class="ft2 mrt1" style="line-height:16px;margin-top: 0px;margin-bottom: 0px;">{{ number_format($item['total_price'],2,",",".") }}</p>
                                     </td>
                                 </tr>
 

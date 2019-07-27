@@ -32,7 +32,7 @@ class Product extends Model
 
     protected $table = 'products_and_services';
 
-    protected $with = ['categories', 'tags', 'taxes', 'primaryImage', 'galleryImages'];
+    protected $with = ['categories', 'tags', 'taxes', 'galleryImages'];
 
     /**
      * The attributes that are mass assignable.
@@ -40,20 +40,20 @@ class Product extends Model
      * @var array
      */
     protected $fillable = [
-        'title', 'description', 'type', 'cost_per_item', 'price', 'sale_price',
-        'sku', 'barcode', 'quantity', 'allow_inventory', 'auto_track_inventory', 'variants', 'variant_attributes', 'allow_variants',
+        'name', 'description', 'type', 'cost_per_item', 'unit_price', 'unit_sale_price',
+        'sku', 'barcode', 'stock_quantity', 'allow_inventory', 'auto_track_inventory', 'variants', 'variant_attributes', 'allow_variants',
         'downloads', 'allow_downloads', 'show_on_store', 'company_branch_id', 'company_id',
     ];
 
     protected $allowedFilters = [
-        'id', 'title', 'description', 'type', 'cost_per_item', 'price', 'created_at',
+        'id', 'name', 'description', 'type', 'cost_per_item', 'unit_price', 'created_at',
 
         // nested filters
         //  'taxes.id', 'taxes.name',
     ];
 
     protected $orderable = [
-        'id', 'title', 'description', 'cost_per_item', 'price', 'created_at',
+        'id', 'name', 'description', 'cost_per_item', 'unit_price', 'created_at',
     ];
 
     /*  Get the documents relating to this product. These are various files such as images, downloadable documents,
@@ -63,11 +63,6 @@ class Product extends Model
     public function documents()
     {
         return $this->morphMany('App\Document', 'documentable');
-    }
-
-    public function primaryImage()
-    {
-        return $this->documents()->where('type', 'primary')->take(1);
     }
 
     public function galleryImages()
@@ -108,6 +103,15 @@ class Product extends Model
     }
 
     /* ATTRIBUTES */
+
+    protected $appends = [
+        'primary_image'
+    ];
+
+    public function getPrimaryImageAttribute()
+    {
+        return $this->documents()->where('type', 'primary')->first();
+    }
 
     public function setAllowInventoryAttribute($value)
     {

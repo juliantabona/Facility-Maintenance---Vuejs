@@ -218,7 +218,7 @@ trait JobcardTraits
 
         try {
             //  Create the jobcard
-            $jobcard = $this->create($template);
+            $jobcard = $this->create($template)->fresh();
 
             //  If the jobcard was created successfully
             if ($jobcard) {

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 Relation::morphMap([
     'user' => 'App\User',
     'company' => 'App\Company',
+    'store' => 'App\Store',
 ]);
 
 class Setting extends Model

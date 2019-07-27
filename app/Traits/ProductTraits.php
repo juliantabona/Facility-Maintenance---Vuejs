@@ -286,19 +286,19 @@ trait ProductTraits
         //  Create a template to hold the product details
         $template = $template ?? [
             //  General details
-            'title' => request('title'),
+            'name' => request('name'),
             'description' => request('description') ?? null,
             'type' => request('type') ?? null,
             
             //  Pricing details
             'cost_per_item' => request('cost_per_item') ?? 0,
-            'price' => request('price') ?? 0,
-            'sale_price' => request('sale_price') ?? 0,
+            'unit_price' => request('unit_price') ?? 0,
+            'unit_sale_price' => request('unit_sale_price') ?? 0,
 
             //  Inventory & Tracking details
             'sku' => request('sku') ?? null,
             'barcode' => request('barcode') ?? null,
-            'quantity' => request('quantity') ?? null,
+            'stock_quantity' => request('stock_quantity') ?? null,
             'allow_inventory' => request('allow_inventory'),
             'auto_track_inventory' => request('auto_track_inventory'),
             
@@ -320,7 +320,7 @@ trait ProductTraits
 
         try {
             //  Create the product
-            $product = $this->create($template);
+            $product = $this->create($template)->fresh();
 
             //  If the product was created successfully
             if ($product) {
@@ -487,19 +487,19 @@ trait ProductTraits
         //  Create a template to hold the product details
         $template = $template ?? [
             //  General details
-            'title' => request('title'),
+            'name' => request('name'),
             'description' => request('description') ?? null,
             'type' => request('type') ?? null,
             
             //  Pricing details
             'cost_per_item' => request('cost_per_item') ?? 0,
-            'price' => request('price') ?? 0,
-            'sale_price' => request('sale_price') ?? 0,
+            'unit_price' => request('unit_price') ?? 0,
+            'unit_sale_price' => request('unit_sale_price') ?? 0,
 
             //  Inventory & Tracking details
             'sku' => request('sku') ?? null,
             'barcode' => request('barcode') ?? null,
-            'quantity' => request('quantity') ?? null,
+            'stock_quantity' => request('stock_quantity') ?? null,
             'allow_inventory' => request('allow_inventory'),
             'auto_track_inventory' => request('auto_track_inventory'),
             

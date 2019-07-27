@@ -13,15 +13,15 @@ class CreateProductsAndServicesTable extends Migration
     {
         Schema::create('products_and_services', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('title')->nullable();
+            $table->string('name')->nullable();
             $table->string('description')->nullable();
             $table->string('type')->nullable();
             $table->float('cost_per_item')->nullable()->default(0);
-            $table->float('price')->nullable()->default(0);
-            $table->float('sale_price')->nullable()->default(0);
+            $table->float('unit_price')->nullable()->default(0);
+            $table->float('unit_sale_price')->nullable()->default(0);
             $table->string('sku')->nullable();
             $table->string('barcode')->nullable();
-            $table->unsignedInteger('quantity')->nullable();
+            $table->unsignedInteger('stock_quantity')->nullable();
             $table->boolean('allow_inventory')->default(0);
             $table->boolean('auto_track_inventory')->default(1);
             $table->json('variants')->nullable();

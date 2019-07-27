@@ -320,7 +320,7 @@ trait QuotationTraits
 
         try {
             //  Create the quotation
-            $quotation = $this->create($template);
+            $quotation = $this->create($template)->fresh();
 
             //  If the quotation was created successfully
             if ($quotation) {
@@ -737,7 +737,7 @@ trait QuotationTraits
              *   SEND QUOTATION VIA MAIL    *
              ******************************/
 
-            Mail::to($primaryEmail)->send(new QuotationMail($subject, $message, $quotationPDF, $pdfName));
+            Mail::to($primaryEmail)->send(new QuotationMail($subject, $message, $quotation, $quotationPDF, $pdfName));
 
             /*****************************
              *   RECORD ACTIVITY         *

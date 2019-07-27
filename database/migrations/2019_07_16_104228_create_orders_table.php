@@ -45,7 +45,8 @@ class CreateOrdersTable extends Migration
             $table->json('tax_lines')->nullable();
 
             /*  Customer Info  */
-            $table->unsignedInteger('customer_id')->nullable();
+            $table->unsignedInteger('client_id')->nullable();
+            $table->string('client_type')->nullable();
             $table->string('customer_ip_address')->nullable();
             $table->string('customer_user_agent')->nullable();
             $table->string('customer_note')->nullable();

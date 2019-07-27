@@ -321,7 +321,7 @@ trait CompanyTraits
             ];
 
             //  Create the company
-            $company = $this->create($template);
+            $company = $this->create($template)->fresh();
 
             //  If the company was created successfully
             if ($company) {
@@ -894,6 +894,26 @@ trait CompanyTraits
         } else {
             return ['success' => false, 'response' => $response];
         }
+    }
+
+    public function getBasicDetails()
+    {
+        //  Filter the collection to only the following details
+        return $this->only([
+
+                /*  Logo  */
+                'logo',
+
+                /*  Basic Info  */
+                'name', 'abbreviation', 'description', 'date_of_incorporation', 'type', 'industry',
+                
+                /*  Address Info  */
+                'address_1', 'address_2', 'country', 'provience', 'city', 'postal_or_zipcode', 
+                
+                /*  Contact Info  */
+                'email', 'additional_email', 'phones'
+                
+            ]);
     }
 
     /*  summarize() method:

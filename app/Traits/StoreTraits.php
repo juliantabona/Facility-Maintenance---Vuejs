@@ -9,6 +9,9 @@ use App\Document;
 use App\Company;
 use App\Notifications\StoreCreated;
 use App\Notifications\StoreUpdated;
+//  Other
+use PDF;
+use Carbon\Carbon;
 
 trait StoreTraits
 {
@@ -274,8 +277,8 @@ trait StoreTraits
             
             //  Pricing details
             'cost_per_item' => request('cost_per_item') ?? 0,
-            'price' => request('price') ?? 0,
-            'sale_price' => request('sale_price') ?? 0,
+            'unit_price' => request('unit_price') ?? 0,
+            'unit_sale_price' => request('unit_sale_price') ?? 0,
 
             //  Inventory & Tracking details
             'sku' => request('sku') ?? null,
@@ -302,7 +305,7 @@ trait StoreTraits
 
         try {
             //  Create the store
-            $store = $this->create($template);
+            $store = $this->create($template)->fresh();
 
             //  If the store was created successfully
             if ($store) {
@@ -475,8 +478,8 @@ trait StoreTraits
             
             //  Pricing details
             'cost_per_item' => request('cost_per_item') ?? 0,
-            'price' => request('price') ?? 0,
-            'sale_price' => request('sale_price') ?? 0,
+            'unit_price' => request('unit_price') ?? 0,
+            'unit_sale_price' => request('unit_sale_price') ?? 0,
 
             //  Inventory & Tracking details
             'sku' => request('sku') ?? null,
@@ -550,6 +553,46 @@ trait StoreTraits
             //  Return the error response
             return ['success' => false, 'response' => $response];
         }
+    }
+
+    public function checkAndCreateSettings($store)
+    {
+        //  Check if the company has any settings
+        $settings = $store->settings()->count();
+
+        if (!$settings) {
+            //  Create new settings for the company
+            $settings = $store->settings()->create([
+                'details' => $this->settingsTemplate($store),
+            ]);
+        }
+    }
+
+    public function settingsTemplate($store)
+    {
+        return [
+            //  Get the general settings
+            'general' => [
+                //  Get the currency mathing the company country
+                'currency_type' => $this->predictCurrency($store)
+            ],
+
+            //  Get settings for creating quotations
+            'quotationTemplate' => (new Quotation())->sampleTemplate(),
+
+            //  Get settings for creating invoices
+            'invoiceTemplate' => (new Invoice())->sampleTemplate(),
+            
+        ];
+    }
+
+    public function getStoreBankAccountDetailsAsPDF($store){
+
+        //  Get the store settings
+        $bankAccountDetails = $store->settings['details']['bankAccountTemplate'] ?? null;
+
+        return PDF::loadView('pdf.bank_account_details', array('bankAccountDetails' => $bankAccountDetails));
+
     }
 
     /*  summarize() method:

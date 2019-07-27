@@ -184,7 +184,7 @@
                                     <el-form-item label="Price" prop="price" class="mb-2">
                                         <el-input
                                             placeholder="0.00"
-                                            v-model="formData.price"
+                                            v-model="formData.unit_price"
                                             size="small"
                                             :style="{ maxWidth:'100%' }">
                                         </el-input>
@@ -193,10 +193,10 @@
 
                                 <Col :span="12">
                                     <!-- Sale Price -->
-                                    <el-form-item label="Sale price" prop="sale_price" class="mb-2">
+                                    <el-form-item label="Sale price" prop="unit_sale_price" class="mb-2">
                                         <el-input
                                             placeholder="0.00"
-                                            v-model="formData.sale_price"
+                                            v-model="formData.unit_sale_price"
                                             size="small"
                                             :style="{ maxWidth:'100%' }">
                                         </el-input>
@@ -391,7 +391,7 @@
                                                     <el-form-item prop="option_price" class="mb-2">
                                                         <el-input
                                                             placeholder="0.00"
-                                                            v-model="formData.variants[key].price"
+                                                            v-model="formData.variants[key].unit_price"
                                                             size="small"
                                                             :style="{ maxWidth:'100%' }">
                                                         </el-input>
@@ -705,8 +705,8 @@ export default {
 
             //  Pricing details
             cost_per_item: 0,
-            price: 0,
-            sale_price: 0,
+            unit_price: 0,
+            unit_sale_price: 0,
 
             //  Inventory & Tracking details
             sku: "",
@@ -818,7 +818,8 @@ export default {
         for(var x = 0; x < (variantsNames || {}).length; x++){
             variantTemplates.push({
                 name: variantsNames[x],
-                price: 0.00,
+                unit_price: 0.00,
+                unit_sale_price: 0.00,
                 sku: variantsNames[x],
                 barcode: '',
                 quantity: 1,

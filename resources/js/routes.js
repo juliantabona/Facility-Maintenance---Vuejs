@@ -281,13 +281,13 @@ let routes = [
     },
     {
         //  Cart
-        path: '/cart', name: 'cart',
+        path: '/stores/:id/cart', name: 'cart',
         meta: { layout: 'Store', middlewareAuth: false },
         component: require('./views/dashboard/store/cart/main.vue')
     },
     {
         //  Checkout
-        path: '/checkout', name: 'checkout',
+        path: '/stores/:id/checkout', name: 'checkout',
         meta: { layout: 'Store', middlewareAuth: false },
         component: require('./views/dashboard/store/checkout/main.vue')
     },

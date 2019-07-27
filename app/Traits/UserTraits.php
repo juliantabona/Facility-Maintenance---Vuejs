@@ -241,7 +241,7 @@ trait UserTraits
             ];
 
             //  Create the user
-            $user = $this->create($template);
+            $user = $this->create($template)->fresh();
 
             //  If the user was created successfully
             if ($user) {
@@ -856,6 +856,25 @@ trait UserTraits
             return ['success' => false, 'response' => oq_api_notify_error(null, ['password' => ['Invalid token. Token might have expired or been used']], 404)];
         }
 
+    }
+
+    public function getBasicDetails()
+    {
+        //  Filter the collection to only the following details
+        return $this->only([
+
+                /*  Profile Image  */
+                'profileImage',
+
+                /*  Basic Info  */
+                'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 
+                
+                /*  Address Info  */
+                'address_1', 'address_2', 'country', 'provience', 'city', 'postal_or_zipcode', 
+                
+                /*  Contact Info  */
+                'email', 'additional_email', 'phones'
+            ]);
     }
 
 }

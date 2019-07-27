@@ -31,6 +31,7 @@ class CreateInvoicesTable extends Migration
             $table->json('customized_company_details')->nullable();
             $table->json('customized_client_details')->nullable();
             $table->unsignedInteger('client_id')->nullable();
+            $table->string('client_type')->nullable();
             $table->json('table_columns')->nullable();
             $table->json('items')->nullable();
             $table->json('notes')->nullable();

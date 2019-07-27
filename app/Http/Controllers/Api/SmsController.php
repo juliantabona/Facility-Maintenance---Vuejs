@@ -65,7 +65,7 @@ class SmsController extends Controller
                 'customized_client_details' => $sampleClient,
                 'client_id' => $sampleClient->id,
                 'table_columns' => $companySettings['invoiceTemplate']['table_columns'],
-                'items' => [['name'=>$company->industry,'description'=>'','quantity'=>1,'unitPrice'=>1250,'totalPrice'=>1250,'taxes'=>[]]],
+                'items' => [['name'=>$company->industry,'description'=>'','quantity'=>1,'unit_price'=>1250,'total_price'=>1250,'taxes'=>[]]],
                 'notes' => $companySettings['invoiceTemplate']['notes'],
                 'colors' => $companySettings['invoiceTemplate']['colors'],
                 'footer' => $companySettings['invoiceTemplate']['footer'],

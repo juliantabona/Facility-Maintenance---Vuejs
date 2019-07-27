@@ -14,9 +14,12 @@
 
     <Row :gutter="20">
         <Col :span="24">
-            <h1 class="tt-title-subpages noborder pt-3 pb-4">CHECKOUT</h1>
-            <div class="row">
-                <div class="col-sm-12 col-xl-8">
+            
+            <Row :gutter="12">
+                <Col :xs="24" :sm="18" :md="18" :lg="18" class="mb-2">
+
+                    <h1 class="text-center pt-3 pb-4">CHECKOUT</h1>
+
                     <Card class="ml-1 mr-1">
                         <Steps :current="checkoutProgress">
                             <Step title="Account" content="Complete basic account details"></Step>
@@ -43,7 +46,7 @@
                                                                     1 - We have the user details and
                                                                     2 - We set showLoginForm = false -->
                                                             <Row v-if="user && showLoginForm == false" :gutter="12">
-                                                                <Col :span="16" :offset="4">
+                                                                <Col :span="14" :offset="5">
                                                                     <!-- Account Summary -->
                                                                     <Card>
                                                                         
@@ -164,7 +167,7 @@
                                                     1 - We have the user details and
                                                     2 - We set showDeliveryForm = false -->
                                             <Row v-if="user && !showDeliveryForm" :gutter="12" class="mb-4">
-                                                <Col :span="16" :offset="4">
+                                                <Col :span="14" :offset="5">
                                                     <!-- Account Summary -->
                                                     <Card>
                                                         
@@ -376,7 +379,7 @@
                                                 class="float-right mb-2 ml-3" 
                                                 type="success" size="large" 
                                                 :ripple="true"
-                                                @click.native="$refs.vcsform.submit()">
+                                                @click.native="handleProceedToPayment()">
                                                 <span>Proceed To Payment</span>
                                                 <Icon type="md-arrow-forward" class="ml-1" />
                                             </basicButton>
@@ -403,49 +406,13 @@
                             <span class="btn btn-link"><i class="icon-e-19"></i>CONTINUE SHOPPING</span>
                         </div>
                     </div>
-                </div>
-                <div class="col-sm-12 col-xl-4">
-                    <div class="tt-shopcart-wrapper">
-                        
-                        <div class="tt-shopcart-box">
-                            <table class="w-100">
-                                <tbody>
-                                    <tr v-for="(product, index) in [[1, 220], [2, 450], [3, 340]]" :key="index" class="mb-1">
-                                        <td>
-                                            <div class="tt-product-img">
-                                                <img :src="'images/samples/dress_'+product[0]+'.jpg'" :data-src="'images/samples/dress_'+product[0]+'.jpg'" style="max-width:80px;max-height:80px;">
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span>Flared Shift Dress</span>
-                                        </td>
-                                        <td class="text-right">
-                                            <div class="tt-price">P350</div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="tt-shopcart-box tt-boredr-large">
-                            <table class="tt-shopcart-table01">
-                                <tbody>
-                                    <tr>
-                                        <th>SUBTOTAL</th>
-                                        <td>P350</td>
-                                    </tr>
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <th>GRAND TOTAL</th>
-                                        <td>P350</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                            <span class="btn btn-outline-dark mb-3"><span class="icon icon-check_circle"></span>DOWNLOAD QUOTATION</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                </Col>
+                <Col :xs="24" :sm="6" :md="6" :lg="6" class="mb-2">
+                    
+                    <cartWidget cartType="widget-cart" :hideCheckoutBtn="true"></cartWidget>
+
+                </Col>
+            </Row>
         </Col>
     </Row>
 
@@ -476,13 +443,13 @@
     import checkoutLoginForm from './../../../components/_common/forms/login-user/checkout-login.vue';
     import checkoutRegisterForm from './../../../components/_common/forms/register-user/checkout-register.vue';
 
-    import lodash from 'lodash';
-    Event.prototype._ = lodash;
+    /*  Cart Widget  */
+    import cartWidget from './../cart/main.vue';
 
     export default {
         components: { 
             basicButton, toggleSwitch, Loader, phoneInput, citySelector, provinceSelector, countrySelector, IconAndCounterCard,
-            checkoutLoginForm, checkoutRegisterForm
+            checkoutLoginForm, checkoutRegisterForm, cartWidget
         },
         props: {
             products: {
@@ -603,7 +570,100 @@
                     //  Hide the delivery address form
                     self.showDeliveryForm = false;
                 });
-            }
+            },
+            handleProceedToPayment(){
+                //  To submit vcs form
+                //  this.$refs.vcsform.submit()
+
+                console.log('Attempt to create product...');
+
+                console.log( this.localProduct );
+
+                //  Form data to send
+                let orderData = { 
+                        //  General details
+                        number: '1005',
+                        order_key: 'dm_order_58d2d042d1d',
+                        status: 'pending-payment',
+                        currency: 'USD',
+
+                        //  Item Info
+                        line_items: [
+                            {
+                                id: 36,
+                                name: 'Rolex wrist watch',
+                                description: 'Stylish x3 series rolex watch',
+                                type: 'product',
+                                taxes: [],
+                                purchasePrice: 1250,
+                                unit_price: 1800,
+                                total_price: 3600,
+                                quantity: '2'
+                            }
+                        ],
+
+                        //  Shipping Info
+                        shipping_lines: null,
+
+                        //  Grand Total, Subtotal, Shipping Total, Discount Total
+                        cart_total: 10.00,
+                        shipping_total: 0.00,
+                        discount_total: 0.00,
+                        grand_total: 15.00,
+
+                        //  Tax Info
+                        cart_tax: 2.00,
+                        shipping_tax: 0.00,
+                        discount_tax: 0.00,
+                        grand_total_tax: 3.00,
+                        prices_include_tax: 0,
+                        tax_lines: null,
+
+                        //  Customer Info
+                        client_id: 91,
+                        client_type: 'company',
+                        customer_ip_address: null,
+                        customer_user_agent: null,
+                        customer_note: 'Deliver before end of this week',
+                        billing: null,
+                        shipping: null,
+
+                        //  Payment Info
+                        payment_method: 'bank_deposit',
+                        payment_method_title: 'Bank Deposit',
+                        transaction_id: null,
+                        date_paid: null,
+
+                        //  Store, Company & Branch Info
+                        store_id: 1,
+
+                            mail: {
+                                primaryEmails: ['brandontabona@gmail.com'],
+                                ccEmails: [],
+                                bccEmails: []
+                                //subject: this.locaSubject,
+                                //message: this.locaMessage
+                            },
+                            deliveryMethods: ['Email']
+
+                 };
+
+                console.log(orderData);
+                
+                //  Use the api call() function located in resources/js/api.js
+                api.call('post', '/api/orders', orderData)
+                    .then(({ data }) => {
+
+                        //  Alert creation success
+                        self.$Message.success('Order saved sucessfully!');
+
+                    })         
+                    .catch(response => { 
+
+                        console.log('productSummaryWidget.vue - Error saving product...');
+                        console.log(response);
+                    });
+            },
         },
         created(){
             if(this.resetToken){

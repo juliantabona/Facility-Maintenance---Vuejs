@@ -112,8 +112,9 @@
                         name: JSON.parse(item).name,
                         description: JSON.parse(item).description,
                         quantity: 1,
-                        unitPrice: JSON.parse(item).price, 
-                        totalPrice: JSON.parse(item).price,
+                        unit_price: JSON.parse(item).unit_price, 
+                        unit_sale_price: JSON.parse(item).unit_sale_price, 
+                        total_price: JSON.parse(item).unit_sale_price || JSON.parse(item).unit_price,
                         taxes: JSON.parse(item).taxes.length ? JSON.parse(item).taxes.map(tax => [{
                                     id: tax.id,
                                     name: tax.name,

@@ -234,7 +234,7 @@ Route::post('stores/{store_id}', 'Api\StoreController@update');
      -  Get, Show, Update, Trash, Delete
 */
 Route::get('orders', 'Api\OrderController@index');
-Route::post('orders', 'Api\OrderController@order');
+Route::post('orders', 'Api\OrderController@store');
 Route::get('orders/{order_id}', 'Api\OrderController@show');
 Route::post('orders/{order_id}', 'Api\OrderController@update');
 
@@ -246,6 +246,15 @@ Route::post('products', 'Api\ProductController@store');
 Route::get('products/{product_id}', 'Api\ProductController@show');
 Route::post('products/{product_id}', 'Api\ProductController@update');
 Route::get('products/{product_id}/image', 'Api\ProductController@getImage');
+
+/*   CART RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::get('cart', 'Api\CartController@index');
+Route::post('cart', 'Api\CartController@store');
+Route::post('cart/{item_id}', 'Api\CartController@update');
+Route::delete('cart/{item_id}', 'Api\CartController@delete');
+Route::delete('cart/empty', 'Api\CartController@empty');
 
 /*   TAXES RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete

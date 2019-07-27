@@ -66,20 +66,20 @@
                         <el-input v-if="editMode" placeholder="e.g) 2" 
                                 type="number" min="1"
                                 v-model="localInvoice.items[i].quantity" 
-                                @input.native="updateSubAndGrandTotal()"
+                                @input.native="updateTotals(item, i)"
                                 size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                     </td>
                     <td colspan="1" class="p-2">
-                        <span v-if="!editMode">{{ item.unitPrice | currency(currencySymbol) || '___' }}</span>
+                        <span v-if="!editMode">{{ item.unit_price | currency(currencySymbol) || '___' }}</span>
                         <el-input v-if="editMode" placeholder="e.g) 2,500.00" 
                                 type="text"  @keypress.native="isNumber($event)" :maxlength="10"
-                                v-model="localInvoice.items[i].unitPrice" 
-                                @input.native="updateSubAndGrandTotal()"
+                                v-model="localInvoice.items[i].unit_price" 
+                                @input.native="updateTotals(item, i)"
                                 size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                     </td>
                     <td colspan="1" class="p-2">
-                        <span v-if="!editMode">{{ getItemTotal(localInvoice.items[i]) | currency(currencySymbol) || '___' }}</span>
-                        <el-input v-if="editMode" placeholder="e.g) 5,000.00" :value="getItemTotal(localInvoice.items[i]) | currency(currencySymbol)" size="mini" class="p-1" :style="{ maxWidth:'100%' }" disabled></el-input>
+                        <span v-if="!editMode">{{ localInvoice.items[i].total_price | currency(currencySymbol) || '___' }}</span>
+                        <el-input v-if="editMode" placeholder="e.g) 5,000.00" :value="localInvoice.items[i].total_price | currency(currencySymbol)" size="mini" class="p-1" :style="{ maxWidth:'100%' }" disabled></el-input>
                     </td>
                     <td v-if="editMode" class="p-2">
                         <Loader v-if="isLoadingTaxes" :loading="isLoadingTaxes" type="text" :style="{ marginTop:'40px' }">Loading taxes...</Loader>
@@ -294,6 +294,10 @@
                 this.localInvoice.calculated_taxes = this.runCalculateTaxes();
                 this.updateSubAndGrandTotal();
             },
+            updateTotals(item, index){
+                this.calculateItemTotal(item, index);
+                this.updateSubAndGrandTotal();
+            },
             updateSubAndGrandTotal(){
                 console.log('run updateSubAndGrandTotal()');
 
@@ -307,7 +311,7 @@
                 this.localInvoice.calculated_taxes = this.runCalculateTaxes();
             },
             runGetTotal: function(){
-                var itemAmounts = (this.localInvoice.items || []).map(item => item.quantity * item.unitPrice);
+                var itemAmounts = (this.localInvoice.items || []).map(item => item.quantity * item.unit_price);
                 var total = itemAmounts.length ? itemAmounts.reduce(this.getSum): 0;
 
                 return total;
@@ -318,8 +322,12 @@
 
                 return  this.runGetTotal() + sumOfTaxAmounts;
             },
-            getItemTotal: function(item){
-                return item.unitPrice * item.quantity
+            calculateItemTotal: function(item, index){
+                //  Update the item total price
+                this.$set(this.localInvoice.items[index], 'total_price', item.unit_price * item.quantity);
+                
+                //  Return the updated item
+                return this.localInvoice.items[index];
             },
             getSum(total, num) {
                 return total + num;
@@ -336,7 +344,7 @@
                                 name: item.taxes[x].name,
                                 abbreviation: item.taxes[x].abbreviation,
                                 rate: item.taxes[x].rate,
-                                amount: item.taxes[x].rate * this.getItemTotal(item)
+                                amount: item.taxes[x].rate * this.calculateItemTotal(item, x)
                             })
                         }
    
@@ -405,7 +413,9 @@
                         type: item.type,
                         taxes: item.taxes,
                         purchasePrice: item.cost_per_item,
-                        unitPrice: item.price,
+                        unit_sale_price: item.unit_sale_price,
+                        unit_price: item.unit_price,
+                        total_price: item.unit_price,
                         quantity: 1
                     }
             },

@@ -1,11 +1,6 @@
 <template>
 
     <Row :gutter="20">
-        
-        <Col v-if="isLoading" span="8" offset="8">
-            <!-- Loader -->
-            <Loader :loading="true" type="text" class="text-left" theme="white">Loading store</Loader>
-        </Col>
 
         <Col v-if="!isLoading && products" span="24">
 
@@ -59,13 +54,16 @@
                 //  Console log to acknowledge the start of api process
                 console.log('Start getting store products...');
 
-                //  Additional data to eager load along with the product found
-                var connections = '';
-
+                var storeId = (this.$route.params.id);
                 var page = (this.$route.query.page) ? this.$route.query.page : 1;
 
+                var urlParams = {
+                        storeId: storeId,
+                        page: page
+                    }
+
                 //  Use the api call() function located in resources/js/api.js
-                api.call('get', '/api/products')
+                api.call('get', '/api/products', null, urlParams)
                     .then(({data}) => {
                         
                         //  Console log the data returned
