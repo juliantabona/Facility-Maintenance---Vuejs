@@ -4,10 +4,10 @@
 
 <template>
     
-    <!-- Provience Selector -->
+    <!-- Province Selector -->
     <div>
         <Loader v-if="isLoadingProviencies" :loading="isLoadingProviencies" type="text" class="text-left">Loading proviencies...</Loader>
-        <Select v-if="!isLoadingProviencies" v-model="localSelectedProvience" :style="{ width:'100%' }" placeholder="Select provience" not-found-text="No proviencies found" filterable>
+        <Select v-if="!isLoadingProviencies" v-model="localSelectedProvince" :style="{ width:'100%' }" placeholder="Select province" not-found-text="No proviencies found" filterable>
             <Option 
                 v-for="(item, index) in fetchedProviencies" 
                 :value="item" 
@@ -28,7 +28,7 @@
             Loader
         },
         props: {
-            selectedProvience: {
+            selectedProvince: {
                 type: String,
                 default: ''
             },
@@ -39,7 +39,7 @@
         },
         data(){
             return {
-                updatedProvience: null,
+                updatedProvince: null,
                 isLoadingProviencies: false,
                 fetchedProviencies: []
             }
@@ -51,13 +51,13 @@
             }
         },
         computed:{
-            localSelectedProvience:{
+            localSelectedProvince:{
                 get(){
-                    return this.selectedProvience;
+                    return this.selectedProvince;
                 },
                 set(val){
-                    var updatedProvience = val;
-                    this.$emit('updated',  updatedProvience);
+                    var updatedProvince = val;
+                    this.$emit('updated',  updatedProvince);
                 }
             },
             formattedProviencies: function(){
@@ -87,7 +87,7 @@
                     self.isLoadingProviencies = true;
 
                     console.log('Start getting proviencies...');
-                    console.log('The provience is: ' + this.selectedCountry);
+                    console.log('The province is: ' + this.selectedCountry);
 
                     var selectedCountry = '?country=' + this.selectedCountry; 
 
@@ -112,7 +112,7 @@
                             //  Stop loader
                             self.isLoadingProviencies = false;
 
-                            console.log('provienceSelector.vue - Error getting proviencies...');
+                            console.log('provinceSelector.vue - Error getting proviencies...');
                             console.log(response);    
                         });
 

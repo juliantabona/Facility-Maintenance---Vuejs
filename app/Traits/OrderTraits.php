@@ -316,7 +316,7 @@ trait OrderTraits
             'number' => request('number') ?? null,
             'order_key' => request('order_key') ?? null,
             'status' => request('status') ?? null,
-            'currency' => request('currency') ?? null,
+            'currency_type' => request('currency_type') ?? null,
             //'cart_hash' => Hash::make(request('line_items')) ?? null,
             'meta_data' => request('meta_data') ?? null,
             'date_completed' => request('date_completed') ?? null,
@@ -347,8 +347,8 @@ trait OrderTraits
             'customer_ip_address' => request('customer_ip_address') ?? null,
             'customer_user_agent' => request('customer_user_agent') ?? null,
             'customer_note' => request('customer_note') ?? null,
-            'billing' => request('billing') ?? null,
-            'shipping' => request('shipping') ?? null,
+            'billing_info' => request('billing_info') ?? null,
+            'shipping_info' => request('shipping_info') ?? null,
 
             //  Payment Info
             'payment_method' => request('payment_method') ?? null,

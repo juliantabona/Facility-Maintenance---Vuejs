@@ -11,7 +11,7 @@ class Store extends Model
     use Dataviewer;
     use StoreTraits;
 
-    protected $with = ['logo', 'phones'];
+    protected $with = ['phones'];
 
     /**
      * The attributes that are mass assignable.
@@ -23,7 +23,7 @@ class Store extends Model
         'name', 'abbreviation', 'description', 'type', 'industry', 
         
         /*  Address Info  */
-        'address_1', 'address_2', 'country', 'provience', 'city', 'postal_or_zipcode', 
+        'address_1', 'address_2', 'country', 'province', 'city', 'postal_or_zipcode', 
         
         /*  Address Info  */
         'email', 'additional_email', 'verified', 'setup', 
@@ -43,7 +43,7 @@ class Store extends Model
 
     protected $allowedFilters = [
         'id', 'name', 'abbreviation', 'description', 'type', 'industry',
-        'address_1', 'address_2', 'country', 'provience', 'city', 'postal_or_zipcode', 
+        'address_1', 'address_2', 'country', 'province', 'city', 'postal_or_zipcode', 
         'email', 'additional_email', 'verified', 'setup', 'facebook_link', 'twitter_link',
         'linkedin_link', 'instagram_link', 'youtube_link', 'currency_type', 'vcs_terminal_id',
         'company_branch_id', 'company_id', 'created_at',
@@ -51,7 +51,7 @@ class Store extends Model
 
     protected $orderable = [
         'id', 'name', 'abbreviation', 'description', 'type', 'industry',
-        'address_1', 'address_2', 'country', 'provience', 'city', 'postal_or_zipcode', 
+        'address_1', 'address_2', 'country', 'province', 'city', 'postal_or_zipcode', 
         'email', 'additional_email', 'verified', 'setup', 'facebook_link', 'twitter_link',
         'linkedin_link', 'instagram_link', 'youtube_link', 'currency_type', 'vcs_terminal_id',
         'company_branch_id', 'company_id', 'created_at',
@@ -90,11 +90,6 @@ class Store extends Model
         return $this->morphMany('App\Document', 'documentable');
     }
 
-    public function logo()
-    {
-        return $this->documents()->where('type', 'logo')->take(1);
-    }
-
     public function files()
     {
         return $this->documents()->where('type', 'file');
@@ -120,6 +115,17 @@ class Store extends Model
                     ->where('trackable_id', $this->id)
                     ->where('trackable_type', 'store')
                     ->orderBy('created_at', 'desc');
+    }
+
+    /* ATTRIBUTES */
+
+    protected $appends = [
+        'logo'
+    ];
+
+    public function getLogoAttribute()
+    {
+        return $this->documents()->where('type', 'logo')->first();
     }
 
 }

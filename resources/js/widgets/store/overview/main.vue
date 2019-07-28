@@ -41,7 +41,7 @@
                 <pageToolbar :fallbackRoute="{ name: 'stores' }"
                              :onlyBackBtn="true" class="d-inline-block mr-2">
                 </pageToolbar>
-                <img v-if="store.logo" :src="((store.logo || [])[0] || {}).url" alt="Store Logo" class="roundedShape">
+                <img v-if="store.logo" :src="(store.logo || {}).url" alt="Store Logo" class="roundedShape">
                 <h2 class="d-inline-block">{{ store.name }}</h2>
             </div>
 
@@ -62,7 +62,9 @@
                                 <Row :gutter="20">
                                     <Col :span="6">
                                         <Select v-model="selectedOrderStatuses" filterable multiple placeholder="Search customer...">
-                                            <Option v-for="customer in storeOrders" :value="customer.id" :key="customer.id">{{ customer.billing.first_name }} {{ customer.billing.last_name }}</Option>
+                                            <Option v-for="customer in storeOrders" :value="customer.id" :key="customer.id">
+                                                {{ (customer.billing_info || {}).first_name || (customer.billing_info || {}).name }} {{ (customer.billing_info || {}).last_name }}
+                                            </Option>
                                         </Select>
                                     </Col>
                                     <Col :span="6">
@@ -259,21 +261,24 @@
                         width: 150,
                         title: 'Customer',
                         render: (h, params) => {
-                            return h('span', (params.row.billing.first_name +' '+params.row.billing.last_name));
+                            return h('span', (
+                                ( (params.row.billing_info || {}).first_name || (params.row.billing_info || {} ).name )
+                                +' '+ (params.row.billing_info || {}).last_name
+                            ));
                         }
                     },
                     {
                         width: 200,
                         title: 'Email',
                         render: (h, params) => {
-                            return h('span', (params.row.billing.email));
+                            return h('span', ((params.row.billing_info || {}).email));
                         }
                     },
                     {
                         width: 150,
                         title: 'Phone',
                         render: (h, params) => {
-                            return h('span', (params.row.billing.phone));
+                            return h('span', ((params.row.billing_info || {}).phone));
                         }
                     },
                     {

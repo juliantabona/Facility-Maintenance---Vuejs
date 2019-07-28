@@ -23,7 +23,9 @@ Relation::morphMap([
     'phone' => 'App\Phone',
     'user' => 'App\User',
     'store' => 'App\Store',
-    'order' => 'App\Order'
+    'order' => 'App\Order',
+    'transaction' => 'App\Transactions',
+    'billing_and_shipping_address' => 'App\BillingAndShippingAddress',   
 ]);
 
 class RecentActivity extends Model

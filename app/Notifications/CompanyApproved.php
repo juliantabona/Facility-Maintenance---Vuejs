@@ -55,7 +55,7 @@ class CompanyApproved extends Notification
         return [
             'id' => $this->company->id,
             'name' => $this->company->name,
-            'logo_url' => $this->company->logo_url,
+            'logo' => $this->company->logo,
             'updated_at' => $this->company->created_at,
         ];
     }

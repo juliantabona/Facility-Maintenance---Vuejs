@@ -220,7 +220,7 @@ trait UserTraits
                 'address_1' => request('address_1') ?? null,
                 'address_2' => request('address_2') ?? null,
                 'country' => request('country') ?? null,
-                'provience' => request('provience') ?? null,
+                'province' => request('province') ?? null,
                 'city' => request('city') ?? null,
                 'postal_or_zipcode' => request('postal_or_zipcode') ?? null,
 
@@ -317,7 +317,7 @@ trait UserTraits
             'address_1' => request('address_1') ?? null,
             'address_2' => request('address_2') ?? null,
             'country' => request('country') ?? null,
-            'provience' => request('provience') ?? null,
+            'province' => request('province') ?? null,
             'city' => request('city') ?? null,
             'postal_or_zipcode' => request('postal_or_zipcode') ?? null,
 
@@ -870,7 +870,7 @@ trait UserTraits
                 'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 
                 
                 /*  Address Info  */
-                'address_1', 'address_2', 'country', 'provience', 'city', 'postal_or_zipcode', 
+                'address_1', 'address_2', 'country', 'province', 'city', 'postal_or_zipcode', 
                 
                 /*  Contact Info  */
                 'email', 'additional_email', 'phones'

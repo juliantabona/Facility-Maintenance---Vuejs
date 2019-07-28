@@ -24,7 +24,7 @@ class CreateCompaniesTable extends Migration
             $table->string('address_1')->nullable();
             $table->string('address_2')->nullable();
             $table->string('country')->nullable();
-            $table->string('provience')->nullable();
+            $table->string('province')->nullable();
             $table->string('city')->nullable();
             $table->string('postal_or_zipcode')->nullable();
 

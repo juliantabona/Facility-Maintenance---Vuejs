@@ -30,7 +30,7 @@ class User extends Authenticatable
         'date_of_birth',
     ];
 
-    protected $with = ['profileImage', 'phones'];
+    protected $with = ['phones'];
 
     /**
      * The attributes that are mass assignable.
@@ -42,7 +42,7 @@ class User extends Authenticatable
         'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 
         
         /*  Address Info  */
-        'address_1', 'address_2', 'country', 'provience', 'city', 'postal_or_zipcode', 
+        'address_1', 'address_2', 'country', 'province', 'city', 'postal_or_zipcode', 
         
         /*  Address Info  */
         'email', 'additional_email',  'username', 'password', 'verified', 'setup', 
@@ -56,7 +56,7 @@ class User extends Authenticatable
 
     protected $allowedFilters = [
         'id', 'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 
-        'address_1', 'address_2', 'country', 'provience', 'city', 'postal_or_zipcode', 
+        'address_1', 'address_2', 'country', 'province', 'city', 'postal_or_zipcode', 
         'email', 'additional_email',  'username', 'password', 'verified', 'setup', 
         'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link',
         'company_branch_id', 'company_id', 'created_at',
@@ -64,7 +64,7 @@ class User extends Authenticatable
 
     protected $orderable = [
         'id', 'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 
-        'address_1', 'address_2', 'country', 'provience', 'city', 'postal_or_zipcode', 
+        'address_1', 'address_2', 'country', 'province', 'city', 'postal_or_zipcode', 
         'email', 'additional_email',  'username', 'password', 'verified', 'setup', 
         'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link',
         'company_branch_id', 'company_id', 'created_at',
@@ -110,12 +110,6 @@ class User extends Authenticatable
         return $this->morphMany('App\Document', 'documentable');
     }
 
-    public function profileImage()
-    {
-        return $this->documents()->where('type', 'profile_image')->take(1);
-    }
-
-
     public function company()
     {
         return $this->belongsTo('App\Company', 'company_id');
@@ -138,6 +132,18 @@ class User extends Authenticatable
                     ->orderBy('created_at', 'desc');
     }
 
+    public function billingAddresses()
+    {
+        return $this->morphMany('App\BillingAndShippingAddress', 'trackable')
+                    ->where('type', 'billing');
+    }
+
+    public function shippingAddresses()
+    {
+        return $this->morphMany('App\BillingAndShippingAddress', 'trackable')
+                    ->where('type', 'shipping');
+    }
+
     /**
      *   Get the recent activities that belong to the user.
      */
@@ -149,17 +155,15 @@ class User extends Authenticatable
                     ->orderBy('created_at', 'desc');
     }
 
-    /**
-     *   Incase the user does not have a profile image, use the default placeholder.
-     */
-    public function getAvatarAttribute($value)
-    {
-        //  If the avatar is not empty ('', NULL, false, e.t.c) then return the avatar url
-        //  Otherwise return the default avatar placeholder
-        return !empty($value) ? $value : '/images/assets/placeholders/profile_placeholder.png';
-    }
+    protected $appends = ['profile_image', 'full_name', 'model_type'];
 
-    protected $appends = ['full_name', 'model_type'];
+    public function getProfileImageAttribute()
+    {
+        $image = $this->documents()->where('type', 'profile_image')->first();
+
+        //  If we have the image then return it otherwise return the placeholder
+        return ($image ? $image : '/images/assets/placeholders/profile_placeholder.png');
+    }
 
     //  Getter for calculating the deadline returned as array
     public function getFullNameAttribute()

@@ -25,7 +25,7 @@ class CreateInvoicesTable extends Migration
             $table->float('sub_total_value')->nullable();
             $table->string('grand_total_title')->nullable();
             $table->float('grand_total_value')->nullable();
-            $table->json('currency_type')->nullable();
+            $table->string('currency_type')->nullable();
             $table->json('calculated_taxes')->nullable();
             $table->string('invoice_to_title')->nullable();
             $table->json('customized_company_details')->nullable();

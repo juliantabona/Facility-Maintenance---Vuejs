@@ -307,7 +307,7 @@ trait CompanyTraits
                 'industry' => request('industry') ?? null,
                 'address' => request('address') ?? null,
                 'country' => request('country') ?? null,
-                'provience' => request('provience') ?? null,
+                'province' => request('province') ?? null,
                 'city' => request('city') ?? null,
                 'postal_or_zipcode' => request('postal_or_zipcode') ?? null,
                 'email' => request('email') ?? null,
@@ -585,7 +585,7 @@ trait CompanyTraits
             'industry' => request('industry') ?? null,
             'address' => request('address') ?? null,
             'country' => request('country') ?? null,
-            'provience' => request('provience') ?? null,
+            'province' => request('province') ?? null,
             'city' => request('city') ?? null,
             'postal_or_zipcode' => request('postal_or_zipcode') ?? null,
             'email' => request('email') ?? null,
@@ -908,7 +908,7 @@ trait CompanyTraits
                 'name', 'abbreviation', 'description', 'date_of_incorporation', 'type', 'industry',
                 
                 /*  Address Info  */
-                'address_1', 'address_2', 'country', 'provience', 'city', 'postal_or_zipcode', 
+                'address_1', 'address_2', 'country', 'province', 'city', 'postal_or_zipcode', 
                 
                 /*  Contact Info  */
                 'email', 'additional_email', 'phones'

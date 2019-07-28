@@ -19,14 +19,15 @@ class Order extends Model
      */
     protected $casts = [
         'meta_data' => 'array',
+        'currency_type' => 'array',
         'line_items' => 'array',
         'shipping_lines' => 'array',
         'tax_lines' => 'array',
-        'billing' => 'array',
-        'shipping' => 'array',
+        'billing_info' => 'array',
+        'shipping_info' => 'array'
     ];
 
-    protected $with = ['lifecycle'];
+    protected $with = ['lifecycle', 'refunds', 'transactions'];
 
     /**
      * The attributes that are mass assignable.
@@ -35,7 +36,7 @@ class Order extends Model
      */
     protected $fillable = [
         /*  Basic Info  */
-        'parent_id', 'number', 'order_key', 'status', 'currency', 'cart_hash', 'meta_data', 'date_completed',
+        'parent_id', 'number', 'order_key', 'status', 'currency_type', 'cart_hash', 'meta_data', 'date_completed',
 
         /*  Item Info  */
         'line_items',
@@ -50,7 +51,8 @@ class Order extends Model
         'cart_tax', 'shipping_tax', 'discount_tax', 'grand_total_tax', 'prices_include_tax', 'tax_lines',
 
         /*  Customer Info  */
-        'client_id', 'client_type', 'customer_ip_address', 'customer_user_agent', 'customer_note', 'billing', 'shipping',
+        'client_id', 'client_type', 'customer_ip_address', 'customer_user_agent', 'customer_note',
+        'billing_info', 'shipping_info',
 
         /*  Payment Info  */
         'payment_method', 'payment_method_title', 'transaction_id', 'date_paid',
@@ -60,7 +62,7 @@ class Order extends Model
     ];
 
     protected $allowedFilters = [
-        'id', 'parent_id', 'number', 'order_key', 'status', 'currency', 'cart_hash', 'meta_data', 'date_completed',
+        'id', 'parent_id', 'number', 'order_key', 'status', 'currency_type', 'cart_hash', 'meta_data', 'date_completed',
         'line_items', 'shipping_lines', 'cart_total', 'shipping_total', 'discount_total', 'grand_total',
         'cart_tax', 'shipping_tax', 'discount_tax', 'grand_total_tax', 'prices_include_tax', 'tax_lines',
         'payment_method', 'payment_method_title', 'transaction_id', 'date_paid',
@@ -68,7 +70,7 @@ class Order extends Model
     ];
 
     protected $orderable = [
-        'id', 'parent_id', 'number', 'order_key', 'status', 'currency', 'cart_hash', 'meta_data', 'date_completed',
+        'id', 'parent_id', 'number', 'order_key', 'status', 'currency_type', 'cart_hash', 'meta_data', 'date_completed',
         'line_items', 'shipping_lines', 'cart_total', 'shipping_total', 'discount_total', 'grand_total',
         'cart_tax', 'shipping_tax', 'discount_tax', 'grand_total_tax', 'prices_include_tax', 'tax_lines',
         'payment_method', 'payment_method_title', 'transaction_id', 'date_paid',
@@ -99,6 +101,18 @@ class Order extends Model
         if (class_exists($dynamicModel)) {
             return $this->hasOne($dynamicModel, 'id', 'client_id');
         }
+    }
+
+    public function transactions()
+    {
+        return $this->morphMany('App\Transaction', 'trackable')
+                    ->orderBy('created_at', 'desc');
+    }
+
+    public function refunds()
+    {
+        return $this->morphMany('App\Refund', 'trackable')
+                    ->orderBy('created_at', 'desc');
     }
 
     /*  Get the documents relating to this order. These are various files such as order documents.
@@ -154,7 +168,8 @@ class Order extends Model
     }
 
     protected $appends = [
-                            'model_type','created_at_format', 
+                            'model_type','created_at_format',
+                            'transaction_total', 'refund_total', 'outstanding_balance', 
                             'status_title', 'status_description',
                             'current_lifecycle_stage', 'current_lifecycle_main_status', 'current_lifecycle_sub_status', 'lifecycle_stages'
                         ];
@@ -163,6 +178,25 @@ class Order extends Model
     public function getModelTypeAttribute()
     {
         return Str::snake( class_basename( $this ) );
+    }
+
+    //  Get the refund total amount
+    public function getTransactionTotalAttribute()
+    {
+        return $this->transactions()->sum('amount');
+    }
+
+    //  Get the refund total amount
+    public function getRefundTotalAttribute()
+    {
+        return $this->refunds()->sum('amount');
+    }
+
+    public function getOutstandingBalanceAttribute()
+    {
+        $balance = $this->grand_total - $this->transaction_total;
+
+        return $balance > 0 ? $balance : 0;
     }
 
     public function getCreatedAtFormatAttribute()

@@ -143,8 +143,8 @@
                                 </Col>
 
                                 <Col :span="12">
-                                    <!-- Provience Selector -->
-                                    <p class="text-dark"><strong>State/Provience/District:</strong> {{ formData.provience ? formData.provience : '___' }}</p>
+                                    <!-- Province Selector -->
+                                    <p class="text-dark"><strong>State/Province/District:</strong> {{ formData.province ? formData.province : '___' }}</p>
                                 </Col>
 
                                 <Col :span="12">
@@ -402,13 +402,13 @@
                     <Row v-if="!summaryMode" :gutter="20" class="mb-1">
 
                         <Col v-if="formData.country" :span="12">
-                            <!-- Provience Selector -->
+                            <!-- Province Selector -->
                             <span v-if="localEditMode">
-                                <span class="form-label mb-1 d-block">State/Provience/District</span>
+                                <span class="form-label mb-1 d-block">State/Province/District</span>
                                 <provinceSelector
                                     :selectedCountry="formData.country"
-                                    :selectedProvience="formData.provience"
-                                    @updated="updateProvienceChanges($event)">
+                                    :selectedProvince="formData.province"
+                                    @updated="updateProvinceChanges($event)">
                                 </provinceSelector>
                             </span>
                         </Col>
@@ -543,7 +543,7 @@
 
                     address: '',
                     country: '',
-                    provience: '',
+                    province: '',
                     city: '',
                     postal_or_zipcode: '',
 
@@ -655,8 +655,8 @@
             updateCountryChanges(newVal){
                 this.formData.country = newVal;
             },
-            updateProvienceChanges(newVal){
-                this.formData.provience = newVal;
+            updateProvinceChanges(newVal){
+                this.formData.province = newVal;
             },
             updateCityChanges(newVal){
                 this.formData.city = newVal;

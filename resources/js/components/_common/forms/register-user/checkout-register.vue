@@ -80,15 +80,15 @@
                 </el-form-item>
             </Col>
             
-            <Col :span="12" v-if="!hiddenFields.includes('provience')" :error="registerCustomErrors.provience">
-                <!-- Provience Selector -->
-                <el-form-item label="Provience" prop="provience" class="mb-2">
+            <Col :span="12" v-if="!hiddenFields.includes('province')" :error="registerCustomErrors.province">
+                <!-- Province Selector -->
+                <el-form-item label="Province" prop="province" class="mb-2">
                     <Alert v-if="!registerForm.country" type="warning">Select country first</Alert>
                     <provinceSelector
                         v-else
                         :selectedCountry="registerForm.country"
-                        :selectedProvience="registerForm.provience"
-                        @updated="registerForm.provience = $event">
+                        :selectedProvince="registerForm.province"
+                        @updated="registerForm.province = $event">
                     </provinceSelector>
                 </el-form-item>
             </Col>
@@ -226,7 +226,7 @@
             registrationProgress(){
                 var progress = 0;
                 var fields = ['first_name', 'last_name', 'email', 'phone', 
-                              'address', 'country', 'provience', 'city', 'password', 'confirm_password'];
+                              'address', 'country', 'province', 'city', 'password', 'confirm_password'];
                 
                 for(var x=0; x < fields.length; x++){
                     if(this.formData[fields[x]] != null && this.formData[fields[x]] != '' ){

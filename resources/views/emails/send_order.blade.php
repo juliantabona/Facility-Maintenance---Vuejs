@@ -16,7 +16,7 @@
         .tg th{font-size:14px;font-weight:normal;padding:8px 20px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:black;}
         .tg .tg-37a3{font-size:16px;border-color:#ffffff;text-align:left;vertical-align:top}
         .tg .tg-eaj8{font-size:14px;background-color:#eef4ff;border-color:#ffffff;text-align:left;vertical-align:top}
-        .tg .tg-2fdn{border-color:#9b9b9b;text-align:left;vertical-align:top}
+        .tg .tg-2fdn{width:50%;border-color:#9b9b9b;text-align:left;vertical-align:top}
         .tg .tg-zv4m{border-color:#ffffff;text-align:left;vertical-align:top}
         .tg .tg-k8mx{font-weight:bold;font-size:14px;background-color:#017bb8;color:#ffffff;border-color:#017bb8;text-align:left;vertical-align:top}
         .tg .tg-r598{font-weight:bold;font-size:14px;background-color:#017bb8;color:#ffffff;border-color:#017bb8;text-align:right;vertical-align:top}
@@ -112,19 +112,46 @@
 <body style="width:100%;font-family:arial, 'helvetica neue', helvetica, sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;padding:0;Margin:0;"> 
 
     @php 
-        $storeSettings = $order->store->settings['details'];
+        $store = $order->store;
+        $storeLogo = $order->store->logo->url ?? null;
+        $storeSettings = $store->settings['details'];
         $orderSettings = $storeSettings['orderTemplate'];
         $primaryColor = $orderSettings['colors'][0];
         $secondaryColor = $orderSettings['colors'][1]; 
-
-        $company = $order['customized_company_details'];
-        $companyLogo = $company['logo'][0]['url'];
-        $client = $order['customized_client_details'];
-        $clientName = $client['name'] ?? $client['full_name'];
-        $companyPhones = isset($company['phones']) ?? [];
-        $clientPhones = isset($client['phones']) ?? [];
-        $currencySymbol = $order['currency_type']['currency']['symbol'];
+        $currencySymbol = $storeSettings['general']['currency_type']['currency']['symbol'] ?? '';
         $items = $order['line_items'];
+
+        //  Company Details
+        $company = $order['customized_company_details'];
+        $companyLogo = $company['logo']['url'];
+        $companyPhones = isset($company['phones']) ?? [];
+
+        //  User Billing Details
+        $billing_info = $order['billing_info'];
+        $billing_name = $billing_info['name'] ?? null;
+        $billing_first_name = $billing_info['first_name'] ?? null;
+        $billing_last_name = $billing_info['last_name'] ?? null;
+        $billing_email = $billing_info['email'] ?? null;
+        $billing_additional_email = $billing_info['additional_email'] ?? null;
+        $billing_phones = $billing_info['phones'] ?? [];
+        $billing_country = $billing_info['country'] ?? null;
+        $billing_province = $billing_info['province'] ?? null;
+        $billing_city = $billing_info['city'] ?? null;
+        $billing_address_1 = $billing_info['address_1'] ?? null;
+        $billing_address_2 = $billing_info['address_2'] ?? null;
+        $billing_postal_or_zipcode = $billing_info['postal_or_zipcode'] ?? null;
+
+        //  Company Shipping Details
+        $shipping_info = $order['shipping_info'];
+        $shipping_name = $shipping_info['name'] ?? null;
+        $shipping_first_name = $shipping_info['first_name'] ?? null;
+        $shipping_last_name = $shipping_info['last_name'] ?? null;
+        $shipping_country = $shipping_info['country'] ?? null;
+        $shipping_province = $shipping_info['province'] ?? null;
+        $shipping_city = $shipping_info['city'] ?? null;
+        $shipping_address_1 = $shipping_info['address_1'] ?? null;
+        $shipping_address_2 = $shipping_info['address_2'] ?? null;
+        $shipping_postal_or_zipcode = $shipping_info['postal_or_zipcode'] ?? null;
 
     @endphp
 
@@ -133,27 +160,21 @@
             
             <div style="width:80%;margin:20px auto;">
 
-                <img src="http://oq-bucket.s3.amazonaws.com/company_logos/wGtBJTYTSqXAJmAR0b2udEcPhUG4kqC6mXaeMUhS.png" 
-                     style="width:auto;max-height:120px;" class="mb-1">
+                @if($storeLogo)
+                  <img src="{{ $storeLogo }}" style="width:auto;max-height:120px;" class="mb-1">
+                @endif
 
-                <h1>Thank you for your order</h1>
+                <h1>{{ $orderSettings['intro_note']['title'] }}</h1>
                 
-                <p>
-                    Your order has been received and is currently being processed. 
-                    The order details are show below for your reference. 
-                </p>
+                <p>{{ $orderSettings['intro_note']['description'] }}</p>
 
                 <div class="dashed-divider"></div>
 
                 @if( $mailConfig['attach_bank_details_pdf'] )
-                    <h3 class="mt-3">How To Pay?</h3>
-                    <p>
-                        We have attached our bank account details for your reference. Payment can be
-                        done via bank deposit, bank transfer or cheque. Make sure to take a picture or
-                        to download your receipt. Use this link below to attach your receipt or proof of 
-                        payment so that your order is completed. Contact (+267) 75993221 for any 
-                        assistance you need. Thank you.
-                    </p>
+
+                    <h3 class="mt-3">{{ $orderSettings['how_to_pay']['title'] }}</h3>
+
+                    <p>{{ $orderSettings['how_to_pay']['description'] }}</p>
 
                     <a href="#" class="btn">Attach Proof Of Payment</a>
 
@@ -167,7 +188,7 @@
                 
             <div class="tg-wrap" style="width:80%;margin:20px auto;">
 
-              <table class="tg" style="undefined;table-layout: fixed;">
+              <table class="tg" style="table-layout: fixed;">
                 <colgroup>
                   <col style="width: 613px">
                   <col style="width: 115px">
@@ -188,7 +209,10 @@
                     <td class="tg-2hug" rowspan="2">{{ $item['quantity'] * $item['unit_price'] }}</td>
                   </tr>
                   <tr style="background-color:{{ ( ($key + 1) % 2 ) ? $secondaryColor . ' !important': '' }} ;">
-                    <td class="tg-eaj8">{{ $item['description'] }}</td>
+                    <td class="tg-eaj8" 
+                        style="border-color:{{ ( ($key + 1) % 2 ) ? $secondaryColor . ' !important': '' }} ;">
+                        {{ $item['description'] }}
+                    </td>
                   </tr>
                 @endforeach
                 <tr>
@@ -217,28 +241,158 @@
                 </tr>
                 <tr>
                   <td class="tg-tckn" colspan="4">
+
+                    @if($orderSettings['bank_details']['account_name'])
                     <span style="font-weight:bold">Account Name:</span>
                       {{ $orderSettings['bank_details']['account_name'] }}<br>
+                    @endif
+
+                    @if($orderSettings['bank_details']['branch_name'])
                     <span style="font-weight:bold">Branch :</span> 
                       {{ $orderSettings['bank_details']['branch_name'] }}<br>
+                    @endif
+
+                    @if($orderSettings['bank_details']['branch_code'])
                     <span style="font-weight:bold">Branch Code:</span> 
                       {{ $orderSettings['bank_details']['branch_code'] }}<br>
+                    @endif
+
+                    @if($orderSettings['bank_details']['swift_code'])
                     <span style="font-weight:bold">Swift Code:</span> 
                      {{ $orderSettings['bank_details']['swift_code'] }}<br>
+                    @endif
+
+                    @if($orderSettings['bank_details']['account_number'])
                     <span style="font-weight:bold">Account Number:</span> 
                      {{ $orderSettings['bank_details']['account_number'] }}
+                    @endif
+
                   </td>
                 </tr>
                 <tr>
                   <td class="tg-zv4m" colspan="4"></td>
                 </tr>
                 <tr>
-                  <td class="tg-iwpf">Billing Address</td>
-                  <td class="tg-iwpf" colspan="3">Delivery Address</td>
+                  <td class="tg-iwpf" colspan="2">Billing Address</td>
+                  <td class="tg-iwpf" colspan="2">Delivery Address</td>
                 </tr>
                 <tr>
-                  <td class="tg-2fdn"><span style="font-weight:bold">First Name: </span>Julian<br><span style="font-weight:bold">Last Name: </span>Tabona<br><span style="font-weight:bold">Email: </span>brandontabona@gmail.com<br><span style="font-weight:bold">Phone: </span>(+267) 75993221<br><span style="font-weight:bold">Country: </span>Botswana<br><span style="font-weight:bold">Province: </span>South-East<br><span style="font-weight:bold">City/Town: </span>Gaborone<br><span style="font-weight:bold">Address: </span>Extension 12, Plot 4567</td>
-                  <td class="tg-2fdn" colspan="3"><span style="font-weight:bold">First Name: </span>Julian<br><span style="font-weight:bold">Last Name: </span>Tabona<br><span style="font-weight:bold">Country: </span>Botswana<br><span style="font-weight:bold">Province: </span>South-East<br><span style="font-weight:bold">City/Town: </span>Gaborone<br><span style="font-weight:bold">Address: </span>Extension 12, Plot 4567<br></td>
+                  <td class="tg-2fdn" colspan="2">
+                  
+                    @if($billing_name)
+                      <span style="font-weight:bold">Name: </span>
+                      {{ $billing_name }}<br>
+                    @endif
+
+                    @if($billing_first_name)
+                      <span style="font-weight:bold">First Name: </span>
+                      {{ $billing_first_name }}<br>
+                    @endif
+
+                    @if($billing_last_name)
+                      <span style="font-weight:bold">Last Name: </span>
+                      {{ $billing_last_name }}<br>
+                    @endif
+                    
+                    @if($billing_email)
+                      <span style="font-weight:bold">Email: </span>
+                      {{ $billing_email }}<br>
+                    @endif
+
+                    @if($billing_email)
+                      <span style="font-weight:bold">Email 2: </span>
+                      {{ $billing_additional_email }}<br>
+                    @endif
+
+                    @if($billing_phones)
+                      <span style="font-weight:bold">Phone: </span>
+                        
+                        @foreach($billing_phones as $key => $phone)
+                          {{ ($key != 0 ? ', ' : '') . '(+' . $phone['calling_code']['calling_code'] . ') ' . $phone['number'] }} 
+                        @endforeach
+
+                        <br>
+                    @endif
+
+                    @if($billing_country)
+                      <span style="font-weight:bold">Country: </span>
+                      {{ $billing_country }}<br>
+                    @endif
+
+                    @if($billing_province)
+                      <span style="font-weight:bold">Province: </span>
+                      {{ $billing_province }}<br>
+                    @endif
+
+                    @if($billing_city)
+                      <span style="font-weight:bold">City/Town: </span>
+                      {{ $billing_city }}<br>
+                    @endif
+
+                    @if($billing_address_1)
+                      <span style="font-weight:bold">Physical Address: </span>
+                      {{ $billing_address_1 }}
+                    @endif
+
+                    @if($billing_address_2)
+                      <span style="font-weight:bold">Physical Address 2: </span>
+                      {{ $billing_address_2 }}
+                    @endif
+
+                    @if($billing_postal_or_zipcode)
+                      <span style="font-weight:bold">Postal/Zipcode: </span>
+                      {{ $billing_postal_or_zipcode }}
+                    @endif
+
+                  </td>
+                  <td class="tg-2fdn" colspan="2">
+
+                    @if($shipping_name)
+                      <span style="font-weight:bold">Name: </span>
+                      {{ $shipping_name }}<br>
+                    @endif
+
+                    @if($shipping_first_name)
+                      <span style="font-weight:bold">First Name: </span>
+                      {{ $shipping_first_name }}<br>
+                    @endif
+
+                    @if($shipping_last_name)
+                      <span style="font-weight:bold">Last Name: </span>
+                      {{ $shipping_last_name }}<br>
+                    @endif
+
+                    @if($shipping_country)
+                      <span style="font-weight:bold">Country: </span>
+                      {{ $shipping_country }}<br>
+                    @endif
+
+                    @if($shipping_province)
+                      <span style="font-weight:bold">Province: </span>
+                      {{ $shipping_province }}<br>
+                    @endif
+
+                    @if($shipping_city)
+                      <span style="font-weight:bold">City/Town: </span>
+                      {{ $shipping_city }}<br>
+                    @endif
+
+                    @if($shipping_address_1)
+                      <span style="font-weight:bold">Physical Address: </span>
+                      {{ $shipping_address_1 }}
+                    @endif
+
+                    @if($shipping_address_2)
+                      <span style="font-weight:bold">Physical Address 2: </span>
+                      {{ $shipping_address_2 }}
+                    @endif
+
+                    @if($shipping_postal_or_zipcode)
+                      <span style="font-weight:bold">Postal/Zipcode: </span>
+                      {{ $shipping_postal_or_zipcode }}
+                    @endif
+
+                  </td>
                 </tr>
               </table>
 

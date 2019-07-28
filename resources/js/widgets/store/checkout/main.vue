@@ -188,7 +188,7 @@
                                                         <div class="pb-2 mb-2" style="border-bottom: 1px dashed #d6d9dc;">
                                                             <span class="font-weight-bold d-block mb-1">Address: <span>{{ user.address_1 }}</span></span>
                                                             <span class="font-weight-bold d-block mb-1">Country: <span>{{ user.country }}</span></span>
-                                                            <span class="font-weight-bold d-block mb-1">Provience: <span>{{ user.provience }}</span></span>
+                                                            <span class="font-weight-bold d-block mb-1">Province: <span>{{ user.province }}</span></span>
                                                             <span class="font-weight-bold d-block mb-1">City: <span>{{ user.city }}</span></span>
                                                         </div>
 
@@ -485,7 +485,7 @@
                     address_1: null, 
                     address_2: null, 
                     country: null, 
-                    provience: null, 
+                    province: null, 
                     city: null, 
                     postal_or_zipcode: null, 
                     
@@ -585,8 +585,17 @@
                         number: '1005',
                         order_key: 'dm_order_58d2d042d1d',
                         status: 'pending-payment',
-                        currency: 'USD',
-
+                        currency_type: {
+                            country: 'Botswana',
+                            currency: {
+                                iso: {
+                                code: 'BWP',
+                                number: '072'
+                                },
+                                name: 'Pula',
+                                symbol: 'P'
+                            }
+                        },
                         //  Item Info
                         line_items: [
                             {
@@ -625,8 +634,49 @@
                         customer_ip_address: null,
                         customer_user_agent: null,
                         customer_note: 'Deliver before end of this week',
-                        billing: null,
-                        shipping: null,
+                        
+                        billing_info: {
+                            first_name: 'Julian',
+                            last_name: 'Tabona',
+                            address_1: 'Plot 4567, Extension 12',
+                            country: 'Botswana',
+                            province: 'South-East',
+                            city: 'Gaborone',
+                            postal_or_zipcode:"PO Box 456 AAH Masa",
+                            email: 'brandontabona@gmail.com',
+                            additional_email: 'brandontabona@yahoo.com',
+                            phones: [
+                                {
+                                id: 164,
+                                type: 'tel',
+                                calling_code: {
+                                    country: 'Botswana',
+                                    calling_code: '267',
+                                    flag: '<span class="flag-icon flag-icon-bw"></span>'
+                                },
+                                number: 3990960,
+                                provider: null,
+                                trackable_id: 91,
+                                trackable_type: 'company',
+                                created_by: 55,
+                                company_branch_id: 46,
+                                company_id: 49,
+                                created_at: '2019-06-18 17:22:03',
+                                updated_at: '2019-06-18 17:22:03',
+                                }
+                            ]
+                            },
+                            shipping_info: {
+                                first_name: 'Bonolo',
+                                last_name: 'Sesiane',
+                                address_1: 'Plot 6721, Block 8',
+                                country: 'Botswana',
+                                province: 'South-East',
+                                city: 'Gaborone',
+                                email: 'bonolosesiane@gmail.com',
+                                additional_email: 'bonolosesiane@yahoo.com',
+                                postal_or_zipcode:"PO Box 623 CAA Masa"
+                            },
 
                         //  Payment Info
                         payment_method: 'bank_deposit',

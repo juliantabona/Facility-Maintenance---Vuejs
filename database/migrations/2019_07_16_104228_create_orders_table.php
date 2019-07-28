@@ -19,7 +19,7 @@ class CreateOrdersTable extends Migration
             $table->string('number')->nullable();
             $table->string('order_key')->nullable();
             $table->string('status')->nullable();
-            $table->string('currency')->nullable();
+            $table->string('currency_type')->nullable();
             $table->string('cart_hash')->nullable();
             $table->json('meta_data')->nullable();
             $table->timestampTz('date_completed')->nullable();
@@ -50,8 +50,8 @@ class CreateOrdersTable extends Migration
             $table->string('customer_ip_address')->nullable();
             $table->string('customer_user_agent')->nullable();
             $table->string('customer_note')->nullable();
-            $table->json('billing')->nullable();
-            $table->json('shipping')->nullable();
+            $table->json('billing_info')->nullable();
+            $table->json('shipping_info')->nullable();
 
             /*  Payment Info  */
             $table->string('payment_method')->nullable();

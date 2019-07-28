@@ -21,8 +21,8 @@ function getRegisterFormRules() {
         country: [
             { required: true, message: 'Select country', trigger: 'blur' }
         ],
-        provience: [
-            { required: true, message: 'Selct provience', trigger: 'blur' }
+        province: [
+            { required: true, message: 'Selct province', trigger: 'blur' }
         ],
         city: [
             { required: true, message: 'Select city', trigger: 'blur' }
@@ -49,7 +49,7 @@ function getRegisterFormFields() {
         address_1: null,
         address_2: null,
         country: null,
-        provience: null,
+        province: null,
         city: null,
         postal_or_zipcode: null,
         password: null,

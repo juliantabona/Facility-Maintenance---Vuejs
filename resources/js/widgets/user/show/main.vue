@@ -183,12 +183,12 @@
                     <Row v-if="summaryMode" :gutter="20" class="mb-1">
 
                         <Col :span="12">
-                            <!-- Provience Selector -->
-                            <span class="form-label mb-1 d-block">State/Provience/District</span>
+                            <!-- Province Selector -->
+                            <span class="form-label mb-1 d-block">State/Province/District</span>
                             <provinceSelector
                                 :selectedCountry="formData.country"
-                                :selectedProvience="formData.provience"
-                                @updated="updateProvienceChanges($event)">
+                                :selectedProvince="formData.province"
+                                @updated="updateProvinceChanges($event)">
                             </provinceSelector>
                         </Col>
 
@@ -327,7 +327,7 @@
 
                     address: '',
                     country: '',
-                    provience: '',
+                    province: '',
                     city: '',
                     postal_or_zipcode: '',
 
@@ -447,8 +447,8 @@
             updateCountryChanges(newVal){
                 this.formData.country = newVal;
             },
-            updateProvienceChanges(newVal){
-                this.formData.provience = newVal;
+            updateProvinceChanges(newVal){
+                this.formData.province = newVal;
             },
             updateCityChanges(newVal){
                 this.formData.city = newVal;

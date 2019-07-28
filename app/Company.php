@@ -25,7 +25,7 @@ class Company extends Model
 
     protected $table = 'companies';
 
-    protected $with = ['logo', 'phones'];
+    protected $with = ['phones'];
 
     /**
      * The attributes that are mass assignable.
@@ -38,7 +38,7 @@ class Company extends Model
         'name', 'abbreviation', 'description', 'date_of_incorporation', 'type', 'industry',
         
         /*  Address Info  */
-        'address_1', 'address_2', 'country', 'provience', 'city', 'postal_or_zipcode', 
+        'address_1', 'address_2', 'country', 'province', 'city', 'postal_or_zipcode', 
         
         /*  Address Info  */
         'email', 'additional_email',
@@ -51,13 +51,13 @@ class Company extends Model
     ];
 
     protected $allowedFilters = [
-        'id', 'name', 'description', 'date_of_incorporation', 'type', 'address', 'country', 'provience', 'city', 'postal_or_zipcode',
+        'id', 'name', 'description', 'date_of_incorporation', 'type', 'address', 'country', 'province', 'city', 'postal_or_zipcode',
         'email', 'additional_email', 'website_link', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link',
         'bio', 'created_at',
     ];
 
     protected $orderable = [
-        'id', 'name', 'description', 'date_of_incorporation', 'type', 'address', 'country', 'provience', 'city', 'postal_or_zipcode',
+        'id', 'name', 'description', 'date_of_incorporation', 'type', 'address', 'country', 'province', 'city', 'postal_or_zipcode',
         'email', 'additional_email', 'website_link', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link',
         'bio', 'created_at',
     ];
@@ -219,6 +219,18 @@ class Company extends Model
         return $this->phones()->has('mobileMoneyAccount')->with('mobileMoneyAccount', 'createdBy');
     }
 
+    public function billingAddresses()
+    {
+        return $this->morphMany('App\BillingAndShippingAddress', 'trackable')
+                    ->where('type', 'billing');
+    }
+
+    public function shippingAddresses()
+    {
+        return $this->morphMany('App\BillingAndShippingAddress', 'trackable')
+                    ->where('type', 'shipping');
+    }
+
     /**
      * Get the companies settings.
      */
@@ -246,7 +258,7 @@ class Company extends Model
     }
 
     protected $appends = [
-                            'model_type', 'phone_list',
+                            'logo', 'model_type', 'phone_list',
                             'last_approved_activity',
                             'has_approved',
                             'current_activity_status', 'activity_count',
@@ -260,6 +272,11 @@ class Company extends Model
     public function getModelTypeAttribute()
     {
         return 'company';
+    }
+
+    public function getLogoAttribute()
+    {
+        return $this->documents()->where('type', 'logo')->first();
     }
 
     //  Getter for the phone list
@@ -397,11 +414,6 @@ class Company extends Model
     public function documents()
     {
         return $this->morphMany('App\Document', 'documentable');
-    }
-
-    public function logo()
-    {
-        return $this->documents()->where('type', 'logo')->take(1);
     }
 
     public function files()
