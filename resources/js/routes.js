@@ -293,9 +293,15 @@ let routes = [
     },
     {
         //  Single Product
-        path: '/store/products/:id', name: 'single-product',
+        path: '/stores/:id/products/:id', name: 'single-product',
         meta: { layout: 'Store', middlewareAuth: false },
         component: require('./views/dashboard/store/single-product/main.vue')
+    },
+    {
+        //  Order Proof Of Payment
+        path: '/stores/:storeId/orders/:orderId/proof-of-payment', name: 'order-payment-proof',
+        meta: { layout: 'Store', middlewareAuth: false },
+        component: require('./views/dashboard/order/proof-of-payment/main.vue')
     },
 
     /**************************************

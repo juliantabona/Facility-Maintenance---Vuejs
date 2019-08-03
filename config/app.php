@@ -1,6 +1,20 @@
 <?php
 
 return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | MY CUSTOM - THESE ARE CREATED BY JULIAN TABONA
+    |--------------------------------------------------------------------------
+    |
+    | I noticed that you should only directly call you .env variables in the config 
+    | directory and not elsewhere in our code because sometimes laravel can return
+    | nothing in some instances. So for instance if you want to use CUSTOM_VARIABLE 
+    | from your .env file in a view:
+    */
+    
+    'AWS_URL' => env('AWS_URL', 'http://oq-bucket.s3.amazonaws.com/'),
+    
     /*
     |--------------------------------------------------------------------------
     | Application Name

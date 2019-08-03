@@ -51,32 +51,8 @@
         </Row>
         <Row :gutter="20" class="column-equal-height">
             <Col :span="8">
-                <Card class="full-height">
-                    <h4 class="text-primary mb-3">Customer</h4>
-                    <span class="d-block pb-2 mb-2 border-bottom">
-                        <span class="font-weight-bold">
-                            <Icon type="ios-contact-outline" :size="20"/>
-                        </span> 
-                        {{ customerName }}
-                    </span>
-                    <span class="d-block">
-                        <span class="font-weight-bold">
-                            <Icon type="ios-call-outline" :size="20"/>
-                        </span>
-                        {{ customerPhoneNumbers }}
-                    </span>
-                    <span class="d-block">
-                        <span class="font-weight-bold">
-                            <Icon type="ios-mail-outline" :size="20" />
-                        </span> 
-                        {{ (localOrder.billing_info || {}).email ||  '___' }}
-                    </span>
-                    
-                    <span class="d-flex pt-2 mt-2 border-top">
-                        <Icon type="ios-pin-outline" :size="20" class="mr-1" />
-                        <span>{{ customerAddress ||  '___' }}</span> 
-                    </span>
-                </Card>
+                <!--    Show the customers details   -->
+                <customerSummaryCard :customer="order.billing_info"></customerSummaryCard>
             </Col>
 
             <Col :span="8">
@@ -87,7 +63,8 @@
                     <span class="d-block">
                         <span class="font-weight-bold mr-2">Customer Note: </span>
                                             
-                        <Poptip title="Customer says" trigger="hover" :content="localOrder.customer_note" placement="top" width="400">
+                        <Poptip title="Customer says" trigger="hover" 
+                                :content="localOrder.customer_note" placement="top" width="300">
                             <Icon type="ios-chatbubbles-outline" :size="20" />
                         </Poptip>
 
@@ -105,10 +82,11 @@
                         <span class="font-weight-bold mr-2">Refunds: </span>
                         <span>{{ localOrder.refund_total | currency(currencySymbol) }}</span>
 
-                        <Poptip v-if="(localOrder.refunds || {}).length" trigger="hover" placement="top" width="400">
+                        <Poptip v-if="(localOrder.refunds || {}).length" trigger="hover" placement="top" width="300">
                             <Icon type="ios-information-circle-outline" :size="20" class="ml-2" />
-                            <template class="border-bottom mt-2" slot="content">
+                            <template slot="content">
                                 <div v-for="(refund, i) in localOrder.refunds" :key="i"
+                                       style=" width: 100%; white-space: normal; "
                                       :class="'mb-2' + (i < (localOrder.refunds.length - 1) ? ' border-bottom': '')">
                                     {{ refund.reason }}
                                 </div>
@@ -122,21 +100,52 @@
             <Col :span="8">
 
                 <Card class="full-height">
+
                     <h4 class="text-primary mb-3">Status</h4>
-                    <scrollBox class="border">
-                        <Steps :current="2" direction="vertical" class="p-2" style="max-height: 190px;">
-                            <Step title="Open" content="Received on Jun 12 2018"></Step>
-                            <Step title="Paid" content="Paid on Jun 14 2018"></Step>
-                            <Step title="Pending Delivery" content="Currently waiting delivery"></Step>
-                            <Step title="Completed" content="Completed on Jun 16 2018"></Step>
-                        </Steps>
-                    </scrollBox>
+                    
+                    <Poptip placement="left-start" width="300" trigger="hover">
+                        <div slot="content" style="white-space: normal;">
+
+                            <h6 class="border-bottom font-weight-bold mb-2 pb-2 pt-2">{{ currentStatus.title }}</h6>
+
+                            <span class="d-block mt-2 mb-2">
+                                <span class="font-weight-bold">
+                                    {{ currentStatus.title == 'Open' ? 'Submitted By: ' : 
+                                        ( currentStatus.title == 'Completed' ? 'Completed By: ' : 'Updated By: ' ) }} 
+                                </span>
+                                <span>{{ ((currentStatus || {})['created_by'] || [])['full_name'] }}</span>
+                            </span>
+
+                            <span v-if="(currentStatus || {})['reason']" class="d-block mb-2">
+                                <span class="font-weight-bold">Reason:</span>
+                                <span>{{ (currentStatus || {})['reason'] }}</span>
+                            </span>
+
+                        </div>
+                        <scrollBox class="border">
+
+                            <Steps v-if="(localOrder.lifecycle_status_activity).length" 
+                                direction="vertical" class="pt-2 pl-2 pr-3 pb-2" style="max-height: 190px;"
+                                :current="((localOrder.lifecycle_status_activity).length || 0) - 1">
+                                
+                                <Step v-for="(status, i) in localOrder.lifecycle_status_activity" :key="i"
+                                    :title="status.title" :content="status.description" 
+                                    @mouseover.native="updateStatusPoptip(status)">
+                                </Step>
+                            </Steps>
+
+                            <Alert v-else type="warning" show-icon>No activities found</Alert>
+
+                        </scrollBox>
+                    </Poptip>
+
                 </Card>
             </Col>
         </Row>
 
         <viewProofOfPaymentModal
             v-if="isOpenViewProofOfPaymentModal" 
+            :docUrl=" localOrder ? '/api/orders/'+localOrder.id+'/documents?type=payment_proof' : null"
             @visibility="isOpenViewProofOfPaymentModal = $event">
         </viewProofOfPaymentModal>
     </div>
@@ -159,6 +168,9 @@
     /*  Lifecycles  */
     import orderLifecycle from './../../../components/_common/lifecycles/orderLifecycle.vue';
 
+    /*  Cards */
+    import customerSummaryCard from './../../../components/_common/cards/customerSummaryCard.vue'
+
     export default {
         props:{
             order: {
@@ -167,13 +179,14 @@
             }
         },
         components: { 
-            viewProofOfPaymentModal, basicButton, Loader, scrollBox, orderLifecycle
+            viewProofOfPaymentModal, basicButton, Loader, scrollBox, orderLifecycle, customerSummaryCard
         },
         data(){
             return {
                 localOrder: this.order,
                 currencySymbol: ((this.order.currency_type || {}).currency || {}).symbol,
-                isOpenViewProofOfPaymentModal: false
+                isOpenViewProofOfPaymentModal: false,
+                currentStatus: {}
             }
         },
         computed: {
@@ -210,7 +223,13 @@
             }
         },
         methods: {
-
+            updateStatusPoptip(status){
+                this.currentStatus = status;
+            },
+            updateOrder(order){
+                //  Update the order
+                this.localOrder = order;
+            },
         },
         created(){
 

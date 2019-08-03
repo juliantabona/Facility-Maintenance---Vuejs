@@ -11,15 +11,26 @@
     }
 
     .order-table >>> .order-status{
-        color: #000000;
+        width: 10px;
+        height: 10px;
+        background: #b3b3b3;
+        border-radius: 10px;
     }
 
-    .order-table >>> .order-status-success{
-        color:#24d806;
+    .order-table >>> .order-open-status{
+        background:#2d8cf0;
     }
 
-    .order-table >>> .order-status-fail{
-        color:#ff0000;
+    .order-table >>> .order-in-progress-status{
+        background: #e8c207;
+    }
+
+    .order-table >>> .order-fail-status{
+        background:#ff0000;
+    }
+
+    .order-table >>> .order-completed-status{
+        background:#24d806;
     }
 
 </style>
@@ -71,7 +82,7 @@
                                         <Select v-model="selectedOrderStatuses" filterable multiple placeholder="Filter by status">
 
                                             <OptionGroup label="Payment status">
-                                                <Option v-for="item in ['Pending Payment', 'Failed Payment', 'Paid']" :value="item" :key="item">{{ item }}</Option>
+                                                <Option v-for="item in ['Pending Payment', 'Verify Payment', 'Failed Payment', 'Paid']" :value="item" :key="item">{{ item }}</Option>
                                             </OptionGroup>
 
                                             <OptionGroup label="Refund status">
@@ -79,7 +90,7 @@
                                             </OptionGroup>
 
                                             <OptionGroup label="Delivery status">
-                                                <Option v-for="item in ['Pending Delivery', 'Delivered']" :value="item" :key="item">{{ item }}</Option>
+                                                <Option v-for="item in ['Pending Delivery', 'Verify Delivery','Delivered']" :value="item" :key="item">{{ item }}</Option>
                                             </OptionGroup>
 
                                             <OptionGroup label="Final status">
@@ -106,8 +117,23 @@
                                 </Row>
                             </Card>
 
+                            <CheckboxGroup  
+                                v-if="!isLoadingOrders && storeOrders" 
+                                v-model="tableColumnsToShow" class="mb-3">
+                                <Checkbox label="Order #"></Checkbox>
+                                <Checkbox label="Customer"></Checkbox>
+                                <Checkbox label="Email"></Checkbox>
+                                <Checkbox label="Phone"></Checkbox>
+                                <Checkbox label="Date"></Checkbox>
+                                <Checkbox label="Grand Total"></Checkbox>
+                            </CheckboxGroup>
+
                             <!-- Store Orders -->
-                            <Table v-if="!isLoadingOrders && storeOrders" :columns="columns" :data="storeOrders" class="order-table"></Table>
+                            <Table v-if="!isLoadingOrders && storeOrders" 
+                                   :columns="dynamicColumns" :data="storeOrders"
+                                   class="order-table">
+                            </Table>
+                        
                         </TabPane>
 
                         <!-- Products Tab -->
@@ -190,6 +216,8 @@
 
     import orderRowDropDown from './orderRowDropDown.vue';  
 
+    import moment from 'moment';
+
     import lodash from 'lodash';
     Event.prototype._ = lodash;
 
@@ -199,6 +227,8 @@
         },
         data(){
             return {
+                moment: moment,
+
                 store: null,
                 storeId: this.$route.params.id,
                 isLoadingStore: false,
@@ -209,54 +239,71 @@
 
                 selectedOrderStatuses:[],
 
-                columns: [
-                    {
-                        type: 'expand',
-                        width: 30,
-                        render: (h, params) => {
-                            return h(orderRowDropDown, {
-                                props: {
-                                    order: params.row
-                                }
-                            })
-                        }
-                    },
-                    {
-                        width: 40,
-                        title: '',
-                        align: 'center',
-                        render: (h, params) => {
-                            return h('Poptip', {
-                                        style: {
-                                            width: '100%',
-                                            textAlign:'left'
-                                        },
-                                        props: {
-                                            width: 280,
-                                            wordWrap: true,
-                                            trigger:'hover',
-                                            placement: 'right',
-                                            title: params.row.status_title,
-                                            content: params.row.status_description,
-                                        }
-                                    }, [
-                                        h('Icon', {
-                                                props: {
-                                                    type: this.getOrderStatusIcon(params.row.status),
-                                                    size: 24
-                                                },
-                                                class: ['order-status', this.getOrderStatusColor(params.row.status)]
-                                            })
-                                    ]);
-                        }
-                    },
+                tableColumnsToShow:['Order #', 'Customer', 'Email', 'Phone', 'Date', 'Grand Total']
+ 
+            }
+        },
+        computed:{
+            dynamicColumns(status){ 
+                var allowedColumns = [];
+                
+                //  Expand Arrow
+                allowedColumns.push(
+                {
+                    type: 'expand',
+                    width: 30,
+                    render: (h, params) => {
+                        return h(orderRowDropDown, {
+                            props: {
+                                order: params.row
+                            }
+                        })
+                    }
+                });
+                
+                //  Status Icon
+                allowedColumns.push(
+                {
+                    width: 40,
+                    title: ' ',
+                    align: 'center',
+                    render: (h, params) => {
+                        return h('Poptip', {
+                                    style: {
+                                        width: '100%',
+                                        textAlign:'left'
+                                    },
+                                    props: {
+                                        width: 280,
+                                        wordWrap: true,
+                                        trigger:'hover',
+                                        placement: 'right',
+                                        title: params.row.status_title,
+                                        content: params.row.status_description,
+                                    }
+                                }, [
+                                    h('div', {
+                                            class: ['order-status', this.getOrderStatusColor(params.row.current_lifecycle_main_status.type)]
+                                        })
+                                ]);
+                    }
+                });
+                
+                //  Order #
+                if(this.tableColumnsToShow.includes('Order #')){
+                    allowedColumns.push(
                     {
                         width: 80,
                         title: 'Order #',
                         render: (h, params) => {
                             return h('span', (params.row.number));
                         }
-                    },
+                    });
+                }
+                
+                //  Customer Details
+                if(this.tableColumnsToShow.includes('Customer')){
+                    allowedColumns.push(
                     {
                         width: 150,
                         title: 'Customer',
@@ -266,100 +313,109 @@
                                 +' '+ (params.row.billing_info || {}).last_name
                             ));
                         }
-                    },
+                    });
+                }
+                
+                //  Customer Email
+                if(this.tableColumnsToShow.includes('Email')){
+                    allowedColumns.push(
                     {
                         width: 200,
                         title: 'Email',
                         render: (h, params) => {
                             return h('span', ((params.row.billing_info || {}).email));
                         }
-                    },
+                    });
+                }
+                
+                //  Customer Phones
+                if(this.tableColumnsToShow.includes('Phone')){
+                    allowedColumns.push(
                     {
-                        width: 150,
+                        width: 130,
                         title: 'Phone',
                         render: (h, params) => {
-                            return h('span', ((params.row.billing_info || {}).phone));
+                            return h('span', (params.row.phone_list));
                         }
-                    },
+                    });
+                }
+                
+                //  Date
+                if(this.tableColumnsToShow.includes('Date')){
+                    allowedColumns.push(
                     {
-                        width: 150,
+                        width: 100,
                         title: 'Date',
-                        key: 'created_at_format'
-                    },
-                    {
-                        title: 'Total',
-                        key: 'grand_total'
-                    },
-                    {
-                        title: 'Action',
-                        align: 'center',
+                        sortable: true,
                         render: (h, params) => {
-                            return h('div', [
-                                h('Button', {
-                                    props: {
-                                        type: 'primary',
-                                        size: 'small'
-                                    },
-                                    style: {
-                                        marginRight: '5px'
-                                    },
-                                    on: {
-                                        click: () => {
-                                            this.$router.push({ name: 'show-order', params: { id: params.row.id } });
-                                        }
-                                    }
-                                }, 'View')
-                            ]);
+                            return h('span', this.formatDate(params.row.created_at));
                         }
+                    });
+                }
+                
+                //  Grand Total
+                if(this.tableColumnsToShow.includes('Grand Total')){
+                    allowedColumns.push(
+                    {
+                        width: 130,
+                        title: 'Total',
+                        key: 'grand_total',
+                        sortable: true,
+                        render: (h, params) => {
+                            var grandTotal = (params.row.grand_total || 0) 
+                            var symbol = ((params.row.currency_type || {}).currency || {}).symbol || '';
+                            return h('span', this.formatPrice(grandTotal, symbol) );
+                        }
+                    });
+                }
+                
+                //  Action
+                allowedColumns.push(
+                {
+                    title: 'Action',
+                    align: 'center',
+                    render: (h, params) => {
+                        return h('div', [
+                            h('Button', {
+                                props: {
+                                    type: 'primary',
+                                    size: 'small'
+                                },
+                                style: {
+                                    marginRight: '5px'
+                                },
+                                on: {
+                                    click: () => {
+                                        this.$router.push({ name: 'show-order', params: { id: params.row.id } });
+                                    }
+                                }
+                            }, 'View')
+                        ]);
                     }
-                ],
- 
+                });
+
+                return allowedColumns;
             }
         },
         methods: {
-            getOrderStatusIcon(status){
-
-                if (status == 'completed') {
-                    return 'ios-checkmark-circle-outline';
-                }else if(status == 'paid') {
-                    return 'ios-cash-outline';
-                }else if(status == 'pending-payment') {
-                    return 'ios-cash-outline';
-                }else if(status == 'failed-payment') {
-                    return 'ios-cash-outline';
-                }else if(status == 'pending-delivery') {
-                    return 'ios-basket-outline';
-                }else if(status == 'delivered') {
-                    return 'ios-basket-outline';
-                }else if(status == 'pending-refund') {
-                    return 'ios-repeat';
-                }else if(status == 'refunded') {
-                    return 'ios-repeat';
-                }else if(status == 'cancelled') {
-                    return 'ios-close-circle-outline';
-                }
-
-            },
             getOrderStatusColor(status){
-                if (status == 'completed') {
-                    return 'order-status-success';
-                }else if(status == 'paid') {
-                    return 'order-status-success';
-                }else if(status == 'pending-payment') {
-                    return '';
-                }else if(status == 'failed-payment') {
-                    return 'order-status-fail';
-                }else if(status == '') {
-                    return 'order-status-fail';
-                }else if(status == 'delivered') {
-                    return 'order-status-success';
-                }else if(status == '') {
-                    return 'order-status-fail';
-                }else if(status == 'refunded') {
-                    return 'order-status-success';
-                }else if(status == 'cancelled') {
-                    return 'order-status-fail';
+                if (status == 'open') {
+                    return 'order-open-status';
+                }else if(['cancelled', 'failed-payment'].includes(status)) {
+                    return 'order-fail-status';
+                }else if(['closed'].includes(status)) {
+                    return 'order-completed-status';
+                }else{
+                    return 'order-in-progress-status';
                 }
+                
+            },
+            formatPrice(money, symbol) {
+                let val = (money/1).toFixed(2).replace(',', '.');
+                return symbol + val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            },
+            formatDate(date) {
+                return this.moment(date).format('MMM DD YYYY');
             },
             fetchStore() {
 

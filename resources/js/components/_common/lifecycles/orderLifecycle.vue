@@ -65,6 +65,99 @@
     border-left-color: #f90;
     }
 
+    /*   WARNING PULSE   */
+    
+    #breadcrumb >>> li.pulse span,
+    #breadcrumb >>> li.pulse i{
+        animation: warningPulseSpan 1.5s linear infinite;
+    }
+
+    @-webkit-keyframes warningPulseSpan {
+        0% {
+            background: #f90;
+        }
+        50% {
+            background: #ffd493;
+        }
+        100% {
+            background: #f90;
+        }
+    }
+
+    @keyframes warningPulseSpan {
+        0% {
+            background: #f90;
+        }
+        50% {
+            background: #ffd493;
+        }
+        100% {
+            background: #f90;
+        }
+    }
+
+    #breadcrumb >>> li.pulse span:before {
+        animation: warningPulseSpanBefore 1.5s linear infinite;
+    }
+
+    @-webkit-keyframes warningPulseSpanBefore {
+        0% {
+            border-color: #f90;
+            border-left-color: transparent;
+        }
+        50% {
+            border-color: #ffd493;
+            border-left-color: transparent;
+        }
+        100% {
+            border-color: #f90;
+            border-left-color: transparent;
+        }
+    }
+
+    @keyframes warningPulseSpanBefore {
+        0% {
+            border-color: #f90;
+            border-left-color: transparent;
+        }
+        50% {
+            border-color: #ffd493;
+            border-left-color: transparent;
+        }
+        100% {
+            border-color: #f90;
+            border-left-color: transparent;
+        }
+    }
+
+    #breadcrumb >>> li.pulse span:after {
+        animation: warningPulseSpanAfter 1.5s linear infinite;
+    }
+
+    @-webkit-keyframes warningPulseSpanAfter {
+        0% {
+            border-left-color: #f90;
+        }
+        50% {
+            border-left-color: #ffd493;
+        }
+        100% {
+            border-left-color: #f90;
+        }
+    }
+
+    @keyframes warningPulseSpanAfter {
+        0% {
+            border-left-color: #f90;
+        }
+        50% {
+            border-left-color: #ffd493;
+        }
+        100% {
+            border-left-color: #f90;
+        }
+    }
+
     #breadcrumb >>> li.danger span {
     background-color: #ed4014;
     }
@@ -172,6 +265,8 @@
         font-size: 20px;
     }
 
+
+
     .lifecycle-toggle-btn >>> .ivu-select-dropdown {
         max-height: 250px !important;
     }
@@ -212,7 +307,7 @@
             </div>
             
             <!-- Next Step Button -->
-            <div v-if="!isSaving" v-for="(stage, i) in lifecycleStages" :key="i" class="lifecycle-toggle-btn float-left mt-1 ml-2">
+            <div v-if="canEditLifecycle && !isSaving" v-for="(stage, i) in lifecycleStages" :key="i" class="lifecycle-toggle-btn float-left mt-1 ml-2">
                 
                 <Select v-if="isActiveStage(stage) && 
                             ( dropdownOptions(stage, i) ).length && !isActiveStage(lifecycleStages[i + 1])"
@@ -287,6 +382,10 @@
                 type: String,
                 default: ''
             },
+            canEditLifecycle: {
+                type: Boolean,
+                default: true
+            }
         },
         components: { Loader, updateLifecycleStageModal },
         data(){
@@ -306,7 +405,8 @@
 
                 var stageData = this.getBasicTemplate(stage)
 
-                if( this.isActiveStage(stage) && !stageData.pending_status && !stageData.cancelled_status ){
+                if( this.isActiveStage(stage) && !stageData.pending_status && 
+                    !stageData.cancelled_status && !stageData.manual_verification_status ){
                     return true;
                 }
 
@@ -316,7 +416,7 @@
 
                 var stageData = this.getBasicTemplate(stage)
 
-                if( stageData.pending_status ){
+                if( stageData.pending_status || stageData.manual_verification_status ){
                     return true;
                 }
                 
@@ -334,17 +434,23 @@
             },
             determineStageColor(stage){
 
-                var stageData = this.getBasicTemplate(stage)
+                var stageData = this.getBasicTemplate(stage);
+                var classes = '';
 
                 if( (stageData.cancelled_status || false) ){
-                    return 'danger';
-                }else if( (stageData.pending_status || false) ){
-                    return 'warning';
+                    classes = 'danger';
+                }else if( (stageData.pending_status || false) || (stageData.manual_verification_status || false) ){
+                    classes = 'warning';
                 }else if( this.isActiveStage(stage) || (stage.type == 'open') ){
-                    return 'active';
-                }else{
-                    return '';
+                    classes = 'active';
                 }
+                
+                //  Add the opacity pulse effect
+                if( (stageData.manual_verification_status || false) ){
+                    classes = classes + ' pulse';
+                }
+
+                return classes;
             },
             determineStageName(stage){
 
@@ -359,6 +465,12 @@
                         return 'Pending Delivery';
                     }else if(stageData.type == 'job_started'){
                         return 'Pending Job';
+                    }
+                }else if( stageData.manual_verification_status ){
+                    if(stageData.type == 'payment'){
+                        return this.canEditLifecycle ? 'Verify Payment' : 'Payment Waiting Verification';
+                    }else if(stageData.type == 'delivery'){
+                        return this.canEditLifecycle ? 'Verify Delivery' : 'Delivery Waiting Verification';
                     }
                 }else if( stageData.skip_status ){
                     if(stageData.type == 'payment'){
@@ -384,6 +496,12 @@
                         return 'The '+this.resourceName+' is currently pending delivery';
                     }else if(stageData.type == 'job_started'){
                         return 'Pending Job';
+                    }
+                }else if( stageData.manual_verification_status ){
+                    if(stageData.type == 'payment'){
+                        return 'The '+this.resourceName+' payment needs to be verified manually';
+                    }else if(stageData.type == 'delivery'){
+                        return 'The '+this.resourceName+' delivery needs to be verified manually';
                     }
                 }else if( stageData.skip_status ){
                     if(stageData.type == 'payment'){
@@ -472,7 +590,7 @@
                 nextStage = this.lifecycleStages[stageIndex + 1];
             
                 //  If the current stage is pending or cancelled
-                if( stageData.pending_status || stageData.cancelled_status ){
+                if( stageData.pending_status || stageData.cancelled_status || stageData.manual_verification_status ){
                  
                     /*************************************************
                     /   CURRENT STEP CANCELLED OR PENDING OPTIONS    *
@@ -481,13 +599,26 @@
                     if( !stageData.cancelled_status && stageData.pending_status ){
                         //  Option to set to pending stage
                         notifyClientText = 'Notify Client (Pending)';
-                        options.push({ name: 'Resume '+this.resourceName, triggerName: 'reverse_pending', icon:'ios-repeat', divider:false });
+                        options.push({ name: 'Resume '+this.resourceName, triggerName: 'undo_step', icon:'ios-repeat', divider:false });
                     }
 
                     if( stageData.cancelled_status ){
                         //  Option to reverse a cancelled stage
                         notifyClientText = 'Notify Client (Cancelled)';
                         options.push({ name: 'Re-open '+this.resourceName, triggerName: 'reverse_cancel', icon:'ios-repeat', divider:true });
+                    }
+
+                    if( stageData.manual_verification_status ){
+                        //  Option to verify a stage
+                        notifyClientText = 'Notify Client (Verified)';
+
+                        if(stageData.type == 'payment'){
+                            options.push({ name: 'Approve Payment', triggerName: 'edit_step', icon:'ios-checkmark', divider:false });
+                            options.push({ name: 'Decline Payment', triggerName: 'reverse_manual_verification', icon:'ios-close', divider:true });
+                        }else if(stageData.type == 'delivery'){
+                            options.push({ name: 'Approve Delivery', triggerName: 'edit_step', icon:'ios-checkmark', divider:false });
+                            options.push({ name: 'Decline Delivery', triggerName: 'reverse_manual_verification', icon:'ios-close', divider:true });
+                        }
                     }
                  
                 }else{
@@ -577,21 +708,21 @@
 
                 return options;
             },
-            updateSelectedStage(stage){
+            updateSelectedStage(stage, overides){
                 if( stage.type == 'payment' ){
-                    this.localSelectedStage = this.getPaymentTemplate(stage);
+                    this.localSelectedStage = this.getPaymentTemplate(stage, overides);
                 }else if( stage.type == 'delivery' ){
-                    this.localSelectedStage = this.getDeliveryTemplate(stage);
+                    this.localSelectedStage = this.getDeliveryTemplate(stage, overides);
                 }else if( stage.type == 'job_started' ){
-                    this.localSelectedStage = this.getJobStartedTemplate(stage);
+                    this.localSelectedStage = this.getJobStartedTemplate(stage, overides);
                 }else if( stage.type == 'open' || stage.type == 'closed' ){
-                    this.localSelectedStage = this.getBasicTemplate(stage);
+                    this.localSelectedStage = this.getBasicTemplate(stage, overides);
                 }
 
                 return this.localSelectedStage;
 
             },
-            getBasicTemplate(stage){
+            getBasicTemplate(stage, overides){
                 
                 var stageData = this.getStageAsRecentActivity(stage);
                 
@@ -600,19 +731,55 @@
                             type: stage.type, 
                             instance: stage.instance, 
                             updated_stage_id: ((stageData || {}).activity || {}).updated_stage_id || (stageData || {}).id || null,   
-                            skip_status: ((stageData || {}).activity || {}).skip_status || false,
-                            pending_status: ((stageData || {}).activity || {}).pending_status || false,
-                            cancelled_status: ((stageData || {}).activity || {}).cancelled_status || false,
-                            notified_client_status: ((stageData || {}).activity || {}).cancelled_status || false
                         }
+
+                var templateStatuses = this.getBasicTemplateStatuses(stageData);
+
+                template =  {...template, ...templateStatuses };
+
+                console.log('Before Overide');
+                console.log(template);
+
+                if( overides ){
+
+                    template =  {...template, ...overides };
+
+                }
+
+                console.log('After Overide');
+                console.log(template);
 
                 return template;
             },
-            getPaymentTemplate(stage){
+            getBasicTemplateStatuses(stageData){
+                return {
+                        //  Skip status variables
+                        skip_status: ((stageData || {}).activity || {}).skip_status || false,
+                        skip_status_reason: ((stageData || {}).activity || {}).skip_status_reason || null,
+                        other_skip_status_reason: ((stageData || {}).activity || {}).other_skip_status_reason || null,
+
+                        //  Manual verification status variables
+                        manual_verification_status: ((stageData || {}).activity || {}).manual_verification_status || false,
+                        
+                        //  Pending status variables
+                        pending_status: ((stageData || {}).activity || {}).pending_status || false,
+                        pending_status_reason: ((stageData || {}).activity || {}).pending_status_reason || null,
+                        other_pending_status_reason: ((stageData || {}).activity || {}).other_pending_status_reason || null,
+
+                        //  Cancel status variables
+                        cancelled_status: ((stageData || {}).activity || {}).cancelled_status || false,
+                        cancelled_status_reason: ((stageData || {}).activity || {}).cancelled_status_reason || null,
+                        other_cancelled_status_reason: ((stageData || {}).activity || {}).other_cancelled_status_reason || null,
+
+                        //  Notify client status variables
+                        notified_client_status: ((stageData || {}).activity || {}).cancelled_status || false
+                }
+            },
+            getPaymentTemplate(stage, overides){
                 
                 var stageData = this.getStageData(stage);
                 
-                var template = this.getBasicTemplate(stage);
+                var template = this.getBasicTemplate(stage, overides);
 
                 var metaData = 
                         {   meta: {
@@ -620,6 +787,7 @@
                                 currency_type: ((stageData || {}).meta || {}).currency_type || null,
                                 payment_amount: ((stageData || {}).meta || {}).payment_amount || null,
                                 payment_method: ((stageData || {}).meta || {}).payment_method || null,
+                                other_payment_method: ((stageData || {}).meta || {}).other_payment_method || null,
                                 full_payment: false
                             }
                         }
@@ -627,11 +795,11 @@
 
                 return  {...template, ...metaData };
             },
-            getDeliveryTemplate(stage){
+            getDeliveryTemplate(stage, overides){
                 
                 var stageData = this.getStageData(stage);
                 
-                var template = this.getBasicTemplate(stage);
+                var template = this.getBasicTemplate(stage, overides);
 
                 var metaData = 
                         {   meta: {
@@ -644,11 +812,11 @@
                 
                 return  {...template, ...metaData };
             },
-            getJobStartedTemplate(stage){
+            getJobStartedTemplate(stage, overides){
               
                 var stageData = this.getStageData(stage);
                 
-                var template = this.getBasicTemplate(stage);
+                var template = this.getBasicTemplate(stage, overides);
 
                 var metaData = 
                         {   meta: {
@@ -665,67 +833,66 @@
                 
                 var currentStage = stages[index];
                 var stageData = null;
-                var stageId = null;
                 var makeApi = true;
                 var postURL = this.postURL;
                 var triggerName = this.selectedTriggerName;
+                var overides = this.getBasicTemplateStatuses();
 
                 this.selectedTriggerName = '';
                 this.selectedTriggerRenderKey = this.selectedTriggerRenderKey + 1;
 
-                if( ['pending','skip'].includes(triggerName) ){
+                //  These affect the next stage in the lifecycle
+                if( ['next_step', 'pending', 'skip'].includes(triggerName) ){
+                    console.log('TRIGGER NAME: '+triggerName);
 
-                    stageData = this.updateSelectedStage(stages[index + 1]);
-
-                    stageId = ( this.getStageAsRecentActivity(stages[index + 1]) || {}).id;
-                }else{
-                    
-                    stageData = this.updateSelectedStage(currentStage);
-
-                    stageId = ( this.getStageAsRecentActivity(currentStage) || {}).id;
-                    
-                }
-
-                if( ['next_step', 'edit_step'].includes(triggerName) ){
-
-                    if( currentStage ){
-
-                        for(var x = 0; x < this.lifecycleStages.length; x++){
-                            
-                            if( this.lifecycleStages[x].type ==  currentStage.type && 
-                                this.lifecycleStages[x].instance ==  currentStage.instance ){
-                                
-                                if(triggerName == 'next_step'){
-                                    this.updateSelectedStage(this.lifecycleStages[x + 1]);
-                                }else if(triggerName == 'edit_step'){
-                                    this.updateSelectedStage(this.lifecycleStages[x]);
-                                }
-                                
-                                this.isOpenUpdateLifecycleStageModal = true;
-                            }
-                        }
+                    //  Overide the following status
+                    if( triggerName ==  'pending'){
+                        overides['pending_status'] = true;
+                    }else if( triggerName ==  'skip'){
+                        overides['skip_status'] = true;
                     }
 
+                    stageData = this.updateSelectedStage(stages[index + 1], overides);
+
+                    //  Open the modal
+                    this.isOpenUpdateLifecycleStageModal = true;
+
+                    //  Do not call the Api on this method
                     makeApi = false;
 
-                }else if( triggerName ==  'pending' ){
+                //  These affect the current stage in the lifecycle
+                }else if( ['cancel'].includes(triggerName) ){
+                    console.log('TRIGGER NAME: '+triggerName);
+                    //  Overide the following status
+                    overides['cancelled_status'] = true;
+
+                    console.log('overides 1');
+                    console.log(overides);
+
+                    stageData = this.updateSelectedStage(stages[index], overides);
                     
-                    stageData.pending_status = true;
+                    console.log('stageData');
+                    console.log(stageData);
 
-                }else if( triggerName ==  'cancel' ){
+                    //  Open the modal
+                    this.isOpenUpdateLifecycleStageModal = true;
 
-                    stageData.cancelled_status = true;    
+                    //  Do not call the Api on this method
+                    makeApi = false;
+                    
+                }else{
 
-                }else if( triggerName ==  'skip' ){
+                    stageData = this.updateSelectedStage(stages[index]);
 
-                    stageData.skip_status = true;    
+                }
 
-                }else if( ['undo_step', 'reverse_pending', 'reverse_skip'].includes(triggerName) ){
+                if( ['undo_step'].includes(triggerName) ){
                     
                     postURL = '/api/lifecycles/stage/undo';
 
                 }else if( ['reverse_cancel'].includes(triggerName) ){
                     stageData.skip_status = false;
+                    stageData.manual_verification_status = false;
                     stageData.cancelled_status = false;
                     stageData.pending_status = false;
 

@@ -28,4 +28,22 @@ class UploadController extends Controller
         return $response;
    
     }
+
+    public function delete(Request $request, $doc_id){
+   
+        //  Document Instance
+        $data = ( new Document() )->deleteDocument($doc_id);
+        $success = $data['success'];
+        $response = $data['response'];
+
+        //  If the delete was successful
+        if ($success) {
+            //  Action was executed successfully
+            return oq_api_notify(null, 200);
+        }
+
+        //  If the data was not a success then return the response
+        return $response;
+   
+    }
 }

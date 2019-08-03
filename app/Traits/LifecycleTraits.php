@@ -78,6 +78,7 @@ trait LifecycleTraits
 
                     //  Check if we have a result
                     if ($dynamicModel) {
+
                         /*****************************
                          *   SEND NOTIFICATIONS      *
                          *****************************/
@@ -151,20 +152,14 @@ trait LifecycleTraits
             $response = oq_api_notify_error('Include the stage instance e.g) { instance: 1 } or { instance: 2 }, e.t.c', null, 404);
 
         }else{
-            if($stageData['type'] == 'closed'){
-                $stageData = array(
-                    'type' => $stageData['type'],
-                    'instance' => $stageData['instance']
-                );
-            }else{
-                $stageData = array(
-                    'type' => $stageData['type'],
-                    'instance' => $stageData['instance'],
-                    'skip_status' => $stageData['skip_status'],
-                    'pending_status' => $stageData['pending_status'],
-                    'cancelled_status' => $stageData['cancelled_status'],
-                );
-            }
+            $stageData = array(
+                'type' => $stageData['type'],
+                'instance' => $stageData['instance'],
+                'skip_status' => $stageData['skip_status'] ?? false,
+                'manual_verification_status' => $stageData['manual_verification_status'] ?? false,
+                'pending_status' => $stageData['pending_status'] ?? false,
+                'cancelled_status' => $stageData['cancelled_status'] ?? false
+            );
         }
 
         if (!isset($modelType) || empty($modelType)) {

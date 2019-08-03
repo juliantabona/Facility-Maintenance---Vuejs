@@ -77,10 +77,11 @@ Route::middleware('auth:api')->get('/users/{user_id}/image', 'Api\UserController
 
 
 
-/*   APPOINTMENT RESOURCE ROUTES
+/*   UPLOAD RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
 */
 Route::post('/upload', 'Api\UploadController@upload');
+Route::delete('/upload/{doc_id}', 'Api\UploadController@delete');
 
 /*   COMPANY RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
@@ -237,6 +238,8 @@ Route::get('orders', 'Api\OrderController@index');
 Route::post('orders', 'Api\OrderController@store');
 Route::get('orders/{order_id}', 'Api\OrderController@show');
 Route::post('orders/{order_id}', 'Api\OrderController@update');
+Route::get('orders/{order_id}/documents', 'Api\OrderController@getDocuments');
+Route::post('orders/{order}/proof-of-payment', 'Api\OrderController@saveProofOfPayment');
 
 /*   PRODUCT/SERVICE RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete

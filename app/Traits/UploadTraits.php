@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use Storage;
 use Validator;
+use App\Document;
 use Illuminate\Support\Facades\Input;
 
 trait UploadTraits
@@ -31,9 +32,9 @@ trait UploadTraits
         $document = $document ? $document : Input::file('file');
         $modelId = $modelId ? $modelId : request('modelId');                                //  Associated model id
         $modelType = $modelType ? $modelType : request('modelType');                        //  Associated model e.g) user, company, jobcard
-        $location = ($location ? $location : request('location')) ?? 'other';                  //  Storage location
-        $type = ($type ? $type : request('type')) ?? 'other';                                //  Storage type
-        $replaceable = request('replaceable') ? request('replaceable') : $replaceable;      //  If we can delete a related document e.g) If its a logo
+        $location = ($location ? $location : request('location')) ?? 'other';               //  Storage location
+        $type = ($type ? $type : request('type')) ?? 'other';                               //  Storage type
+        $replaceable = request('replaceable') == 'true' ? true : $replaceable;              //  If we can delete a related document e.g) If its a logo
 
         if(!$request){
 
@@ -92,19 +93,23 @@ trait UploadTraits
 
                     if($replaceable == true){
                         
-                        $relatedDoc = $dynamicModel->documents()->where('type', $type)->first();
+                        $relatedDocs = $dynamicModel->documents()->where('type', $type)->get() ?? [];
 
-                        if( $relatedDoc ){
+                        if( count( $relatedDocs ) ){
 
-                            $related_doc_path = str_replace(env('AWS_URL'), '', $relatedDoc->url);
+                            foreach( $relatedDocs as $key => $relatedDoc){
 
-                            if (!empty($related_doc_path)) {
-                                //  Permanently delete document from S3 Bucket
-                                Storage::disk('s3')->delete($related_doc_path);
+                                $related_doc_path = str_replace( config('app.AWS_URL') , '', $relatedDoc->url);
+
+                                if (!empty($related_doc_path)) {
+                                    //  Permanently delete document from S3 Bucket
+                                    Storage::disk('s3')->delete($related_doc_path);
+                                }
+        
+                                //  Permanently delete document from the database
+                                $relatedDoc->forceDelete();
+
                             }
-    
-                            //  Permanently delete document from the database
-                            $relatedDoc->forceDelete();
 
                         }
                     }
@@ -116,7 +121,7 @@ trait UploadTraits
                     $doc_file_name = Storage::disk('s3')->putFile($location, $doc_file, 'public');
 
                     //  Construct the URL to the new uploaded file
-                    $doc_url = env('AWS_URL').$doc_file_name;
+                    $doc_url = config('app.AWS_URL').$doc_file_name;
 
                     //  Record the uploaded doc
                     $document = $dynamicModel->documents()->create([
@@ -161,6 +166,45 @@ trait UploadTraits
                 //  Return the error response
                 return ['success' => false, 'response' => $response];
             }
+        }
+
+    }
+
+    function deleteDocument($doc_id)
+    {
+        //  Current authenticated user
+        $auth_user = auth('api')->user();
+
+        //  Find the associated record by model id
+        try {
+
+            $document = Document::find( $doc_id );
+
+            $related_doc_path = str_replace( config('app.AWS_URL') , '', $document->url);
+
+            if (!empty($related_doc_path)) {
+                //  Permanently delete document from S3 Bucket
+                Storage::disk('s3')->delete($related_doc_path);
+            }
+
+            //  Permanently delete document from the database
+            $deleted = $document->forceDelete();
+
+            //  If the document was deleted successfully
+            if ($deleted) {
+                //  Record activity of invoice approved
+                $status = 'deleted';
+                $documentDeletedActivity = oq_saveActivity($document, $auth_user, $status, ['document' => $document->summarize()]);
+
+                //  Action was executed successfully
+                return ['success' => true, 'response' => $document];
+            }
+        } catch (\Exception $e) {
+            //  Log the error
+            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+            //  Return the error response
+            return ['success' => false, 'response' => $response];
         }
 
     }

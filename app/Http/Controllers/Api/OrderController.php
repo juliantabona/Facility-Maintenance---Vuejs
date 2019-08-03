@@ -90,4 +90,47 @@ class OrderController extends Controller
         return $response;
     }
 
+    public function saveProofOfPayment(Order $order)
+    {
+        //  Order Instance
+        $data = $order->setLifecycleToVerifyPaymentStatus();
+        $success = $data['success'];
+        $response = $data['response'];
+
+        //  If the order proof of payment was updated successfully
+        if ($success) {
+            //  If this is a success then we have a order returned
+            $order = $response;
+
+            //  Action was executed successfully
+            return oq_api_notify($order, 200);
+        }
+
+        //  If the data was not a success then return the response
+        return $response;
+    }
+
+    public function getDocuments(Request $request, $order_id)
+    {
+        try {
+            
+            $type = request('type');      // e.g) payment proof
+
+            //  Get the associated company
+            $orderDocuments = Order::find($order_id)->documents();
+
+            if( isset($type) && !empty($type) ){
+               //$orderDocuments = $orderDocuments->where('type', $type);
+            }
+
+            $orderDocuments = $orderDocuments->get();
+
+            //  Action was executed successfully
+            return oq_api_notify($orderDocuments, 200);
+
+        } catch (\Exception $e) {
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+    }
+
 }
