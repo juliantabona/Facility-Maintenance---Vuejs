@@ -175,7 +175,7 @@ class Order extends Model
                             'model_type', 'created_at_format',
                             'phone_list', 'transaction_total', 'refund_total', 'outstanding_balance',
                             'status_title', 'status_description', 'lifecycle_status_activity',
-                            'current_lifecycle_stage', 'current_lifecycle_main_status', 'current_lifecycle_sub_status', 'lifecycle_stages',
+                            'current_lifecycle_stage', 'current_lifecycle_main_status', 'lifecycle_stages',
                         ];
 
     //  Getter for the type of model
@@ -316,38 +316,6 @@ class Order extends Model
         if (count($this->lifecycle_stages)) {
             //  Return the last lifecycle stage
             return $this->lifecycle_stages[0];
-        }
-    }
-
-    public function getCurrentLifecycleMainStatusAttribute()
-    {
-        if (count($this->current_lifecycle_stage)) {
-            $availableStages = $this->lifecycle->first()['stages'];
-            foreach ($availableStages as $availableStage) {
-                if ($availableStage['type'] == $this->current_lifecycle_stage['activity']['type']
-                    && $availableStage['instance'] == $this->current_lifecycle_stage['activity']['instance']) {
-                    //  Current stage name and type
-                    $stageName = $availableStage['name'];
-                    $stageType = $availableStage['type'];
-
-                    return ['name' => $stageName, 'type' => $stageType];
-                }
-            }
-        } elseif ($this->has_approved) {
-            return ['name' => 'Open', 'type' => 'open'];
-        }
-    }
-
-    public function getCurrentLifecycleSubStatusAttribute()
-    {
-        if (count($this->current_lifecycle_stage)) {
-            //  Check if this stage is cancelled
-            if ($this->current_lifecycle_stage['activity']['cancelled_status'] ?? false) {
-                return 'Cancelled';
-            //  Check if this stage is pending
-            } elseif ($this->current_lifecycle_stage['activity']['pending_status'] ?? false) {
-                return 'Pending';
-            }
         }
     }
 
@@ -567,4 +535,19 @@ class Order extends Model
 
         return $activityHistory;
     }
+
+    public function getCurrentLifecycleMainStatusAttribute()
+    {
+        $lifecycleHistory = $this->getLifecycleStatusActivityAttribute() ?? [];
+
+        if (count($lifecycleHistory)) {
+
+            //  Get the last in ativity in the lifecycle history
+            return end($lifecycleHistory);
+
+        }
+
+    }
+
+
 }

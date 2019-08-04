@@ -57,6 +57,15 @@
 
             <Col :span="8">
                 <Card class="full-height">
+
+                    <Poptip 
+                        v-if="(localOrder.current_lifecycle_main_status || {}).title == 'Completed'" 
+                        trigger="hover" content="Order has been completed" placement="top" width="300"
+                        :style="{ position: 'absolute', right: '10px', top: '10px' }">
+                        <!-- Animated checkmark  -->
+                        <animatedCheckmark :style="{ width: '30px', height: 'auto' }"></animatedCheckmark>
+                    </Poptip>
+
                     <h4 class="text-primary mb-3">Order</h4>
                     <span class="d-block"><span class="font-weight-bold">Total Cost: </span> {{ localOrder.grand_total | currency(currencySymbol) }}</span>
                     <span class="d-block"><span class="font-weight-bold">Purchased: </span>{{ numberOfItemsPurchased + (numberOfItemsPurchased == 1 ? ' Item' : ' Items') }}</span>
@@ -169,7 +178,10 @@
     import orderLifecycle from './../../../components/_common/lifecycles/orderLifecycle.vue';
 
     /*  Cards */
-    import customerSummaryCard from './../../../components/_common/cards/customerSummaryCard.vue'
+    import customerSummaryCard from './../../../components/_common/cards/customerSummaryCard.vue';
+
+    /*  Animated Icons */
+    import animatedCheckmark from './../../../components/_common/animatedIcons/animatedCheckmark.vue';
 
     export default {
         props:{
@@ -179,7 +191,7 @@
             }
         },
         components: { 
-            viewProofOfPaymentModal, basicButton, Loader, scrollBox, orderLifecycle, customerSummaryCard
+            viewProofOfPaymentModal, basicButton, Loader, scrollBox, orderLifecycle, customerSummaryCard, animatedCheckmark
         },
         data(){
             return {
@@ -229,6 +241,7 @@
             updateOrder(order){
                 //  Update the order
                 this.localOrder = order;
+                this.$emit('updated', order)
             },
         },
         created(){

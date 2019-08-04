@@ -54,7 +54,7 @@
                 //  Console log to acknowledge the start of api process
                 console.log('Start getting store products...');
 
-                var storeId = (this.$route.params.id);
+                var storeId = (this.$route.params.storeId);
                 var page = (this.$route.query.page) ? this.$route.query.page : 1;
 
                 var urlParams = {

@@ -23,7 +23,7 @@
                     <div class="mt-5 mb-3 pb-3 clearfix border-bottom">
                         <div class="mb-3">
                             <Card v-for="(store, key) in stores" :key="key"
-                                  @click.native="$router.push({ name:'store-overview', params:{ id: store.id } })"
+                                  @click.native="$router.push({ name:'store-overview', params:{ storeId: store.id } })"
                                   class="mb-2">
                                 <span>{{ store.name }}</span>
                                 <Icon type="md-arrow-forward" :size="15" class="float-right mt-1"/>

@@ -217,7 +217,7 @@
                 console.log('Start getting store products...');
 
                 //  Get the store id and the pagination page number
-                var storeId = (this.$route.params.id);
+                var storeId = (this.$route.params.storeId);
                 var per_page = (this.$route.query.per_page) ? this.$route.query.per_page : 1;
                 var page = (this.$route.query.page) ? this.$route.query.page : 1;
 

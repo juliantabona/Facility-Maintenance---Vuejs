@@ -737,17 +737,11 @@
 
                 template =  {...template, ...templateStatuses };
 
-                console.log('Before Overide');
-                console.log(template);
-
                 if( overides ){
 
                     template =  {...template, ...overides };
 
                 }
-
-                console.log('After Overide');
-                console.log(template);
 
                 return template;
             },
@@ -843,7 +837,6 @@
 
                 //  These affect the next stage in the lifecycle
                 if( ['next_step', 'pending', 'skip'].includes(triggerName) ){
-                    console.log('TRIGGER NAME: '+triggerName);
 
                     //  Overide the following status
                     if( triggerName ==  'pending'){
@@ -862,17 +855,11 @@
 
                 //  These affect the current stage in the lifecycle
                 }else if( ['cancel'].includes(triggerName) ){
-                    console.log('TRIGGER NAME: '+triggerName);
+                    
                     //  Overide the following status
                     overides['cancelled_status'] = true;
 
-                    console.log('overides 1');
-                    console.log(overides);
-
                     stageData = this.updateSelectedStage(stages[index], overides);
-                    
-                    console.log('stageData');
-                    console.log(stageData);
 
                     //  Open the modal
                     this.isOpenUpdateLifecycleStageModal = true;
