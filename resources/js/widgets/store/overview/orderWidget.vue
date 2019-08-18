@@ -53,7 +53,7 @@
         <!-- No orders message -->
         <Alert v-if="!isLoadingOrders && !localOrders" type="info" :style="{ maxWidth: '250px' }" show-icon>No orders found</Alert>
         
-        <Card v-if="!isLoadingOrders && localOrders" class="mt-4 mb-3">
+        <Card v-if="!isLoadingOrders && localOrders" class="mb-3">
             <Row :gutter="20">
                 <Col :span="6">
                     <Select v-model="selectedOrderStatuses" filterable multiple placeholder="Search customer...">

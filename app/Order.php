@@ -28,7 +28,7 @@ class Order extends Model
         'shipping_info' => 'array',
     ];
 
-    protected $with = ['lifecycle', 'refunds', 'transactions'];
+    protected $with = ['lifecycle'];
 
     /**
      * The attributes that are mass assignable.
@@ -140,6 +140,21 @@ class Order extends Model
         return $this->morphToMany('App\Lifecycle', 'trackable', 'lifecycle_allocations');
     }
 
+    public function comments()
+    {
+        return $this->morphToMany('App\Comment', 'trackable', 'comment_allocations');
+    }
+
+    public function messages()
+    {
+        return $this->comments()->where('type', 'message');
+    }
+
+    public function reviews()
+    {
+        return $this->comments()->where('type', 'review');
+    }
+
     public function recentActivities()
     {
         return $this->morphMany('App\RecentActivity', 'trackable')
@@ -172,11 +187,20 @@ class Order extends Model
     }
 
     protected $appends = [
-                            'model_type', 'created_at_format',
+                            'average_rating', 'model_type', 'created_at_format',
                             'phone_list', 'transaction_total', 'refund_total', 'outstanding_balance',
                             'status_title', 'status_description', 'lifecycle_status_activity',
                             'current_lifecycle_stage', 'current_lifecycle_main_status', 'lifecycle_stages',
                         ];
+
+    public function getAverageRatingAttribute()
+    {
+        $reviews = $this->reviews()->get() ?? [];
+
+        if( count( $reviews ) ){
+            return collect( $reviews )->avg('rating_value');
+        }
+    }
 
     //  Getter for the type of model
     public function getModelTypeAttribute()

@@ -275,25 +275,25 @@ let routes = [
    
     {
         //  Store
-        path: '/stores/:id/catalog', name: 'store',
+        path: '/stores/:storeId/catalog', name: 'store',
         meta: { layout: 'Store', middlewareAuth: false },
         component: require('./views/dashboard/store/catalog/main.vue')
     },
     {
         //  Cart
-        path: '/stores/:id/cart', name: 'cart',
+        path: '/stores/:storeId/cart', name: 'cart',
         meta: { layout: 'Store', middlewareAuth: false },
         component: require('./views/dashboard/store/cart/main.vue')
     },
     {
         //  Checkout
-        path: '/stores/:id/checkout', name: 'checkout',
+        path: '/stores/:storeId/checkout', name: 'checkout',
         meta: { layout: 'Store', middlewareAuth: false },
         component: require('./views/dashboard/store/checkout/main.vue')
     },
     {
         //  Single Product
-        path: '/stores/:id/products/:id', name: 'single-product',
+        path: '/stores/:storeId/products/:productId', name: 'single-product',
         meta: { layout: 'Store', middlewareAuth: false },
         component: require('./views/dashboard/store/single-product/main.vue')
     },

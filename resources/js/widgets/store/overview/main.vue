@@ -25,16 +25,18 @@
         <!-- Show when we have store -->
         <Col v-if="store && !isLoadingStore" :span="22" :offset="1">
         
-            <div class="mb-3 pb-3">
-                <pageToolbar :fallbackRoute="{ name: 'stores' }"
-                             :onlyBackBtn="true" class="d-inline-block mr-2">
-                </pageToolbar>
-                <img v-if="store.logo" :src="(store.logo || {}).url" alt="Store Logo" class="roundedShape">
-                <h2 class="d-inline-block">{{ store.name }}</h2>
-            </div>
+            <pageToolbar :fallbackRoute="{ name: 'stores' }"
+                            :onlyBackBtn="true" class="d-inline-block mr-2">
+            </pageToolbar>
 
             <div class="mt-3">
                 <Card class="p-2">
+
+                    <div class="mb-3">
+                        <img v-if="store.logo" :src="(store.logo || {}).url" alt="Store Logo" class="roundedShape">
+                        <h3 class="d-inline-block">{{ store.name }}</h3>
+                    </div>
+
                     <!-- Store Tabs -->
                     <Tabs type="card" :animated="false" class="pb-5">
 
@@ -49,6 +51,20 @@
                         <TabPane label="Products" class="p-1">
 
                             <productWidget :storeId="store.id"></productWidget>
+
+                        </TabPane>
+
+                        <!-- Messages Tab -->
+                        <TabPane label="Messages" class="p-1">
+
+                            <messageWidget :storeId="store.id"></messageWidget>
+
+                        </TabPane>
+
+                        <!-- Reviews Tab -->
+                        <TabPane label="Reviews" class="p-1">
+
+                            <reviewWidget :storeId="store.id"></reviewWidget>
 
                         </TabPane>
 
@@ -124,10 +140,12 @@
     /*  Widgets  */
     import orderWidget from './orderWidget.vue';
     import productWidget from './productWidget.vue';
+    import messageWidget from './messageWidget.vue';
+    import reviewWidget from './reviewWidget.vue';
 
     export default {
         components: { 
-            pageToolbar, basicButton, Loader, orderWidget, productWidget
+            pageToolbar, basicButton, Loader, orderWidget, productWidget, messageWidget, reviewWidget
         },
         data(){
             return {

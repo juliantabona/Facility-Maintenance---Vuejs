@@ -2,8 +2,8 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Model;
 use App\AdvancedFilter\Dataviewer;
 use App\Traits\ProductTraits;
 
@@ -23,16 +23,18 @@ class Product extends Model
         'variant_attributes' => 'array',
 
         //  Return the following 1/0 as true/false
-        'allow_inventory' => 'boolean',
+        'has_inventory' => 'boolean',
         'auto_track_inventory' => 'boolean',
         'allow_variants' => 'boolean',
         'allow_downloads' => 'boolean',
         'show_on_store' => 'boolean',
+        'is_new' => 'boolean',
+        'is_featured' => 'boolean',
     ];
 
     protected $table = 'products_and_services';
 
-    protected $with = ['categories', 'tags', 'taxes', 'galleryImages'];
+    protected $with = ['categories', 'tags', 'taxes', 'comments', 'galleryImages'];
 
     /**
      * The attributes that are mass assignable.
@@ -41,8 +43,9 @@ class Product extends Model
      */
     protected $fillable = [
         'name', 'description', 'type', 'cost_per_item', 'unit_price', 'unit_sale_price',
-        'sku', 'barcode', 'stock_quantity', 'allow_inventory', 'auto_track_inventory', 'variants', 'variant_attributes', 'allow_variants',
-        'downloads', 'allow_downloads', 'show_on_store', 'company_branch_id', 'company_id',
+        'sku', 'barcode', 'stock_quantity', 'has_inventory', 'auto_track_inventory', 
+        'variants', 'variant_attributes', 'allow_variants', 'downloads', 'allow_downloads', 
+        'show_on_store', 'is_new', 'is_featured', 'store_id', 'company_branch_id', 'company_id',
     ];
 
     protected $allowedFilters = [
@@ -55,6 +58,11 @@ class Product extends Model
     protected $orderable = [
         'id', 'name', 'description', 'cost_per_item', 'unit_price', 'created_at',
     ];
+
+    public function store()
+    {
+        return $this->belongsTo('App\Store');
+    }
 
     /*  Get the documents relating to this product. These are various files such as images, downloadable documents,
      *  and so on. Basically any file/image the user wants to save to this product is stored in this relation
@@ -94,6 +102,21 @@ class Product extends Model
         return $this->belongsToMany('App\Tax', 'products_and_services_taxes', 'product_service_id', 'tax_id');
     }
 
+    public function comments()
+    {
+        return $this->morphToMany('App\Comment', 'trackable', 'comment_allocations');
+    }
+
+    public function messages()
+    {
+        return $this->comments()->where('type', 'message');
+    }
+
+    public function reviews()
+    {
+        return $this->comments()->where('type', 'review');
+    }
+
     public function recentActivities()
     {
         return $this->morphMany('App\RecentActivity', 'trackable')
@@ -105,17 +128,32 @@ class Product extends Model
     /* ATTRIBUTES */
 
     protected $appends = [
-        'primary_image'
+        'primary_image', 'store_currency_symbol', 'average_rating'
     ];
+
+    public function getAverageRatingAttribute()
+    {
+        $reviews = $this->reviews()->get() ?? [];
+
+        if( count( $reviews ) ){
+            return collect( $reviews )->avg('rating_value');
+        }
+    }
 
     public function getPrimaryImageAttribute()
     {
         return $this->documents()->where('type', 'primary')->first();
     }
 
+    public function getStoreCurrencySymbolAttribute()
+    {
+        //  Store currency
+        return $this->store()->first()->settings['details']['general']['currency_type']['currency']['symbol'] ?? null;
+    }
+
     public function setAllowInventoryAttribute($value)
     {
-        $this->attributes['allow_inventory'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+        $this->attributes['has_inventory'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
     }
 
     public function setAutoTrackInventoryAttribute($value)
@@ -137,4 +175,15 @@ class Product extends Model
     {
         $this->attributes['show_on_store'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
     }
+
+    public function setIsNewAttribute($value)
+    {
+        $this->attributes['is_new'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+    }
+
+    public function setIsFeaturedAttribute($value)
+    {
+        $this->attributes['show_on_store'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+    }
+
 }

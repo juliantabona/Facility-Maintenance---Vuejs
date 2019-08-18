@@ -39,7 +39,12 @@
                                 </span>
                                 <!-- Product Tag -->
                                 <span class="tt-label-location">
-                                    <span class="tt-label-new">New</span>
+                                    <Tag v-if="product.is_featured" color="primary">Featured</Tag>
+                                    <Tag v-if="product.is_new" color="success">New</Tag>
+                                    <Tag v-if="product.unit_sale_price" color="warning">Sale</Tag>
+                                    <Tag v-if="product.has_inventory && !product.stock_quantity" color="error">
+                                        Out Of Stock
+                                    </Tag>
                                 </span>
                             </span>
 
@@ -86,11 +91,26 @@
 
                             <!-- Product Name -->
                             <h2 class="tt-title">
-                                <span class="btn btn-link pt-0 m-0" style="white-space: initial;">{{ product.title }}</span>
+                                <span class="btn btn-link pt-0 m-0" style="white-space: initial;"
+                                      @click="$router.push({ name: 'single-product', params: { storeId: storeId, productId: product.id } })">
+                                    {{ product.name }}
+                                </span>
                             </h2>
 
                             <!-- Product Price -->
-                            <div class="tt-price mt-2">P{{ product.unit_price }}</div>
+                            <div class="tt-price mt-2">
+                                
+                                <!-- Show sale or normal price -->
+                                <span>
+                                    {{ product.store_currency_symbol + (product.unit_sale_price ? product.unit_sale_price : product.unit_price) }}
+                                </span>
+                                
+                                <!-- Show old price if we have a sale -->
+                                <span v-if="product.unit_sale_price" class="old-price">
+                                    {{ product.store_currency_symbol + product.unit_price }}
+                                </span>
+                            
+                            </div>
 
                             <!-- Product Color Swatch -->
                             <div v-if="false" class="tt-option-block">
@@ -100,21 +120,25 @@
                                 </ul>
                             </div>
 
-                            <div v-if="existsInCart(product)" class="tt-input-counter style-01 small mt-2 ml-3 mr-3" style="max-width:100%;">
-                                <span class="minus-btn" @click="updateItemQuantity(product, 'subtract')"></span>
-                                <input type="text" :value="product.quantity" size="5"
-                                        @input="updateItemQuantity(product, $event.target.value)">
-                                <span class="plus-btn" @click="updateItemQuantity(product, 'add')"></span>
-                            </div>
-                            
-                            <div v-if="!existsInCart(product)" class="tt-product-inside-hover" style="opacity: 0;">
-                                <div class="tt-row-btn">
-                                    <!-- Add To Cart Button -->
-                                    <span class="tt-btn-addtocart thumbprod-button-bg btn btn-primary"
-                                          @click="addToCart(product)">
-                                          ADD TO CART
-                                    </span>
+                            <div v-if="!product.has_inventory || (product.has_inventory && product.stock_quantity)" >
+                                
+                                <div v-if="existsInCart(product)" class="tt-input-counter style-01 small mt-2 ml-3 mr-3" style="max-width:100%;">
+                                    <span class="minus-btn" @click="updateItemQuantity(product, 'subtract')"></span>
+                                    <input type="text" :value="product.quantity" size="5"
+                                            @input="updateItemQuantity(product, $event.target.value)">
+                                    <span class="plus-btn" @click="updateItemQuantity(product, 'add')"></span>
                                 </div>
+                                
+                                <div v-if="!existsInCart(product)" class="tt-product-inside-hover" style="opacity: 0;">
+                                    <div class="tt-row-btn">
+                                        <!-- Add To Cart Button -->
+                                        <span class="tt-btn-addtocart thumbprod-button-bg btn btn-primary"
+                                            @click="addToCart(product)">
+                                            ADD TO CART
+                                        </span>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </div>
@@ -155,6 +179,10 @@
                 products: null,
                 isLoadingProducts: false,
 
+                storeId: (this.$route.params || {}).storeId,
+                per_page: (this.$route.query || {}).per_page || 1,
+                page: (this.$route.query || {}).page || 1,
+
                 //  Cart parameters
                 addItem: null,
                 removeItem: null,
@@ -163,9 +191,29 @@
             }
         },
         watch: {
-            //  Watch for changes on the product id
-            '$route.query.page': function (id) {
+            //  Watch for changes on the page
+            '$route.query.storeId': function (storeId) {
                 
+                this.storeId = storeId;
+
+                // react to route changes by fetching the associated product...
+                this.fetchProducts();
+
+            },
+            //  Watch for changes on the page
+            '$route.query.per_page': function (per_page) {
+                
+                this.per_page = per_page;
+
+                // react to route changes by fetching the associated product...
+                this.fetchProducts();
+
+            },
+            //  Watch for changes on the page
+            '$route.query.page': function (page) {
+                
+                this.page = page;
+
                 // react to route changes by fetching the associated product...
                 this.fetchProducts();
 
@@ -216,18 +264,13 @@
                 //  Console log to acknowledge the start of api process
                 console.log('Start getting store products...');
 
-                //  Get the store id and the pagination page number
-                var storeId = (this.$route.params.storeId);
-                var per_page = (this.$route.query.per_page) ? this.$route.query.per_page : 1;
-                var page = (this.$route.query.page) ? this.$route.query.page : 1;
-
                 var urlParams = {
                         // Store Id 
-                        storeId: storeId,
+                        storeId: this.storeId,
                         //  Number of items to return per page
-                        perPage: per_page,
+                        perPage: this.per_page,
                         //  The page number of the paginated items
-                        page: page,
+                        page: this.page,
                     }
 
                 //  Use the api call() function located in resources/js/api.js

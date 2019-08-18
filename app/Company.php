@@ -171,16 +171,6 @@ class Company extends Model
         return $this->hasMany('App\Product');
     }
 
-    public function onlyProducts()
-    {
-        return productAndServices()->where('type', 'physical');
-    }
-
-    public function onlyServices()
-    {
-        return productAndServices()->where('type', 'virtual');
-    }
-
     public function taxes()
     {
         return $this->hasMany('App\Tax');

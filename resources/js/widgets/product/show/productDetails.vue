@@ -23,6 +23,10 @@
     display:inline-block;
 }
 
+.ivu-tabs {
+    overflow: visible;
+}
+
 </style>
 
 <template>
@@ -35,21 +39,27 @@
         <Row :gutter="20" class="mb-1">
           <!-- Product Image -->
           <Col :span="8" :offset="8">
-            <imageUploader
-              uploadMsg="Upload or change image"
-              :allowUpload="editMode"
-              :multiple="false"
-              :docUrl=" this.localProduct ? '/api/products/'+(this.localProduct || {}).id+'/image' : null"
-              :postData="{ 
-                    modelId: this.localProduct ? (this.localProduct || {}).id : null,
-                    modelType: 'product',
-                    location:  'products', 
-                    type: 'primary',
-                    replaceable: true
-                }"
-              :thumbnailStyle="{ width:'200px', height:'auto' }"
-              @fileBeforeUpload="handleFileAdded('primary_image', $event)"
-            ></imageUploader>
+                <!-- Image/Pdf Uploader -->
+                <imageUploader 
+                    :allowUpload="editMode"
+                    :multiple="false"
+                    :docUrl=" localProduct ? '/api/products/'+localProduct.id+'/documents?type=primary' : null"
+                    :postData="{ 
+                        modelId: this.localProduct ? (this.localProduct || {}).id : null,
+                        modelType: 'product',
+                        location:  'products', 
+                        type: 'primary',
+                        replaceable: true
+                    }"
+                    :uploadBtnText="'Upload '+getProductName+' Image'"
+                    :changeUplodBtnText="'Change '+getProductName+' Image'"
+                    noUploadFoundText="No Image Found"
+                    uploadMsg="Add Image here..."
+                    :thumbnailColSpan="24"
+                    :thumbnailStyle="{}"
+                    @fileBeforeUpload="handleFileAdded('primary_image', $event)"
+                    @completedAllUploads="true">
+                </imageUploader>
           </Col>
 
           <Col :span="24" class="mb-2">
@@ -104,7 +114,7 @@
             </Spin>
 
             <Col :span="24" class="mt-2 mb-2">
-                <Card class="clearfix pb-3" :style="{ width: '100%' }">
+                <Card class="clearfix" :style="{ width: '100%' }">
 
                     <!-- Create Button -->
                     <basicButton v-if="createMode && (!isSaving && !isCreating)" customClass="float-right" :style="{ position:'relative' }"
@@ -132,37 +142,39 @@
                         title="Show on store" onText="Yes" offText="No" poptipMsg="Show this product on the ecommerce store"
                         class="float-left mt-2">
                     </toggleSwitch>
+                    
                     <div class="dot float-left" style="margin:17px 2px 0px 10px;"></div>
-                    <span class="btn btn-link float-left pl-1" @click="true">
+                    
+                    <span class="btn btn-link d-inline-block pl-1" @click="true">
                         <span style="font-size: 12px;" class="inline-block">View Store</span>
                     </span>
 
+                    <template v-if="getProductName">
+                        <Divider type="vertical" class="ml-0 mr-0"></Divider>
+                        
+                        <span class="btn btn-link d-inline-block pl-1" @click="true">
+                            <span style="font-size: 12px;" class="inline-block">{{ getProductName }} Orders</span>
+                        </span>
+
+                        <Divider type="vertical" class="ml-0 mr-0"></Divider>
+                        
+                        <span class="btn btn-link d-inline-block pl-1" @click="true">
+                            <span style="font-size: 12px;" class="inline-block">Share {{ getProductName }} Links</span>
+                        </span>
+                    </template>
                 </Card>
             </Col>
 
             <Col :span="16">
-                <Card :style="{ width: '100%' }" class="mb-2">
-                    <Row :gutter="20" class="mb-1">
-                        
-                        <Col :span="24">
-                            <!-- Title -->
-                            <el-form-item label="Title:" prop="title" class="mb-2">
-                                <el-input v-model="formData.title" size="small" style="width:100%" placeholder="Enter product title"></el-input>
-                            </el-form-item>
-                        </Col>
 
-                        <Col :span="24">
-                            <!-- Description -->
-                            <el-form-item label="Description:" prop="description" class="mb-2">
-                                <el-input type="textarea" v-model="formData.description" size="small" style="width:100%" placeholder="Enter product description"></el-input>
-                            </el-form-item>
-                        </Col>
+                <Card :style="{ width: '100%' }" class="mb-2">
+                    <Row :gutter="20">
 
                         <Col :span="12">
                             <!-- Product Type Selector -->
-                            <el-form-item label="Product Type" prop="type" class="mt-2 mb-2">
+                            <el-form-item label="Product Type" prop="type">
                                 <productTypeSelector
-                                    class="mb-2"
+                                    class="mt-2 mb-2"
                                     :selectedType="(formData || {}).type"
                                     @on-change="formData.type = $event">
                                 </productTypeSelector>
@@ -171,7 +183,635 @@
 
                     </Row>
                 </Card>
-                
+
+                <Card :style="{ width: '100%' }" class="mb-2">
+                    <Row :gutter="20" class="mb-1">
+                        
+                        <Col :span="24">
+                            <!-- Title -->
+                            <el-form-item :label="getProductNameFieldTitle" prop="title" class="mb-2">
+                                <el-input v-model="formData.title" size="small" style="width:100%" :placeholder="'Enter '+lowerCase(getProductName)+' name'"></el-input>
+                            </el-form-item>
+                        </Col>
+
+                    </Row>
+                </Card>
+
+                <Card :style="{ width: '100%' }" class="mb-2">
+                    <Tabs :animated="false" class="pt-3 pb-2">
+
+                        <!-- Description -->
+                        <TabPane label="Description">
+                            <Row :gutter="20" class="p-2">
+
+                                <Col :span="24">
+                                    <!-- Summary -->
+                                    <el-form-item label="Summary" prop="short_description" class="mb-2">
+                                        <el-input type="textarea" v-model="(formData.meta || {}).short_description" size="small" style="width:100%" :placeholder="'Enter '+lowerCase(getProductName)+' summary'"></el-input>
+                                    </el-form-item>
+                                </Col>
+
+                                <Col :span="24">
+                                    <!-- Detailed Description -->
+                                    <el-form-item label="Detailed Description" prop="detailed_description" class="mb-2">
+                                        <el-input type="textarea" v-model="(formData.meta || {}).detailed_description" size="small" style="width:100%" :placeholder="'Enter '+lowerCase(getProductName)+' detailed description'"></el-input>
+                                    </el-form-item>
+                                </Col>
+
+                            </Row>
+                        </TabPane>
+
+                        <!-- Schedule -->
+                        <TabPane label="Schedule">
+
+                            <Row :gutter="20" class="p-2">
+                                <Col :span="24" class="mb-2">
+                                    <Alert>
+                                        <template slot="desc">Add schedule details if this {{ lowerCase(getProductName) }} has a start/end date and time</template>
+                                    </Alert>
+                                </Col>
+
+                                <Col :span="24" class="mb-0">
+
+                                    <!-- Schedule Details Checkmark -->
+                                    <el-form-item prop="has_schedules" class="mb-1">
+                                        <Checkbox v-model="(formData.meta || {}).has_schedules">This {{ lowerCase(getProductName) }} has a schedule</Checkbox>
+                                    </el-form-item>
+                                    
+                                </Col>
+
+                                <Col v-if="(formData.meta || {}).has_schedules" :span="24">
+                                    <Row v-for="(schedule, i) in ((formData.meta || {}).schedules || [])" :key="i" :gutter="12" class="p-2 border">
+
+                                        <Col :span="20">
+
+                                            <Row v-if="formData.meta.schedules[i].is_editting" :gutter="20" class="p-2">
+
+                                                <Col :span="24">
+
+                                                    <!-- Type Selector -->
+                                                    <el-form-item label="Schedule Type" prop="schedule_type" class="mb-0">
+                                                        <basicOrAdvancedSelector
+                                                            :selectedType="formData.meta.schedules[i].type"
+                                                            @updated="formData.meta.schedules[i].type = $event">
+                                                        </basicOrAdvancedSelector>
+                                                    </el-form-item>
+
+                                                </Col>
+                                            </Row>
+
+                                            <Row v-if="formData.meta.schedules[i].type == 'Basic' && formData.meta.schedules[i].is_editting" :gutter="20" class="p-2">
+
+                                                <Col :span="12">
+                                                    <!-- Start Date -->
+                                                    <el-form-item label="Start Date:" prop="start_date" class="mb-2">
+                                                        <DatePicker type="date" v-model="formData.meta.schedules[i].basic.start_date" 
+                                                                    format="MMM dd yyyy" style="width:100%" placeholder="Select date">
+                                                        </DatePicker>
+                                                    </el-form-item>
+                                                </Col>
+
+                                                <Col :span="12">
+                                                    <!-- Start Time -->
+                                                    <el-form-item label="Start Time:" prop="start_time" class="mb-2">
+                                                        <TimePicker v-model="formData.meta.schedules[i].basic.start_time"
+                                                                    format="HH:mm" placeholder="Select time" style="width:100%">
+                                                        </TimePicker>
+                                                    </el-form-item>
+                                                </Col>
+
+                                                <Col :span="12">
+                                                    <!-- End Date -->
+                                                    <el-form-item label="End Date:" prop="end_date" class="mb-2">
+                                                        <DatePicker type="date" v-model="formData.meta.schedules[i].basic.end_date" 
+                                                                    format="MMM dd yyyy" style="width:100%" placeholder="Select date">
+                                                        </DatePicker>
+                                                    </el-form-item>
+                                                </Col>
+
+                                                <Col :span="12">
+                                                    <!-- End Time -->
+                                                    <el-form-item label="End Time:" prop="end_time" class="mb-2">
+                                                        <TimePicker v-model="formData.meta.schedules[i].basic.end_time"
+                                                                    format="HH:mm" placeholder="Select time" style="width:100%">
+                                                        </TimePicker>
+                                                    </el-form-item>
+                                                </Col>
+
+                                            </Row>
+
+                                            <Row v-if="formData.meta.schedules[i].type == 'Basic' && !formData.meta.schedules[i].is_editting" :gutter="20" class="p-2">
+
+                                                <Col :span="24">
+                                                    
+                                                    <h5 class="border-bottom pb-2 mb-2">Schedule {{ i + 1 }}</h5>
+
+                                                    <span class="d-block">
+                                                        <span class="font-weight-bold">Starts On:</span>
+                                                        <span v-if="formData.meta.schedules[i].basic.start_date">
+                                                            {{ formData.meta.schedules[i].basic.start_date | moment('DD MMM YYYY') }} 
+                                                            @ 
+                                                            {{ formData.meta.schedules[i].basic.start_time | moment('H:mmA') }}</span>
+                                                        <span v-else>___</span>
+                                                    </span>
+
+                                                    <span class="d-block">
+                                                        <span class="font-weight-bold">Ends On:</span>
+                                                        <span v-if="formData.meta.schedules[i].basic.end_date">
+                                                            {{ formData.meta.schedules[i].basic.end_date | moment('DD MMM YYYY') }} 
+                                                            @ 
+                                                            {{ formData.meta.schedules[i].basic.end_time | moment('H:mmA') }}</span>
+                                                        <span v-else>___</span>
+                                                    </span>
+
+                                                </Col>
+
+                                            </Row>
+
+                                            <Row v-if="formData.meta.schedules[i].type == 'Advanced' && formData.meta.schedules[i].is_editting">
+                                                
+                                                <Col :span="24">
+
+                            <!-- Get the stage for setting the recurring schedule plan -->
+                            <datetimeSchedule 
+                                :resourceName="lowerCase(getProductName)"
+                                :resourceNamePlural="lowerCase(getProductName)+'s'"
+                                :url="null"
+                                :showStageNumber="false"
+                                :showVerticalLine="false"
+                                :showHeader="false"
+                                :showSubHeader="false"
+                                :showCheckMark="false"
+                                :showNextStepBtn="false"
+                                :isEditing="true"
+                                :rippleEffect="true"
+                                :style="{ position:'relative', zIndex: 4 }" 
+                                @saved="$emit('saved', $event)">
+                            </datetimeSchedule>
+
+                                                </Col>
+
+                                            </Row>
+
+                                        </Col>
+
+                                        <Col :span="4">
+                                            <div class="float-right mt-4">
+
+                                                <!-- Edit Item  -->
+                                                <span class="btn btn-link d-inline-block mr-2 mt-1 p-0" @click="formData.meta.schedules[i].is_editting = !formData.meta.schedules[i].is_editting">
+                                                    {{ formData.meta.schedules[i].is_editting ? 'Done' : 'Edit' }}
+                                                </span>
+
+                                                <!-- Remove Item  -->
+                                                <Poptip confirm title="Are you sure you want to remove this schedule?"  width="300" class="d-inline-block"
+                                                        placement="left-start" ok-text="Yes" cancel-text="No" @on-ok="true">
+                                                    <Icon type="md-trash" :size="20" />
+                                                </Poptip>
+
+                                            </div>
+                                        </Col>
+
+                                    </Row>
+
+                                    <Row :gutter="12">
+                                        <Col :span="24">
+
+                                            <basicButton
+                                                    @click.native="true"
+                                                    customClass="mt-3 mb-3" 
+                                                    :style="{ width: 'fit-content', position:'relative' }"
+                                                    type="success" size="small" 
+                                                    :ripple="false">
+                                                + Add Another Schedule
+                                            </basicButton>
+
+                                        </Col>
+                                    </Row>
+
+                                </Col>
+                            </Row>
+
+                        </TabPane>
+
+                        <!-- Venue Details -->
+                        <TabPane label="Venue">
+                            <Row :gutter="20" class="p-2">
+                                <Col :span="24" class="mb-2">
+                                    <Alert>
+                                        <template slot="desc">Add venue details if this {{ lowerCase(getProductName) }} has a venue</template>
+                                    </Alert>
+                                </Col>
+
+                                <Col :span="24" class="mb-0">
+
+                                    <!-- Venue Details Checkmark -->
+                                    <el-form-item prop="has_venues" class="mb-1">
+                                        <Checkbox v-model="(formData.meta || {}).has_venues">This {{ lowerCase(getProductName) }} has a venue</Checkbox>
+                                    </el-form-item>
+                                    
+                                </Col>
+
+                                <Col v-if="(formData.meta || {}).has_venues" :span="24">
+                                    <Row v-for="(venue, i) in ((formData.meta || {}).venues || [])" :key="i" :gutter="12" class="p-2 border">
+
+                                        <Col :span="20">
+                                            
+                                            <Row :gutter="12">
+
+                                                <Col :span="24">
+                                                    <!-- Name -->
+                                                    <el-form-item label="Name:" prop="venue_name" class="mb-2">
+                                                        <el-input v-model="formData.meta.venues[i].name" size="small" style="width:100%" placeholder="Enter venue name"></el-input>
+                                                    </el-form-item>
+                                                </Col>
+
+                                                <Col :span="24">
+                                                    <!-- Address -->
+                                                    <el-form-item label="Address:" prop="venue_address" class="mb-2">
+                                                        <el-input v-model="formData.meta.venues[i].address" size="small" style="width:100%" placeholder="Enter venue address"></el-input>
+                                                    </el-form-item>
+                                                </Col>
+
+                                                <Col :span="24">
+                                                    <!-- Country -->
+                                                    <el-form-item prop="venue_country" class="mb-2">
+                                                        <countrySelector
+                                                            :selectedCountry="formData.meta.venues[i].country"
+                                                            @updated="formData.meta.venues[i].country = $event">
+                                                        </countrySelector>
+                                                    </el-form-item>
+                                                </Col>
+
+                                                <Col :span="12">
+                                                    <!-- Province -->
+                                                    <el-form-item prop="venue_province" class="mb-2">
+                                                        <provinceSelector
+                                                            :selectedCountry="formData.meta.venues[i].country"
+                                                            :selectedProvince="formData.meta.venues[i].province"
+                                                            @updated="formData.meta.venues[i].province = $event">
+                                                        </provinceSelector>
+                                                    </el-form-item>
+                                                </Col>
+
+                                                <Col :span="12">
+                                                    <!-- City -->
+                                                    <el-form-item prop="venue_city" class="mb-2">
+                                                        <citySelector
+                                                            :selectedCountry="formData.meta.venues[i].country"
+                                                            :selectedCity="formData.meta.venues[i].city"
+                                                            @updated="formData.meta.venues[i].city = $event">
+                                                        </citySelector>
+                                                    </el-form-item>
+                                                </Col>
+
+                                                <Col :span="24">
+                                                    <!-- Use Map Checkmark -->
+                                                    <el-form-item prop="has_venues" class="mb-2">
+                                                        <Checkbox v-model="formData.meta.venues[i].has_map">Use a map for this {{ lowerCase(getProductName) }} venue</Checkbox>
+                                                    </el-form-item>
+
+                                                    <!-- Map Settings -->
+                                                    <Row v-if="formData.meta.venues[i].has_map" :gutter="12">
+
+                                                        <Col :span="12">
+                                                            <!-- Latitude Coordinates -->
+                                                            <el-form-item label="Latitude:" prop="venue_latitude" class="mb-2">
+                                                                <el-input v-model="formData.meta.venues[i].map.latitude" size="small" style="width:100%" placeholder="Enter latitude coordinates"></el-input>
+                                                            </el-form-item>
+                                                            lat: {{ parseFloat( formData.meta.venues[i].map.latitude ) }}
+                                                        </Col>
+
+                                                        <Col :span="12">
+                                                            <!-- Longitude Coordinates -->
+                                                            <el-form-item label="Longitude:" prop="venue_longitude" class="mb-2">
+                                                                <el-input v-model="formData.meta.venues[i].map.longitude" size="small" style="width:100%" placeholder="Enter longitude coordinates"></el-input>
+                                                            </el-form-item>
+                                                        </Col>
+
+                                                        <Col :span="12">
+                                                            <!-- Zoom Level -->
+                                                            <el-form-item label="Zoom Level:" prop="venue_longitude" class="mb-2">
+                                                                <el-input type="number" v-model="formData.meta.venues[i].map.zoom" size="small" style="width:100%" placeholder="Zoom between 1 to 15"></el-input>
+                                                            </el-form-item>
+                                                        </Col>
+
+                                                        <Col :span="24">
+                                                            <GmapMap 
+                                                                map-type-id="terrain" style="width: 100%;height:300px;"
+                                                                :zoom="parseInt( formData.meta.venues[i].map.zoom )" 
+                                                                :center="{
+                                                                    lat: parseFloat( formData.meta.venues[i].map.latitude ), 
+                                                                    lng: parseFloat( formData.meta.venues[i].map.longitude )
+                                                                }">
+                                                            </GmapMap>
+                                                        </Col>
+
+                                                    </Row>
+
+                                                </Col>
+
+                                            </Row>
+
+                                        </Col>
+
+                                        <Col :span="4">
+                                            <div class="float-right mt-4">
+                                                <!-- Remove Item  -->
+                                                <Poptip confirm title="Are you sure you want to remove this venue?"  width="300" class="mr-3"
+                                                        placement="left-start" ok-text="Yes" cancel-text="No" @on-ok="true">
+                                                    <Icon type="md-trash" :size="20" />
+                                                </Poptip>
+                                            </div>
+                                        </Col>
+
+                                    </Row>
+
+                                    <Row :gutter="12">
+                                        <Col :span="24">
+
+                                            <basicButton
+                                                    @click.native="true"
+                                                    customClass="mt-3 mb-3" 
+                                                    :style="{ width: 'fit-content', position:'relative' }"
+                                                    type="success" size="small" 
+                                                    :ripple="false">
+                                                + Add Another Venue
+                                            </basicButton>
+
+                                        </Col>
+                                    </Row>
+
+                                </Col>
+                            </Row>
+                        </TabPane>
+
+                        <!-- Organizer Details -->
+                        <TabPane label="Organizer">
+                            <Row :gutter="20" class="p-2">
+                                <Col :span="24" class="mb-2">
+                                    <Alert>
+                                        <template slot="desc">Add an organizer for this {{ lowerCase(getProductName) }}</template>
+                                    </Alert>
+                                </Col>
+
+                                <Col :span="24" class="mb-0">
+
+                                    <!-- Organizer Details Checkmark -->
+                                    <el-form-item prop="has_organizers" class="mb-1">
+                                        <Checkbox v-model="(formData.meta || {}).has_organizers">This {{ lowerCase(getProductName) }} has an organizer</Checkbox>
+                                    </el-form-item>
+
+                                </Col>
+
+                                <Col v-if="(formData.meta || {}).has_organizers" :span="24">
+                                    <Row v-for="(organizer, i) in ((formData.meta || {}).organizers || [])" :key="i" :gutter="12" class="p-2 border">
+                                        
+                                        <Col :span="20">
+                                            
+                                            <Row :gutter="12">
+
+                                                <Col :span="24">
+                                                    <!-- Organizer Name -->
+                                                    <el-form-item prop="organizer_name" class="mb-2">
+                                                        <el-input v-model="formData.meta.organizers[i].name" placeholder="Enter organizer name"
+                                                                size="small" :style="{ maxWidth:'100%' }">
+                                                        </el-input>
+                                                    </el-form-item>
+                                                </Col>
+
+                                                <Col :span="24">
+                                                    <!-- Organizer Description -->
+                                                    <el-form-item prop="organizer_description" class="mb-2">
+                                                        <el-input type="textarea" v-model="formData.meta.organizers[i].description" placeholder="Enter organizer description"
+                                                                size="small" :style="{ maxWidth:'100%' }">
+                                                        </el-input>
+                                                    </el-form-item>
+                                                </Col>
+
+                                                <Col :span="24">
+                                                    <!-- Website Link -->
+                                                    <el-form-item label="Website Link:" prop="organizer_website_link" class="mb-2">
+                                                        <el-input v-model="formData.meta.organizers[i].website_link" size="small" style="width:100%"placeholder="Enter Website link"></el-input>
+                                                    </el-form-item>
+                                                </Col>
+
+                                                <Col :span="24">
+                                                    <!-- Facebook Link -->
+                                                    <el-form-item label="Facebook Link:" prop="organizer_facebook_link" class="mb-2">
+                                                        <el-input v-model="formData.meta.organizers[i].facebook_link" size="small" style="width:100%"placeholder="Enter Facebook link"></el-input>
+                                                    </el-form-item>
+                                                </Col>
+
+                                                <Col :span="24">
+                                                    <!-- Twitter Link -->
+                                                    <el-form-item label="Twitter Link:" prop="organizer_twitter_link" class="mb-2">
+                                                        <el-input v-model="formData.meta.organizers[i].twitter_link" size="small" style="width:100%"placeholder="Enter Twitter link"></el-input>
+                                                    </el-form-item>
+                                                </Col>
+
+                                            </Row>
+
+                                        </Col>
+
+                                        <Col :span="4">
+                                            <div class="float-right mt-4">
+                                                <!-- Remove Item  -->
+                                                <Poptip confirm title="Are you sure you want to remove this organizer?"  width="300" class="mr-3"
+                                                        placement="left-start" ok-text="Yes" cancel-text="No" @on-ok="true">
+                                                    <Icon type="md-trash" :size="20" />
+                                                </Poptip>
+                                            </div>
+                                        </Col>
+
+                                    </Row>
+
+                                    <Row :gutter="12">
+                                        <Col :span="24">
+
+                                            <basicButton
+                                                    @click.native="true"
+                                                    customClass="mt-3 mb-3" 
+                                                    :style="{ width: 'fit-content', position:'relative' }"
+                                                    type="success" size="small" 
+                                                    :ripple="false">
+                                                + Add Another Organizer
+                                            </basicButton>
+
+                                        </Col>
+                                    </Row>
+
+                                </Col>
+                            </Row>
+                        </TabPane>
+
+                        <!-- Sponsor Details -->
+                        <TabPane label="Sponsors">
+                            <Row :gutter="20" class="p-2">
+                                <Col :span="24" class="mb-2">
+                                    <Alert>
+                                        <template slot="desc">Add sponsors to this {{ lowerCase(getProductName) }}</template>
+                                    </Alert>
+                                </Col>
+
+                                <Col :span="24" class="mb-0">
+
+                                    <!-- Sponsor Details Checkmark -->
+                                    <el-form-item prop="has_sponsors" class="mb-1">
+                                        <Checkbox v-model="(formData.meta || {}).has_sponsors">This {{ lowerCase(getProductName) }} has sponsors</Checkbox>
+                                    </el-form-item>
+
+                                </Col>
+
+                                <Col v-if="(formData.meta || {}).has_sponsors" :span="24">
+                                    <Row v-for="(sponsor, i) in ((formData.meta || {}).sponsors || [])" :key="i" :gutter="12" class="p-2 border">
+                                        
+                                        <Col :span="20">
+                                            <Row :gutter="12">
+                                                <Col :span="8">
+                                                    <!-- Sponsor Logo -->
+                                                    <el-form-item  label="Logo" prop="sponsor_logo" class="mb-2">
+                                                        ...
+                                                    </el-form-item>
+                                                </Col>
+
+                                                <Col :span="16">
+                                                
+                                                    <!-- Sponsor Name -->
+                                                    <el-form-item label="Name:" prop="sponsor_name" class="mb-2">
+                                                        <el-input v-model="formData.meta.sponsors[i].name" placeholder="Enter sponsor name"
+                                                                size="small" :style="{ maxWidth:'100%' }">
+                                                        </el-input>
+                                                    </el-form-item>
+
+                                                    <!-- External Link -->
+                                                    <el-form-item label="Url Link:" prop="sponsor_url" class="mb-2">
+                                                        <el-input v-model="formData.meta.sponsors[i].url_link" size="small" style="width:100%" placeholder="E.g website, facebook or twitter url"></el-input>
+                                                    </el-form-item>
+
+                                                </Col>
+                                            </Row>
+                                        </Col>
+
+                                        <Col :span="4">
+                                            <div class="float-right mt-4">
+                                                <!-- Remove Item  -->
+                                                <Poptip confirm title="Are you sure you want to remove this sponsor?" width="300" class="mr-3"
+                                                        placement="left-start" ok-text="Yes" cancel-text="No" @on-ok="true">
+                                                    <Icon type="md-trash" :size="20" />
+                                                </Poptip>
+                                            </div>
+                                        </Col>
+
+                                    </Row>
+
+                                    <Row :gutter="12">
+                                        <Col :span="24">
+
+                                            <basicButton
+                                                    @click.native="true"
+                                                    customClass="mt-3 mb-3" 
+                                                    :style="{ width: 'fit-content', position:'relative' }"
+                                                    type="success" size="small" 
+                                                    :ripple="false">
+                                                + Add Another Sponsor
+                                            </basicButton>
+
+                                        </Col>
+                                    </Row>
+
+                                </Col>
+                            </Row>
+                        </TabPane>
+
+                        <!-- Contact Details -->
+                        <TabPane label="Contacts">
+                            <Row :gutter="20" class="p-2">
+                                <Col :span="24" class="mb-2">
+                                    <Alert>
+                                        <template slot="desc">Add contact details if you want customers to reach out for more information</template>
+                                    </Alert>
+                                </Col>
+
+                                <Col :span="24" class="mb-0">
+
+                                    <!-- Contact Details Checkmark -->
+                                    <el-form-item prop="has_contacts" class="mb-1">
+                                        <Checkbox v-model="(formData.meta || {}).has_contacts">This {{ lowerCase(getProductName) }} has contacts</Checkbox>
+                                    </el-form-item>
+
+                                </Col>
+
+                                <Col v-if="(formData.meta || {}).has_contacts" :span="24">
+                                    <Row v-for="(contact, i) in ((formData.meta || {}).contacts || [])" :key="i" :gutter="12" class="p-2 border">
+
+                                        <Col :span="20">
+                                            <Row :gutter="12">
+                                                    
+                                                <Col :span="12">
+                                                    <!-- Contact Name -->
+                                                    <el-form-item prop="contact_name" class="mb-2">
+                                                        <el-input v-model="formData.meta.contacts[i].name" placeholder="Enter contact name"
+                                                                size="small" :style="{ maxWidth:'100%' }">
+                                                        </el-input>
+                                                    </el-form-item>
+                                                </Col>
+
+                                                <Col :span="12">
+                                                    <!-- Contact Postion -->
+                                                    <el-form-item prop="contact_position" class="mb-2">
+                                                        <el-input v-model="formData.meta.contacts[i].position" placeholder="Enter contact position"
+                                                                size="small" :style="{ maxWidth:'100%' }">
+                                                        </el-input>
+                                                    </el-form-item>
+                                                </Col>
+
+                                                <Col :span="24">
+                                                    <!-- Contact Phone -->
+                                                    <el-form-item prop="contact_phone" class="mb-2">
+                                                        <el-input v-model="formData.meta.contacts[i].phone" placeholder="Enter contact phone"
+                                                                size="small" :style="{ maxWidth:'100%' }">
+                                                        </el-input>
+                                                    </el-form-item>
+                                                </Col>
+                                                
+                                            </Row>
+                                        </Col>
+
+                                        <Col :span="4">
+                                            <div class="float-right mt-4">
+                                                <!-- Remove Item  -->
+                                                <Poptip confirm title="Are you sure you want to remove this contact?"  width="300" class="mr-3"
+                                                        placement="left-start" ok-text="Yes" cancel-text="No" @on-ok="true">
+                                                    <Icon type="md-trash" :size="20" />
+                                                </Poptip>
+                                            </div>
+                                        </Col>
+
+                                    </Row>
+
+                                    <Row :gutter="12">
+                                        <Col :span="24">
+
+                                            <basicButton
+                                                    @click.native="true"
+                                                    customClass="mt-3 mb-3" 
+                                                    :style="{ width: 'fit-content', position:'relative' }"
+                                                    type="success" size="small" 
+                                                    :ripple="false">
+                                                + Add Another Contact
+                                            </basicButton>
+
+                                        </Col>
+                                    </Row>
+
+                                </Col>
+                            </Row>
+                        </TabPane>
+
+                    </Tabs>
+                </Card>
+
                 <Card :style="{ width: '100%' }" class="mb-2">
                     <Tabs :animated="false" class="pt-3 pb-5">
 
@@ -181,7 +821,7 @@
 
                                 <Col :span="12">
                                     <!-- Price -->
-                                    <el-form-item label="Price" prop="price" class="mb-2">
+                                    <el-form-item label="Regular Price" prop="unit_price" class="mb-2">
                                         <el-input
                                             placeholder="0.00"
                                             v-model="formData.unit_price"
@@ -205,7 +845,7 @@
 
                                 <Col :span="12">
                                     <!-- Unit Price -->
-                                    <el-form-item label="Cost per item" prop="unit_price" class="mb-2">
+                                    <el-form-item label="Cost per item" prop="cost_per_item" class="mb-2">
                                         <el-input
                                             placeholder="0.00"
                                             v-model="formData.cost_per_item"
@@ -220,25 +860,25 @@
                         <!-- Inventory Details -->
                         <TabPane label="Inventory">
                             <Row :gutter="20" class="p-2">
-                                <Col v-if="!formData.allow_inventory" :span="24" class="mb-2">
+                                <Col v-if="!formData.has_inventory" :span="24" class="mb-2">
                                     <Alert>
-                                        <template slot="desc">Use inventory if you have stock and want to keep track of how many items are left.</template>
+                                        <template slot="desc">{{ getProductInventoryInfo }}</template>
                                     </Alert>
                                 </Col>
 
                                 <Col :span="24" class="mb-0">
 
                                     <!-- Inventory Checkmark -->
-                                    <el-form-item prop="allow_inventory" class="mb-1">
-                                        <Checkbox v-model="formData.allow_inventory">This product has inventory</Checkbox>
+                                    <el-form-item prop="has_inventory" class="mb-1">
+                                        <Checkbox v-model="formData.has_inventory">This {{ lowerCase(getProductName) }} has inventory</Checkbox>
                                     </el-form-item>
 
                                 </Col>
 
-                                <Col v-if="formData.allow_inventory" :span="24">
+                                <Col v-if="formData.has_inventory" :span="24">
                                     <Row :gutter="12">
                                         <Col :span="12">
-                                            <!-- Price -->
+                                            <!-- SKU -->
                                             <el-form-item label="SKU (Stock Keeping Unit)" prop="sku" class="mb-2">
                                                 <el-input
                                                     placeholder="e.g BL01"
@@ -250,7 +890,7 @@
                                         </Col>
 
                                         <Col :span="12">
-                                            <!-- Price -->
+                                            <!-- Barcode -->
                                             <el-form-item label="Barcode (ISBN, UPC, GTIN, etc.)" prop="barcode" class="mb-2">
                                                 <el-input
                                                     placeholder="e.g 07350053850019"
@@ -278,10 +918,14 @@
                                         <Col :span="12">
 
                                             <!-- Track Inventory -->
-                                            <el-form-item prop="auto_track_inventory">
-                                                <Checkbox v-model="formData.auto_track_inventory" class="mt-4 ml-2">Track stock inventory</Checkbox>
-                                            </el-form-item>
+                                            <Poptip :content="getTrackStockInventoryDescription" trigger="hover" placement="top" width="300">
                                             
+                                                <el-form-item prop="auto_track_inventory">
+                                                    <Checkbox v-model="formData.auto_track_inventory" class="mt-4 ml-2">Track stock inventory</Checkbox>
+                                                </el-form-item>
+
+                                            </Poptip>
+
                                         </Col>
                                     </Row>
                                 </Col>
@@ -293,7 +937,7 @@
                             <Row :gutter="20" class="p-2">
                                 <Col v-if="!formData.allow_variants" :span="24" class="mb-2">
                                     <Alert>
-                                        <template slot="desc">Add variants if this product comes in multiple versions, like different sizes or colors.</template>
+                                        <template slot="desc">{{ getVariantInfo }}</template>
                                     </Alert>
                                 </Col>
 
@@ -301,7 +945,7 @@
 
                                     <!-- Variant Checkmark -->
                                     <el-form-item prop="allow_variants" class="mb-1">
-                                        <Checkbox v-model="formData.allow_variants">This product has variants</Checkbox>
+                                        <Checkbox v-model="formData.allow_variants">This {{ lowerCase(getProductName) }} has variants</Checkbox>
                                     </el-form-item>
 
                                 </Col>
@@ -348,7 +992,7 @@
                                             customClass="mt-3 mb-3" :style="{ width: 'fit-content', position:'relative' }"
                                             type="success" size="small" 
                                             :ripple="false">
-                                        + Add Variant
+                                        + Add Another Variant
                                     </basicButton>
 
                                 </Col>
@@ -440,7 +1084,7 @@
                             <Row :gutter="20" class="pt-2 pr-2 pl-2 pb-5">
                                 <Col v-if="!formData.allow_downloads" :span="24" class="mb-2">
                                     <Alert>
-                                        <template slot="desc">Add files if this product has downloadables such as images, audio, documents or artworks.</template>
+                                        <template slot="desc">Add files if this {{ lowerCase(getProductName) }} has downloadables such as images, audio, documents or artworks.</template>
                                     </Alert>
                                 </Col>
 
@@ -448,7 +1092,7 @@
 
                                     <!-- Download Checkmark -->
                                     <el-form-item prop="allow_downloads" class="mb-1">
-                                        <Checkbox v-model="formData.allow_downloads">This product has downloadable files</Checkbox>
+                                        <Checkbox v-model="formData.allow_downloads">This {{ lowerCase(getProductName) }} has downloadable files</Checkbox>
                                     </el-form-item>
 
                                 </Col>
@@ -520,7 +1164,7 @@
                                                 customClass="mb-3" :style="{ width: 'fit-content', position:'relative' }"
                                                 type="success" size="small" 
                                                 :ripple="false">
-                                            + Add Download
+                                            + Add Another Download
                                     </basicButton>
 
                                 </Col>
@@ -530,26 +1174,68 @@
 
                     </Tabs>
                 </Card>
+
+                <Card :style="{ width: '100%' }" class="mb-2">
+                    <Row :gutter="20">
+                        
+                        <Col :span="24">
+                            <el-form-item :label="'Other ' + lowerCase(getProductName) + ' related images'" prop="gallery">
+                                <!-- Image Uploader -->
+                                <imageUploader 
+                                    class="mt-1"
+                                    :allowUpload="editMode"
+                                    :multiple="true"
+                                    :docUrl=" localProduct ? '/api/products/'+localProduct.id+'/documents?type=secondary' : null"
+                                    :postData="{ 
+                                        modelId: this.localProduct ? (this.localProduct || {}).id : null,
+                                        modelType: 'product',
+                                        location:  'products', 
+                                        type: 'secondary',
+                                        replaceable: true
+                                    }"
+                                    :uploadBtnText="'Upload Gallery Images'"
+                                    :changeUplodBtnText="'Change Image'"
+                                    noUploadFoundText="No Image Found"
+                                    uploadMsg="Add Images here..."   
+                                    :thumbnailColSpan="8"
+                                    @fileBeforeUpload="handleFileAdded('secondary_image', $event)"
+                                    @completedAllUploads="true">
+                                </imageUploader>
+                            </el-form-item>
+
+                        </Col>
+
+                    </Row>
+                </Card>
+
+
             </Col>
 
             <Col :span="8">
                 <Card :style="{ width: '100%' }">
 
-                    <imageUploader
-                        uploadMsg="Upload or change image"
+                    <!-- Image/Pdf Uploader -->
+                    <imageUploader 
                         :allowUpload="editMode"
                         :multiple="false"
-                        :docUrl=" this.localProduct ? '/api/products/'+(this.localProduct || {}).id+'/image' : null"
+                        :docUrl=" localProduct ? '/api/products/'+localProduct.id+'/documents?type=primary' : null"
                         :postData="{ 
-                                modelId: this.localProduct ? (this.localProduct || {}).id : null,
-                                modelType: 'product',
-                                location:  'products', 
-                                type: 'primary',
-                                replaceable: true
-                            }"
-                        :thumbnailStyle="{ width:'200px', height:'auto' }"
+                            modelId: this.localProduct ? (this.localProduct || {}).id : null,
+                            modelType: 'product',
+                            location:  'products', 
+                            type: 'primary',
+                            replaceable: true
+                        }"
+                        :uploadBtnText="'Upload '+getProductName+' Image'"
+                        :changeUplodBtnText="'Change '+getProductName+' Image'"
+                        noUploadFoundText="No Image Found"
+                        uploadMsg="Add Image here..."
+                        :thumbnailColSpan="24"
+                        :thumbnailStyle="{}"
                         @fileBeforeUpload="handleFileAdded('primary_image', $event)"
-                    ></imageUploader>
+                        @completedAllUploads="true">
+                    </imageUploader>
+
                 </Card>
 
                 <Card class="mt-2 pt-1" :style="{ width: '100%' }">
@@ -598,7 +1284,7 @@
             </Col>
         
         </Row>
-
+        {{ formData }}
       </el-form>
     </Col>
   </Row>
@@ -612,6 +1298,10 @@ import clockLoader from './../../../components/_common/loaders/clockLoader.vue';
 /*  Selectors   */
 import productTypeSelector from './../../../components/_common/selectors/productTypeSelector.vue';
 import clientOrVendorSelector from "./../../../components/_common/selectors/clientOrVendorSelector.vue"; 
+import provinceSelector from './../../../components/_common/selectors/provinceSelector.vue'; 
+import citySelector from './../../../components/_common/selectors/citySelector.vue'; 
+import countrySelector from './../../../components/_common/selectors/countrySelector.vue'; 
+import basicOrAdvancedSelector from './../../../components/_common/selectors/basicOrAdvancedSelector.vue';
 
 /*  Image Uploader  */
 import imageUploader from "./../../../components/_common/uploaders/imageUploader.vue";
@@ -627,6 +1317,10 @@ import basicButton from './../../../components/_common/buttons/basicButton.vue';
 
 /*  Checkmarks  */ 
 import categoryCheckmark from './../../../components/_common/checkmarks/categoryCheckmark.vue';
+
+import datetimeSchedule from './../../../components/_common/steps/datetimeSchedule.vue';
+
+
 
 import lodash from "lodash";
 Event.prototype._ = lodash;
@@ -678,7 +1372,8 @@ export default {
   },
   components: {
     Loader, clockLoader, imageUploader, productTypeSelector, clientOrVendorSelector, 
-    toggleSwitch, tagInput, basicButton, categoryCheckmark
+    provinceSelector, citySelector, countrySelector, basicOrAdvancedSelector, toggleSwitch, 
+    tagInput, basicButton, categoryCheckmark, datetimeSchedule
   },
   data() {
     return {
@@ -712,7 +1407,7 @@ export default {
             sku: "",
             barcode: "",
             quantity: 1,
-            allow_inventory: false,
+            has_inventory: false,
             auto_track_inventory: true,
 
             //  Variant details
@@ -736,11 +1431,75 @@ export default {
             allow_downloads: false,
 
             //  Ecommerce details
-            show_on_store: true
+            show_on_store: true,
+
+            //  Meta Data
+            meta: {
+                short_description: '',
+                detailed_description: '',
+                has_schedules:true,
+                schedules:[
+                    {
+                        type: 'Basic',      //  Basic, Advanced,
+                        is_editting: true, 
+                        basic: {
+                            start_date: '',
+                            start_time: '',
+                            end_date: '',
+                            end_time: '',
+                        },
+                        advanced: {
+
+                        }
+                    }
+                ],
+                has_venues: true,
+                venues: [
+                    {
+                        name: '',
+                        address: '',
+                        country: '',
+                        province: '',
+                        city: '',
+                        has_map: false,
+                        map: {
+                            latitude: -24.63,
+                            longitude: 25.92,
+                            zoom: 13
+                        }
+                    }
+                ],
+                has_organizers: true,
+                organizers: [
+                    {
+                        name: '',
+                        description: '',
+                        website_link: '',
+                        facebook_link: '',
+                        twitter_link: '',
+                    }
+                ],
+                has_sponsors: true,
+                sponsors: [
+                    {
+                        logo: '',
+                        name: '',
+                        url_link: '',
+                    }
+                ],
+                has_contacts: true,
+                contacts: [
+                    {
+                        name: '',
+                        position: '',
+                        phone: '',
+                    }
+                ]
+            }
         },
         localEditMode: this.editMode,
         isCreating: false,
-        isSaving: false
+        isSaving: false,
     };
   },
   watch: {
@@ -794,9 +1553,86 @@ export default {
             }
 
             return valid;
+        },
+        getProductName(){
+            if( this.formData.type == 'physical' ){
+                return 'Product';
+            }else{
+                return _.capitalize([this.formData.type]);
+            }
+        },
+        getProductNameFieldTitle(){
+            if( this.formData.type == 'physical' ){
+                return 'Product Name';
+            }else{
+                return  _.capitalize([this.formData.type]) + ' Name';
+            }
+        },
+        getProductDescriptionFieldTitle(){
+            if( this.formData.type == 'physical' ){
+                return 'Product Description';
+            }else{
+                return  _.capitalize([this.formData.type]) + ' Description';
+            }
+        },
+        getProductInventoryInfo(){
+            if( this.formData.type == 'physical' ){
+                return 'Use inventory if you have stock and want to keep track of how many products are left.';
+            }else if( this.formData.type == 'service' ){
+                return 'Use inventory if you want to keep track of how much of this service is left that you can provide.'+
+                       'It helps by putting a limit to how many orders can be placed until you increase the inventory again.';
+            }else if( this.formData.type == 'booking' ){
+                return 'Use inventory if you have limited bookings and want to keep track of how many booking spots are left to sell.';
+            }else if( this.formData.type == 'event' ){
+                return 'Use inventory if you have limited seats/tickets and want to keep track of how many spots are left to sell.';
+            }else if( this.formData.type == 'ticket' ){
+                return 'Use inventory if you have stock and want to keep track of how many tickets are left.'
+            }else if( this.formData.type == 'donation' ){
+                return 'Use inventory if you want to keep track of how much of how many donations you can take.'+
+                       'It helps by putting a limit to how many donations can be placed until you increase the inventory again.';
+            }else if( this.formData.type == 'membership' ){
+                return 'Use inventory if you have limited membership and want to keep track of how many spots are left to sell.';
+            }
+        },
+        getTrackStockInventoryDescription(){
+            if( this.formData.type == 'physical' ){
+                return 'When the product is paid, the stock will be automatically reduced e.g) If a customer buys one product from a stock of 10, we will automatically reduce the stock left to 9';
+            }else if( this.formData.type == 'service' ){
+                return 'When the service is paid, the stock will be automatically reduced e.g) If a customer pays for the service with a stock of 10, we will automatically reduce the stock left to 9';
+            }else if( this.formData.type == 'booking' ){
+                return 'When the booking is paid, the stock will be automatically reduced e.g) If a customer pays for the booking with a stock of 10, we will automatically reduce the stock left to 9';
+            }else if( this.formData.type == 'event' ){
+                return 'When the event seat/ticket is paid, the stock will be automatically reduced e.g) If a customer pays for the booking with a stock of 10, we will automatically reduce the stock left to 9';
+            }else if( this.formData.type == 'ticket' ){
+                return 'When the event ticket is paid, the stock will be automatically reduced e.g) If a customer pays for the ticket with a stock of 10, we will automatically reduce the stock left to 9';
+            }else if( this.formData.type == 'donation' ){
+                return 'When the donation is paid, the stock will be automatically reduced e.g) If a customer pays for the donation with a stock of 10, we will automatically reduce the stock left to 9';
+            }else if( this.formData.type == 'membership' ){
+                return 'When the membership is paid, the stock will be automatically reduced e.g) If a customer pays for the membership with a stock of 10, we will automatically reduce the stock left to 9';
+            }
+        },
+        getVariantInfo(){
+            if( this.formData.type == 'physical' ){
+                return 'Add variants if this product comes in multiple versions e.g) different sizes or colors. You can change the price and information for each variant';
+            }else if( this.formData.type == 'service' ){
+                return 'Add variants if this service comes in multiple versions e.g) different features. You can change the price and information for each variant';
+            }else if( this.formData.type == 'booking' ){
+                return 'Add variants if this booking comes in multiple versions e.g) different packages (Single, Double, Twin). You can change the price and information for each variant';
+            }else if( this.formData.type == 'event' ){
+                return 'Add variants if this event comes in multiple versions e.g) different packages (Standard, Premium, Gold). You can change the price and information for each variant';
+            }else if( this.formData.type == 'ticket' ){
+                return 'Add variants if this ticket comes in multiple versions e.g) different packages (Standard, VIP, VVIP). You can change the price and information for each variant';
+            }else if( this.formData.type == 'donation' ){
+                return 'Add variants if this donation comes in multiple versions e.g) different packages (Standard, Premium, Gold). You can change the price and information for each variant';
+            }else if( this.formData.type == 'membership' ){
+                return 'Add variants if this membership comes in multiple versions e.g) different packages (Standard, Premium, Gold). You can change the price and information for each variant';
+            }
         }
-  },
+    },
   methods: {
+    lowerCase(msg){
+       return _.lowerCase(msg); 
+    },
     handleFileAdded(key, fileData){
         
         this.$set(this.formData, key, fileData);

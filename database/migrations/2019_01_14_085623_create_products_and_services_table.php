@@ -22,13 +22,16 @@ class CreateProductsAndServicesTable extends Migration
             $table->string('sku')->nullable();
             $table->string('barcode')->nullable();
             $table->unsignedInteger('stock_quantity')->nullable();
-            $table->boolean('allow_inventory')->default(0);
+            $table->boolean('has_inventory')->default(0);
             $table->boolean('auto_track_inventory')->default(1);
             $table->json('variants')->nullable();
             $table->json('variant_attributes')->nullable();
             $table->boolean('allow_variants')->default(0);
             $table->boolean('allow_downloads')->default(0);
             $table->boolean('show_on_store')->default(1);
+            $table->boolean('is_new')->default(1);
+            $table->boolean('is_featured')->default(1);
+            $table->unsignedInteger('store_id');
             $table->unsignedInteger('company_branch_id');
             $table->unsignedInteger('company_id');
             $table->softDeletes();

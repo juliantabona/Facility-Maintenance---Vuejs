@@ -2,11 +2,6 @@
 
 namespace App\Traits;
 
-use DB;
-use App\Company;
-use App\Notifications\JobcardApproved;
-use Illuminate\Pagination\LengthAwarePaginator;
-
 trait LifecycleTraits
 {
     /*  initiateUpdateLifecycleProgress() method:
@@ -35,21 +30,15 @@ trait LifecycleTraits
         $modelType = request('modelType');
         $stageData = request('stage');
 
-        if ( !isset($stageData) || empty($stageData) ) {
-
+        if (!isset($stageData) || empty($stageData)) {
             //  Stage instance not specified - Log the error
             $response = oq_api_notify_error('Include the stage data e.g) { stage: { type: \'payment\', instance: 1 } }', null, 404);
-
-        }elseif ( !isset($stageData['type']) || empty($stageData['type']) ) {
-
+        } elseif (!isset($stageData['type']) || empty($stageData['type'])) {
             //  Stage type not specified - Log the error
             $response = oq_api_notify_error('Include the stage type e.g) stage: { type: \'open\' } or { type: \'payment\' }, e.t.c', null, 404);
-
-        }elseif ( !isset($stageData['instance']) || empty($stageData['instance']) ) {
-
+        } elseif (!isset($stageData['instance']) || empty($stageData['instance'])) {
             //  Stage instance not specified - Log the error
             $response = oq_api_notify_error('Include the stage instance e.g) { instance: 1 } or { instance: 2 }, e.t.c', null, 404);
-
         }
 
         if (!isset($modelType) || empty($modelType)) {
@@ -58,14 +47,12 @@ trait LifecycleTraits
 
             //  Return the error response
             return ['success' => false, 'response' => $response];
-
         } elseif (!isset($modelId) || empty($modelId)) {
             //  Model id not specified - Log the error
             $response = oq_api_notify_error('Include associated model id e.g) modelId=1 or modelId=2, e.t.c', null, 404);
 
             //  Return the error response
             return ['success' => false, 'response' => $response];
-            
         } else {
             //  Create the dynamic model
             $dynamicModel = oq_generateDynamicModel($modelType);
@@ -78,7 +65,6 @@ trait LifecycleTraits
 
                     //  Check if we have a result
                     if ($dynamicModel) {
-
                         /*****************************
                          *   SEND NOTIFICATIONS      *
                          *****************************/
@@ -99,12 +85,11 @@ trait LifecycleTraits
                         $lifecycleUpdatedActivity = oq_saveActivity($dynamicModel, $auth_user, $status, $stageData);
 
                         //  Action was executed successfully
-                        return ['success' => true, 'response' => $dynamicModel];
+                        return ['success' => false, 'response' => $dynamicModel];
                     } else {
                         //  No resource found
                         return ['success' => false, 'response' => oq_api_notify_no_resource()];
                     }
-                    
                 } catch (\Exception $e) {
                     //  Log the error
                     $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
@@ -136,29 +121,23 @@ trait LifecycleTraits
         $modelType = request('modelType');
         $stageData = request('stage') ?? [];
 
-        if ( !isset($stageData) || empty($stageData) ) {
-
+        if (!isset($stageData) || empty($stageData)) {
             //  Stage instance not specified - Log the error
             $response = oq_api_notify_error('Include the stage data e.g) { stage: { type: \'payment\', instance: 1 } }', null, 404);
-
-        }elseif ( !isset($stageData['type']) || empty($stageData['type']) ) {
-
+        } elseif (!isset($stageData['type']) || empty($stageData['type'])) {
             //  Stage type not specified - Log the error
             $response = oq_api_notify_error('Include the stage type e.g) stage: { type: \'open\' } or { type: \'payment\' }, e.t.c', null, 404);
-
-        }elseif ( !isset($stageData['instance']) || empty($stageData['instance']) ) {
-
+        } elseif (!isset($stageData['instance']) || empty($stageData['instance'])) {
             //  Stage instance not specified - Log the error
             $response = oq_api_notify_error('Include the stage instance e.g) { instance: 1 } or { instance: 2 }, e.t.c', null, 404);
-
-        }else{
+        } else {
             $stageData = array(
                 'type' => $stageData['type'],
                 'instance' => $stageData['instance'],
                 'skip_status' => $stageData['skip_status'] ?? false,
                 'manual_verification_status' => $stageData['manual_verification_status'] ?? false,
                 'pending_status' => $stageData['pending_status'] ?? false,
-                'cancelled_status' => $stageData['cancelled_status'] ?? false
+                'cancelled_status' => $stageData['cancelled_status'] ?? false,
             );
         }
 
@@ -168,14 +147,12 @@ trait LifecycleTraits
 
             //  Return the error response
             return ['success' => false, 'response' => $response];
-
         } elseif (!isset($modelId) || empty($modelId)) {
             //  Model id not specified - Log the error
             $response = oq_api_notify_error('Include associated model id e.g) modelId=1 or modelId=2, e.t.c', null, 404);
 
             //  Return the error response
             return ['success' => false, 'response' => $response];
-            
         } else {
             //  Create the dynamic model
             $dynamicModel = oq_generateDynamicModel($modelType);
@@ -213,7 +190,6 @@ trait LifecycleTraits
                         //  No resource found
                         return ['success' => false, 'response' => oq_api_notify_no_resource()];
                     }
-                    
                 } catch (\Exception $e) {
                     //  Log the error
                     $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);

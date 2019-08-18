@@ -70,7 +70,12 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <div class="text-center">{{ product.unit_price }}</div>
+                                            <div class="text-center">
+                                                <!-- Show sale or normal price -->
+                                                <span>
+                                                    {{ product.store_currency_symbol + (product.unit_sale_price ? product.unit_sale_price : product.unit_price) }}
+                                                </span>
+                                            </div>
                                         </td>
                                         <td>
                                             <div class="text-center">P{{ getProductTotalPrice(product) }}</div>
@@ -155,16 +160,23 @@
                                             </td>
                                             <td style="position:relative;">
                                                 <span class="d-block text-dark">{{ product.name }}</span>
-                                                <span style="font-size:0.9;" class="d-inline-block">P{{ product.unit_price }} each</span>
-                                                <span style="font-size:0.9;" class="d-inline-block btn btn-link m-0 p-0 text-left">View Details</span>
+                                                <span style="font-size:0.9;" class="d-inline-block">
+                                                    {{ product.store_currency_symbol + (product.unit_sale_price ? product.unit_sale_price : product.unit_price) }}
+                                                    each
+                                                </span>
+                                                <span style="font-size:0.9;" class="d-inline-block btn btn-link m-0 p-0 text-left"
+                                                      @click="$router.push({ name: 'single-product', params: { storeId: storeId, productId: product.id } })">
+                                                      View Details
+                                                </span>
                                                 <span style="display: inline-block; position: absolute; top: -10px; left: -30px; height: 1.7em; border-radius: 3.235801032000001em; background: #0071ce; color: #fff; padding: .38198205906665em .618046971569839em; text-align: center; font-size: .875rem; line-height: .875rem;">
                                                     {{ product.quantity }}
                                                 </span>
                                             </td>
                                             <td class="text-right" style="font-size: 1.5em">
 
-                                                <!-- Price  -->
-                                                <div class="tt-price font-weight-bold text-dark text-right">P{{ getProductTotalPrice(product) }}</div>
+                                                <!-- Grand Total Price  -->
+                                                <div class="tt-price font-weight-bold text-dark text-right">
+                                                    {{ product.store_currency_symbol + getProductTotalPrice(product) }}</div>
 
                                                 <!-- Remove Item  -->
                                                 <Poptip confirm title="Are you sure you want to remove this?" width="300" placement="left-start"
@@ -270,6 +282,8 @@
                 cartItems: [],
                 localProducts: [],
 
+                storeId: (this.$route.params || {}).storeId,
+
                 //  Cart loading states
                 isLoadingCartItems: false,
                 isAddingItemToCart: false,
@@ -278,6 +292,12 @@
             }
         },
         watch: {
+            //  Watch for changes on the page
+            '$route.query.storeId': function (storeId) {
+                
+                this.storeId = storeId;
+
+            },
             /*  The products watch checks all the changes experienced by the products
              *  that are currently listed on the shop page. When a value of any product
              *  changes e.g) if the item is set to be added to cart or has its quantity
@@ -371,7 +391,7 @@
         },
         methods: {
             getProductTotalPrice(product){
-                return product.unit_price * product.quantity;
+                return product.unit_sale_price ? (product.unit_sale_price *  product.quantity) : (product.unit_price *  product.quantity)
             },
             
             /*  Whe the user wants to add a product to the cart, we will request the

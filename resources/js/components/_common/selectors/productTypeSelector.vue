@@ -29,6 +29,7 @@
                     { name: 'Service', value: 'service'},
                     { name: 'Event', value: 'event'},
                     { name: 'Ticket', value: 'ticket'},
+                    { name: 'Booking', value: 'booking'},
                     { name: 'Donation', value: 'donation'},
                     { name: 'Membership', value: 'membership'}
                 ]

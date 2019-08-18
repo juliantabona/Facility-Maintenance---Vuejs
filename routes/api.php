@@ -250,6 +250,14 @@ Route::get('products/{product_id}', 'Api\ProductController@show');
 Route::post('products/{product_id}', 'Api\ProductController@update');
 Route::get('products/{product_id}/image', 'Api\ProductController@getImage');
 
+/*   COMMENT RESOURCE ROUTES
+     -  Get, Show, Update, Trash, Delete
+*/
+Route::get('comments', 'Api\CommentController@index');
+Route::post('comments', 'Api\CommentController@store');
+Route::get('comments/{comment_id}', 'Api\CommentController@show');
+Route::post('comments/{comment_id}', 'Api\CommentController@update');
+
 /*   CART RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
 */

@@ -3,10 +3,11 @@
 namespace App\Traits;
 
 use DB;
+use App\Store;
+use App\Company;
 use App\Document;
 
 //  Notifications
-use App\Company;
 use App\Notifications\ProductCreated;
 use App\Notifications\ProductUpdated;
 
@@ -61,85 +62,91 @@ trait ProductTraits
         $productType = strtolower(request('productType'));
 
         /*
+         *  $storeId = 1, 2, 3, e.t.c
+        /*
+         *  The $storeId variable only get data specifically related to
+         *  the specified store id. It is useful for scenerios where we
+         *  want only comments of that store only
+         */
+        $storeId = request('storeId');
+
+        /*
+         *  $companyBranchId = 1, 2, 3, e.t.c
+        /*
+         *  The $companyBranchId variable only get data specifically related to
+         *  the specified company branch id. It is useful for scenerios where we
+         *  want only comments of that branch only
+         */
+        $companyBranchId = request('companyBranchId');
+
+        /*
          *  $companyId = 1, 2, 3, e.t.c
         /*
          *  The $companyId variable only get data specifically related to
          *  the specified company id. It is useful for scenerios where we
-         *  want only products of that company only
+         *  want only comments of that company only
          */
         $companyId = request('companyId');
 
-        if( isset($companyId) && !empty($companyId) ){
+        if (isset($storeId) && !empty($storeId)) {
+            /********************************************************************
+            *  CHECK IF THE USER IS AUTHORIZED TO GET SPECIFIED STORE COMMENTS  *
+            /********************************************************************/
 
-            //  Only get specific company data only if specified
-            if ($companyId) {
-                /************************************************************************
-                *  CHECK IF THE USER IS AUTHORIZED TO GET SPECIFIED COMPANY PRODUCTS    *
-                /***********************************************************************/
+            $model = Store::find($storeId);
+        }elseif (isset($companyBranchId) && !empty($companyBranchId)) {
+            /********************************************************************
+            *  CHECK IF THE USER IS AUTHORIZED TO GET SPECIFIED BRANCH COMMENTS *
+            /********************************************************************/
 
-                $model = Company::find($companyId);
+            $model = CompanyBranch::find($companyBranchId);
+        } elseif (isset($companyId) && !empty($companyId)) {
+            /**********************************************************************
+            *  CHECK IF THE USER IS AUTHORIZED TO GET SPECIFIED COMPANY COMMENTS  *
+            /**********************************************************************/
 
-            }
-
-        }else{
-
+            $model = Company::find($companyId);
+        } else {
             //  Apply filter by allocation
             if ($allocation == 'all') {
                 /***********************************************************
-                *  CHECK IF THE USER IS AUTHORIZED TO ALL PRODUCTS         *
+                *  CHECK IF THE USER IS AUTHORIZED TO ALL COMMENTS         *
                 /**********************************************************/
 
-                //  Get the current product instance
+                //  Get the current comment instance
                 $model = $this;
-
             } elseif ($allocation == 'branch') {
                 /*************************************************************
-                *  CHECK IF THE USER IS AUTHORIZED TO GET BRANCH PRODUCTS    *
+                *  CHECK IF THE USER IS AUTHORIZED TO GET BRANCH COMMENTS    *
                 /*************************************************************/
 
-                // Only get products associated to the company branch
+                // Only get comments associated to the company branch
                 $model = $auth_user->companyBranch;
             } else {
                 /**************************************************************
-                *  CHECK IF THE USER IS AUTHORIZED TO GET COMPANY PRODUCTS    *
+                *  CHECK IF THE USER IS AUTHORIZED TO GET COMPANY COMMENTS    *
                 /**************************************************************/
 
-                //  Only get products associated to the company
+                //  Only get comments associated to the company
                 $model = $auth_user->company;
             }
-
         }
 
-        /*  If user indicated to only return specific types of products
-        */
-        if ($productType == 'physical') {
-            $products = $model->onlyProducts();
+        /*  If user indicated to only return specific types of products  */
+        if( isset($productTypes) && !empty( $productTypes ) ){
 
-        /*  If user indicated to only return virtual products
-        */
-        } elseif ($productType == 'virtual') {
-            $products = $model->onlyServices();
+            //  If the $productType is a list e.g) virtual,physical, ... e.t.c
+            $productTypes = explode(',', $productType );
 
-        /*  If user did not indicate any specific group
-        */
-        } else {
-
-            if( isset($productTypes) && !empty( $productTypes ) ){
-
-                //  If the $productType is a list e.g) virtual,pysical, ... e.t.c
-                $productTypes = explode(',', $productType );
-
-                if (count($productTypes)) {
-                    //  Get products listed
-                    $products = $model->productAndServices()->whereIn('type', $productTypes);
-                }
-
-            } else {
-                //  Otherwise get all products
-                $products = $model->productAndServices();
+            if (count($productTypes)) {
+                //  Get products listed
+                $products = $model->productAndServices()->whereIn('type', $productTypes);
             }
-        }
 
+        } else {
+            //  Otherwise get all products
+            $products = $model->productAndServices();
+        }
 
         //  Only get specific company data only if specified
         if ($companyId) {
@@ -299,7 +306,7 @@ trait ProductTraits
             'sku' => request('sku') ?? null,
             'barcode' => request('barcode') ?? null,
             'stock_quantity' => request('stock_quantity') ?? null,
-            'allow_inventory' => request('allow_inventory'),
+            'has_inventory' => request('has_inventory'),
             'auto_track_inventory' => request('auto_track_inventory'),
             
             //  Variant details
@@ -312,6 +319,10 @@ trait ProductTraits
 
             //  Store Details
             'show_on_store' => request('show_on_store'),
+
+            //  Other
+            'is_new' => request('is_new'),
+            'is_featured' => request('is_featured'),
 
             //  Ownership Details
             'company_branch_id' => $auth_user->company_branch_id ?? null,
@@ -500,7 +511,7 @@ trait ProductTraits
             'sku' => request('sku') ?? null,
             'barcode' => request('barcode') ?? null,
             'stock_quantity' => request('stock_quantity') ?? null,
-            'allow_inventory' => request('allow_inventory'),
+            'has_inventory' => request('has_inventory'),
             'auto_track_inventory' => request('auto_track_inventory'),
             
             //  Variant details
@@ -514,6 +525,10 @@ trait ProductTraits
             //  Store Details
             'show_on_store' => request('show_on_store'),
 
+            //  Other
+            'is_new' => request('is_new'),
+            'is_featured' => request('is_featured'),
+            
             //  Ownership Details
             'company_branch_id' => $auth_user->company_branch_id ?? null,
             'company_id' => $auth_user->company_id ?? null,

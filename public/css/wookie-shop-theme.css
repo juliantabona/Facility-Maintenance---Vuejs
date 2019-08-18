@@ -8461,7 +8461,8 @@ html.edge .tt-portfolio-content figure:hover figcaption {
 .tt-review-block .tt-review-comments {
   margin-top: 20px; }
   .tt-review-block .tt-review-comments .tt-item:not(:first-child) {
-    margin-top: 28px; }
+    margin-top: 0;
+    }
   .tt-review-block .tt-review-comments .tt-item {
     display: -ms-flexbox;
     display: -webkit-flex;

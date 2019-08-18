@@ -459,7 +459,7 @@ trait OrderTraits
             'sku' => request('sku') ?? null,
             'barcode' => request('barcode') ?? null,
             'quantity' => request('quantity') ?? null,
-            'allow_inventory' => request('allow_inventory'),
+            'has_inventory' => request('has_inventory'),
             'auto_track_inventory' => request('auto_track_inventory'),
 
             //  Variant details

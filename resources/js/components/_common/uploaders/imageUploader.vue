@@ -123,19 +123,19 @@
                 style="display: inline-block;width:58px;">
                 
                 <div v-if="uploadList.length || previewImage">
-                    <span class="btn btn-link">{{ uploadBtnText }}</span>
+                    <span class="btn btn-link">{{ changeUplodBtnText }}</span>
                 </div>
 
                 <div v-else style="padding: 30px;line-height: 3em;">
                     <Icon type="ios-image-outline" size="50"></Icon>
-                    <span class="d-block">{{ changeUplodBtnText }}</span>
+                    <span class="d-block">{{ uploadBtnText }}</span>
                 </div>
                 
             </Upload>
         </Poptip>
         <div v-show="!allowUpload && !isLoadingDocs && !isUploadingDocs && !uploadList.length" class="no-image-box">
             <Icon type="ios-image-outline" size="70"></Icon>
-            <span class="">{{ noUplodFoundText }}</span>
+            <span class="">{{ noUploadFoundText }}</span>
         </div>
         <Modal v-model="visible">
             <img :src="imgUrl" v-if="visible" style="width: 100%">
@@ -175,7 +175,7 @@
                 type: String,
                 default: 'Click To Change'     
             },
-            noUplodFoundText:{
+            noUploadFoundText:{
                 type: String,
                 default: 'Document not found'  
             },
@@ -185,7 +185,7 @@
             },
             thumbnailStyle: {
                 type: Object,
-                default: {}
+                default: null
             },
             thumbnailColSpan: {
                 type: Number,

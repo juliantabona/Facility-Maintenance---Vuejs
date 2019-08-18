@@ -45,7 +45,7 @@
         <!-- No products message -->
         <Alert v-if="!isLoadingProducts && !localProducts" type="info" :style="{ maxWidth: '250px' }" show-icon>No products found</Alert>
         
-        <Card v-if="!isLoadingProducts && localProducts" class="mt-4 mb-3">
+        <Card v-if="!isLoadingProducts && localProducts" class="mb-3">
             <Row :gutter="20">
                 <Col :span="6">
                     <Select v-model="selectedProductStatuses" filterable multiple placeholder="Search product...">
@@ -270,7 +270,7 @@
                         title: 'Stock',
                         render: (h, params) => {
                             return h('span', 
-                                (params.row.allow_inventory) ?
+                                (params.row.has_inventory) ?
                                     (params.row.stock_quantity) :
                                         'N/A'
                             );

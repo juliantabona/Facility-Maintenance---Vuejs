@@ -24,7 +24,10 @@ Relation::morphMap([
     'user' => 'App\User',
     'store' => 'App\Store',
     'order' => 'App\Order',
-    'transaction' => 'App\Transactions',
+    'refund' => 'App\Refund',
+    'transaction' => 'App\Transaction',
+    'rating' => 'App\Rating',   
+    'comment' => 'App\Comment',   
     'billing_and_shipping_address' => 'App\BillingAndShippingAddress',   
 ]);
 

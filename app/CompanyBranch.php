@@ -96,16 +96,6 @@ class CompanyBranch extends Model
         return $this->hasMany('App\Product');
     }
 
-    public function onlyProducts()
-    {
-        return productAndServices()->where('type', 'product');
-    }
-
-    public function onlyServices()
-    {
-        return productAndServices()->where('type', 'service');
-    }
-
     public function quotations()
     {
         return $this->hasMany('App\Quotation');

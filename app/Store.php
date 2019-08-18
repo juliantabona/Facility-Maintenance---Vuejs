@@ -80,6 +80,11 @@ class Store extends Model
         return $this->hasMany('App\StoreInterests');
     }
 
+    public function productAndServices()
+    {
+        return $this->hasMany('App\Product');
+    }
+
     /*  Get the documents relating to this store. These are various files such as logos, store profiles,
      *  scanned files, images and so on. Basically any file/image the user wants to save to this store is
      *  stored in this relation
@@ -99,6 +104,21 @@ class Store extends Model
     {
         return $this->morphMany('App\Phone', 'trackable')
                     ->orderBy('created_at', 'desc');
+    }
+
+    public function comments()
+    {
+        return $this->morphToMany('App\Comment', 'trackable', 'comment_allocations');
+    }
+
+    public function messages()
+    {
+        return $this->comments()->where('type', 'message');
+    }
+
+    public function reviews()
+    {
+        return $this->comments()->where('type', 'review');
     }
 
     /**
