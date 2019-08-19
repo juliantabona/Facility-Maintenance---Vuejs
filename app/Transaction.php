@@ -23,7 +23,7 @@ class Transaction extends Model
     /**
      * Get all of the owning transaction models.
      */
-    public function trackable()
+    public function transactionable()
     {
         return $this->morphTo();
     }

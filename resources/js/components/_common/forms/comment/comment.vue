@@ -125,7 +125,7 @@
                 //  Comment Details
                 commentForm: commentHandle.getCommentFormFields(this),
                 commentFormRules: commentHandle.getCommentFormRules(this.requiredTextError),
-                commentCustomErrors: commentHandle.getCommentCustomErrorFields(),
+                commentCustomErrors: commentHandle.getCommentCustomErrorFields(this),
                 isSavingComment: false,
             }
         },

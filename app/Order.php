@@ -21,9 +21,7 @@ class Order extends Model
     protected $casts = [
         'meta_data' => 'array',
         'currency_type' => 'array',
-        'line_items' => 'array',
-        'shipping_lines' => 'array',
-        'tax_lines' => 'array',
+        'items' => 'array',
         'billing_info' => 'array',
         'shipping_info' => 'array',
     ];
@@ -36,46 +34,42 @@ class Order extends Model
      * @var array
      */
     protected $fillable = [
-        /*  Basic Info  */
-        'parent_id', 'number', 'order_key', 'status', 'currency_type', 'cart_hash', 'meta_data', 'date_completed',
+            /*  Basic Info  */
+           'number', 'currency_type', 'meta_data',
 
-        /*  Item Info  */
-        'line_items',
+            /*  Item Info  */
+            'items',
 
-        /*  Shipping Info  */
-        'shipping_lines',
+            /*  Shop Info  */
+            'shop_taxes', 'shop_discounts', 'shop_coupons',
 
-        /*  Grand Total, Subtotal, Shipping Total, Discount Total  */
-        'cart_total', 'shipping_total', 'discount_total', 'grand_total',
+            /*  Grand Total, Sub Total, Tax Total, Discount Total, Shipping Total  */
+            'sub_total', 'cart_tax_total', 'shop_tax_total', 'grand_tax_total',
+            'cart_discount_total', 'shop_discount_total', 'grand_discount_total',
+            'shipping_total', 'grand_total',
 
-        /*  Tax Info  */
-        'cart_tax', 'shipping_tax', 'discount_tax', 'grand_total_tax', 'prices_include_tax', 'tax_lines',
+            /*  Customer Info  */
+            'client_id', 'client_type', 'customer_ip_address', 'customer_user_agent',
+            'customer_note', 'billing_info', 'shipping_info',
 
-        /*  Customer Info  */
-        'client_id', 'client_type', 'customer_ip_address', 'customer_user_agent', 'customer_note',
-        'billing_info', 'shipping_info',
-
-        /*  Payment Info  */
-        'payment_method', 'payment_method_title', 'transaction_id', 'date_paid',
-
-        /*  Store, Company & Branch Info  */
-        'store_id', 'company_branch_id', 'company_id',
+            /*  Store & Company Info  */
+            'store_id', 'company_branch_id', 'company_id'
     ];
 
     protected $allowedFilters = [
-        'id', 'parent_id', 'number', 'order_key', 'status', 'currency_type', 'cart_hash', 'meta_data', 'date_completed',
-        'line_items', 'shipping_lines', 'cart_total', 'shipping_total', 'discount_total', 'grand_total',
-        'cart_tax', 'shipping_tax', 'discount_tax', 'grand_total_tax', 'prices_include_tax', 'tax_lines',
-        'payment_method', 'payment_method_title', 'transaction_id', 'date_paid',
-        'store_id', 'company_branch_id', 'company_id', 'created_at',
+        'id', 'number', 'currency_type', 'meta_data', 'items', 'shop_taxes', 'shop_discounts', 'shop_coupons', 
+        'sub_total', 'cart_tax_total', 'shop_tax_total', 'grand_tax_total', 'cart_discount_total', 'shop_discount_total', 
+        'grand_discount_total', 'shipping_total', 'grand_total', 'client_id', 'client_type', 'customer_ip_address', 
+        'customer_user_agent', 'customer_note', 'billing_info', 'shipping_info', 'store_id', 'company_branch_id',
+        'company_id', 'created_at',
     ];
 
     protected $orderable = [
-        'id', 'parent_id', 'number', 'order_key', 'status', 'currency_type', 'cart_hash', 'meta_data', 'date_completed',
-        'line_items', 'shipping_lines', 'cart_total', 'shipping_total', 'discount_total', 'grand_total',
-        'cart_tax', 'shipping_tax', 'discount_tax', 'grand_total_tax', 'prices_include_tax', 'tax_lines',
-        'payment_method', 'payment_method_title', 'transaction_id', 'date_paid',
-        'store_id', 'company_branch_id', 'company_id', 'created_at',
+        'id', 'number', 'currency_type', 'meta_data', 'items', 'shop_taxes', 'shop_discounts', 'shop_coupons', 
+        'sub_total', 'cart_tax_total', 'shop_tax_total', 'grand_tax_total', 'cart_discount_total', 'shop_discount_total', 
+        'grand_discount_total', 'shipping_total', 'grand_total', 'client_id', 'client_type', 'customer_ip_address', 
+        'customer_user_agent', 'customer_note', 'billing_info', 'shipping_info', 'store_id', 'company_branch_id',
+        'company_id', 'created_at',
     ];
 
     public function store()
@@ -106,13 +100,13 @@ class Order extends Model
 
     public function transactions()
     {
-        return $this->morphMany('App\Transaction', 'trackable')
+        return $this->morphMany('App\Transaction', 'transactionable')
                     ->orderBy('created_at', 'desc');
     }
 
     public function refunds()
     {
-        return $this->morphMany('App\Refund', 'trackable')
+        return $this->morphMany('App\Refund', 'refundable')
                     ->orderBy('created_at', 'desc');
     }
 
@@ -142,7 +136,7 @@ class Order extends Model
 
     public function comments()
     {
-        return $this->morphToMany('App\Comment', 'trackable', 'comment_allocations');
+        return $this->morphToMany('App\Comment', 'trackable', 'comment_allocations')->orderBy('comment_allocations.created_at', 'asc');
     }
 
     public function messages()

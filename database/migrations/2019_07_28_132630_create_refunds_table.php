@@ -15,8 +15,8 @@ class CreateRefundsTable extends Migration
             $table->increments('id');
             $table->float('amount');
             $table->string('reason');
-            $table->unsignedInteger('trackable_id');
-            $table->string('trackable_type');
+            $table->unsignedInteger('refundable_id');
+            $table->string('refundable_type');
             $table->timestamps();
         });
     }

@@ -295,6 +295,9 @@ trait OrderTraits
         //  Get the associated store
         $store = Store::find(request('store_id'));
 
+        //  Check if the store has any settings
+        $storeSettings = $store->settings;
+
         //  If the store does not exist
         if (!$store) {
             //  Notify the user that the store was not found
@@ -303,7 +306,7 @@ trait OrderTraits
 
         //  MyCart Instance
         $cartInstance = ( new MyCart() );
-        $cartRequest = $cartInstance->initiateGetCartDetails();
+        $cartRequest = $cartInstance->initiateGetCartDetails( $store->id );
 
         if( $cartRequest['success'] && count($cartRequest['response']) ){
             $cartDetails = $cartRequest['response'];
@@ -314,50 +317,38 @@ trait OrderTraits
 
         //  Create a template to hold the order details
         $template = $template ?? [
-            //  General details
-            'parent_id' => request('parent_id') ?? null,
+
+            /*  Basic Info  */
             'number' => request('number') ?? null,
-            'order_key' => request('order_key') ?? null,
-            'status' => request('status') ?? null,
-            'currency_type' => request('currency_type') ?? null,
-            //'cart_hash' => Hash::make(request('line_items')) ?? null,
+            'currency_type' => $storeSettings['general']['currency_type'] ?? (request('currency_type') ?? null),
             'meta_data' => request('meta_data') ?? null,
-            'date_completed' => request('date_completed') ?? null,
 
-            //  Item Info
-            'line_items' => $cartDetails['cart_items'] ?? (request('line_items') ?? null),
+            /*  Item Info  */
+            'items' => $cartDetails['items'] ?? (request('items') ?? null),
 
-            //  Shipping Info
-            'shipping_lines' => request('shipping_lines') ?? null,
+            /*  Shop Info  */
+            'shop_taxes' => $shop->taxes ?? (request('shop_taxes') ?? null),
+            'shop_discounts' => $shop->discounts ?? (request('shop_discounts') ?? null),
+            'shop_coupons' => $shop->coupons ?? (request('shop_coupons') ?? null),
 
-            //  Grand Total, Subtotal, Shipping Total, Discount Total
-            'cart_total' => $cartDetails['sub_total'] ?? (request('cart_total') ?? 0),
-            'shipping_total' => request('shipping_total') ?? 0,
-            'discount_total' => request('discount_total') ?? 0,
+            /*  Grand Total, Sub Total, Tax Total, Discount Total, Shipping Total  */
+            'sub_total' => $cartDetails['sub_total'] ?? (request('sub_total') ?? 0),
+            'cart_tax_total' => $cartDetails['cart_tax_total'] ?? (request('cart_tax_total') ?? 0),
+            'shop_tax_total' => $cartDetails['shop_tax_total'] ?? (request('shop_tax_total') ?? 0),
+            'grand_tax_total' => $cartDetails['grand_tax_total'] ?? (request('grand_tax_total') ?? 0),
+            'cart_discount_total' => $cartDetails['cart_discount_total'] ?? (request('cart_discount_total') ?? 0),
+            'shop_discount_total' => $cartDetails['shop_discount_total'] ?? (request('shop_discount_total') ?? 0),
+            'grand_discount_total' => $cartDetails['grand_discount_total'] ?? (request('grand_discount_total') ?? 0),
+            'shipping_total' => $cartDetails['shipping_total'] ?? (request('shipping_total') ?? 0),
             'grand_total' => $cartDetails['grand_total'] ?? (request('grand_total') ?? 0),
 
-            //  Tax Info
-            'cart_tax' => $cartDetails['cart_tax_total'] ?? (request('cart_tax') ?? 0),
-            'shipping_tax' => request('shipping_tax') ?? 0,
-            'discount_tax' => request('discount_tax') ?? 0,
-            'grand_total_tax' => request('grand_total_tax') ?? 0,
-            'prices_include_tax' => request('prices_include_tax') ?? null,
-            'tax_lines' => request('tax_lines') ?? null,
-
-            //  Customer Info
+            /*  Customer Info  */
             'client_id' => request('client_id') ?? null,
-            'client_type' => request('client_type') ?? null,
             'customer_ip_address' => request('customer_ip_address') ?? null,
             'customer_user_agent' => request('customer_user_agent') ?? null,
             'customer_note' => request('customer_note') ?? null,
             'billing_info' => request('billing_info') ?? null,
             'shipping_info' => request('shipping_info') ?? null,
-
-            //  Payment Info
-            'payment_method' => request('payment_method') ?? null,
-            'payment_method_title' => request('payment_method_title') ?? null,
-            'transaction_id' => request('transaction_id') ?? null,
-            'date_paid' => request('date_paid') ?? null,
 
             //  Store, Company & Branch Info
             'store_id' => request('store_id') ?? null,
@@ -642,14 +633,6 @@ trait OrderTraits
     public function checkAndCreateOrderInvoice($store, $order)
     {
         $auth_user = auth('api')->user();
-
-        //  Check if the store has any settings
-        $settings = Store::find($store->id)->settings;
-
-        if (!$settings) {
-            //  Create new settings for the store
-            $settings = ( new Store )->checkAndCreateSettings($store);
-        }
 
         $hasInvoices = $order->invoices->count();
 

@@ -108,7 +108,7 @@ class Store extends Model
 
     public function comments()
     {
-        return $this->morphToMany('App\Comment', 'trackable', 'comment_allocations');
+        return $this->morphToMany('App\Comment', 'trackable', 'comment_allocations')->orderBy('comment_allocations.created_at', 'asc');
     }
 
     public function messages()
@@ -119,6 +119,21 @@ class Store extends Model
     public function reviews()
     {
         return $this->comments()->where('type', 'review');
+    }
+
+    public function taxes()
+    {
+        return $this->morphToMany('App\Tax', 'taxable', 'tax_allocations');
+    }
+
+    public function discounts()
+    {
+        return $this->morphToMany('App\Discount', 'discountable', 'discount_allocations');
+    }
+
+    public function coupons()
+    {
+        return $this->morphToMany('App\Coupon', 'couponable', 'tax_allocations');
     }
 
     /**

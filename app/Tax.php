@@ -21,10 +21,7 @@ class Tax extends Model
     ];
 
     protected $allowedFilters = [
-        'id', 'name', 'abbreviation', 'rate', 'created_at',
-
-        // nested filters
-        //  'taxes.id', 'taxes.name',
+        'id', 'name', 'abbreviation', 'rate', 'created_at'
     ];
 
     protected $orderable = [
@@ -32,20 +29,12 @@ class Tax extends Model
     ];
 
     /**
-     * Get all of the tax associated products and services.
+     * Get all of the owning refund models.
      */
-    public function productAndServices()
+    public function taxable()
     {
-        return $this->belongsToMany('App\Product', 'products_and_services_taxes', 'tax_id', 'product_service_id');
+        return $this->morphTo();
     }
 
-    public function onlyProducts()
-    {
-        return productAndServices()->where('type', 'product');
-    }
-
-    public function onlyServices()
-    {
-        return productAndServices()->where('type', 'service');
-    }
+    
 }

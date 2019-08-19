@@ -122,92 +122,81 @@
 
                                     <Row :gutter="12">
 
-                                        <Col :span="24">
+                                        <Col :span="24" v-if="!isCompleted">
 
-                                            <!-- Loader -->
-                                            <Loader v-if="isLoadingReviews" type="text" class="text-left d-inline-block p-0" theme="white">Loading review</Loader>
+                                            <span class="font-weight-bold d-block border-top mb-2 mt-4 pt-3">Rate Our Service</span> 
+                                            
+                                            <div v-if="(localOrder.reviews || {}).length" class="tt-review-block">
+                                                <scrollBox class="border mb-4">
+                                                    <div class="tt-review-comments pr-3 pl-3" style="max-height: 300px;">
+                                                        <div v-for="(comment, i) in localOrder.reviews" class="tt-item">
+                                                            <div class="tt-avatar">
+                                                                <img src="images/backgrounds/review-comments-img-01.jpg" :alt="(comment.user || {}).full_name">
+                                                            </div>
+                                                            <div class="tt-content">
+                                                                
+                                                                <Rate v-if="comment.rating_value"  :disabled="true"
+                                                                    :value="comment.rating_value" class="tt-rating-stars" />
 
-                                            <template v-if="!isLoadingReviews && isCompleted">
-                                                <span class="font-weight-bold d-block border-top mb-2 mt-4 pt-3">Rate Our Service</span> 
-                                                
-                                                <div v-if="(localReviews || {}).length" class="tt-review-block">
-                                                    <scrollBox class="border mb-4">
-                                                        <div class="tt-review-comments pr-3 pl-3" style="max-height: 300px;">
-                                                            <div v-for="(comment, i) in localReviews" class="tt-item">
-                                                                <div class="tt-avatar">
-                                                                    <img src="images/backgrounds/review-comments-img-01.jpg" :alt="(comment.user || {}).full_name">
+                                                                <div class="tt-comments-info">
+                                                                    <span class="username">by <span>{{ (comment.user || {}).full_name }}</span></span>
+                                                                    <span class="time">on {{ comment.created_at | moment('DD MMM YYYY') || '___' }}</span>
                                                                 </div>
-                                                                <div class="tt-content">
-                                                                    
-                                                                    <Rate v-if="comment.rating_value"  :disabled="true"
-                                                                        :value="comment.rating_value" class="tt-rating-stars" />
-
-                                                                    <div class="tt-comments-info">
-                                                                        <span class="username">by <span>{{ (comment.user || {}).full_name }}</span></span>
-                                                                        <span class="time">on {{ comment.created_at | moment('DD MMM YYYY') || '___' }}</span>
-                                                                    </div>
-                                                                    <p>{{ comment.text }}</p>
-                                                                </div>
+                                                                <p>{{ comment.text }}</p>
                                                             </div>
                                                         </div>
-                                                    </scrollBox>
-                                                </div>
+                                                    </div>
+                                                </scrollBox>
+                                            </div>
 
-                                                <commentCreator 
-                                                    v-if="!(localReviews || {}).length"
-                                                    :urlParams="{
-                                                            commentType: 'review',
-                                                            orderId: localOrder.id
-                                                        }"
-                                                    requiredTextError="Enter your review"
-                                                    btnText="SUBMIT REVIEW"
-                                                    btnClass="w-100 mt-2"
-                                                    placeholder="Enter your review"
-                                                    loaderText="Adding review"
-                                                    fieldType="textarea"
-                                                    :canRate="true"
-                                                    @commentSuccess="updateReviews($event)">
-                                                </commentCreator>
-                                            </template>
+                                            <commentCreator 
+                                                v-if="!(localOrder.reviews || {}).length"
+                                                :urlParams="{
+                                                        commentType: 'review',
+                                                        orderId: localOrder.id
+                                                    }"
+                                                requiredTextError="Enter your review"
+                                                btnText="SUBMIT REVIEW"
+                                                btnClass="w-100 mt-2"
+                                                placeholder="Enter your review"
+                                                loaderText="Adding review"
+                                                fieldType="textarea"
+                                                :canRate="true"
+                                                @commentSuccess="updateReviews($event)">
+                                            </commentCreator>
                                             
                                         </Col>
 
                                         <Col :span="24">
 
-                                            <!-- Loader -->
-                                            <Loader v-if="isLoadingMessages" type="text" class="text-left d-inline-block p-0" theme="white">Loading messages</Loader>
+                                            <span v-if="(localOrder.messages || {}).length" 
+                                                    class="font-weight-bold d-block border-top mb-2 mt-4 pt-3">
+                                                    Messages
+                                            </span> 
+                                            
+                                            <div v-if="(localOrder.messages || {}).length" class="tt-review-block">
+                                                <messageChatBox
+                                                    :messages="localOrder.messages"
+                                                    :urlParams="{
+                                                        commentType: 'message',
+                                                        orderId: localOrder.id
+                                                    }"
+                                                    :showAsStaff="false"
+                                                    :showContactList="false"
+                                                    :showMessages="false"
+                                                    :showReplyBox="!isCompleted"
+                                                    :chatBoxStyle="{
+                                                        maxHeight:'250px'
+                                                    }"
+                                                    @sentMessage="localOrder.messages.push($event)">
+                                                </messageChatBox>
+                                            </div>
 
-                                            <template v-if="!isLoadingMessages">
-
-                                                <span v-if="(localMessages || {}).length" 
-                                                      class="font-weight-bold d-block border-top mb-2 mt-4 pt-3">
-                                                      Messages
-                                                </span> 
-                                                
-                                                <div v-if="(localMessages || {}).length" class="tt-review-block">
-                                                    <messageChatBox
-                                                        :messages="localMessages"
-                                                        :urlParams="{
-                                                            commentType: 'message',
-                                                            orderId: localOrder.id
-                                                        }"
-                                                        :showAsStaff="false"
-                                                        :showContactList="false"
-                                                        :showMessages="false"
-                                                        :showReplyBox="!isCompleted"
-                                                        :chatBoxStyle="{
-                                                            maxHeight:'250px'
-                                                        }">
-                                                    </messageChatBox>
-                                                </div>
-
-                                                <template v-if="!(localMessages || {}).length">
-                                                    <span class="font-weight-bold d-block border-top mb-2 mt-4 pt-3">Need Help?</span> 
-                                                    <span class="d-block mt-2 mb-2">
-                                                        Send us a message if you need more information or want to ask a question.
-                                                    </span>
-                                                </template>
-
+                                            <template v-if="!(localOrder.messages || {}).length">
+                                                <span class="font-weight-bold d-block border-top mb-2 mt-4 pt-3">Need Help?</span> 
+                                                <span class="d-block mt-2 mb-2">
+                                                    Send us a message if you need more information or want to ask a question.
+                                                </span>
                                             </template>
 
                                         </Col>
@@ -283,10 +272,6 @@
                 isLoadingOrder: false,
                 isSubmitting: false,
                 isDoneUploading: false,
-                localMessages: [],
-                localReviews: [],
-                isLoadingReviews: false,
-                isLoadingMessages: false,
                 formData: {
                     payment_amount: null,
                     payment_method: null,
@@ -305,11 +290,11 @@
         methods: {
             updateMessages(message){
                 //  Add rview to top of existing messages
-                this.localMessages.push(message);
+                this.localOrder.messages.push(message);
             },
             updateReviews(review){
                 //  Add rview to top of existing messages
-                this.localReviews.push(review);
+                this.localOrder.reviews.push(review);
             },
             fetchOrder() {
 
@@ -324,8 +309,12 @@
                     //  Console log to acknowledge the start of api process
                     console.log('Start getting order...');
 
+                    var urlParams = {
+                            connections: 'messages,reviews'
+                        }
+
                     //  Use the api call() function located in resources/js/api.js
-                    return api.call('get', '/api/orders/'+this.orderId)
+                    return api.call('get', '/api/orders/'+this.orderId, null, urlParams)
                         .then(({ data }) => {
                             
                             //  Console log the data returned
@@ -355,106 +344,6 @@
                         });
                 }
 
-            },
-            fetchMessages() {
-
-                var orderId = (this.$route.params.orderId);
-                
-                if(orderId){
-
-                    //  Hold constant reference to the vue instance
-                    const self = this;
-
-                    //  Start loader
-                    self.isLoadingMessages = true;
-
-                    //  Console log to acknowledge the start of api process
-                    console.log('Start getting messages...');
-
-                    var page = (this.$route.query.page) ? this.$route.query.page : 1;
-
-                    var urlParams = {
-                            orderId: orderId,
-                            commentType: 'message',
-                            page: page
-                        }
-
-                    //  Use the api call() function located in resources/js/api.js
-                    api.call('get', '/api/comments', null, urlParams)
-                        .then(({data}) => {
-                            
-                            //  Console log the data returned
-                            console.log(data);
-
-                            //  Stop loader
-                            self.isLoadingMessages = false;
-
-                            //  Store the product data
-                            self.localMessages = (data || {}).data;
-
-                        })         
-                        .catch(response => { 
-
-                            //  Stop loader
-                            self.isLoadingMessages = false;
-
-                            //  Console log Error Location
-                            console.log('dashboard/product/show/main.vue - Error getting messages...');
-
-                            //  Log the responce
-                            console.log(response);    
-                        });
-                }
-            },
-            fetchReviews() {
-
-                var orderId = (this.$route.params.orderId);
-                
-                if(orderId){
-
-                    //  Hold constant reference to the vue instance
-                    const self = this;
-
-                    //  Start loader
-                    self.isLoadingReviews = true;
-
-                    //  Console log to acknowledge the start of api process
-                    console.log('Start getting reviews...');
-
-                    var page = (this.$route.query.page) ? this.$route.query.page : 1;
-
-                    var urlParams = {
-                            orderId: orderId,
-                            commentType: 'review',
-                            page: page
-                        }
-
-                    //  Use the api call() function located in resources/js/api.js
-                    api.call('get', '/api/comments', null, urlParams)
-                        .then(({data}) => {
-                            
-                            //  Console log the data returned
-                            console.log(data);
-
-                            //  Stop loader
-                            self.isLoadingReviews = false;
-
-                            //  Store the product data
-                            self.localReviews = (data || {}).data;
-
-                        })         
-                        .catch(response => { 
-
-                            //  Stop loader
-                            self.isLoadingReviews = false;
-
-                            //  Console log Error Location
-                            console.log('dashboard/product/show/main.vue - Error getting reviews...');
-
-                            //  Log the responce
-                            console.log(response);    
-                        });
-                }
             },
             submitAttachments(){
                 const self = this;
@@ -512,15 +401,7 @@
             var self = this;
 
             //  Fetch the order
-            this.fetchOrder().then( data => {
-
-                 //  Fetch the order reviews
-                self.fetchReviews();
-
-                //  Fetch the order messages
-                self.fetchMessages();
-
-            });
+            this.fetchOrder();
         }
     };
   

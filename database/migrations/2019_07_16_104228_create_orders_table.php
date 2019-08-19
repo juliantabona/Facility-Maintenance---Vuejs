@@ -15,34 +15,28 @@ class CreateOrdersTable extends Migration
             $table->increments('id');
 
             /*  Basic Info  */
-            $table->unsignedInteger('parent_id')->nullable();
             $table->string('number')->nullable();
-            $table->string('order_key')->nullable();
-            $table->string('status')->nullable();
             $table->string('currency_type')->nullable();
-            $table->string('cart_hash')->nullable();
             $table->json('meta_data')->nullable();
-            $table->timestampTz('date_completed')->nullable();
 
             /*  Item Info  */
-            $table->json('line_items')->nullable();
+            $table->json('items')->nullable();
 
-            /*  Shipping Info  */
-            $table->json('shipping_lines')->nullable();
+            /*  Shop Info  */
+            $table->json('shop_taxes')->nullable();
+            $table->json('shop_discounts')->nullable();
+            $table->json('shop_coupons')->nullable();
 
-            /*  Grand Total, Subtotal, Shipping Total, Discount Total  */
-            $table->float('cart_total')->nullable();
+            /*  Grand Total, Sub Total, Tax Total, Discount Total, Shipping Total  */
+            $table->float('sub_total')->nullable();
+            $table->float('cart_tax_total')->nullable();
+            $table->float('shop_tax_total')->nullable();
+            $table->float('grand_tax_total')->nullable();
+            $table->float('cart_discount_total')->nullable();
+            $table->float('shop_discount_total')->nullable();
+            $table->float('grand_discount_total')->nullable();
             $table->float('shipping_total')->nullable();
-            $table->float('discount_total')->nullable();
             $table->float('grand_total')->nullable();
-
-            /*  Tax Info  */
-            $table->float('cart_tax')->nullable();
-            $table->float('shipping_tax')->nullable();
-            $table->float('discount_tax')->nullable();
-            $table->float('grand_total_tax')->nullable();
-            $table->boolean('prices_include_tax')->default(0);
-            $table->json('tax_lines')->nullable();
 
             /*  Customer Info  */
             $table->unsignedInteger('client_id')->nullable();
@@ -52,12 +46,6 @@ class CreateOrdersTable extends Migration
             $table->string('customer_note')->nullable();
             $table->json('billing_info')->nullable();
             $table->json('shipping_info')->nullable();
-
-            /*  Payment Info  */
-            $table->string('payment_method')->nullable();
-            $table->string('payment_method_title')->nullable();
-            $table->unsignedInteger('transaction_id')->nullable();
-            $table->timestampTz('date_paid')->nullable();
 
             /*  Store & Company Info  */
             $table->unsignedInteger('store_id')->nullable();

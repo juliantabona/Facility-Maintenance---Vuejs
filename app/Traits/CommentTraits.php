@@ -434,13 +434,13 @@ trait CommentTraits
         return false;
     }
 
-    public function insertAllocation($comment, $id, $type){
+    public function insertAllocation($comment, $trackable_id, $trackable_type){
 
         //  Allocate to comment
         $insert = DB::table('comment_allocations')->insert([
                 'comment_id' => $comment->id,
-                'trackable_id' => $comment->id,                       
-                'trackable_type' => 'comment',                       
+                'trackable_id' => $trackable_id,                       
+                'trackable_type' => $trackable_type,                       
                 'created_at' => DB::raw('now()'),                       
                 'updated_at' => DB::raw('now()')
             ]);

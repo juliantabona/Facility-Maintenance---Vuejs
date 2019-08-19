@@ -208,7 +208,7 @@
         height: 0;
     }
 
-    .close-btn{
+    .toggle-btn{
         opacity:1;
         float: right; 
         border: 1px solid #cecece; 
@@ -217,7 +217,7 @@
         cursor: pointer;
     }
 
-    .close-btn:active{
+    .toggle-btn:active{
         opacity:0.8;
     }
 
@@ -342,13 +342,19 @@
             <div class="chat-num-messages">{{ messages.length }} {{ messages.length == 1 ? ' message' : ' messages' }}</div>
             </div>
 
-            <div v-if="!localShowMessages" class="close-btn mt-2"
+            <div v-if="!localShowMessages" class="toggle-btn mt-2"
                  @click="localShowMessages = true">
                 <Icon type="ios-eye-outline" :size="20" />
                 <span>View Messages</span>
             </div>
 
-            <div v-if="localShowMessages" class="close-btn mt-2"
+            <div class="toggle-btn mt-2 mr-2"
+                 @click="localShowMessages = true">
+                <Icon type="ios-checkmark" :size="20" />
+                <span>Mark As Read</span>
+            </div>
+
+            <div v-if="localShowMessages" class="toggle-btn mt-2"
                 @click="localShowMessages = false">
                 <Icon type="ios-close" :size="20" />
                 <span>Close</span>
@@ -386,7 +392,7 @@
                 
             </div> <!-- end chat-history -->
         </scrollBox>
-
+        
         <div v-if="localShowMessages && showReplyBox" class="chat-message clearfix">
 
             <commentCreator 

@@ -94,17 +94,24 @@ class Product extends Model
         return $this->morphToMany('App\Tag', 'trackable', 'tag_allocations');
     }
 
-    /**
-     * Get all of the product/service associated taxes.
-     */
     public function taxes()
     {
-        return $this->belongsToMany('App\Tax', 'products_and_services_taxes', 'product_service_id', 'tax_id');
+        return $this->morphToMany('App\Tax', 'taxable', 'tax_allocations');
+    }
+
+    public function discounts()
+    {
+        return $this->morphToMany('App\Discount', 'discountable', 'discount_allocations');
+    }
+
+    public function coupons()
+    {
+        return $this->morphToMany('App\Coupon', 'couponable', 'tax_allocations');
     }
 
     public function comments()
     {
-        return $this->morphToMany('App\Comment', 'trackable', 'comment_allocations');
+        return $this->morphToMany('App\Comment', 'trackable', 'comment_allocations')->orderBy('comment_allocations.created_at', 'asc');
     }
 
     public function messages()
@@ -153,7 +160,7 @@ class Product extends Model
 
     public function setAllowInventoryAttribute($value)
     {
-        $this->attributes['has_inventory'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+        $this->attributes['allow_inventory'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
     }
 
     public function setAutoTrackInventoryAttribute($value)
@@ -183,7 +190,7 @@ class Product extends Model
 
     public function setIsFeaturedAttribute($value)
     {
-        $this->attributes['show_on_store'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+        $this->attributes['is_featured'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
     }
 
 }

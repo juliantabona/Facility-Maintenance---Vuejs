@@ -91,11 +91,11 @@ class Comment extends Model
 
     public function setFromCustomerAttribute($value)
     {
-        $this->attributes['from_customer'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+        $this->attributes['from_customer'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
     }
 
     public function setFromStaffAttribute($value)
     {
-        $this->attributes['from_staff'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+        $this->attributes['from_staff'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
     }
 }

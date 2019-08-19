@@ -72,6 +72,7 @@
                         :showAsStaff="true"
                         :showContactList="false"
                         :showMessages="false"
+                        :showReplyBox="true"
                         :chatBoxStyle="{
                             maxHeight:'250px'
                         }"

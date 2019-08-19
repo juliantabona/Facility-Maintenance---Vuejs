@@ -23,7 +23,7 @@ class Refund extends Model
     /**
      * Get all of the owning refund models.
      */
-    public function trackable()
+    public function refundable()
     {
         return $this->morphTo();
     }

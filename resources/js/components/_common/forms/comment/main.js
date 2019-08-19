@@ -1,6 +1,7 @@
 
 //  COMMENT FUNCTIONS
 function getCommentFormFields(self) {
+    console.log('here...');
     return {
         text: null,
         rating: null,
