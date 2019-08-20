@@ -78,7 +78,7 @@
                 </Col>
                 <Col :span="24">
                     <!-- Register Form -->
-                    <checkoutRegisterForm
+                    <checkoutUserRegisterForm
                         registerBtnText="Save Address"
                         :existingUser="user"
                         :showLoader="showDeliveryFormLoader"
@@ -88,7 +88,7 @@
                         :showCancelBtn="true"
                         @cancel="showDeliveryForm = false"
                         @success="handleSavedAddressSuccess()">
-                    </checkoutRegisterForm>
+                    </checkoutUserRegisterForm>
                 </Col>
             </Row>
 
@@ -103,11 +103,11 @@
     import basicButton from './../../../components/_common/buttons/basicButton.vue';
 
     /*  Forms  */
-    import checkoutRegisterForm from './../../../components/_common/forms/register-user/checkout-register.vue';
+    import checkoutUserRegisterForm from './../../../components/_common/forms/register-user/register.vue';
 
     export default {
         components: { 
-            basicButton, checkoutRegisterForm
+            basicButton, checkoutUserRegisterForm
         },
         props: {
             checkoutProgress: {

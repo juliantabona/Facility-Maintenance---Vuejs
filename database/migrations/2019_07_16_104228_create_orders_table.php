@@ -39,10 +39,10 @@ class CreateOrdersTable extends Migration
             $table->float('grand_total')->nullable();
 
             /*  Customer Info  */
-            $table->unsignedInteger('client_id')->nullable();
+            $table->unsignedInteger('submitted_by')->nullable();
             $table->string('client_type')->nullable();
-            $table->string('customer_ip_address')->nullable();
-            $table->string('customer_user_agent')->nullable();
+            $table->string('client_ip_address')->nullable();
+            $table->string('client_user_agent')->nullable();
             $table->string('customer_note')->nullable();
             $table->json('billing_info')->nullable();
             $table->json('shipping_info')->nullable();

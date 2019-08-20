@@ -12,8 +12,8 @@ function getRegisterFormRules() {
         email: [
             { required: true, message: 'Enter email', trigger: 'blur' }
         ],
-        phone: [
-            { required: true, message: 'Enter mobile number', trigger: 'blur' }
+        phones: [
+            { required: true, message: 'Enter tel/mobile number', trigger: 'blur' }
         ],
         address_1: [
             { required: true, message: 'Enter physical address', trigger: 'blur' }

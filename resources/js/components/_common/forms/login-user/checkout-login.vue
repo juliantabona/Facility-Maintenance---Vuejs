@@ -4,9 +4,16 @@
         margin-bottom: 0px;
     }
 
+    .el-form-item >>> .el-form-item__label {
+        margin: 0;
+        padding: 0;
+        line-height: 2em;
+    }
+
     .el-form-item.is-error{
         margin-bottom: 22px !important;
     }
+    
 </style>
 <template>
 

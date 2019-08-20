@@ -49,7 +49,7 @@ class Order extends Model
             'shipping_total', 'grand_total',
 
             /*  Customer Info  */
-            'client_id', 'client_type', 'customer_ip_address', 'customer_user_agent',
+            'submitted_by', 'client_type', 'client_ip_address', 'client_user_agent',
             'customer_note', 'billing_info', 'shipping_info',
 
             /*  Store & Company Info  */
@@ -59,16 +59,16 @@ class Order extends Model
     protected $allowedFilters = [
         'id', 'number', 'currency_type', 'meta_data', 'items', 'shop_taxes', 'shop_discounts', 'shop_coupons', 
         'sub_total', 'cart_tax_total', 'shop_tax_total', 'grand_tax_total', 'cart_discount_total', 'shop_discount_total', 
-        'grand_discount_total', 'shipping_total', 'grand_total', 'client_id', 'client_type', 'customer_ip_address', 
-        'customer_user_agent', 'customer_note', 'billing_info', 'shipping_info', 'store_id', 'company_branch_id',
+        'grand_discount_total', 'shipping_total', 'grand_total', 'submitted_by', 'client_type', 'client_ip_address', 
+        'client_user_agent', 'customer_note', 'billing_info', 'shipping_info', 'store_id', 'company_branch_id',
         'company_id', 'created_at',
     ];
 
     protected $orderable = [
         'id', 'number', 'currency_type', 'meta_data', 'items', 'shop_taxes', 'shop_discounts', 'shop_coupons', 
         'sub_total', 'cart_tax_total', 'shop_tax_total', 'grand_tax_total', 'cart_discount_total', 'shop_discount_total', 
-        'grand_discount_total', 'shipping_total', 'grand_total', 'client_id', 'client_type', 'customer_ip_address', 
-        'customer_user_agent', 'customer_note', 'billing_info', 'shipping_info', 'store_id', 'company_branch_id',
+        'grand_discount_total', 'shipping_total', 'grand_total', 'submitted_by', 'client_type', 'client_ip_address', 
+        'client_user_agent', 'customer_note', 'billing_info', 'shipping_info', 'store_id', 'company_branch_id',
         'company_id', 'created_at',
     ];
 
@@ -94,7 +94,7 @@ class Order extends Model
 
         //  Check if this is a valid dynamic class
         if (class_exists($dynamicModel)) {
-            return $this->hasOne($dynamicModel, 'id', 'client_id');
+            return $this->hasOne($dynamicModel, 'id', 'submitted_by');
         }
     }
 

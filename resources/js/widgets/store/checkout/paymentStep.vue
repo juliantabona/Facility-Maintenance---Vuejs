@@ -150,7 +150,7 @@
                 class="float-right mb-2 ml-3" 
                 type="success" size="large" 
                 :ripple="true"
-                @click.native="handleProceedToPayment()">
+                @click.native="$emit('proceedToPayment')">
                 <span>Proceed To Payment</span>
                 <Icon type="md-arrow-forward" class="ml-1" />
             </basicButton>
@@ -219,6 +219,18 @@
                 },
                 deep: true
             },
+            selectedPaymentMethod: {
+                handler: function (val, oldVal) {
+                    this.$emit('updated:paymentMethod', selectedPaymentMethod)
+                },
+                deep: true
+            },
+            shippingInfo: {
+                handler: function (val, oldVal) {
+                    this.localShippingInfo = val;
+                },
+                deep: true
+            },
         },
         methods: {
             updateCheckoutProgress(proceed){
@@ -231,162 +243,7 @@
                     this.$emit('back');
                     
                 }
-            },
-            handleProceedToPayment(){
-
-                var self = this;
-
-                self.isSubmittingOrder= true;
-
-                console.log('Attempt to submit order...');
-
-                //  Form data to send
-                let orderData = { 
-                        //  General details
-                        number: '1005',
-                        order_key: 'dm_order_58d2d042d1d',
-                        status: 'pending-payment',
-                        currency_type: {
-                            country: 'Botswana',
-                            currency: {
-                                iso: {
-                                code: 'BWP',
-                                number: '072'
-                                },
-                                name: 'Pula',
-                                symbol: 'P'
-                            }
-                        },
-                        //  Item Info
-                        line_items: [
-                            {
-                                id: 36,
-                                name: 'Rolex wrist watch',
-                                description: 'Stylish x3 series rolex watch',
-                                type: 'product',
-                                taxes: [],
-                                purchasePrice: 1250,
-                                unit_price: 1800,
-                                total_price: 3600,
-                                quantity: '2'
-                            }
-                        ],
-
-                        //  Shipping Info
-                        shipping_lines: null,
-
-                        //  Grand Total, Subtotal, Shipping Total, Discount Total
-                        cart_total: 10.00,
-                        shipping_total: 0.00,
-                        discount_total: 0.00,
-                        grand_total: 15.00,
-
-                        //  Tax Info
-                        cart_tax: 2.00,
-                        shipping_tax: 0.00,
-                        discount_tax: 0.00,
-                        grand_total_tax: 3.00,
-                        prices_include_tax: 0,
-                        tax_lines: null,
-
-                        //  Customer Info
-                        client_id: 91,
-                        client_type: 'company',
-                        customer_ip_address: null,
-                        customer_user_agent: null,
-                        customer_note: 'Deliver before end of this week',
-                        
-                        billing_info: {
-                            first_name: 'Julian',
-                            last_name: 'Tabona',
-                            address_1: 'Plot 4567, Extension 12',
-                            country: 'Botswana',
-                            province: 'South-East',
-                            city: 'Gaborone',
-                            postal_or_zipcode:"PO Box 456 AAH Masa",
-                            email: 'brandontabona@gmail.com',
-                            additional_email: 'brandontabona@yahoo.com',
-                            phones: [
-                                {
-                                id: 164,
-                                type: 'tel',
-                                calling_code: {
-                                    country: 'Botswana',
-                                    calling_code: '267',
-                                    flag: '<span class="flag-icon flag-icon-bw"></span>'
-                                },
-                                number: 3990960,
-                                provider: null,
-                                trackable_id: 91,
-                                trackable_type: 'company',
-                                created_by: 55,
-                                company_branch_id: 46,
-                                company_id: 49,
-                                created_at: '2019-06-18 17:22:03',
-                                updated_at: '2019-06-18 17:22:03',
-                                }
-                            ]
-                            },
-                            shipping_info: {
-                                first_name: 'Bonolo',
-                                last_name: 'Sesiane',
-                                address_1: 'Plot 6721, Block 8',
-                                country: 'Botswana',
-                                province: 'South-East',
-                                city: 'Gaborone',
-                                email: 'bonolosesiane@gmail.com',
-                                additional_email: 'bonolosesiane@yahoo.com',
-                                postal_or_zipcode:"PO Box 623 CAA Masa"
-                            },
-
-                        //  Payment Info
-                        payment_method: 'bank_deposit',
-                        payment_method_title: 'Bank Deposit',
-                        transaction_id: null,
-                        date_paid: null,
-
-                        //  Store, Company & Branch Info
-                        store_id: 1,
-
-                            mail: {
-                                primaryEmails: ['brandontabona@gmail.com'],
-                                ccEmails: [],
-                                bccEmails: []
-                                //subject: this.locaSubject,
-                                //message: this.locaMessage
-                            },
-                            deliveryMethods: ['Email']
-
-                 };
-
-                console.log(orderData);
-                
-                //  Use the api call() function located in resources/js/api.js
-                api.call('post', '/api/orders', orderData)
-                    .then(({ data }) => {
-
-                        //  Alert creation success
-                        self.$Message.success('Order saved sucessfully!');
-
-                        self.isSubmittingOrder= false;
-
-                        //  If the payment method is Credit/Debit Card
-                        if( self.selectedPaymentMethod == 'card' ){
-                                            
-                            //  Submit the VCS Form
-                            //this.$refs.vcsform.submit();
-
-                        }
-
-                    })         
-                    .catch(response => { 
-                        
-                        self.isSubmittingOrder= false;
-
-                        console.log('productSummaryWidget.vue - Error saving product...');
-                        console.log(response);
-                    });
-            },
+            }
         },
         created(){
             

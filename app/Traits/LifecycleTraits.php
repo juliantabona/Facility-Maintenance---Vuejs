@@ -16,7 +16,7 @@ trait LifecycleTraits
      *
      *
      */
-    public function initiateUpdateLifecycleProgress()
+    public function initiateUpdateLifecycleProgress($modelId = null, $modelType = null, $stageData = null)
     {
         //  Current authenticated user
         $auth_user = auth('api')->user();
@@ -205,6 +205,36 @@ trait LifecycleTraits
                 return ['success' => false, 'response' => $response];
             }
         }
+    }
+
+    public function setToPendingPayment($modelId = null, $modelType = null){
+        $stageData = [
+            "type" => "payment",
+            "instance" => 1, 
+            "updated_stage_id" => null,
+            "skip_status" => false,
+            "pending_status" => true,
+            "cancelled_status" => false,
+            "failed_payment_status" => false,
+            "notified_client_status" => false,
+            "meta" => []
+        ];
+        return $this->initiateUpdateLifecycleProgress($modelId, $modelType, $stageData);
+    }
+
+    public function setToFailedPayment($modelId = null, $modelType = null){
+        $stageData = [
+            "type" => "payment",
+            "instance" => 1, 
+            "updated_stage_id" => null,
+            "skip_status" => false,
+            "pending_status" => false,
+            "cancelled_status" => false,
+            "failed_payment_status" => true,
+            "notified_client_status" => false,
+            "meta" => []
+        ];
+        return $this->initiateUpdateLifecycleProgress($modelId, $modelType, $stageData);
     }
 
     /*  summarize() method:

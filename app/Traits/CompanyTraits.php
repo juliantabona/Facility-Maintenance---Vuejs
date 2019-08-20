@@ -497,7 +497,8 @@ trait CompanyTraits
          *  variable has been set with an array list of phone numbers.
          */
         //  Get any associated phones if any
-        $phones = json_decode( request('phones'), true);
+        $phones = request('phones');
+        $phones = is_array( $phones ) ? $phones : json_decode( $phones, true);
         
         if (isset($phones) && !empty($phones)) {
             //  Add new phone numbers

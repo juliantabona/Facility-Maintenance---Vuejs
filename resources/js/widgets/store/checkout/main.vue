@@ -28,6 +28,7 @@
                             <Card class="ml-1 mr-1">   
                                 <accountStep
                                     :checkoutProgress="checkoutProgress"
+                                    @updated:billingInfo="localBillingInfo = $event"
                                     @proceed="checkoutProgress = checkoutProgress + 1">
                                 </accountStep>
                             </Card>
@@ -40,6 +41,7 @@
                                     class="pt-4 pb-4 pr-2 pl-2 mr-1 ml-1" 
                                     :style="{ background: '#f5f7f9', borderRadius:'10px' }"
                                     :checkoutProgress="checkoutProgress"
+                                    @updated:shippingInfo="localShippingInfo = $event"
                                     @proceed="checkoutProgress = checkoutProgress + 1"
                                     @back="checkoutProgress = checkoutProgress - 1">
                                 </deliveryStep>
@@ -51,8 +53,10 @@
                             <Card class="ml-1 mr-1">   
                                 <paymentStep  
                                     :checkoutProgress="checkoutProgress"
+                                    @updated:paymentMethod="selectedPaymentMethod = $event"
                                     @proceed="checkoutProgress = checkoutProgress + 1"
-                                    @back="checkoutProgress = checkoutProgress - 1">
+                                    @back="checkoutProgress = checkoutProgress - 1"
+                                    @proceedToPayment="handleProceedToPayment()">
                                 </paymentStep>
                             </Card>
                         </CarouselItem>
@@ -103,6 +107,12 @@
                 user: auth.user,
                 localProducts: this.products,
                 checkoutProgress: 0,
+
+                selectedPaymentMethod: null,
+                localBillingInfo: this.billingInfo,
+                localShippingInfo: this.shippingInfo,
+                customerNote: '',
+
             }
         },
         watch: {
@@ -114,7 +124,67 @@
             }
         },
         methods: {
+            handleProceedToPayment(){
 
+                var self = this;
+
+                self.isSubmittingOrder= true;
+
+                console.log('Attempt to submit order...');
+
+                //  Form data to send
+                let orderData = { 
+
+                        //  Customer Info
+                        submitted_by: user.id,
+                        billing_info: this.localBillingInfo,
+                        shipping_info: this.localShippingInfo,
+                        customer_note: this.customerNote,
+                        
+                        //  Payment Info
+                        payment_method: this.selectedPaymentMethod,
+
+                        //  Store, Company & Branch Info
+                        store_id: this.store.id,
+
+                        //  Mail/Sms delivery info
+                        deliveryMethods: ['Email'],
+                        mail: {
+                            primaryEmails: [ user.email ],
+                            ccEmails: [],
+                            bccEmails: []
+                        }
+
+                 };
+
+                console.log(orderData);
+                
+                //  Use the api call() function located in resources/js/api.js
+                api.call('post', '/api/orders', orderData)
+                    .then(({ data }) => {
+
+                        //  Alert creation success
+                        self.$Message.success('Order saved sucessfully!');
+
+                        self.isSubmittingOrder= false;
+
+                        //  If the payment method is Credit/Debit Card
+                        if( self.selectedPaymentMethod == 'card' ){
+                                            
+                            //  Submit the VCS Form
+                            //this.$refs.vcsform.submit();
+
+                        }
+
+                    })         
+                    .catch(response => { 
+                        
+                        self.isSubmittingOrder= false;
+
+                        console.log('productSummaryWidget.vue - Error saving product...');
+                        console.log(response);
+                    });
+            },
         },
         created(){
             

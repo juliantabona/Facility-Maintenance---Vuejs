@@ -343,9 +343,9 @@ trait OrderTraits
             'grand_total' => $cartDetails['grand_total'] ?? (request('grand_total') ?? 0),
 
             /*  Customer Info  */
-            'client_id' => request('client_id') ?? null,
-            'customer_ip_address' => request('customer_ip_address') ?? null,
-            'customer_user_agent' => request('customer_user_agent') ?? null,
+            'submitted_by' => request('submitted_by') ?? null,
+            'client_ip_address' => request('client_ip_address') ?? null,
+            'client_user_agent' => request('client_user_agent') ?? null,
             'customer_note' => request('customer_note') ?? null,
             'billing_info' => request('billing_info') ?? null,
             'shipping_info' => request('shipping_info') ?? null,
@@ -357,17 +357,32 @@ trait OrderTraits
         ];
 
         try {
+
             //  Create the order
             $order = $this->create($template)->fresh();
 
             //  If the order was created successfully
             if ($order) {
 
+                /*****************************
+                 *   SEND NOTIFICATIONS      *
+                 *****************************/
+
+                // $auth_user->notify(new OrderCreated($order));
+
+                /*****************************
+                 *   RECORD ACTIVITY         *
+                 *****************************/
+
+                //  Record activity of order created
+                $status = 'created';
+                $orderCreatedActivity = oq_saveActivity($order, $auth_user, $status, ['order' => $order->summarize()]);
+
                 //  Check and generate the order lifecycle
                 $lifecyle = $this->checkAndCreateLifecycle($order);
 
                 //  Set the lifecycle to pending payment status
-                $pendingPaymentActivity = $this->setLifecycleToPendingPaymentStatus($order, $store);
+                $pendingPaymentActivity = $this->setLifecycleToPendingPaymentStatus($order);
 
                 //  Check and generate the order invoice
                 $invoiceRequest = $this->checkAndCreateOrderInvoice($store, $order);
@@ -383,20 +398,6 @@ trait OrderTraits
 
                 //  refetch the updated order
                 $order = $order->fresh();
-
-                /*****************************
-                 *   SEND NOTIFICATIONS      *
-                 *****************************/
-
-                // $auth_user->notify(new OrderCreated($order));
-
-                /*****************************
-                 *   RECORD ACTIVITY         *
-                 *****************************/
-
-                //  Record activity of order created
-                $status = 'created';
-                $orderCreatedActivity = oq_saveActivity($order, $auth_user, $status, ['order' => $order->summarize()]);
 
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $order];
@@ -512,7 +513,6 @@ trait OrderTraits
 
     public function checkAndCreateLifecycle($order)
     {
-        
         $auth_user = auth('api')->user();
 
         /*  $defaultLifecycle:
@@ -521,13 +521,7 @@ trait OrderTraits
          */
         $defaultLifecycle = Lifecycle::where('type', 'order')->where('company_id', $order->company_id)->first();
 
-        if (!empty($defaultLifecycle)) {
-
-            //  Delete any previous lifecycles to the order
-            DB::table('lifecycle_allocations')
-                ->where('trackable_id', $defaultLifecycle->id)
-                ->where('trackable_type', 'order')
-                ->delete();
+        if (empty($defaultLifecycle)) {
 
             //  Add the default lifecycle to the order
             DB::table('lifecycle_allocations')->insert([
@@ -537,32 +531,13 @@ trait OrderTraits
                 'created_at' => DB::raw('now()'),                       
                 'updated_at' => DB::raw('now()')
             ]);
-
         }
     }
 
-    public function setLifecycleToPendingPaymentStatus($order, $store)
+    public function setLifecycleToPendingPaymentStatus($order)
     {
-        
-        $pendingPaymentActivity = new RecentActivity([
-            'type' => 'updated lifecycle stage',
-            'activity' => [
-                'type' => 'payment',
-                'instance' => 1,
-                'updated_stage_id' => NULL,
-                'skip_status' => false,
-                'pending_status' => true,
-                'cancelled_status' => false,
-                'notified_client_status' => false,
-                'meta' => []
-            ],
-            'company_id' => $store->company_id,
-            'company_branch_id' => $store->company_branch_id,
-            'created_by' => 0,
-
-        ]);
-
-        return $order->recentActivities()->save( $pendingPaymentActivity );
+        //  Set the current lifecycle to pending payment
+        return (new Lifecycle)->setToPendingPayment($order->id, 'order');
 
     }
 
@@ -643,7 +618,7 @@ trait OrderTraits
             $settings = $settings['details'];
 
             //  Get the current date and time
-            $nowDateTime = Carbon::createFromFormat('Y-m-d H:i:s', Carbon::now());
+            $orderCreatedDateTime = Carbon::createFromFormat('Y-m-d H:i:s', $order->created_at);
 
             //  Create the invoice template
             $template = [
@@ -651,22 +626,22 @@ trait OrderTraits
                 'reference_no_title' => $settings['invoiceTemplate']['reference_no_title'],
                 'reference_no_value' => null,                                                   //  Autogenerated
                 'created_date_title' => $settings['invoiceTemplate']['created_date_title'],
-                'created_date_value' => $nowDateTime,  
+                'created_date_value' => $orderCreatedDateTime,  
                 'expiry_date_title' => $settings['invoiceTemplate']['expiry_date_title'],
-                'expiry_date_value' => $nowDateTime->addDays( $settings['invoiceTemplate']['expire_after_no_of_days'] ),
+                'expiry_date_value' => $orderCreatedDateTime->addDays( $settings['invoiceTemplate']['expire_after_no_of_days'] ),
                 'sub_total_title' => $settings['invoiceTemplate']['sub_total_title'],
-                'sub_total_value' => $order->cart_total,
+                'sub_total_value' => $order->sub_total,
                 'grand_total_title' => $settings['invoiceTemplate']['grand_total_title'],
                 'grand_total_value' => $order->grand_total,
-                'currency_type' => $settings['general']['currency_type'],
-                //'calculated_taxes' => $order->tax_lines,
+                'currency_type' => $order['currency_type'],
+                'calculated_taxes' => $order->taxes,
                 'invoice_to_title' => $settings['invoiceTemplate']['invoice_to_title'],
-                'customized_company_details' => $order->company->getBasicDetails() ?? null,
-                'customized_client_details' => $order->client->getBasicDetails() ?? null,
+                //'customized_company_details' => $order->company->getBasicDetails() ?? null,
+                //'customized_client_details' => $order->client->getBasicDetails() ?? null,
                 'client_id' => $order->client_id,
                 'client_type' => $order->client_type,
                 'table_columns' => $settings['invoiceTemplate']['table_columns'],
-                'items' => $order['line_items'],
+                'items' => $order['items'],
                 'notes' => $settings['invoiceTemplate']['notes'],
                 'colors' => $settings['invoiceTemplate']['colors'],
                 'footer' => $settings['invoiceTemplate']['footer'],

@@ -17,7 +17,7 @@ class Transaction extends Model
      * @var array
      */
     protected $fillable = [
-        'amount'
+        'user_id', 'payment_type', 'payment_amount', 'success_state',
     ];
 
     /**
