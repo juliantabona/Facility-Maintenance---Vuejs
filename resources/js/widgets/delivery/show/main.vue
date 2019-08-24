@@ -144,11 +144,11 @@
                                         size="mini" class="input-fix-append mb-1"
                                         @blur="getCursorPosition($event)"
                                         @input.native="$emit('updated:deliveryMailSubject', $event.target.value)">
-                                    <shortcodeselector slot="append"
+                                    <shortCodeSelector slot="append"
                                         :style="{ marginLeft: '5px' }"
                                         :shortcodes="localshortcodes" 
                                         @selected="localDeliveryMailSubject = insertShortCode($refs.email_subject, $event)">
-                                    </shortcodeselector>
+                                    </shortCodeSelector>
                                 </el-input>
 
                             </Col>
@@ -160,11 +160,11 @@
                                 <span class="d-inline-block font-weight-bold mt-3 mb-2">
                                     Message:
                                 </span>
-                                <shortcodeselector
+                                <shortCodeSelector
                                     :shortcodes="localshortcodes" 
                                     :copyToClipboard="true"
                                     @selected="">
-                                </shortcodeselector>
+                                </shortCodeSelector>
                                 <froalaEditor 
                                             ref="email_message" 
                                             :content.sync="localDeliveryMailMessage" 
@@ -214,7 +214,7 @@
 <script type="text/javascript">
 
     /*  Selectors  */
-    import shortcodeselector from './../../../components/_common/selectors/shortcodeselector.vue';
+    import shortCodeSelector from './../../../components/_common/selectors/shortCodeSelector.vue';
 
     /*  Editors  */
     import froalaEditor from './../../../components/_common/wiziwigEditors/froalaEditor.vue';
@@ -230,7 +230,7 @@
     import IconAndCounterCard from './../../../components/_common/cards/IconAndCounterCard.vue';
 
     export default {
-        components: { shortcodeselector, froalaEditor, sendTestSmsModal, sendTestEmailModal, phoneInput, IconAndCounterCard },
+        components: { shortCodeSelector, froalaEditor, sendTestSmsModal, sendTestEmailModal, phoneInput, IconAndCounterCard },
         props: {
             deliveryMethods: {
                 type: Array,
