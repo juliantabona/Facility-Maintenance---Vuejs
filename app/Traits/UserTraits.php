@@ -665,8 +665,8 @@ trait UserTraits
         $response = $http->post(URL::to('/').'/oauth/token', [
             'form_params' => [
                 'grant_type' => 'password',
-                'client_id' => '2',
-                'client_secret' => 'wosVFuDb7gqFM10AJvixPfyfp2NF0fQvPGidyNJ5',
+                'client_id' => '6',
+                'client_secret' => 'x3yhgWVqF8sSaMev4JI3yvsVxfbgkfRJmqzlpiMQ',
                 'username' => $this->email,
                 'password' => $request->input('password'),
                 'scope' => '',
