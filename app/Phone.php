@@ -8,18 +8,17 @@ use App\Traits\PhoneTraits;
 
 Relation::morphMap([
     'user' => 'App\User',
-    'company' => 'App\Company',
     'store' => 'App\Store',
+    'company' => 'App\Company',
 ]);
 
 class Phone extends Model
 {
     use PhoneTraits;
 
-    //  protected $with = ['createdBy'];
-
     protected $casts = [
         'calling_code' => 'array',
+        'default' => 'boolean'
     ];
 
     /**
@@ -28,20 +27,24 @@ class Phone extends Model
      * @var array
      */
     protected $fillable = [
-        'number', 'calling_code', 'type', 'provider', 'company_branch_id', 'company_id', 'created_by',
+
+        /*  Phone Details  */
+        'type', 'calling_code', 'number', 'provider', 'default',
+
+        /*  Ownership Information  */
+        'owner_id', 'owner_type'
+
     ];
 
     /**
-     * Get all of the owning documentable models.
+     *  Get the owner from the morphTo relationship.
+     *  Phones can be assigned to multiple types of
+     *  owning resources e.g users, companies, stores,
+     *  e.t.c
      */
-    public function trackable()
+    public function owner()
     {
         return $this->morphTo();
-    }
-
-    public function createdBy()
-    {
-        return $this->belongsTo('App\User', 'created_by');
     }
 
     public function mobileMoneyAccount()
@@ -51,9 +54,14 @@ class Phone extends Model
 
     public function recentActivities()
     {
-        return $this->morphMany('App\RecentActivity', 'trackable')
-                    ->where('trackable_id', $this->id)
-                    ->where('trackable_type', 'phone')
-                    ->orderBy('created_at', 'desc');
+        return $this->morphMany('App\RecentActivity', 'owner')->orderBy('created_at', 'desc');
     }
+
+    /* ATTRIBUTES */
+    
+    public function setDefaultAttribute($value)
+    {
+        $this->attributes['default'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+    }
+
 }

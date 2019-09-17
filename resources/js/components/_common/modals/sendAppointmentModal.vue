@@ -121,10 +121,10 @@ Inv<template>
         methods: {
             emailMsg(){
                 /*
-                var money = this.appointment.grand_total_value || 0;
+                var money = this.appointment.grand_total || 0;
                 var currency = (((this.appointment || {}).currency_type || {}).currency || {}).symbol || '';
                 var amount = this.formatPrice(money, currency);
-                var expiry_date = moment(this.appointment.expiry_date_value).format('MMM DD YYYY');
+                var expiry_date = moment(this.appointment.expiry_date).format('MMM DD YYYY');
                 var company_name = this.appointment.customized_company_details.name;
 
                 return '<p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:12px;font-family:arial, \'helvetica neue\', helvetica, sans-serif;line-height:18px;color:#000000;">  \
@@ -161,18 +161,18 @@ Inv<template>
             },
             getShotCodes(){
                 /*
-                var money = this.appointment.grand_total_value || 0;
+                var money = this.appointment.grand_total || 0;
                 var currency = (((this.appointment || {}).currency_type || {}).currency || {}).symbol || '';
                 var sub_total = this.formatPrice( (this.appointment.sub_total_value || 0), currency);
-                var grand_total = this.formatPrice( (this.appointment.grand_total_value || 0), currency);
+                var grand_total = this.formatPrice( (this.appointment.grand_total || 0), currency);
                 var client = ((this.appointment || {}).client || {});
                 var company = ((this.appointment || {}).customized_company_details || {});
 
                 var shortcodes = {
                     '[appointment_heading]': this.appointment.heading,
                     '[appointment_reference_no]': '#'+this.appointment.reference_no_value,
-                    '[created_date]': moment(this.appointment.created_date_value).format('MMM DD YYYY'),
-                    '[expiry_date]': moment(this.appointment.expiry_date_value).format('MMM DD YYYY'),
+                    '[created_date]': moment(this.appointment.created_date).format('MMM DD YYYY'),
+                    '[expiry_date]': moment(this.appointment.expiry_date).format('MMM DD YYYY'),
                     '[sub_total]': sub_total,
                     '[grand_total]': grand_total,
                     '[currency]': currency,

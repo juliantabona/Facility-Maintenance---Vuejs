@@ -20,7 +20,7 @@
         "php-http/message": "^1.7",
         "pragmarx/countries": "^0.5.9",
         "pusher/pusher-php-server": "~3.0",
-        "zizaco/entrust": "5.2.x-dev"
+        "koterle/roleable": "1.1.*"
     },
     "require-dev": {
         "beyondcode/laravel-dump-server": "^1.0",

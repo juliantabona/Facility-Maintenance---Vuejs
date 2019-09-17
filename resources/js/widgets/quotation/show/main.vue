@@ -329,13 +329,13 @@
                         reference_no_title: '',
                         reference_no_value: '',
                         created_date_title: '',
-                        created_date_value: '',
+                        created_date: '',
                         expiry_date_title: '',
-                        expiry_date_value: '',
+                        expiry_date: '',
                         sub_total_title: '',
                         sub_total_value: 0,
                         grand_total_title: '',
-                        grand_total_value: 0,
+                        grand_total: 0,
                         currency_type: null,
                         customized_company_details: null,
                         customized_client_details: null,
@@ -557,8 +557,8 @@
 
                 //  Update Quotation Dates Using Current Dates
                 
-                this.localQuotation.created_date_value = yy+'-'+mm+'-'+dd;
-                this.localQuotation.expiry_date_value = yy+'-'+mm+'-'+('0' + (date.getDate() + 7) ).slice(-2);
+                this.localQuotation.created_date = yy+'-'+mm+'-'+dd;
+                this.localQuotation.expiry_date = yy+'-'+mm+'-'+('0' + (date.getDate() + 7) ).slice(-2);
 
                 //  Update Quotation Shorthands
 

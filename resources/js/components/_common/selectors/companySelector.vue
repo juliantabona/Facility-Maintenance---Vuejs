@@ -28,6 +28,25 @@
             selectedCompany:{
                 type: Object,
                 default: null
+            },
+            availableCompanies:{
+                type: Array,
+                default: function(){
+                    return []
+                }
+            },
+            url:{
+                type: String,
+                default: '/api/companies?allocation=company&type=client,supplier'
+            },
+            urlParams:{
+                type: Object,
+                default: function(){
+                    return {
+                        //  Settings to prevent pagination
+                        paginate: 0
+                    }
+                }
             }
         },
         components: { Loader },
@@ -61,11 +80,8 @@
 
                 console.log('Start getting companies...');
 
-                //  Settings to prevent pagination
-                var pagination = '&paginate=0';
-
                 //  Use the api call() function located in resources/js/api.js
-                api.call('get', '/api/companies?allocation=company&type=client,supplier'+pagination)
+                api.call('get', this.url, null, this.urlParams)
                     .then(({data}) => {
                         
                         console.log(data);
@@ -91,7 +107,14 @@
             }
         },
         created(){
-            this.fetch();
+            //  If we have companies already provided
+            if( this.availableCompanies.length ){
+                //  Then use the companies provided
+                this.localfetchedCompanies = this.availableCompanies;
+            }else{
+                //  Otherwise API to get the companies
+                this.fetch();
+            }
         }
     };
 </script>

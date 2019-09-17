@@ -3,12 +3,11 @@
 namespace App\Traits;
 
 use Cart;
+use App\Store;
 use App\Product;
-use Illuminate\Http\Request;
 
 trait MyCartTraits
 {
-
     /*  initiateGetAll() method:
      *
      *  This is used to return all the cart items.
@@ -16,84 +15,35 @@ trait MyCartTraits
      */
     public function initiateGetAll()
     {
-        try{
-
-            $store = [];
-            $cartContent = Cart::content();
-
-            //  Get the cart product ids
-            $cartContentIds = collect( $cartContent )->map(function ($item) {
-                                    return $item->id;
-                                })->values() ?? [];
-                            
-            //  If we have products in the cart
-            if( count($cartContentIds) ){
-
-                //  Fetch the products listed in the cart
-                $cartItems = Product::whereIn('id', $cartContentIds)->get();
-    
-                //  Foreach product returned matching a cart item
-                $cartItems->map(function ($item) use ($cartContent)  {
-                    //  Foreach item in the actual cart
-                    foreach( $cartContent as $x => $itemContent){
-                        // If the id of returned product matches that of the cart item
-                        if( $itemContent->id == $item->id){
-                            //  Add the cart row id to the product
-                            $item['cart_row_id'] = $itemContent->rowId;
-                            //  Add the cart quantity to the product
-                            $item['quantity'] = $itemContent->qty;
-                            //  Identify the product as added to cart
-                            $item['inside_cart'] = true;
-                            return $item;
-                        }
-                    }
-                });
-            }else{
-                //  Otherwise we don't have any cart items
-                $cartItems = [];
-            }
-
-            //  Action was executed successfully
-            return ['success' => true, 'response' => $cartItems];
-
-        } catch (\Exception $e) {
-            //  Log the error
-            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
-
-            //  Return the error response
-            return ['success' => false, 'response' => $response];
-        }
     }
 
-    public function initiateGetCartDetails( $storeId )
+    public function initiateGetCartDetails($cart, $storeId)
     {
-        try{
-
+        try {
             //  Get the store and settings
-            $store = Store::find( $storeId );
-            $storeSettings = $store->settings;
+            $store = Store::find($storeId);
 
-            $cart_items = $this->initiateGetAll()['response'];
+            $cart_items = $this->buildItems($cart['items']);
 
             //  Total of only the cart items combined
             $sub_total = 0;
 
             //  Total of only the cart taxes combined
-            $cart_tax_total = 0;
+            $item_tax_total = 0;
 
-            //  Total of only the shop taxes combined
-            $shop_tax_total = 0;
+            //  Total of only the store taxes combined
+            $global_tax_total = 0;
 
-            //  Total of only the shop taxes and cart taxes combined
+            //  Total of only the store taxes and cart taxes combined
             $grand_tax_total = 0;
 
             //  Total of only the cart discounts combined
-            $cart_discount_total = 0;
+            $item_discount_total = 0;
 
-            //  Total of only the shop discounts combined
-            $shop_discount_total = 0;
+            //  Total of only the store discounts combined
+            $global_discount_total = 0;
 
-            //  Total of only the shop discounts and cart discounts combined
+            //  Total of only the store discounts and cart discounts combined
             $grand_discount_total = 0;
 
             //  The total of shipping costs
@@ -102,82 +52,71 @@ trait MyCartTraits
             //  The total of all the cart item costs and taxes
             $grand_total = 0;
 
-            foreach($cart_items as $key => $item){
-                
+            foreach ($cart_items as $key => $item) {
                 //  If we have a sale price then use the sale price otherwise use the regular price
                 $price = !empty($item['unit_sale_price']) ? $item['unit_sale_price'] : $item['unit_price'];
                 $item_total_price = ($price * $item['quantity']);
 
-                //  Calculate the sub total 
+                //  Calculate the sub total
                 $sub_total += $item_total_price;
 
                 //  Calculate the cart item taxes
-                foreach($item['taxes'] as $key => $tax){
-                    $cart_tax_total += $tax['rate'] * $item_total_price;
+                foreach ($item['taxes'] as $key => $tax) {
+                    $item_tax_total += $tax['rate'] * $item_total_price;
                 }
 
                 //  Calculate the cart item discounts
-                foreach($item['discounts'] as $key => $discount){
-
+                foreach ($item['discounts'] as $key => $discount) {
                     //  If its a percentage rate based discount
-                    if( $discount['type'] == 'rate' ){
-
-                        $cart_discount_total += $discount['rate'] * $item_total_price;
+                    if ($discount['type'] == 'rate') {
+                        $item_discount_total += $discount['rate'] * $item_total_price;
 
                     //  If its a fixed rate based discount
-                    }else if( $discount['type'] == 'fixed' ){
-
-                        $cart_discount_total += $discount['amount'] * $item_total_price;
-
+                    } elseif ($discount['type'] == 'fixed') {
+                        $item_discount_total += $discount['amount'];
                     }
                 }
-
             }
 
-            //  Calculate the shop taxes
-            foreach($shop['taxes'] as $key => $tax){
-                $shop_tax_total += $tax['rate'] * $sub_total;
+            //  Calculate the store taxes
+            foreach ($store['taxes'] as $key => $tax) {
+                $global_tax_total += $tax['rate'] * $sub_total;
             }
 
-            //  Calculate the shop discounts
-            foreach($shop['discounts'] as $key => $discount){
-
+            //  Calculate the store discounts
+            foreach ($store['discounts'] as $key => $discount) {
                 //  If its a percentage rate based discount
-                if( $discount['type'] == 'rate' ){
-
-                    $shop_discount_total += $discount['rate'] * $sub_total;
+                if ($discount['type'] == 'rate') {
+                    $global_discount_total += $discount['rate'] * $sub_total;
 
                 //  If its a fixed rate based discount
-                }else if( $discount['type'] == 'fixed' ){
-
-                    $shop_discount_total += $discount['amount'] * $sub_total;
-
+                } elseif ($discount['type'] == 'fixed') {
+                    $global_discount_total += $discount['amount'];
                 }
             }
 
             //  Calculate the grand total tax
-            $grand_tax_total = $cart_tax_total + $shop_tax_total;
+            $grand_tax_total = $item_tax_total + $global_tax_total;
 
             //  Calculate the grand total discount
-            $grand_discount_total = $cart_discount_total + $shop_discount_total;
+            $grand_discount_total = $item_discount_total + $global_discount_total;
 
             //  Calculate the grand total
             $grand_total = $sub_total + $grand_tax_total + $shipping_total - $grand_discount_total;
 
             $cartDetails = [
                 'items' => $cart_items,
-                'cart_tax_total' => $cart_tax_total,
-                'shop_tax_total' => $shop_tax_total,
+                'item_tax_total' => $item_tax_total,
+                'global_tax_total' => $global_tax_total,
                 'grand_tax_total' => $grand_tax_total,
-                'cart_discount_total' => $cart_discount_total,
-                'shop_discount_total' => $shop_discount_total,
+                'item_discount_total' => $item_discount_total,
+                'global_discount_total' => $global_discount_total,
                 'grand_discount_total' => $grand_discount_total,
                 'grand_total' => $grand_total,
             ];
 
             //  Action was executed successfully
             return ['success' => true, 'response' => $cartDetails];
-
         } catch (\Exception $e) {
             //  Log the error
             $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
@@ -187,174 +126,86 @@ trait MyCartTraits
         }
     }
 
-    /*  initiateCreate() method:
-     *
-     *  This is used to create a new product. It also works
-     *  to store the creation activity and broadcasting of
-     *  notifications to users concerning the creation of
-     *  the product.
-     *
-     */
-    public function initiateCreate($id=null, $name=null, $quantity=null, $unit_price=null)
+    public function buildItems($items)
     {
-        try {
-            
-            $id = $id ?? request('id');
-            $name = $name ?? request('name');
-            $quantity = $quantity ?? request('quantity');
-            $unit_price = $unit_price ?? (!empty(request('unit_sale_price')) ? request('unit_sale_price') : request('unit_price'));
-    
-            //  Add item to cart
-            $item = Cart::add($id, $name, $quantity, $unit_price)->associate('App\Product');
+        $cartItems = [];
 
-            //  Action was executed successfully
-            return ['success' => true, 'response' => $item];
+        //  Lets get the ids of the items in the cart
+        $relatedItemIds = collect($items)->map(function ($item) {
+            return $item['id'];
+        });
 
-        } catch (\Exception $e) {
-            //  Log the error
-            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        //  Lets get the items from the db related to the cart
+        $relatedItems = Product::whereIn('id', $relatedItemIds)->get();
 
-            //  Return the error response
-            return ['success' => false, 'response' => $response];
+        foreach ($items as $key => $item) {
+            foreach ($relatedItems as $key => $relatedItem) {
+                if ($relatedItem['id'] == $item['id']) {
+                    //  If we have a sale price then use the sale price otherwise use the regular price
+                    $price = ($relatedItem['unit_sale_price']) ? $relatedItem['unit_sale_price'] : $relatedItem['unit_price'];
+                    $quantity = ($item['quantity'] ?? 1);
+                    $sub_total = $price * $quantity;
+                    $tax_total = 0;
+                    $discount_total = 0;
+                    $grand_total = 0;
+
+                    //  Calculate the item taxes
+                    foreach ($relatedItem['taxes'] as $key => $tax) {
+                        $tax_total = $tax_total + ($tax['rate'] * $sub_total);
+                    }
+
+                    //  Calculate the item discounts
+                    foreach ($relatedItem['discounts'] as $key => $discount) {
+                        //  If its a percentage rate based discount
+                        if ($discount['type'] == 'rate') {
+                            $discount_total = $discount_total + ($discount['rate'] * $sub_total);
+
+                        //  If its a fixed rate based discount
+                        } elseif ($discount['type'] == 'fixed') {
+                            $discount_total = $discount_total + ($discount['amount']);
+                        }
+                    }
+
+                    //  Calculate the grand total
+                    $grand_total = $sub_total + $tax_total - $discount_total;
+
+                    $cartItem = [
+                        'id' => $relatedItem['id'],
+                        'primary_image' => $relatedItem['primary_image'],
+                        'name' => $relatedItem['name'],
+                        'store_currency_symbol' => $relatedItem['store_currency_symbol'],
+                        'unit_price' => $relatedItem['unit_price'],
+                        'unit_sale_price' => $relatedItem['unit_sale_price'],
+                        'quantity' => $quantity,
+                        'sub_total' => $sub_total,
+                        'tax_total' => $tax_total,
+                        'grand_total' => $grand_total,
+                        'taxes' => $relatedItem['taxes'],
+                        'discounts' => $relatedItem['discounts'],
+                        'selectedVariable' => null,
+                    ];
+
+                    array_push($cartItems, $cartItem);
+                }
+            }
         }
+
+        return $cartItems;
     }
 
-    /*  initiateUpdate() method:
-     *
-     *  This is used to update an existing product. It also works
-     *  to store the update activity and broadcasting of
-     *  notifications to users concerning the update of
-     *  the product.
-     *
-     */
-    public function initiateUpdate($item_id, $title=null, $quantity=null, $unit_price=null)
+    public function initiateCreate()
     {
-        try {
-            
-            $title = $title ?? request('title');
-            $quantity = $quantity ?? request('quantity');
-            $unit_price = $unit_price ?? (!empty(request('sale_price')) ? request('sale_price') : request('unit_price'));
-    
-            //  Product Instance
-            $item = Cart::update($item_id, ['name' => $title, 'qty' => $quantity, 'price' => $unit_price]);
-
-            //  Action was executed successfully
-            return ['success' => true, 'response' => $item];
-            
-        } catch (\Exception $e) {
-
-            //  Log the error
-            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
-
-            //  Return the error response
-            return ['success' => false, 'response' => $response];
-
-        }
     }
 
-    public function initiateDelete($item_id)
+    public function initiateUpdateItem()
     {
-        try {
-            
-            //  Remove item from the cart
-            Cart::remove($item_id);
+    }
 
-            //  Action was executed successfully
-            return ['success' => true, 'response' => null];
-            
-        } catch (\Exception $e) {
-
-            //  Log the error
-            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
-
-            //  Return the error response
-            return ['success' => false, 'response' => $response];
-
-        }
+    public function initiateDeleteItem()
+    {
     }
 
     public function initiateEmptyCart()
     {
-        try {
-            
-            //  Completely empty or delete the cart
-            Cart::destroy();
-
-            //  Action was executed successfully
-            return ['success' => true, 'response' => null];
-            
-        } catch (\Exception $e) {
-
-            //  Log the error
-            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
-
-            //  Return the error response
-            return ['success' => false, 'response' => $response];
-
-        }
     }
-
-    public function initiateGetCartGrandTotal()
-    {
-        try {
-            
-            //  Get the calculated cart total
-            $total = Cart::total();
-
-            //  Action was executed successfully
-            return ['success' => true, 'response' => $total];
-            
-        } catch (\Exception $e) {
-
-            //  Log the error
-            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
-
-            //  Return the error response
-            return ['success' => false, 'response' => $response];
-
-        }
-    }
-
-    public function initiateGetCartSubTotal()
-    {
-        try {
-            
-            //  Get the calculated sub total
-            $total = Cart::subtotal();
-
-            //  Action was executed successfully
-            return ['success' => true, 'response' => $total];
-            
-        } catch (\Exception $e) {
-
-            //  Log the error
-            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
-
-            //  Return the error response
-            return ['success' => false, 'response' => $response];
-
-        }
-    }
-
-    public function initiateGetCartTax()
-    {
-        try {
-            
-            //  Get the calculated tax total
-            $tax = Cart::tax();
-
-            //  Action was executed successfully
-            return ['success' => true, 'response' => $tax];
-            
-        } catch (\Exception $e) {
-
-            //  Log the error
-            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
-
-            //  Return the error response
-            return ['success' => false, 'response' => $response];
-
-        }
-    }
-
 }

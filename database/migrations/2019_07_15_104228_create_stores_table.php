@@ -21,19 +21,10 @@ class CreateStoresTable extends Migration
             $table->string('description')->nullable();
             $table->string('type')->nullable();
             $table->string('industry')->nullable();
-            
-            /*  Address Info  */
-            $table->string('address_1')->nullable();
-            $table->string('address_2')->nullable();
-            $table->string('country')->nullable();
-            $table->string('province')->nullable();
-            $table->string('city')->nullable();
-            $table->string('postal_or_zipcode')->nullable();
 
             /*  Account Info  */
             $table->string('email')->nullable();
             $table->string('additional_email')->nullable();
-            $table->boolean('verified')->default(0);
             $table->boolean('setup')->default(0);
 
             /*  Social Info  */
@@ -44,19 +35,15 @@ class CreateStoresTable extends Migration
             $table->string('instagram_link')->nullable();
             $table->string('youtube_link')->nullable();
 
-            /*  Currency Info  */
-            $table->json('currency_type')->nullable();
-
-            /*  Payment Gateway Info  */
-            $table->unsignedInteger('vcs_terminal_id')->nullable();
-
-            /*  Company Info  */
-            $table->unsignedInteger('company_branch_id')->nullable();
-            $table->unsignedInteger('company_id')->nullable();
+            /*  Ownership Information  */
+            $table->unsignedInteger('owner_id');
+            $table->string('owner_type');
             
-            $table->rememberToken();
             $table->softDeletes();
+            
+            /*  Timestamps  */
             $table->timestamps();
+            
         });
     }
 

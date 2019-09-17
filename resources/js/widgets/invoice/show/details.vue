@@ -31,20 +31,20 @@
                 <el-input v-if="localEditMode && localCreateMode" :disabled="true" placeholder="Auto Generated" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }"></el-input>
 
             <!-- Invoice Created Date Value -->  
-            <p v-if="!localEditMode" class="text-dark">{{ localInvoice.created_date_value | moment('MMM DD YYYY') || '___' }}</p>
-            <el-date-picker v-if="localEditMode" v-model="localInvoice.created_date_value" type="date" :clearable="false" placeholder="e.g) January 1, 2018" size="mini" class="mb-2" :style="{ maxWidth:'135px', float:'right' }"
+            <p v-if="!localEditMode" class="text-dark">{{ localInvoice.created_date | moment('MMM DD YYYY') || '___' }}</p>
+            <el-date-picker v-if="localEditMode" v-model="localInvoice.created_date" type="date" :clearable="false" placeholder="e.g) January 1, 2018" size="mini" class="mb-2" :style="{ maxWidth:'135px', float:'right' }"
                 format="MMM dd yyyy" value-format="yyyy-MM-dd">
             </el-date-picker>
 
             <!-- Invoice Expiry Date Value -->
-            <p v-if="!localEditMode" class="text-dark">{{ localInvoice.expiry_date_value | moment('MMM DD YYYY') || '___' }}</p>
-            <el-date-picker v-if="localEditMode" v-model="localInvoice.expiry_date_value" type="date" :clearable="false" placeholder="e.g) January 7, 2018" size="mini" class="mb-2" :style="{ maxWidth:'135px', float:'right' }"
+            <p v-if="!localEditMode" class="text-dark">{{ localInvoice.expiry_date | moment('MMM DD YYYY') || '___' }}</p>
+            <el-date-picker v-if="localEditMode" v-model="localInvoice.expiry_date" type="date" :clearable="false" placeholder="e.g) January 7, 2018" size="mini" class="mb-2" :style="{ maxWidth:'135px', float:'right' }"
                 format="MMM dd yyyy" value-format="yyyy-MM-dd">
             </el-date-picker>
 
             <!-- Invoice Grand Total Value -->
-            <p v-if="!localEditMode" class="text-dark">{{ localInvoice.grand_total_value | currency(currencySymbol) || '___' }}</p>
-            <el-input v-if="localEditMode" :placeholder="'e.g) '+currencySymbol+'5,000.00'" :value="localInvoice.grand_total_value | currency(currencySymbol)" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }" disabled></el-input>
+            <p v-if="!localEditMode" class="text-dark">{{ localInvoice.grand_total | currency(currencySymbol) || '___' }}</p>
+            <el-input v-if="localEditMode" :placeholder="'e.g) '+currencySymbol+'5,000.00'" :value="localInvoice.grand_total | currency(currencySymbol)" size="mini" class="mb-2" :style="{ maxWidth:'155px', float:'right' }" disabled></el-input>
         </Col>
     </Row>
 

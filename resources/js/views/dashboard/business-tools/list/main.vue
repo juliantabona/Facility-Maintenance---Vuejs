@@ -125,7 +125,8 @@
                     </h6>
                 </Col>
                 <Col :span="8" class="mt-0 mb-0 pl-0">
-                    <Card class="business-tool-card">
+                    <Card class="business-tool-card"
+                        @click.native="$router.push({name:'stores'})">
                         <div class="image-box orange-bg d-block float-left">
                             <img src="/images/assets/icons/shopping-cart.svg" class="tool-image">
                         </div>

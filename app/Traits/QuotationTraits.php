@@ -296,13 +296,13 @@ trait QuotationTraits
             'reference_no_title' => $quotation['reference_no_title'],
             'reference_no_value' => $quotation['reference_no_value'],
             'created_date_title' => $quotation['created_date_title'],
-            'created_date_value' => $quotation['created_date_value'],
+            'created_date' => $quotation['created_date'],
             'expiry_date_title' => $quotation['expiry_date_title'],
-            'expiry_date_value' => $quotation['expiry_date_value'],
+            'expiry_date' => $quotation['expiry_date'],
             'sub_total_title' => $quotation['sub_total_title'],
             'sub_total_value' => $quotation['sub_total_value'],
             'grand_total_title' => $quotation['grand_total_title'],
-            'grand_total_value' => $quotation['grand_total_value'],
+            'grand_total' => $quotation['grand_total'],
             'currency_type' => $quotation['currency_type'],
             'calculated_taxes' => $quotation['calculated_taxes'],
             'quotation_to_title' => $quotation['quotation_to_title'],
@@ -394,13 +394,13 @@ trait QuotationTraits
             'reference_no_title' => $quotation['reference_no_title'],
             'reference_no_value' => $quotation['reference_no_value'],
             'created_date_title' => $quotation['created_date_title'],
-            'created_date_value' => $quotation['created_date_value'],
+            'created_date' => $quotation['created_date'],
             'expiry_date_title' => $quotation['expiry_date_title'],
-            'expiry_date_value' => $quotation['expiry_date_value'],
+            'expiry_date' => $quotation['expiry_date'],
             'sub_total_title' => $quotation['sub_total_title'],
             'sub_total_value' => $quotation['sub_total_value'],
             'grand_total_title' => $quotation['grand_total_title'],
-            'grand_total_value' => $quotation['grand_total_value'],
+            'grand_total' => $quotation['grand_total'],
             'currency_type' => $quotation['currency_type'],
             'calculated_taxes' => $quotation['calculated_taxes'],
             'quotation_to_title' => $quotation['quotation_to_title'],
@@ -632,8 +632,8 @@ trait QuotationTraits
         $items = '';
         $referenceNo = $quotation->reference_no_value;
         $currency = $quotation['currency_type']['currency']['symbol'];
-        $grand_total = $currency.number_format($quotation->grand_total_value, 2, ',', '.');
-        $expiry_date = (new Carbon($quotation->expiry_date_value))->format('M d Y');
+        $grand_total = $currency.number_format($quotation->grand_total, 2, ',', '.');
+        $expiry_date = (new Carbon($quotation->expiry_date))->format('M d Y');
         $client = $quotation->customized_client_details;
         $company = $quotation->customized_company_details;
 
@@ -717,7 +717,7 @@ trait QuotationTraits
             //  Get the quotation name from heading, reference and date
             $pdfName = $quotation->details['heading'].' - '.
                        $quotation->details['reference_no_value'].' - '.
-                       Carbon::parse($quotation['created_date_value'])->format('M d Y').
+                       Carbon::parse($quotation['created_date'])->format('M d Y').
                        '.pdf';
         } else {
             //  Otherwise get quotation name from the quotation id
@@ -853,7 +853,7 @@ trait QuotationTraits
             //  Get the quotation receipt name from heading, reference and date
             $pdfName = 'Receipt - '.
                         $quotation->details['reference_no_value'].' - '.
-                        Carbon::parse($quotation['created_date_value'])->format('M d Y').
+                        Carbon::parse($quotation['created_date'])->format('M d Y').
                         '.pdf';
         } else {
             //  Otherwise get quotation name from the quotation id
@@ -902,14 +902,14 @@ trait QuotationTraits
         $company = $quotation->customized_company_details;
         $currency = $quotation->currency_type['currency']['symbol'] ?? '';
         $sub_total = $currency.number_format($quotation->sub_total_value, 2, ',', '.');
-        $grand_total = $currency.number_format($quotation->grand_total_value, 2, ',', '.');
+        $grand_total = $currency.number_format($quotation->grand_total, 2, ',', '.');
 
         //  Custom Quotation Variables - Shortcodes
         $customFields = [
             '[quotation_heading]' => $quotation->heading,
             '[quotation_reference_no]' => '#'.$quotation->reference_no_value,
-            '[created_date]' => (new Carbon($quotation->created_date_value))->format('M d Y'),
-            '[expiry_date]' => (new Carbon($quotation->expiry_date_value))->format('M d Y'),
+            '[created_date]' => (new Carbon($quotation->created_date))->format('M d Y'),
+            '[expiry_date]' => (new Carbon($quotation->expiry_date))->format('M d Y'),
             '[sub_total]' => $sub_total,
             '[grand_total]' => $grand_total,
             '[currency]' => $currency,
@@ -1015,7 +1015,7 @@ trait QuotationTraits
                     $invoiceTemplate = $settings['invoiceTemplate'];
                 }
 
-                $daysApart = (new Carbon($quotation->created_date_value) )->diffInDays((new Carbon($quotation->expiry_date_value) ));
+                $daysApart = (new Carbon($quotation->created_date) )->diffInDays((new Carbon($quotation->expiry_date) ));
 
                 //  Create a template to hold the quotation details
                 $template = [
@@ -1023,13 +1023,13 @@ trait QuotationTraits
                     'reference_no_title' => $invoiceTemplate['reference_no_title'],
                     //  'reference_no_value' => $quotation['reference_no_value'],
                     'created_date_title' => $invoiceTemplate['created_date_title'],
-                    'created_date_value' => (Carbon::now())->format('Y-m-d'),
+                    'created_date' => (Carbon::now())->format('Y-m-d'),
                     'expiry_date_title' => $invoiceTemplate['expiry_date_title'],
-                    'expiry_date_value' => (Carbon::now())->addDays($daysApart - 1)->format('Y-m-d'),
+                    'expiry_date' => (Carbon::now())->addDays($daysApart - 1)->format('Y-m-d'),
                     'sub_total_title' => $invoiceTemplate['sub_total_title'],
                     'sub_total_value' => $quotation['sub_total_value'],
                     'grand_total_title' => $invoiceTemplate['grand_total_title'],
-                    'grand_total_value' => $quotation['grand_total_value'],
+                    'grand_total' => $quotation['grand_total'],
                     'currency_type' => $quotation['currency_type'],
                     'calculated_taxes' => $quotation['calculated_taxes'],
                     'invoice_to_title' => $invoiceTemplate['invoice_to_title'],
@@ -1180,7 +1180,7 @@ trait QuotationTraits
                 $availableStats = collect($quotations)->groupBy('current_activity_status')->map(function ($quotationGroup, $key) {
                     return [
                         'name' => $key,  //  e.g) Converted, Expired, Sent, Approved, Draft
-                        'grand_total' => collect($quotationGroup)->sum('grand_total_value'),  //  35020
+                        'grand_total' => collect($quotationGroup)->sum('grand_total'),  //  35020
                         'total_count' => collect($quotationGroup)->count(),                   //  12
                     ];
                 });

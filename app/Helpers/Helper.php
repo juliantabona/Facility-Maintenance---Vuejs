@@ -141,12 +141,22 @@ function oq_viaAPI($request)
 
 function oq_api_notify_no_resource()
 {
-    return oq_api_notify_error('Record not found', null, 404);
+    return oq_api_notify_error('Record not found.', null, 404);
 }
 
 function oq_api_notify_no_page()
 {
-    return oq_api_notify_error('Page not found', null, 404);
+    return oq_api_notify_error('Route not found. Make sure you are using the correct url', null, 404);
+}
+
+function oq_api_not_authorized()
+{
+    return oq_api_notify_error('Not authorized', null, 403);
+}
+
+function oq_api_notify_to_many_attempts()
+{
+    return oq_api_notify_error('Too many attempts. Please wait some time and try again', null, 404);
 }
 
 function oq_url_to_array($url, $dimension = 0)

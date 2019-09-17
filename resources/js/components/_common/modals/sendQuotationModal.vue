@@ -91,8 +91,8 @@
                 var referenceNo = this.quotation.reference_no_value;
                 var items = '';
                 var currency = (((this.quotation || {}).currency_type || {}).currency || {}).symbol || '';
-                var grand_total = this.formatPrice( (this.quotation.grand_total_value || 0), currency);
-                var expiry_date = moment(this.quotation.expiry_date_value).format('MMM DD YYYY');
+                var grand_total = this.formatPrice( (this.quotation.grand_total || 0), currency);
+                var expiry_date = moment(this.quotation.expiry_date).format('MMM DD YYYY');
                 var client = ((this.quotation || {}).customized_client_details || {});
                 var company = ((this.quotation || {}).customized_company_details || {});
 
@@ -133,10 +133,10 @@
         methods: {
             emailMsg(){
                 
-                var money = this.quotation.grand_total_value || 0;
+                var money = this.quotation.grand_total || 0;
                 var currency = (((this.quotation || {}).currency_type || {}).currency || {}).symbol || '';
                 var amount = this.formatPrice(money, currency);
-                var expiry_date = moment(this.quotation.expiry_date_value).format('MMM DD YYYY');
+                var expiry_date = moment(this.quotation.expiry_date).format('MMM DD YYYY');
                 var company_name = this.quotation.customized_company_details.name;
 
                 return '<p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:12px;font-family:arial, \'helvetica neue\', helvetica, sans-serif;line-height:18px;color:#000000;">  \
@@ -171,18 +171,18 @@
             },
             getShotCodes(){
                 
-                var money = this.quotation.grand_total_value || 0;
+                var money = this.quotation.grand_total || 0;
                 var currency = (((this.quotation || {}).currency_type || {}).currency || {}).symbol || '';
                 var sub_total = this.formatPrice( (this.quotation.sub_total_value || 0), currency);
-                var grand_total = this.formatPrice( (this.quotation.grand_total_value || 0), currency);
+                var grand_total = this.formatPrice( (this.quotation.grand_total || 0), currency);
                 var client = ((this.quotation || {}).customized_client_details || {});
                 var company = ((this.quotation || {}).customized_company_details || {});
 
                 var shortcodes = {
                     '[quotation_heading]': this.quotation.heading,
                     '[quotation_reference_no]': '#'+this.quotation.reference_no_value,
-                    '[created_date]': moment(this.quotation.created_date_value).format('MMM DD YYYY'),
-                    '[expiry_date]': moment(this.quotation.expiry_date_value).format('MMM DD YYYY'),
+                    '[created_date]': moment(this.quotation.created_date).format('MMM DD YYYY'),
+                    '[expiry_date]': moment(this.quotation.expiry_date).format('MMM DD YYYY'),
                     '[sub_total]': sub_total,
                     '[grand_total]': grand_total,
                     '[currency]': currency,

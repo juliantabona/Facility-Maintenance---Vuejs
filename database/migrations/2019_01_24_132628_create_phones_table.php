@@ -13,15 +13,19 @@ class CreatePhonesTable extends Migration
     {
         Schema::create('phones', function (Blueprint $table) {
             $table->increments('id');
+
+            /*  Address Details  */
             $table->string('type')->nullable();
             $table->json('calling_code')->nullable();
             $table->unsignedInteger('number');
             $table->string('provider')->nullable();
-            $table->unsignedInteger('trackable_id');
-            $table->string('trackable_type');
-            $table->unsignedInteger('created_by')->nullable();
-            $table->unsignedInteger('company_branch_id');
-            $table->unsignedInteger('company_id');
+            $table->boolean('default')->nullable()->default(false);
+
+            /*  Ownership Information  */
+            $table->unsignedInteger('owner_id');
+            $table->string('owner_type');
+
+            /*  Timestamps  */
             $table->timestamps();
         });
     }

@@ -6,6 +6,7 @@ use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\HttpKernel\Exception\ThrottleRequestsException;
 use Illuminate\Database\Eloquent\RelationNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 
@@ -53,6 +54,7 @@ class Handler extends ExceptionHandler
          */
         if (oq_viaAPI($request)) {
             switch (true) {
+
                 /*  Error handle if the model data does not exist. Helpful for error handling especially for
                  *  Route-Model binding scenerios e.g create(Company $company){} but the resource is not found
                  */
@@ -60,24 +62,34 @@ class Handler extends ExceptionHandler
                     //  Found inside helper.php function
                     return oq_api_notify_no_resource();
                     break;
-                /*  Error handle if the route to a page does not exist
+
+                /*  Error handle if the route does not exist
                  */
                 case $e instanceof NotFoundHttpException:
-                //  Found inside helper.php function
-                return oq_api_notify_no_page();
+                    //  Found inside helper.php function
+                    return oq_api_notify_no_page();
                     break;
+
                 /*  Error handle if the request method is not supported
                  */
                 case $e instanceof MethodNotAllowedHttpException:
-                //  Found inside helper.php function
-                return oq_api_notify(['message' => 'Method not allowed'], 405);
+                    //  Found inside helper.php function
+                    return oq_api_notify(['message' => 'Method not allowed'], 405);
                     break;
+
                 /*  Error handle if the resource relationship is not found
                  *  e.g) when we use Model::with($relationship) and its not found
-                 */
+                 
                 case $e instanceof RelationNotFoundException:
-                //  Found inside helper.php function
-                return oq_api_notify(['message' => 'Relationship not found'], 404);
+                    //  Found inside helper.php function
+                    return oq_api_notify(['message' => 'Relationship not found'], 404);
+                    break;
+                */
+                /*  Error handle too many requests have been made by a client on the api
+                 */
+                case $e instanceof ThrottleRequestsException:
+                    //  Found inside helper.php function
+                    return oq_api_notify_to_many_attempts();
                     break;
             }
         }

@@ -117,7 +117,7 @@ class DownloadController extends Controller
             if (!empty($quotation->details['heading']) && !empty($quotation['reference_no_value'])) {
                 $pdfName = $quotation->details['heading'].' - '.
                            $quotation->details['reference_no_value'].' - '.
-                           \Carbon\Carbon::parse($quotation['created_date_value'])->format('M d Y').
+                           \Carbon\Carbon::parse($quotation['created_date'])->format('M d Y').
                            '.pdf';
             } else {
                 $pdfName = 'Quotation - '.$quotation->id.'.pdf';
@@ -144,7 +144,7 @@ class DownloadController extends Controller
             if (!empty($invoice->details['heading']) && !empty($invoice['reference_no_value'])) {
                 $pdfName = $invoice->details['heading'].' - '.
                            $invoice->details['reference_no_value'].' - '.
-                           \Carbon\Carbon::parse($invoice['created_date_value'])->format('M d Y').
+                           \Carbon\Carbon::parse($invoice['created_date'])->format('M d Y').
                            '.pdf';
             } else {
                 $pdfName = 'Invoice - '.$invoice->id.'.pdf';

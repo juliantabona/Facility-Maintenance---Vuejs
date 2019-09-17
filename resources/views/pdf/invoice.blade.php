@@ -331,7 +331,7 @@
                                             </td>
                 
                                             <td class="tr0 td2">
-                                                <p class="p5 ft2 pdr4">{{ Carbon\Carbon::parse($invoice['created_date_value'])->format('M d Y') }}</p>
+                                                <p class="p5 ft2 pdr4">{{ Carbon\Carbon::parse($invoice['created_date'])->format('M d Y') }}</p>
                                             </td>
                 
                                         </tr>
@@ -342,7 +342,7 @@
                                             </td>
                 
                                             <td class="tr0">
-                                                <p class="p5 ft2 pdr4">{{ Carbon\Carbon::parse($invoice['expiry_date_value'])->format('M d Y') }}</p>
+                                                <p class="p5 ft2 pdr4">{{ Carbon\Carbon::parse($invoice['expiry_date'])->format('M d Y') }}</p>
                                             </td>
                 
                                         </tr>
@@ -353,7 +353,7 @@
                                             </td>
                 
                                             <td class="td10 td14">
-                                                <p class="ft1 p5 pd2">{{ $currencySymbol . number_format($invoice['grand_total_value'],2,",",".") }}</p>
+                                                <p class="ft1 p5 pd2">{{ $currencySymbol . number_format($invoice['grand_total'],2,",",".") }}</p>
                                             </td>
                 
                                         </tr>
@@ -460,7 +460,7 @@
                             </td>
 
                             <td colspan="1" class="brt brb2">
-                                <p class="p10 ft1 pdr4">{{ $currencySymbol . number_format($invoice['grand_total_value'],2,",",".") }}</p>
+                                <p class="p10 ft1 pdr4">{{ $currencySymbol . number_format($invoice['grand_total'],2,",",".") }}</p>
                             </td>
                         </tr>
 

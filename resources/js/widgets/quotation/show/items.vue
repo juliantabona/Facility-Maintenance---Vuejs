@@ -300,7 +300,7 @@
                 this.localQuotation.sub_total_value = this.runGetTotal();
 
                 //  Re-Calculate the grand total amount
-                this.localQuotation.grand_total_value = this.runGetGrandTotal();
+                this.localQuotation.grand_total = this.runGetGrandTotal();
 
                 //  Re-Calculate the taxes
                 this.localQuotation.calculated_taxes = this.runCalculateTaxes();

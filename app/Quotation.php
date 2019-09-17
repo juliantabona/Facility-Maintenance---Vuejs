@@ -34,7 +34,7 @@ class Quotation extends Model
         'colors' => 'array',
     ];
 
-    protected $dates = ['created_date_value', 'expiry_date_value'];
+    protected $dates = ['created_date', 'expiry_date'];
 
     protected $with = ['reminders'];
 
@@ -44,8 +44,8 @@ class Quotation extends Model
      * @var array
      */
     protected $fillable = [
-        'status', 'heading', 'reference_no_title', 'reference_no_value', 'created_date_title', 'created_date_value',
-        'expiry_date_title', 'expiry_date_value', 'sub_total_title', 'sub_total_value', 'grand_total_title', 'grand_total_value',
+        'status', 'heading', 'reference_no_title', 'reference_no_value', 'created_date_title', 'created_date',
+        'expiry_date_title', 'expiry_date', 'sub_total_title', 'sub_total_value', 'grand_total_title', 'grand_total',
         'currency_type', 'calculated_taxes', 'quotation_to_title', 'customized_company_details', 'customized_client_details', 'client_id',
         'table_columns', 'items', 'notes', 'colors', 'footer', 'company_branch_id', 'company_id',
     ];
@@ -62,7 +62,7 @@ class Quotation extends Model
     ];
 
     protected $allowedFilters = [
-        'id', 'reference_no_value', 'grand_total_value', 'created_date_value', 'expiry_date_value', 'created_at',
+        'id', 'reference_no_value', 'grand_total', 'created_date', 'expiry_date', 'created_at',
 
         //  Nested within JSON
         //  'notes > details',
@@ -71,8 +71,8 @@ class Quotation extends Model
         'client.id', 'client.name', 'client.city', 'client.state_or_region', 'client.address', 'client.industry', 'client.type', 'client.website_link', 'client.phone_ext', 'client.phone_num', 'client.email', 'client.created_at',
     ];
 
-    protected $orderable = [
-        'id', 'reference_no_value', 'grand_total_value', 'created_date_value', 'expiry_date_value', 'created_at',
+    protected $allowedOrderableColumns = [
+        'id', 'reference_no_value', 'grand_total', 'created_date', 'expiry_date', 'created_at',
     ];
 
     /**
@@ -185,7 +185,7 @@ class Quotation extends Model
 
     public function gethasExpiredAttribute()
     {
-        $expiryDate = $this->expiry_date_value->getTimestamp();
+        $expiryDate = $this->expiry_date->getTimestamp();
         $now = Carbon::now()->getTimestamp();
 
         return ($now > $expiryDate) ? true : false;

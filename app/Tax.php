@@ -2,12 +2,18 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Model;
 use App\AdvancedFilter\Dataviewer;
+use App\Traits\TaxTraits;
 
+Relation::morphMap([
+    'product' => 'App\Product'
+]);
 class Tax extends Model
 {
+    use TaxTraits;
     use SoftDeletes;
     use Dataviewer;
 
@@ -24,7 +30,7 @@ class Tax extends Model
         'id', 'name', 'abbreviation', 'rate', 'created_at'
     ];
 
-    protected $orderable = [
+    protected $allowedOrderableColumns = [
         'id', 'name', 'abbreviation', 'rate', 'created_at',
     ];
 
@@ -36,5 +42,21 @@ class Tax extends Model
         return $this->morphTo();
     }
 
+    /**
+     * Get the owner from the morphTo relationship
+     * This method returns a company/store
+     */
+    public function owner()
+    {
+        return $this->taxable();
+    }
+
+    /**
+     * Get all of the products that are assigned this tax.
+     */
+    public function products()
+    {
+        return $this->morphedByMany('App\Product', 'taxable');
+    }
     
 }

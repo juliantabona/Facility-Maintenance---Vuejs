@@ -14,8 +14,8 @@ class CreateCouponAllocationsTable extends Migration
         Schema::create('coupon_allocations', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('coupon_id');
-            $table->unsignedInteger('couponable_id');
-            $table->string('couponable_type');
+            $table->unsignedInteger('allocatable_id');
+            $table->string('allocatable_type');
             $table->timestamps();
         });
     }

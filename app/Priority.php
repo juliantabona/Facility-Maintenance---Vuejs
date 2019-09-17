@@ -27,13 +27,13 @@ class Priority extends Model
 
     protected $allowedFilters = [];
 
-    protected $orderable = [];
+    protected $allowedOrderableColumns = [];
 
     /**
      * Get all of the jobcards that are assigned this category.
      */
     public function jobcards()
     {
-        return $this->morphedByMany('App\Jobcard', 'trackable', 'priority_allocations');
+        return $this->morphedByMany('App\Jobcard', 'allocatable', 'priority_allocations');
     }
 }

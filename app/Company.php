@@ -2,11 +2,11 @@
 
 namespace App;
 
-use DB;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Model;
 use App\AdvancedFilter\Dataviewer;
 use App\Traits\CompanyTraits;
+use DB;
 
 class Company extends Model
 {
@@ -35,10 +35,7 @@ class Company extends Model
     protected $fillable = [
 
         /*  Basic Info  */
-        'name', 'abbreviation', 'description', 'date_of_incorporation', 'type', 'industry',
-        
-        /*  Address Info  */
-        'address_1', 'address_2', 'country', 'province', 'city', 'postal_or_zipcode', 
+        'name', 'abbreviation', 'description', 'date_of_incorporation', 'type', 'industry', 
         
         /*  Address Info  */
         'email', 'additional_email',
@@ -56,25 +53,164 @@ class Company extends Model
         'bio', 'created_at',
     ];
 
-    protected $orderable = [
+    protected $allowedOrderableColumns = [
         'id', 'name', 'description', 'date_of_incorporation', 'type', 'address', 'country', 'province', 'city', 'postal_or_zipcode',
         'email', 'additional_email', 'website_link', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link',
         'bio', 'created_at',
     ];
 
-    /*  Get the jobcards created by this company, get them in relation to the company branches that created them
-     *  A jobcard is a documentation of work to be done for a client. This documentation is made up of details
-     *  describing the job, the client, the supplier, the contacts of both the client and supplier, as well
-     *  as the history (Recent Activities) describing the series of events building the jobcard
+    /*  
+     *  Returns documents associated with this company. These are various files such as images,
+     *  videos, files and so on. Basically any file/image/video the user wants to save to 
+     *  this company is stored in this relation
      */
-
-    public function smsCredits()
+    public function documents()
     {
-        return $this->hasOne('App\Sms');
+        return $this->morphMany('App\Document', 'owner');
     }
 
-    /**
-     * Get the stores associated.
+    /* 
+     *  Returns documents categorized as files
+     */
+    public function files()
+    {
+        return $this->documents()->where('type', 'file');
+    }
+
+    /* 
+     *  Returns phones associated with this company
+     */
+    public function phones()
+    {
+        return $this->morphMany('App\Phone', 'owner')->orderBy('created_at', 'desc');
+    }
+
+    /* 
+     *  Returns the company settings
+     */
+    public function settings()
+    {
+        return $this->morphOne('App\Setting', 'owner');
+    }
+
+    /* 
+     *  Returns all the users that are associated with this company. This includes associations
+     *  were the user as admin, staff, client, vendor e.t.c. Any association to this company 
+     *  will pass as a valid user to retrieve on this relationship. We can then filter our 
+     *  results to be more specific (using a scope) e.g) Get all users where the user 
+     *  is an admin.
+     */
+    public function users()
+    {
+        return $this->morphToMany('App\User', 'allocatable', 'user_allocations');
+    }
+
+    /* 
+     *  Scope the users by type
+     */
+    public function scopeWhereUserType($query, $type)
+    {
+        return $query->where('user_allocations.type', '=', $type);
+    }
+
+    /* 
+     *  Returns users where the users by id
+     */
+    public function scopeWhereUserId($query, $id)
+    {
+        return $query->where('user_allocations.user_id', '=', $id);
+    }
+
+    /* 
+     *  Returns users where the user is an admin
+     */
+    public function admins()
+    {
+        return $this->users()->whereUserType('admin');
+    }
+
+    /* 
+     *  Returns users where the user is a staff member
+     */
+    public function staff()
+    {
+        return $this->users()->whereUserType('staff');
+    }
+
+    /* 
+     *  Returns users where the user is a client
+     */
+    public function userClients()
+    {
+        return $this->users()->whereUserType('client');
+    }
+
+    /* 
+     *  Returns users where the user is a vendor
+     */
+    public function userVendors()
+    {
+        return $this->users()->whereUserType('vendor');
+    }
+
+    /* 
+     *  Checks if a given user is an admin to the company
+     */
+    public function isAdmin($user_id)
+    {
+        return ($this->admins()->whereUserId($user_id)->count()) ? true : false;
+    }
+
+    /* 
+     *  Checks if a given user is a staff member to the company
+     */
+    public function isStaff($user_id)
+    {
+        return ($this->staff()->whereUserId($user_id)->count()) ? true : false;
+    }
+
+    /* 
+     *  Checks if a given user is an admin or staff member to the company
+     */
+    public function isAdminOrStaff($user_id)
+    {
+        return ($this->isAdmin($user_id) || $this->isStaff($user_id));
+    }
+
+    /* 
+     *  Returns products associated with this company
+     */
+    public function products()
+    {
+        return $this->morphMany('App\Product', 'productable');
+    }
+
+    /* 
+     *  Get the company taxes
+     */
+    public function taxes()
+    {
+        return $this->morphMany('App\Tax', 'taxable');
+    }
+
+    /* 
+     *  Get the company discounts
+     */
+    public function discounts()
+    {
+        return $this->morphMany('App\Discount', 'discountable');
+    }
+
+    /* 
+     *  Get the company coupons
+     */
+    public function coupons()
+    {
+        return $this->morphMany('App\Coupon', 'owner');
+    }
+
+    /* 
+     *  Returns stores associated with this company
      */
     public function stores()
     {
@@ -87,6 +223,17 @@ class Company extends Model
     public function orders()
     {
         return $this->hasMany('App\Order', 'company_id');
+    }
+
+    /*  Get the jobcards created by this company, get them in relation to the company branches that created them
+     *  A jobcard is a documentation of work to be done for a client. This documentation is made up of details
+     *  describing the job, the client, the supplier, the contacts of both the client and supplier, as well
+     *  as the history (Recent Activities) describing the series of events building the jobcard
+     */
+
+    public function smsCredits()
+    {
+        return $this->hasOne('App\Sms');
     }
 
     /**
@@ -118,7 +265,7 @@ class Company extends Model
     {
         return $this->belongsToMany('App\Company', 'company_directory', 'owning_company_id', 'company_id')
                     ->withPivot('id', 'type', 'owning_branch_id', 'owning_company_id')
-                    //  Select everything and make the jobcard id the primary id
+                    //  Select everything and make the company id the primary id
                     ->select('*', 'companies.id as id', 'companies.type as type', 'company_directory.type as directory_type',
                              'companies.deleted_at as deleted_at', 'companies.created_at as created_at',
                              'companies.updated_at as updated_at')
@@ -147,7 +294,7 @@ class Company extends Model
         return $this->companyDirectory()
                     ->where('company_directory.type', 'supplier');
     }
-
+    /*
     public function userClients()
     {
         return $this->userDirectory()
@@ -165,16 +312,7 @@ class Company extends Model
         return $this->userDirectory()
                     ->where('user_directory.type', 'staff');
     }
-
-    public function productAndServices()
-    {
-        return $this->hasMany('App\Product');
-    }
-
-    public function taxes()
-    {
-        return $this->hasMany('App\Tax');
-    }
+    */
 
     public function quotations()
     {
@@ -198,53 +336,24 @@ class Company extends Model
         return $this->hasMany('App\Invoice', 'client_id');
     }
 
-    public function phones()
-    {
-        return $this->morphMany('App\Phone', 'trackable')
-                    ->orderBy('created_at', 'desc');
-    }
-
     public function wallets()
     {
         return $this->phones()->has('mobileMoneyAccount')->with('mobileMoneyAccount', 'createdBy');
     }
 
-    public function billingAddresses()
-    {
-        return $this->morphMany('App\BillingAndShippingAddress', 'trackable')
-                    ->where('type', 'billing');
-    }
-
-    public function shippingAddresses()
-    {
-        return $this->morphMany('App\BillingAndShippingAddress', 'trackable')
-                    ->where('type', 'shipping');
-    }
-
-    /**
-     * Get the companies settings.
-     */
-    public function settings()
-    {
-        return $this->morphOne('App\Setting', 'trackable');
-    }
-
     public function recentActivities()
     {
-        return $this->morphMany('App\RecentActivity', 'trackable')
-                    ->where('trackable_id', $this->id)
-                    ->where('trackable_type', 'company')
-                    ->orderBy('created_at', 'desc');
+        return $this->morphMany('App\RecentActivity', 'owner')->orderBy('created_at', 'desc');
     }
 
     public function createdActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'company')->where('type', 'created');
+        return $this->recentActivities()->where('type', 'created');
     }
 
     public function approvedActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'company')->where('type', 'approved');
+        return $this->recentActivities()->where('type', 'approved');
     }
 
     protected $appends = [
@@ -252,8 +361,8 @@ class Company extends Model
                             'last_approved_activity',
                             'has_approved',
                             'current_activity_status', 'activity_count',
-                            'incoming_quotation_count', 'outgoing_quotation_count',
-                            'incoming_invoice_count', 'outgoing_invoice_count',
+                            //'incoming_quotation_count', 'outgoing_quotation_count',
+                            //'incoming_invoice_count', 'outgoing_invoice_count',
                             'incoming_jobcard_count', 'outgoing_jobcard_count',
                             'outgoing_appointment_count',
                         ];
@@ -284,7 +393,7 @@ class Company extends Model
 
     public function getLastApprovedActivityAttribute()
     {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('trackable_type', 'company')->where('type', 'approved')->first();
+        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('type', 'approved')->first();
     }
 
     public function gethasApprovedAttribute()
@@ -306,9 +415,8 @@ class Company extends Model
 
     public function getActivityCountAttribute()
     {
-        $count = $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'company')
-                                          ->select(DB::raw('count(*) as total'))
-                                          ->groupBy('trackable_type')
+        $count = $this->recentActivities()->select(DB::raw('count(*) as total'))
+                                          ->groupBy('owner_type')
                                           ->first();
 
         return $count ? $count->only(['total']) : ['total' => 0];
@@ -396,21 +504,6 @@ class Company extends Model
         return $this->morphMany('App\Creator', 'creatable');
     }
 
-    /*  Get the documents relating to this company. These are various files such as logos, company profiles,
-     *  scanned files, images and so on. Basically any file/image the user wants to save to this company is
-     *  stored in this relation
-     */
-
-    public function documents()
-    {
-        return $this->morphMany('App\Document', 'documentable');
-    }
-
-    public function files()
-    {
-        return $this->documents()->where('type', 'file');
-    }
-
     /*  Get the profiles of users related to this company  Get them in relation to the company branches
      *  that created them. These profiles can be admins, staff members, company client contacts or company
      *  supplier contracts. Any user in the database is a profile
@@ -465,12 +558,6 @@ class Company extends Model
     public function branches()
     {
         return $this->hasMany('App\CompanyBranch');
-    }
-
-    public function staff()
-    {
-        return $this->userDirectory()
-                    ->where('user_directory.type', 'staff');
     }
 
     public function assignedJobcards()

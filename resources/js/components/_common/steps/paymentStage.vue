@@ -21,7 +21,7 @@
             <template slot="leftContent">
 
                 <h4 v-if="" class="text-secondary">{{ localInvoice.has_paid ? 'Got Paid' : 'Get Paid' }}</h4>
-                <p class="mt-2 mb-2"><span class="font-weight-bold">{{ (localInvoice.has_paid ? 'Amount Paid' : 'Amount Due') }}:</span> {{ localInvoice.grand_total_value | currency(currencySymbol)  }}</p>
+                <p class="mt-2 mb-2"><span class="font-weight-bold">{{ (localInvoice.has_paid ? 'Amount Paid' : 'Amount Due') }}:</span> {{ localInvoice.grand_total | currency(currencySymbol)  }}</p>
 
             </template>
 
@@ -74,7 +74,7 @@
                     <!-- Explainer Message  -->
                     <Col span="24">
                         <Alert :style="{ zIndex:'1' }">
-                            <h6 class="mt-2 mb-2"><span class="font-weight-bold">Status:</span> Your invoice is awaiting payment for - {{ localInvoice.grand_total_value | currency(currencySymbol) }}</h6>
+                            <h6 class="mt-2 mb-2"><span class="font-weight-bold">Status:</span> Your invoice is awaiting payment for - {{ localInvoice.grand_total | currency(currencySymbol) }}</h6>
                         </Alert>
                     </Col>
 

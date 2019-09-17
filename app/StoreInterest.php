@@ -22,7 +22,7 @@ class StoreInterest extends Model
         'id', 'type', 'store_id', 'created_at',
     ];
 
-    protected $orderable = [
+    protected $allowedOrderableColumns = [
         'id', 'type', 'store_id', 'created_at',
     ];
 

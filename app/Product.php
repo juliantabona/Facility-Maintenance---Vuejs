@@ -2,10 +2,15 @@
 
 namespace App;
 
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 use App\AdvancedFilter\Dataviewer;
 use App\Traits\ProductTraits;
+
+Relation::morphMap([
+    'store' => 'App\Store',
+]);
 
 class Product extends Model
 {
@@ -13,7 +18,7 @@ class Product extends Model
     use Dataviewer;
     use ProductTraits;
 
-    /**
+    /*
      * The table associated with the model.
      *
      * @var string
@@ -32,11 +37,9 @@ class Product extends Model
         'is_featured' => 'boolean',
     ];
 
-    protected $table = 'products_and_services';
+    protected $with = ['categories', 'tags', 'taxes', 'galleryImages'];
 
-    protected $with = ['categories', 'tags', 'taxes', 'comments', 'galleryImages'];
-
-    /**
+    /*
      * The attributes that are mass assignable.
      *
      * @var array
@@ -45,7 +48,7 @@ class Product extends Model
         'name', 'description', 'type', 'cost_per_item', 'unit_price', 'unit_sale_price',
         'sku', 'barcode', 'stock_quantity', 'has_inventory', 'auto_track_inventory', 
         'variants', 'variant_attributes', 'allow_variants', 'downloads', 'allow_downloads', 
-        'show_on_store', 'is_new', 'is_featured', 'store_id', 'company_branch_id', 'company_id',
+        'show_on_store', 'is_new', 'is_featured', 'productable_id', 'productable_id'
     ];
 
     protected $allowedFilters = [
@@ -55,81 +58,124 @@ class Product extends Model
         //  'taxes.id', 'taxes.name',
     ];
 
-    protected $orderable = [
+    protected $allowedOrderableColumns = [
         'id', 'name', 'description', 'cost_per_item', 'unit_price', 'created_at',
     ];
 
-    public function store()
-    {
-        return $this->belongsTo('App\Store');
-    }
-
-    /*  Get the documents relating to this product. These are various files such as images, downloadable documents,
-     *  and so on. Basically any file/image the user wants to save to this product is stored in this relation
+    /*  
+     *  Returns documents associated with this store. These are various files such as logos,
+     *  store profiles,  scanned files, images and so on. Basically any file/image the user 
+     *  wants to save to this store is stored in this relation
      */
 
     public function documents()
     {
-        return $this->morphMany('App\Document', 'documentable');
+        return $this->morphMany('App\Document', 'owner');
     }
 
+    /* 
+     *  Returns documents categorized as gallery images
+     */
     public function galleryImages()
     {
         return $this->documents()->where('type', 'gallery');
     }
 
-    /**
-     * Get all of the categories for the jobcard.
+    /* 
+     *  Returns documents categorized as downloads
      */
-    public function categories()
+    public function downloads()
     {
-        return $this->morphToMany('App\Category', 'trackable', 'category_allocations');
+        return $this->documents()->where('type', 'download');
+    }
+
+    /* 
+     *  Get the product settings
+     */
+    public function settings()
+    {
+        return $this->morphOne('App\Setting', 'owner');
     }
 
     /**
-     * Get all of the categories for the jobcard.
+     * Product can be assigned to company/store
      */
-    public function tags()
+    public function productable()
     {
-        return $this->morphToMany('App\Tag', 'trackable', 'tag_allocations');
+        return $this->morphTo();
     }
 
+    /**
+     * Get the owner from the morphTo relationship
+     * This method returns a company/store
+     */
+    public function owner()
+    {
+        return $this->productable();
+    }
+
+    /* 
+     *  Get the product taxes
+     */
     public function taxes()
     {
         return $this->morphToMany('App\Tax', 'taxable', 'tax_allocations');
     }
 
+    /* 
+     *  Get the product discounts
+     */
     public function discounts()
     {
         return $this->morphToMany('App\Discount', 'discountable', 'discount_allocations');
     }
 
+    /* 
+     *  Get the product coupons
+     */
     public function coupons()
     {
-        return $this->morphToMany('App\Coupon', 'couponable', 'tax_allocations');
+        return $this->morphToMany('App\Coupon', 'couponable', 'coupon_allocations');
     }
 
-    public function comments()
-    {
-        return $this->morphToMany('App\Comment', 'trackable', 'comment_allocations')->orderBy('comment_allocations.created_at', 'asc');
-    }
-
+    /* 
+     *  Get the product messages
+     */
     public function messages()
     {
-        return $this->comments()->where('type', 'message');
+        return $this->morphMany('App\Message', 'messageable')->orderBy('messages.created_at', 'asc');
     }
 
+    /* 
+     *  Get the product reviews
+     */
     public function reviews()
     {
-        return $this->comments()->where('type', 'review');
+        return $this->morphMany('App\Review', 'reviewable')->orderBy('reviews.created_at', 'asc');
     }
 
+    /*
+     * Get the product categories
+     */
+    public function categories()
+    {
+        return $this->morphToMany('App\Category', 'allocatable', 'category_allocations');
+    }
+
+    /*
+     * Get the product tags
+     */
+    public function tags()
+    {
+        return $this->morphToMany('App\Tag', 'allocatable', 'tag_allocations');
+    }
+
+    /*
+     * Get the product recent activties
+     */
     public function recentActivities()
     {
-        return $this->morphMany('App\RecentActivity', 'trackable')
-                    ->where('trackable_id', $this->id)
-                    ->where('trackable_type', 'product')
-                    ->orderBy('created_at', 'desc');
+        return $this->morphMany('App\RecentActivity', 'owner')->orderBy('created_at', 'desc');
     }
 
     /* ATTRIBUTES */
@@ -140,10 +186,10 @@ class Product extends Model
 
     public function getAverageRatingAttribute()
     {
-        $reviews = $this->reviews()->get() ?? [];
+        $reviews = $this->reviews ?? [];
 
-        if( count( $reviews ) ){
-            return collect( $reviews )->avg('rating_value');
+        if( $reviews ){
+            return collect( $reviews )->avg('rating');
         }
     }
 
@@ -154,8 +200,14 @@ class Product extends Model
 
     public function getStoreCurrencySymbolAttribute()
     {
-        //  Store currency
-        return $this->store()->first()->settings['details']['general']['currency_type']['currency']['symbol'] ?? null;
+        //  Get the owning model settings
+        $settings = $this->owner->settings ?? null;
+
+        //  If we have the settings
+        if($settings){
+            //  Return the currency symbol if exists
+            return $settings['details']['general']['currency_type']['currency']['symbol'] ?? null;
+        }
     }
 
     public function setAllowInventoryAttribute($value)

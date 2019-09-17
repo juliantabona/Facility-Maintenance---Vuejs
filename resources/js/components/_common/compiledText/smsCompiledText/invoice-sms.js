@@ -15,8 +15,8 @@ export default {
         var referenceNo = invoice.reference_no_value;
         var items = '';
         var currency = (((invoice || {}).currency_type || {}).currency || {}).symbol || '';
-        var grand_total = formatPrice( (invoice.grand_total_value || 0), currency);
-        var expiry_date = moment(invoice.expiry_date_value).format('MMM DD YYYY');
+        var grand_total = formatPrice( (invoice.grand_total || 0), currency);
+        var expiry_date = moment(invoice.expiry_date).format('MMM DD YYYY');
         var company = ((invoice || {}).customized_company_details || {});
     
         for( var x = 0; x < invoice.items.length; x++  ){

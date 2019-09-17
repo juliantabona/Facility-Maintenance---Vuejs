@@ -33,7 +33,7 @@
                                         <!-- Account Contacts -->
                                         <div class="pb-1 mb-1" style="border-bottom: 1px dashed #d6d9dc;">
                                             <span class="font-weight-bold d-block mb-1">Email: <span>{{ user.email }}</span></span>
-                                            <span class="font-weight-bold d-block mb-1">Mobile: <span>(+267) 75993221</span></span>
+                                            <span class="font-weight-bold d-block mb-1">Mobile: <span>(+267) 75993xxx</span></span>
                                         </div>
 
                                         
@@ -50,14 +50,27 @@
                                                     
                                                     <Checkbox v-model="chekoutAsCompany">Checkout As Company?</Checkbox>
 
-                                                    <template v-if="selectedCompany">
+                                                    <!-- Change/Edit Company Account Details -->
+                                                    <div class="clearfix">
+                                                        <span @click="openCompanyRegisterForm()" class="float-right btn btn-link d-inline-block m-0 p-0">Edit</span>
+                                                        
+                                                        <span v-if="!selectedCompany || !showChangeCompany" class="float-right ml-1 mr-1">|</span>
 
-                                                        <!-- Change/Edit Company Account Details -->
-                                                        <div class="clearfix">
-                                                            <span @click="openCompanyRegisterForm()" class="float-right btn btn-link d-inline-block m-0 p-0">Edit</span>
-                                                            <span class="float-right ml-1 mr-1">|</span>
-                                                            <span @click="showLoginForm = true" class="float-right btn btn-link d-inline-block m-0 p-0">Change Company</span>
-                                                        </div>
+                                                        <span v-if="!selectedCompany || !showChangeCompany" 
+                                                              @click="showChangeCompany = true" class="float-right btn btn-link d-inline-block m-0 p-0">
+                                                              Change Company
+                                                        </span>
+
+                                                        <span v-if="selectedCompany && showChangeCompany" class="float-right ml-1 mr-1">|</span>
+
+                                                        <span v-if="selectedCompany && showChangeCompany" 
+                                                              @click="showChangeCompany = false" class="float-right btn btn-link d-inline-block m-0 p-0">
+                                                              Done
+                                                        </span>
+
+                                                    </div>
+
+                                                    <template v-if="selectedCompany && !showChangeCompany">
                                                         
                                                         <!-- Company Account Name -->
                                                         <div class="pb-1 mt-1 mb-1" style="border-bottom: 1px dashed #d6d9dc;">
@@ -65,13 +78,28 @@
                                                         </div>
 
                                                         <!-- Company Account Contacts -->
-                                                        <div class="pb-1 mb-1" style="border-bottom: 1px dashed #d6d9dc;">
+                                                        <div class="pb-1 mb-1">
                                                             <span class="font-weight-bold d-block mb-1">Email: <span>{{ selectedCompany.email }}</span></span>
                                                             <span v-if="selectedCompany.phones" class="font-weight-bold d-block mb-1">
                                                                 Phone(s): <span>{{ selectedCompany.phone_list }}</span>
                                                             </span>
                                                         </div>
 
+                                                    </template>
+
+                                                    <template v-else>
+                                                        <!-- Company Selector -->
+                                                        <companySelector 
+                                                            class="mt-3 mb-2"
+                                                            url="/api/companies"
+                                                            :urlParams="{
+                                                                userIds: user.id,
+                                                                userTypes: '',
+                                                                paginate: 0
+                                                            }"
+                                                            :selectedCompany="selectedCompany"
+                                                            @updated:company="handleCompanyChange($event)">
+                                                        </companySelector>  
                                                     </template>
 
                                                 </Card>
@@ -195,9 +223,12 @@
     import checkoutUserRegisterForm from './../../../components/_common/forms/register-user/register.vue';
     import checkoutCompanyRegisterForm from './../../../components/_common/forms/register-company/register.vue';
 
+    /*  Selectors  */
+    import companySelector from './../../../components/_common/selectors/companySelector.vue';
+
     export default {
         components: { 
-            basicButton, checkoutLoginForm, checkoutUserRegisterForm, checkoutCompanyRegisterForm
+            basicButton, checkoutLoginForm, checkoutUserRegisterForm, checkoutCompanyRegisterForm, companySelector
         },
         props: {
             checkoutProgress: {
@@ -209,12 +240,13 @@
             return {
                 user: auth.user,
                 selectedAccountTab:'login',
-
+                localBillingInfo: null,
                 chekoutAsCompany: false,
                 selectedCompany: null,
                 localCheckoutProgress: this.checkoutProgress,
 
                 showLoginForm: false,
+                showChangeCompany: false,
                 registrationForm: 'user',
 
                 resetToken: ((this.$route || {}).query || {}).resetToken
@@ -224,6 +256,25 @@
             products: {
                 handler: function (val, oldVal) {
                     this.localProducts = val;
+                },
+                deep: true
+            },
+            localBillingInfo: {
+                handler: function (val, oldVal) {
+                    this.$emit('updated:billingInfo', val);
+                },
+                deep: true
+            },
+            chekoutAsCompany: {
+                handler: function (val, oldVal) {
+                    //  If the checkbox is set to true and we have a company already set
+                    if(val && this.selectedCompany){
+                        //  Then set the company info as the billing info
+                        this.localBillingInfo = this.selectedCompany;
+                    }else{
+                        //  Then set the user info as the billing info
+                        this.localBillingInfo = this.user;
+                    }
                 },
                 deep: true
             },
@@ -249,6 +300,9 @@
 
                 //  Hide the login form
                 this.showLoginForm = false;
+
+                //  Update the billing info
+                this.localBillingInfo = this.user;
             },
             handleUserRegisterSuccess(){
                 //  Lets update the user details
@@ -259,9 +313,12 @@
 
                 //  Go to the login tab
                 this.selectedAccountTab = 'login';
+
+                //  Update the billing info
+                this.localBillingInfo = this.user;
             },
             handleCompanyRegisterSuccess(company){
-                //  Lets update the user details
+                //  Lets update the company details
                 this.selectedCompany = company;
 
                 //  Hide the login form
@@ -269,13 +326,29 @@
 
                 //  Go to the login tab
                 this.selectedAccountTab = 'login';
+
+                //  Update the billing info
+                this.localBillingInfo = this.selectedCompany;
             },
-            
+            handleCompanyChange(company){
+                //  Lets update the company details
+                this.selectedCompany = company;
+
+                //  Hide the company selector widget
+                this.showChangeCompany = false;
+
+                //  Update the billing info
+                this.localBillingInfo = this.selectedCompany;
+            },
             updateCheckoutProgress(){
                 this.$emit('proceed');
             }
         },
         created(){
+
+            //  Update the billing info
+            this.localBillingInfo = (auth || {}).user;
+
             //  If we have the reset token
             if(this.resetToken){
                 //  show the login form

@@ -8,7 +8,7 @@
                 <!-- Loader -->
                 <Loader v-if="isLoadingProducts" :loading="true" type="text" class="text-left" theme="white">Loading products...</Loader>
 
-                <Col v-else v-for="(product, index) in products" :key="index" :xs="24" :sm="12" :md="8" :lg="6" class="mb-2">
+                <Col v-else v-for="(product, index) in updatedProducts" :key="index" :xs="24" :sm="12" :md="8" :lg="6" class="mb-2">
                     
                     <!-- Single Product -->
                     <div class="tt-product thumbprod-center hovered" style="height: 420px;">
@@ -178,6 +178,7 @@
             return {
                 products: null,
                 isLoadingProducts: false,
+                localCart: cartInstance.cart,
 
                 storeId: (this.$route.params || {}).storeId,
                 per_page: (this.$route.query || {}).per_page || 1,
@@ -219,6 +220,30 @@
 
             }
         },
+        computed: {
+            updatedProducts(){
+                
+                var products = [];
+                
+                var cartItemIds = (this.localCart.items || []).map( (item) => { return item.id } );
+
+                for(var x=0; x < (this.products || {}).length; x++){
+
+                    if( cartItemIds.includes(this.products[x].id) ){
+                        for(var y=0; y < (this.localCart.items || {}).length; y++){
+                            if(this.products[x].id == this.localCart.items[y].id){
+                                products.push( this.localCart.items[y] );
+                            }
+                        }
+                    }else{
+                        products.push( this.products[x] );
+                    }
+
+                }
+
+                return products;
+            },     
+        },
         methods: {
             addToCart(product){
                 this.addItem = product;
@@ -239,12 +264,15 @@
              *  on the list then it does not already exist and we return false
              */ 
             existsInCart(product){
-                var itemIds = this.products.map( (item) => { 
-                        if(item.inside_cart){
-                            return item.id
-                        } 
-                    });
-                return itemIds.includes(product.id);
+                if( this.localCart.items ){
+                    var itemIds = this.localCart.items.map( (item) => { 
+                            return item.id;
+                        });
+
+                    return itemIds.includes(product.id);
+                }
+                
+                return false;
             },
             /*  fetchProducts()
              *  This method will fetch all the products related to the current store.
@@ -284,7 +312,7 @@
                         self.isLoadingProducts = false;
 
                         //  Store the products
-                        self.products = (data || {}).data;Z
+                        self.products = (data || {}).data;
 
                     })         
                     .catch(response => { 
@@ -300,11 +328,25 @@
                     });
             }
         },
-        created(){
+        created () {
 
             //  Fetch the store products
             this.fetchProducts();
 
+            //  Listen for global changes on the updating of the cart. 
+            //  Updates on the cart should reflect changes on the
+            //  localCart as well
+
+            var self = this;
+
+            Event.$on('cartUpdated', function(cart){
+                //  Update the local cart
+                self.localCart = cart;
+            });
+        },
+        beforeDestroy() {
+            //  Stop listening for global changes on the cart.
+            Event.$off('cartUpdated');
         }
     };
   

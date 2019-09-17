@@ -2,16 +2,18 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Eloquent\Model;
+use App\Traits\DiscountTraits;
 
 Relation::morphMap([
-    'product' => 'App\Product',
-    'shop' => 'App\Shop',
+    'product' => 'App\Product'
 ]);
 
 class Discount extends Model
 {
+    use DiscountTraits;
+    
     protected $casts = [
         'meta' => 'array',
     ];
@@ -22,7 +24,7 @@ class Discount extends Model
      * @var array
      */
     protected $fillable = [
-        'type', 'rate', 'meta'
+        'name', 'description', 'type', 'rate', 'meta'
     ];
 
     /**
@@ -33,11 +35,25 @@ class Discount extends Model
         return $this->morphTo();
     }
 
+    /**
+     * Get the owner from the morphTo relationship
+     * This method returns a company/store
+     */
+    public function owner()
+    {
+        return $this->discountable();
+    }
+
+    /**
+     * Get all of the products that are assigned this discount.
+     */
+    public function products()
+    {
+        return $this->morphedByMany('App\Product', 'discountable');
+    }
+
     public function recentActivities()
     {
-        return $this->morphMany('App\RecentActivity', 'trackable')
-                    ->where('trackable_id', $this->id)
-                    ->where('trackable_type', 'discount')
-                    ->orderBy('created_at', 'desc');
+        return $this->morphMany('App\RecentActivity', 'owner')->orderBy('created_at', 'desc');
     }
 }

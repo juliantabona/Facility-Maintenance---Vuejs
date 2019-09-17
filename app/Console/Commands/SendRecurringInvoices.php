@@ -186,10 +186,10 @@ class SendRecurringInvoices extends Command
                 //  Link this child invoice to the parent
                 $childInvoice->invoice_parent_id = $invoice->id;
                 //  Update the invoice created date
-                $childInvoice->created_date_value = (Carbon::now())->format('Y-m-d');
+                $childInvoice->created_date = (Carbon::now())->format('Y-m-d');
                 //  Update the invoice expiry date according to the parent days apart between created and expiry dates
-                $daysApart = (new Carbon($invoice->created_date_value) )->diffInDays((new Carbon($invoice->expiry_date_value) ));
-                $childInvoice->expiry_date_value = (new Carbon($currentDate) )->addDays($daysApart - 1);
+                $daysApart = (new Carbon($invoice->created_date) )->diffInDays((new Carbon($invoice->expiry_date) ));
+                $childInvoice->expiry_date = (new Carbon($currentDate) )->addDays($daysApart - 1);
                 //  Save the child invoice
                 $childInvoice->save();
 

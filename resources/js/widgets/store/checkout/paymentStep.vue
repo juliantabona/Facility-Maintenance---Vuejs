@@ -221,7 +221,7 @@
             },
             selectedPaymentMethod: {
                 handler: function (val, oldVal) {
-                    this.$emit('updated:paymentMethod', selectedPaymentMethod)
+                    this.$emit('updated:paymentMethod', this.selectedPaymentMethod)
                 },
                 deep: true
             },

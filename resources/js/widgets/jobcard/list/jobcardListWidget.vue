@@ -131,9 +131,9 @@
                     orderables: [
                         {title: 'Id', name: 'id'},
                         {title: 'Reference No', name: 'reference_no_value'},
-                        {title: 'Grand Total', name: 'grand_total_value'},
-                        {title: 'Created Date', name: 'created_date_value'},
-                        {title: 'Due Date', name: 'expiry_date_value'},                        
+                        {title: 'Grand Total', name: 'grand_total'},
+                        {title: 'Created Date', name: 'created_date'},
+                        {title: 'Due Date', name: 'expiry_date'},                        
                         {title: 'Created At', name: 'created_at'},
                     ],
                     filterGroups: [
@@ -142,9 +142,9 @@
                             filters: [
                                 {title: 'Id', name: 'id', type: 'numeric'},
                                 {title: 'Reference No', name: 'reference_no_value', type: 'numeric'},
-                                {title: 'Grand Total', name: 'grand_total_value', type: 'numeric'},    
-                                {title: 'Created Date', name: 'created_date_value', type: 'datetime'},
-                                {title: 'Due Date', name: 'expiry_date_value', type: 'datetime'},
+                                {title: 'Grand Total', name: 'grand_total', type: 'numeric'},    
+                                {title: 'Created Date', name: 'created_date', type: 'datetime'},
+                                {title: 'Due Date', name: 'expiry_date', type: 'datetime'},
                                 {title: 'Published Date', name: 'created_at', type: 'datetime'},
                             ]
                         },

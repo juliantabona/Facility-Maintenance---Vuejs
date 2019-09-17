@@ -16,8 +16,133 @@ use App\Notifications\UserCreated;
 use App\Notifications\UserUpdated;
 use Illuminate\Support\Facades\Hash;
 
+//  Resources
+use App\Http\Resources\User as UserResource;
+use App\Http\Resources\Users as UsersResource;
+
 trait UserTraits
 {
+
+    /*  convertToApiFormat() method:
+     *
+     *  Converts to the appropriate Api Response Format
+     *
+     */
+    public function convertToApiFormat($users = null)
+    {
+
+        try {
+
+            if( $users ){
+                
+                //  Transform the users
+                return new UsersResource($users);
+
+            }else{
+                
+                //  Transform the company
+                return new UserResource($this);
+
+            }
+
+        } catch (\Exception $e) {
+
+            //  Log the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+        }
+    }
+
+
+    /*  getUsers() method:
+     *
+     *  This is used to return users
+     *
+     */
+    public function getUsers( $options = [] )
+    {
+        /************************************
+        *  CHECK IF THE USER IS AUTHORIZED  *
+        /************************************/
+
+        try {
+
+            //  Get all the users
+            $users = $this->all();
+
+            if( $users ){
+
+                //  Transform the users
+                return new UsersResource($users);
+
+            }else{
+
+                //  Otherwise we don't have a resource to return
+                return oq_api_notify_no_resource();
+            
+            }
+
+        } catch (\Exception $e) {
+
+            //  Log the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+        }
+    }
+
+    /*  getUser() method:
+     *
+     *  This is used to return the specified or currently authenticated user
+     *
+     */
+    public function getUser( $user_id = null )
+    {
+        /************************************
+        *  CHECK IF THE USER IS AUTHORIZED  *
+        /************************************/
+
+        try {
+
+            //  Get the specified user or authenticated user
+            $user = $user_id ? User::find($user_id) : auth('api')->user();
+
+            if( $user ){
+
+                //  Transform the authenticated user
+                return new UserResource($user);
+
+            }else{
+
+                //  Otherwise we don't have a resource to return
+                return oq_api_notify_no_resource();
+            
+            }
+
+        } catch (\Exception $e) {
+
+            //  Log the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
     /*  initiateGetAll() method:
      *
      *  This is used to return a pagination of company results.

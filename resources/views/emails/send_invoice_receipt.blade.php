@@ -172,7 +172,7 @@
                                             <tr style="border-collapse:collapse;"> 
                                               <td align="left" style="padding:0;Margin:0;padding-bottom:20px;"> 
                                                 <h2 style="Margin:0;line-height:29px;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:24px;font-style:normal;font-weight:normal;color:#000000;text-align:center;">
-                                                  <strong>Amount Paid: {{ $currencySymbol . number_format($invoice['grand_total_value'],2,",",".") }}</strong>
+                                                  <strong>Amount Paid: {{ $currencySymbol . number_format($invoice['grand_total'],2,",",".") }}</strong>
                                                 </h2>
                                                 <h3 style="Margin:0;margin-top: 5px;line-height:14px;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:12px;font-style:normal;font-weight:normal;color:#000000;text-align:center;">
                                                   Payment Method: BANK PAYMENT

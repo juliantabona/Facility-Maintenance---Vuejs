@@ -49,8 +49,8 @@
             </Col>
             <Col :span="localEditMode ? '8':'4'">
 
-                <p v-if="!localEditMode" class="text-dark text-right float-right w-100"><strong>{{ localQuotation.grand_total_value | currency(currencySymbol) }}</strong></p>
-                <el-input v-if="localEditMode" :placeholder="'e.g) '+currencySymbol+'5,000.00'" :value="localQuotation.grand_total_value | currency(currencySymbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
+                <p v-if="!localEditMode" class="text-dark text-right float-right w-100"><strong>{{ localQuotation.grand_total | currency(currencySymbol) }}</strong></p>
+                <el-input v-if="localEditMode" :placeholder="'e.g) '+currencySymbol+'5,000.00'" :value="localQuotation.grand_total | currency(currencySymbol)" size="mini" class="mb-2" :style="{ maxWidth:'250px', float:'right' }" disabled></el-input>
             
             </Col>
             

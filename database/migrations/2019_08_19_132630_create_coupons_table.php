@@ -21,6 +21,8 @@ class CreateCouponsTable extends Migration
             $table->json('meta');
             $table->timestampTz('start_date')->nullable();
             $table->timestampTz('end_date')->nullable();
+            $table->unsignedInteger('owner_id');
+            $table->string('owner_type');
             $table->timestamps();
         });
     }

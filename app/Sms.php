@@ -26,7 +26,7 @@ class Sms extends Model
         'id', 'count', 'company_id', 'created_at',
     ];
 
-    protected $orderable = [
+    protected $allowedOrderableColumns = [
         'id', 'count', 'company_id', 'created_at',
     ];
 

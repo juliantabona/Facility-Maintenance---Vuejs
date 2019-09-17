@@ -62,7 +62,7 @@
                         title: 'Date',
                         sortable: true,
                         render: (h, params) => {
-                            return h('span', this.formatDate(params.row.created_date_value));
+                            return h('span', this.formatDate(params.row.created_date));
                         }
                     },
                     {
@@ -70,7 +70,7 @@
                         title: 'Due Date',
                         sortable: true,
                         render: (h, params) => {
-                            return h('span', this.formatDate(params.row.expiry_date_value));
+                            return h('span', this.formatDate(params.row.expiry_date));
                         }
                     },
                     {
@@ -78,7 +78,7 @@
                         title: 'Grand Total',
                         sortable: true,
                         render: (h, params) => {
-                            var grandTotal = (params.row.grand_total_value || 0) 
+                            var grandTotal = (params.row.grand_total || 0) 
                             var symbol = ((params.row.currency_type || {}).currency || {}).symbol || '';
                             return h('span', this.formatPrice(grandTotal, symbol) );
                         }
@@ -124,9 +124,9 @@
                     orderables: [
                         {title: 'Id', name: 'id'},
                         {title: 'Reference No', name: 'reference_no_value'},
-                        {title: 'Grand Total', name: 'grand_total_value'},
-                        {title: 'Created Date', name: 'created_date_value'},
-                        {title: 'Due Date', name: 'expiry_date_value'},                        
+                        {title: 'Grand Total', name: 'grand_total'},
+                        {title: 'Created Date', name: 'created_date'},
+                        {title: 'Due Date', name: 'expiry_date'},                        
                         {title: 'Created At', name: 'created_at'},
                     ],
                     filterGroups: [
@@ -135,9 +135,9 @@
                             filters: [
                                 {title: 'Id', name: 'id', type: 'numeric'},
                                 {title: 'Reference No', name: 'reference_no_value', type: 'numeric'},
-                                {title: 'Grand Total', name: 'grand_total_value', type: 'numeric'},    
-                                {title: 'Created Date', name: 'created_date_value', type: 'datetime'},
-                                {title: 'Due Date', name: 'expiry_date_value', type: 'datetime'},
+                                {title: 'Grand Total', name: 'grand_total', type: 'numeric'},    
+                                {title: 'Created Date', name: 'created_date', type: 'datetime'},
+                                {title: 'Due Date', name: 'expiry_date', type: 'datetime'},
                                 {title: 'Published Date', name: 'created_at', type: 'datetime'},
                             ]
                         },

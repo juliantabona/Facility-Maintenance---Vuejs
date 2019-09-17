@@ -5,21 +5,20 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use App\Traits\UploadTraits;
+use App\Traits\DocumentTraits;
 
 Relation::morphMap([
-    'user' => 'App\User',
     'company' => 'App\Company',
-    'jobcard' => 'App\Jobcard',
     'product' => 'App\Product',
     'store' => 'App\Store',
     'order' => 'App\Order',
+    'user' => 'App\User',
 ]);
 
 class Document extends Model
 {
     use Dataviewer;
-    use UploadTraits;
+    use DocumentTraits;
 
     /**
      * The attributes that are mass assignable.
@@ -32,21 +31,21 @@ class Document extends Model
 
     protected $allowedFilters = [];
 
-    protected $orderable = [];
+    protected $allowedOrderableColumns = [];
 
     /**
-     * Get all of the document owning models.
+     *  Get the owner from the morphTo relationship.
+     *  Documents can be assigned to multiple types of
+     *  owning resources e.g companies, stores, users,
+     *  products, e.t.c
      */
-    public function documentable()
+    public function owner()
     {
         return $this->morphTo();
     }
 
     public function recentActivities()
     {
-        return $this->morphMany('App\RecentActivity', 'trackable')
-                    ->where('trackable_id', $this->id)
-                    ->where('trackable_type', 'document')
-                    ->orderBy('created_at', 'desc');
+        return $this->morphMany('App\RecentActivity', 'owner')->orderBy('created_at', 'desc');
     }
 }

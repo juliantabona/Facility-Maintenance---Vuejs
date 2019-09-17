@@ -246,8 +246,8 @@
                                 <basicButton customClass="tool-btn mt-3 ml-auto mr-auto" :style="{ position:'relative' }"
                                                 type="success" size="small" 
                                                 :ripple="false"
-                                                @click.native="$router.push({name:'create-quotation'})">
-                                    + Create Product
+                                                @click.native="$router.push({name:'stores'})">
+                                    + Create Shop
                                 </basicButton>
                             </slide>
                             <slide :index="4">  
@@ -658,14 +658,14 @@
                                 heading: 'Products',
                                 videos: [
                                     { time: 0, name: 'Creating products' },
-                                    { time: 10, name: 'Adding products to shop' },
+                                    { time: 10, name: 'Adding products to store' },
                                     { time: 20, name: 'Tracking product sales' }
                                 ]
                             },
                             {
                                 heading: 'Shop',
                                 videos: [
-                                    { time: 30, name: 'Customizing shop' },
+                                    { time: 30, name: 'Customizing store' },
                                     { time: 40, name: 'Managing orders' },
                                     { time: 50, name: 'Managing payments' }
                                 ]

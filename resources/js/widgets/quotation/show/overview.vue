@@ -22,13 +22,13 @@
         <!-- Quotation Amount  -->
         <Col span="5">
             <h6 class="text-secondary">Amount</h6>
-            <h5>{{ localQuotation.grand_total_value | currency(currencySymbol)  }}</h5>            
+            <h5>{{ localQuotation.grand_total | currency(currencySymbol)  }}</h5>            
         </Col>
 
         <!-- Quotation Due Date  -->
         <Col span="4">
             <h6 class="text-secondary">Due</h6>
-            <h5>{{ localQuotation.expiry_date_value | moment("from", "now")  }}</h5>            
+            <h5>{{ localQuotation.expiry_date | moment("from", "now")  }}</h5>            
         </Col>
 
         <!-- Quotation Menu -->

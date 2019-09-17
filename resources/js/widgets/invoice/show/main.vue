@@ -398,13 +398,13 @@
                         reference_no_title: '',
                         reference_no_value: '',
                         created_date_title: '',
-                        created_date_value: '',
+                        created_date: '',
                         expiry_date_title: '',
-                        expiry_date_value: '',
+                        expiry_date: '',
                         sub_total_title: '',
                         sub_total_value: 0,
                         grand_total_title: '',
-                        grand_total_value: 0,
+                        grand_total: 0,
                         currency_type: null,
                         customized_company_details: null,
                         customized_client_details: null,
@@ -638,8 +638,8 @@
 
                 //  Update Invoice Dates Using Current Dates
                 
-                this.localInvoice.created_date_value = yy+'-'+mm+'-'+dd;
-                this.localInvoice.expiry_date_value = yy+'-'+mm+'-'+('0' + (date.getDate() + 7) ).slice(-2);
+                this.localInvoice.created_date = yy+'-'+mm+'-'+dd;
+                this.localInvoice.expiry_date = yy+'-'+mm+'-'+('0' + (date.getDate() + 7) ).slice(-2);
 
                 //  Update Invoice Shorthands
 

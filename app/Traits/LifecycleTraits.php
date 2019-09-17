@@ -26,9 +26,9 @@ trait LifecycleTraits
          **************************************************************/
 
         //  Get the model and stage data
-        $modelId = request('modelId');
-        $modelType = request('modelType');
-        $stageData = request('stage');
+        $modelId = $modelId ?? request('modelId');
+        $modelType = $modelType ?? request('modelType');
+        $stageData = $stageData ?? request('stage');
 
         if (!isset($stageData) || empty($stageData)) {
             //  Stage instance not specified - Log the error
@@ -208,17 +208,20 @@ trait LifecycleTraits
     }
 
     public function setToPendingPayment($modelId = null, $modelType = null){
+        
         $stageData = [
             "type" => "payment",
             "instance" => 1, 
             "updated_stage_id" => null,
             "skip_status" => false,
+            "manual_verification_status" => false,
             "pending_status" => true,
             "cancelled_status" => false,
             "failed_payment_status" => false,
             "notified_client_status" => false,
             "meta" => []
         ];
+
         return $this->initiateUpdateLifecycleProgress($modelId, $modelType, $stageData);
     }
 
@@ -228,6 +231,7 @@ trait LifecycleTraits
             "instance" => 1, 
             "updated_stage_id" => null,
             "skip_status" => false,
+            "manual_verification_status" => false,
             "pending_status" => false,
             "cancelled_status" => false,
             "failed_payment_status" => true,

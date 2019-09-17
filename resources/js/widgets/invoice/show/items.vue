@@ -305,7 +305,7 @@
                 this.localInvoice.sub_total_value = this.runGetTotal();
 
                 //  Re-Calculate the grand total amount
-                this.localInvoice.grand_total_value = this.runGetGrandTotal();
+                this.localInvoice.grand_total = this.runGetGrandTotal();
 
                 //  Re-Calculate the taxes
                 this.localInvoice.calculated_taxes = this.runCalculateTaxes();

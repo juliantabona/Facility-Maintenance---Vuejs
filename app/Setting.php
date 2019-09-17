@@ -5,6 +5,7 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use App\Traits\SettingTraits;
 
 Relation::morphMap([
     'user' => 'App\User',
@@ -15,6 +16,7 @@ Relation::morphMap([
 class Setting extends Model
 {
     use Dataviewer;
+    use SettingTraits;
 
     protected $casts = [
         'details' => 'array',
@@ -26,13 +28,16 @@ class Setting extends Model
      * @var array
      */
     protected $fillable = [
-        'details', 'trackable_id', 'trackable_type',
+        'details', 'owner_id', 'owner_type',
     ];
 
     /**
-     * Get all of the trackable models.
+     *  Get the owner from the morphTo relationship.
+     *  Settings can be assigned to multiple types of
+     *  owning resources e.g users, companies, stores,
+     *  e.t.c
      */
-    public function trackable()
+    public function owner()
     {
         return $this->morphTo();
     }

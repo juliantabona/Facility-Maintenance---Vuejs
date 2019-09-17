@@ -409,7 +409,7 @@
             updatePaymentDetails(invoice){
                 (this.localSelectedStage.meta || {}).linked_invoice_id = invoice.id;
                 (this.localSelectedStage.meta || {}).currency_type = invoice.currency_type;
-                (this.localSelectedStage.meta || {}).payment_amount = invoice.grand_total_value;
+                (this.localSelectedStage.meta || {}).payment_amount = invoice.grand_total;
                 (this.localSelectedStage.meta || {}).payment_method = invoice.payment_method;
             },
             closeModal(){

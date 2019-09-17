@@ -91,8 +91,8 @@
                 var referenceNo = this.invoice.reference_no_value;
                 var items = '';
                 var currency = (((this.invoice || {}).currency_type || {}).currency || {}).symbol || '';
-                var grand_total = this.formatPrice( (this.invoice.grand_total_value || 0), currency);
-                var expiry_date = moment(this.invoice.expiry_date_value).format('MMM DD YYYY');
+                var grand_total = this.formatPrice( (this.invoice.grand_total || 0), currency);
+                var expiry_date = moment(this.invoice.expiry_date).format('MMM DD YYYY');
                 var client = ((this.invoice || {}).customized_client_details || {});
                 var company = ((this.invoice || {}).customized_company_details || {});
 
@@ -133,10 +133,10 @@
         methods: {
             emailMsg(){
                 
-                var money = this.invoice.grand_total_value || 0;
+                var money = this.invoice.grand_total || 0;
                 var currency = (((this.invoice || {}).currency_type || {}).currency || {}).symbol || '';
                 var amount = this.formatPrice(money, currency);
-                var expiry_date = moment(this.invoice.expiry_date_value).format('MMM DD YYYY');
+                var expiry_date = moment(this.invoice.expiry_date).format('MMM DD YYYY');
                 var company_name = this.invoice.customized_company_details.name;
 
                 return '<p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:12px;font-family:arial, \'helvetica neue\', helvetica, sans-serif;line-height:18px;color:#000000;">  \
@@ -171,18 +171,18 @@
             },
             getShotCodes(){
                 
-                var money = this.invoice.grand_total_value || 0;
+                var money = this.invoice.grand_total || 0;
                 var currency = (((this.invoice || {}).currency_type || {}).currency || {}).symbol || '';
                 var sub_total = this.formatPrice( (this.invoice.sub_total_value || 0), currency);
-                var grand_total = this.formatPrice( (this.invoice.grand_total_value || 0), currency);
+                var grand_total = this.formatPrice( (this.invoice.grand_total || 0), currency);
                 var client = ((this.invoice || {}).customized_client_details || {});
                 var company = ((this.invoice || {}).customized_company_details || {});
 
                 var shortcodes = {
                     '[invoice_heading]': this.invoice.heading,
                     '[invoice_reference_no]': '#'+this.invoice.reference_no_value,
-                    '[created_date]': moment(this.invoice.created_date_value).format('MMM DD YYYY'),
-                    '[expiry_date]': moment(this.invoice.expiry_date_value).format('MMM DD YYYY'),
+                    '[created_date]': moment(this.invoice.created_date).format('MMM DD YYYY'),
+                    '[expiry_date]': moment(this.invoice.expiry_date).format('MMM DD YYYY'),
                     '[sub_total]': sub_total,
                     '[grand_total]': grand_total,
                     '[currency]': currency,

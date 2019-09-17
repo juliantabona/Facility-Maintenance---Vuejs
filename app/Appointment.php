@@ -55,7 +55,7 @@ class Appointment extends Model
         'id', 'subject', 'agenda', 'start_date', 'end_date', 'client_id', 'client_type', 'company_branch_id', 'company_id', 'created_at',
     ];
 
-    protected $orderable = [
+    protected $allowedOrderableColumns = [
         'id', 'subject', 'agenda', 'start_date', 'end_date', 'client_id', 'client_type', 'company_branch_id', 'company_id', 'created_at',
     ];
 

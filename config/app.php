@@ -179,7 +179,6 @@ return [
          */
 
         Barryvdh\DomPDF\ServiceProvider::class,
-        Zizaco\Entrust\EntrustServiceProvider::class,
 
         /*
          * Application Service Providers...
@@ -237,7 +236,6 @@ return [
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
         'PDF' => Barryvdh\DomPDF\Facade::class,
-        'Entrust' => Zizaco\Entrust\EntrustFacade::class,
         'Swap' => Swap\Laravel\Facades\Swap::class,
         'Cart' => Gloudemans\Shoppingcart\Facades\Cart::class,
     ],

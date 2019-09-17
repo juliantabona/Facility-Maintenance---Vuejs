@@ -71,7 +71,7 @@ trait Dataviewer
 
     protected function orderableColumns()
     {
-        return implode(',', $this->orderable);
+        return implode(',', $this->allowedOrderableColumns);
     }
 
     protected function allowedOperators()

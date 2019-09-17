@@ -2,8 +2,42 @@
 
 namespace App\Traits;
 
+use App\Http\Resources\Phone as PhoneResource;
+use App\Http\Resources\Phones as PhonesResource;
+
 trait PhoneTraits
 {
+
+    /*  convertToApiFormat() method:
+     *
+     *  Converts to the appropriate Api Response Format
+     *
+     */
+    public function convertToApiFormat($phones = null)
+    {
+
+        try {
+
+            if( $phones ){
+
+                //  Transform the phones
+                return new PhonesResource($phones);
+
+            }else{
+
+                //  Transform the phone
+                return new PhoneResource($this);
+
+            }
+
+        } catch (\Exception $e) {
+
+            //  Log the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+        }
+    }
+
     public function initiateGet()
     {
         //  Current authenticated user

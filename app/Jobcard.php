@@ -56,7 +56,7 @@ class Jobcard extends Model
         'selectedSuppliers.id', 'selectedSuppliers.name', 'selectedSuppliers.city', 'selectedSuppliers.state_or_region', 'selectedSuppliers.address', 'selectedSuppliers.industry', 'selectedSuppliers.type', 'selectedSuppliers.website_link', 'selectedSuppliers.phone_ext', 'selectedSuppliers.phone_num', 'selectedSuppliers.email', 'selectedSuppliers.created_at',
     ];
 
-    protected $orderable = [
+    protected $allowedOrderableColumns = [
         'id', 'title', 'description', 'start_date', 'end_date', 'created_at',
     ];
 
@@ -161,7 +161,7 @@ class Jobcard extends Model
 
     public function documents()
     {
-        return $this->morphMany('App\Document', 'documentable');
+        return $this->morphMany('App\Document', 'owner');
     }
 
     public function client()

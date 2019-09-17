@@ -9,14 +9,160 @@ use App\Phone;
 use App\Invoice;
 use App\Quotation;
 use App\Document;
+use App\Traits\CountryTraits;
 use App\Notifications\CompanyCreated;
 use App\Notifications\CompanyApproved;
-use App\Traits\CountryTraits;
+//  Resources
+use App\Http\Resources\Company as CompanyResource;
+use App\Http\Resources\Companies as CompaniesResource;
 
 trait CompanyTraits
 {
 
     use CountryTraits;
+
+
+    /*  convertToApiFormat() method:
+     *
+     *  Converts to the appropriate Api Response Format
+     *
+     */
+    public function convertToApiFormat($companies = null)
+    {
+
+        try {
+
+            if( $companies ){
+
+                //  Transform the companies
+                return new CompaniesResource($companies);
+
+            }else{
+
+                //  Transform the company
+                return new CompanyResource($this);
+
+            }
+
+        } catch (\Exception $e) {
+
+            //  Log the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+        }
+    }
+
+    /*  getCompanies() method:
+     *
+     *  This is used to return companies
+     *
+     */
+    public function getCompanies( $options = [] )
+    {
+        /************************************
+        *  CHECK IF THE USER IS AUTHORIZED  *
+        /************************************/
+
+        try {
+
+            //  If we have provided the users id
+            if( isset($options['user_id']) && !empty(isset($options['user_id'])) ){
+                
+                //  Get the specified user
+                $user = User::find( $options['user_id'] );
+            
+                //  Filter the companies by the user type
+                $userTypes = request('userTypes');
+
+                if( isset($userTypes) && !empty($userTypes) ){
+                    
+                    if($userTypes == 'admin'){
+                        //  Get companies where this user is an admin
+                        $companies = $user->companiesWhereUserIsAdmin;
+                    }elseif($userTypes == 'staff'){
+                        //  Get companies where this user is an staff member
+                        $companies = $user->companiesWhereUserIsStaff;
+                    }elseif($userTypes == 'client'){
+                        //  Get companies where this user is an client
+                        $companies = $user->companiesWhereUserIsClient;
+                    }elseif($userTypes == 'vendor'){
+                        //  Get companies where this user is an vendor
+                        $companies = $user->companiesWhereUserIsVendor;
+                    }else{
+                        /*  Incase $userTypes is a list e.g) admin,staff ... e.t.c
+                         *  This means we want companies where the user plays anyone
+                         *  of those roles.
+                         */
+                        $userTypes = explode(',', $userTypes );
+
+                        //  If we have atleast one userType
+                        if (count($userTypes)) {
+                            //  Get companies related to the listed user types
+                            $companies = $user->companies()->whereHas('users', function ($query) use($userTypes) {
+                                            $query->whereIn('user_allocations.type', $userTypes);
+                                        })->get();
+                        }
+                    }
+
+                }else{
+
+                    //  Get the specified companies for this user
+                    $companies = $user->companies()->get();
+                }
+
+            }else{
+
+                //  Get all the companies
+                $companies = $this->all();
+
+            }
+
+            if( $companies ){
+
+                //  Transform the companies
+                return new CompaniesResource($companies);
+
+            }else{
+
+                //  Otherwise we don't have a resource to return
+                return oq_api_notify_no_resource();
+            
+            }
+
+        } catch (\Exception $e) {
+
+            //  Log the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     /*  initiateGetAll() method:
      *
@@ -33,83 +179,60 @@ trait CompanyTraits
         //  Replace defaults with any provided options
         $config = array_merge($defaults, $options);
 
-        //  If we overide using the request
+        //  If we have the paginate value provided
         $requestPagination = request('paginate');
+        
         if (isset($requestPagination) && ($requestPagination == 0 || $requestPagination == 1)) {
-            $config['paginate'] = $requestPagination == 1 ? true : false;
+            $config['paginate'] = ($requestPagination == 1) ? true : false;
         }
 
         //  Current authenticated user
         $auth_user = auth('api')->user();
 
-        /*
-         *  $allocation = all, company, branch
-        /*
-         *  The $allocation variable is used to determine where the data is being
-         *  pulled from. The user may request data from three possible sources.
-         *  1) Data may come from the associated authenticated user branch
-         *  2) Data may come from the associated authenticated user company
-         *  3) Data may come from the whole bucket meaning outside the scope of the
-         *     authenticated user. This means we can access all possible records
-         *     available. This is usually useful for users acting as superadmins.
-         */
-        $allocation = strtolower(request('allocation'));
 
-        /*
-         *  $type = client, supplier
-        /*
-         *  The $type variable is used to determine which type of company to pull.
-         *  The user may request data of type.
-         *  1) client: A company that is listed as a client/customer
-         *  2) supplier: A company that is listed as a supplier/vendor/hawker
-         */
-        $type = strtolower(request('type'));
+        //  Get the company instance to gain access to all the companies
+        $companies = $this;
 
-        //  Apply filter by allocation
-        if ($allocation == 'all') {
-            /***********************************************************
-            *  CHECK IF THE USER IS AUTHORIZED TO ALL COMPANIES         *
-            /**********************************************************/
+        /*******************************
+         *  FILTER BY USER IDS         *
+         ******************************/
+        $userIds = strtolower(request('userIds'));
 
-            //  Get the current company instance
-            $model = $this;
-        } elseif ($allocation == 'branch') {
-            /*************************************************************
-            *  CHECK IF THE USER IS AUTHORIZED TO GET BRANCH COMPANIES    *
-            /*************************************************************/
+        //  If user indicated to only return companies related to a specific user id
+        if( isset($userIds) && !empty( $userIds ) ){
 
-            // Only get companies associated to the company branch
-            $model = $auth_user->companyBranch;
-        } else {
-            /**************************************************************
-            *  CHECK IF THE USER IS AUTHORIZED TO GET COMPANY COMPANIES    *
-            /**************************************************************/
+            //  Incase $userIds is a list e.g) 1,2,3 ... e.t.c
+            $userIds = explode(',', $userIds );
 
-            //  Only get companies associated to the company
-            $model = $auth_user->company;
+            //  If we have atleast one user id
+            if (count($userIds)) {
+                //  Get companies related to the listed user ids
+                $companies = $companies->whereHas('users', function ($query) use($userIds) {
+                                    $query->whereIn('user_allocations.user_id', $userIds);
+                                });
+            }
+
         }
 
-        /*  If user indicated to only return client dierctories
-        */
-        if ($type == 'client') {
-            $companies = $model->companyClients();
+        /*******************************
+         *  FILTER BY USER TYPES       *
+         ******************************/
+        $userTypes = strtolower(request('userTypes'));
 
-        /*  If user indicated to only return supplier dierctories
-        */
-        } elseif ($type == 'supplier') {
-            $companies = $model->companySuppliers();
+        //  If user indicated to only return companies related to a specific user type
+        if( isset($userTypes) && !empty( $userTypes ) ){
 
-        /*  If user did not indicate any specific group
-        */
-        } else {
-            //  If the $type is a list e.g) client,supplier
-            $type = explode(',', $type);
+            //  Incase $userTypes is a list e.g) admin,staff, ... e.t.c
+            $userTypes = explode(',', $userTypes );
 
-            if (count($type)) {
-                $companies = $model->companyDirectory()->whereIn('company_directory.type', $type);
-            } else {
-                $companies = $model->companyDirectory();
+            //  If we have atleast one user type
+            if (count($userTypes)) {
+                //  Get companies related to the listed user types
+                $companies = $companies->whereHas('users', function ($query) use($userTypes) {
+                                    $query->whereIn('user_allocations.type', $userTypes);
+                                });
             }
+
         }
 
         /*  To avoid sql order_by error for ambigious fields e.g) created_at
@@ -142,22 +265,34 @@ trait CompanyTraits
                 $companies = $companies->advancedFilter(['order_join' => $order_join, 'paginate' => $config['paginate']]);
             }
 
-            //  If we are not paginating then
-            if (!$config['paginate']) {
-                //  Get the collection
-                $companies = $companies->get();
-            }
+            //  If we only want to know how many were returned
+            if( request('count') == 1 ){
+                //  If the companies are paginated
+                if($config['paginate']){
+                    $companies = $companies->total() ?? 0;
+                //  If the companies are not paginated
+                }else{
+                    $companies = $companies->count() ?? 0;
+                }
+            }else{
+                //  If we are not paginating then
+                if (!$config['paginate']) {
+                    //  Get the collection
+                    $companies = $companies->get();
+                }
 
-            //  If we have any companies so far
-            if ($companies) {
-                //  Eager load other relationships wanted if specified
-                if (strtolower(request('connections'))) {
-                    $companies->load(oq_url_to_array(strtolower(request('connections'))));
+                //  If we have any companies so far
+                if ($companies) {
+                    //  Eager load other relationships wanted if specified
+                    if (strtolower(request('connections'))) {
+                        $companies->load(oq_url_to_array(strtolower(request('connections'))));
+                    }
                 }
             }
 
             //  Action was executed successfully
             return ['success' => true, 'response' => $companies];
+
         } catch (\Exception $e) {
             //  Log the error
             $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);

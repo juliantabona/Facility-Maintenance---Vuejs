@@ -16,13 +16,46 @@ use App\Mail\OrderMail;
 //  Notifications
 use App\Notifications\OrderCreated;
 use App\Notifications\OrderUpdated;
-use Illuminate\Support\Facades\Hash;
+//  Resources
+use App\Http\Resources\Order as OrderResource;
+use App\Http\Resources\Orders as OrdersResource;
 //  Other
 use PDF;
 use Carbon\Carbon;
 
 trait OrderTraits
 {
+
+    /*  convertToApiFormat() method:
+     *
+     *  Converts to the appropriate Api Response Format
+     *
+     */
+    public function convertToApiFormat($orders = null)
+    {
+
+        try {
+
+            if( $orders ){
+
+                //  Transform the orders
+                return new OrdersResource($orders);
+
+            }else{
+
+                //  Transform the order
+                return new OrderResource($this);
+
+            }
+
+        } catch (\Exception $e) {
+
+            //  Log the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+        }
+    }
+
     /*  initiateGetAll() method:
      *
      *  This is used to return a pagination of order results.
@@ -305,65 +338,68 @@ trait OrderTraits
         }
 
         //  MyCart Instance
+        $cart = request('cart');
         $cartInstance = ( new MyCart() );
-        $cartRequest = $cartInstance->initiateGetCartDetails( $store->id );
+        $cartRequest = $cartInstance->initiateGetCartDetails($cart, $store->id);
 
-        if( $cartRequest['success'] && count($cartRequest['response']) ){
+        if ($cartRequest['success'] && count($cartRequest['response'])) {
             $cartDetails = $cartRequest['response'];
-        }else{
+        } else {
             //  Notify the user that the cart does not exist
             return ['success' => false, 'response' => $cartRequest];
         }
 
         //  Create a template to hold the order details
         $template = $template ?? [
-
             /*  Basic Info  */
             'number' => request('number') ?? null,
             'currency_type' => $storeSettings['general']['currency_type'] ?? (request('currency_type') ?? null),
-            'meta_data' => request('meta_data') ?? null,
+            'created_date' => request('created_date') ?? null,
 
             /*  Item Info  */
             'items' => $cartDetails['items'] ?? (request('items') ?? null),
 
-            /*  Shop Info  */
-            'shop_taxes' => $shop->taxes ?? (request('shop_taxes') ?? null),
-            'shop_discounts' => $shop->discounts ?? (request('shop_discounts') ?? null),
-            'shop_coupons' => $shop->coupons ?? (request('shop_coupons') ?? null),
+            /*  Store Info  */
+            'taxes' => $store->taxes ?? (request('taxes') ?? null),
+            'discounts' => $store->discounts ?? (request('discounts') ?? null),
+            'coupons' => $store->coupons ?? (request('coupons') ?? null),
 
             /*  Grand Total, Sub Total, Tax Total, Discount Total, Shipping Total  */
             'sub_total' => $cartDetails['sub_total'] ?? (request('sub_total') ?? 0),
-            'cart_tax_total' => $cartDetails['cart_tax_total'] ?? (request('cart_tax_total') ?? 0),
-            'shop_tax_total' => $cartDetails['shop_tax_total'] ?? (request('shop_tax_total') ?? 0),
+            'item_tax_total' => $cartDetails['item_tax_total'] ?? (request('item_tax_total') ?? 0),
+            'global_tax_total' => $cartDetails['global_tax_total'] ?? (request('global_tax_total') ?? 0),
             'grand_tax_total' => $cartDetails['grand_tax_total'] ?? (request('grand_tax_total') ?? 0),
-            'cart_discount_total' => $cartDetails['cart_discount_total'] ?? (request('cart_discount_total') ?? 0),
-            'shop_discount_total' => $cartDetails['shop_discount_total'] ?? (request('shop_discount_total') ?? 0),
+            'item_discount_total' => $cartDetails['item_discount_total'] ?? (request('item_discount_total') ?? 0),
+            'global_discount_total' => $cartDetails['global_discount_total'] ?? (request('global_discount_total') ?? 0),
             'grand_discount_total' => $cartDetails['grand_discount_total'] ?? (request('grand_discount_total') ?? 0),
             'shipping_total' => $cartDetails['shipping_total'] ?? (request('shipping_total') ?? 0),
             'grand_total' => $cartDetails['grand_total'] ?? (request('grand_total') ?? 0),
 
             /*  Customer Info  */
-            'submitted_by' => request('submitted_by') ?? null,
-            'client_ip_address' => request('client_ip_address') ?? null,
-            'client_user_agent' => request('client_user_agent') ?? null,
+            'reference_id' => request('reference_id') ?? null,
+            'reference_ip_address' => request('reference_ip_address') ?? null,
+            'reference_user_agent' => request('reference_user_agent') ?? null,
             'customer_note' => request('customer_note') ?? null,
             'billing_info' => request('billing_info') ?? null,
             'shipping_info' => request('shipping_info') ?? null,
 
-            //  Store, Company & Branch Info
-            'store_id' => request('store_id') ?? null,
-            'company_branch_id' => $store->company_branch_id ?? null,
-            'company_id' => $store->company_id ?? null,
+            /*  Company Info  */
+            'company_info' => request('company_info') ?? null,
+            
+            /*  Allocation Details  */
+            'orderable_id' => $store->id ?? null,
+            'orderable_type' => 'store',
+
+            /*  Meta Data  */
+            'meta' => request('meta') ?? null,
         ];
 
         try {
-
             //  Create the order
             $order = $this->create($template)->fresh();
 
             //  If the order was created successfully
             if ($order) {
-
                 /*****************************
                  *   SEND NOTIFICATIONS      *
                  *****************************/
@@ -379,21 +415,25 @@ trait OrderTraits
                 $orderCreatedActivity = oq_saveActivity($order, $auth_user, $status, ['order' => $order->summarize()]);
 
                 //  Check and generate the order lifecycle
-                $lifecyle = $this->checkAndCreateLifecycle($order);
+                $lifecyle = $this->checkAndCreateLifecycle($order, $store);
 
                 //  Set the lifecycle to pending payment status
                 $pendingPaymentActivity = $this->setLifecycleToPendingPaymentStatus($order);
 
                 //  Check and generate the order invoice
-                $invoiceRequest = $this->checkAndCreateOrderInvoice($store, $order);
+                $invoiceRequest = $this->convertToInvoice($order, $store);
+
+                return ['success' => true, 'response' => $invoiceRequest];
 
                 //  If the invoice was created successfully
-                if($invoiceRequest && $invoiceRequest['success']){
+                if ($invoiceRequest && $invoiceRequest['success']) {
+
+                    //  Get the invoice created
+                    $invoice = $invoiceRequest['response'];
 
                     //  Send the order invoice
-                    $sentOrderMail = $this->checkAndSendOrderInvoice($invoiceRequest['response'], $order, $store);
-                    return $sentOrderMail;
-                    
+                    $sentOrderMail = $this->checkAndSendOrderInvoice($invoice, $order, $store);
+
                 }
 
                 //  refetch the updated order
@@ -424,112 +464,26 @@ trait OrderTraits
      */
     public function initiateUpdate($order_id)
     {
-        //  Current authenticated user
-        $auth_user = auth('api')->user();
-
-        /*******************************************************
-         *   CHECK IF USER HAS PERMISSION TO UPDATE ORDER    *
-         ******************************************************/
-
-        /*********************************************
-         *   VALIDATE ORDER INFORMATION            *
-         ********************************************/
-
-        //  Create a template to hold the order details
-        $template = $template ?? [
-            //  General details
-            'title' => request('title'),
-            'description' => request('description') ?? null,
-            'type' => request('type') ?? null,
-
-            //  Pricing details
-            'cost_per_item' => request('cost_per_item') ?? 0,
-            'unit_price' => request('unit_price') ?? 0,
-            'unit_sale_price' => request('unit_sale_price') ?? 0,
-
-            //  Inventory & Tracking details
-            'sku' => request('sku') ?? null,
-            'barcode' => request('barcode') ?? null,
-            'quantity' => request('quantity') ?? null,
-            'has_inventory' => request('has_inventory'),
-            'auto_track_inventory' => request('auto_track_inventory'),
-
-            //  Variant details
-            'variants' => request('variants') ?? null,
-            'variant_attributes' => request('variant_attributes') ?? null,
-            'allow_variants' => request('allow_variants'),
-
-            //  Download Details
-            'allow_downloads' => request('allow_downloads'),
-
-            //  Order Details
-            'show_on_order' => request('show_on_order'),
-
-            //  Ownership Details
-            'company_branch_id' => $auth_user->company_branch_id ?? null,
-            'company_id' => $auth_user->company_id ?? null,
-        ];
-
-        try {
-            //  Update the order
-            $order = $this->where('id', $order_id)->first()->update($template);
-
-            //  If the order was updated successfully
-            if ($order) {
-                //  re-retrieve the instance to get all of the fields in the table.
-                $order = $this->where('id', $order_id)->first();
-
-                //  refetch the updated order
-                $order = $order->fresh();
-
-                /*****************************
-                 *   SEND NOTIFICATIONS      *
-                 *****************************/
-
-                // $auth_user->notify(new OrderUpdated($order));
-
-                /*****************************
-                 *   RECORD ACTIVITY         *
-                 *****************************/
-
-                //  Record activity of order updated
-                $status = 'updated';
-                $orderUpdatedActivity = oq_saveActivity($order, $auth_user, $status, ['order' => $order->summarize()]);
-
-                //  Action was executed successfully
-                return ['success' => true, 'response' => $order];
-            } else {
-                //  No resource found
-                return ['success' => false, 'response' => oq_api_notify_no_resource()];
-            }
-        } catch (\Exception $e) {
-            //  Log the error
-            $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
-
-            //  Return the error response
-            return ['success' => false, 'response' => $response];
-        }
+        
     }
 
-    public function checkAndCreateLifecycle($order)
+    public function checkAndCreateLifecycle($order, $store)
     {
-        $auth_user = auth('api')->user();
 
         /*  $defaultLifecycle:
          *  The default lifecycle represents the lifecycle process followed
          *  by orders of a particular company.
          */
-        $defaultLifecycle = Lifecycle::where('type', 'order')->where('company_id', $order->company_id)->first();
+        $defaultLifecycle = $store->availableLifecycles->where('type', 'order')->where('default', 1)->first();
 
         if (empty($defaultLifecycle)) {
-
             //  Add the default lifecycle to the order
             DB::table('lifecycle_allocations')->insert([
-                'lifecycle_id' => $defaultLifecycle->id, 
-                'trackable_id' => $order->id,                       
-                'trackable_type' => 'order',                       
-                'created_at' => DB::raw('now()'),                       
-                'updated_at' => DB::raw('now()')
+                'lifecycle_id' => $defaultLifecycle->id,
+                'trackable_id' => $order->id,
+                'trackable_type' => 'order',
+                'created_at' => DB::raw('now()'),
+                'updated_at' => DB::raw('now()'),
             ]);
         }
     }
@@ -537,14 +491,12 @@ trait OrderTraits
     public function setLifecycleToPendingPaymentStatus($order)
     {
         //  Set the current lifecycle to pending payment
-        return (new Lifecycle)->setToPendingPayment($order->id, 'order');
-
+        return (new Lifecycle())->setToPendingPayment($order->id, 'order');
     }
 
     public function setLifecycleToVerifyPaymentStatus()
     {
-        try{
-            
+        try {
             $payment_amount = request('payment_amount') ?? null;
             $payment_method = request('payment_method') ?? null;
 
@@ -552,39 +504,38 @@ trait OrderTraits
             $orderPendingPaymentActivityArray = collect($orderPendingPaymentActivity)->toArray();
 
             //  If the current lifecycle activity is set to pending payment then we can update the lifecycle
-            if( $orderPendingPaymentActivityArray['activity']['type'] == 'payment' && $orderPendingPaymentActivityArray['activity']['pending_status'] == 'true'){
-            
+            if ($orderPendingPaymentActivityArray['activity']['type'] == 'payment' && $orderPendingPaymentActivityArray['activity']['pending_status'] == 'true') {
                 //  Set the id to null to be autogenerated
                 $orderPendingPaymentActivityArray['id'] = null;
 
                 //  Set the created by to the users id instead of the whole user data
                 $orderPendingPaymentActivityArray['created_by'] = $orderPendingPaymentActivityArray['created_by']['id'] ?? null;
-                
+
                 //  Set pending payment to false to turn it off
                 $orderPendingPaymentActivityArray['activity']['pending_status'] = false;
                 //  Set manual verification to true to turn it on
                 $orderPendingPaymentActivityArray['activity']['manual_verification_status'] = true;
-                
+
                 //  Update the payment amount if needed, otherwise use the old value
                 $orderPendingPaymentActivityArray['activity']['meta']['payment_amount'] = $payment_amount ?? $orderPendingPaymentActivityArray['activity']['meta']['payment_amount'];
                 //  Update the payment method if needed, otherwise use the old value
                 $orderPendingPaymentActivityArray['activity']['meta']['payment_method'] = $payment_method ?? $orderPendingPaymentActivityArray['activity']['meta']['payment_method'];
-            
-                //  Keep only important fields and remove unnecessary fields from the data set
-                $importantFields = (new RecentActivity)->getFillable();
 
-                foreach( $orderPendingPaymentActivityArray as $key => $value ){
+                //  Keep only important fields and remove unnecessary fields from the data set
+                $importantFields = (new RecentActivity())->getFillable();
+
+                foreach ($orderPendingPaymentActivityArray as $key => $value) {
                     //  If this is not an important field
-                    if( !in_array($key, $importantFields) ){
+                    if (!in_array($key, $importantFields)) {
                         //  Remove the field
-                        unset( $orderPendingPaymentActivityArray[$key] );
+                        unset($orderPendingPaymentActivityArray[$key]);
                     }
                 }
 
-                //  Create a new activity with the modified fields and values 
-                $verifyPaymentActivity = new RecentActivity( $orderPendingPaymentActivityArray );
+                //  Create a new activity with the modified fields and values
+                $verifyPaymentActivity = new RecentActivity($orderPendingPaymentActivityArray);
 
-                $savedActivity = $this->recentActivities()->save( $verifyPaymentActivity );
+                $savedActivity = $this->recentActivities()->save($verifyPaymentActivity);
 
                 //  refetch the order
                 $order = $this->fresh();
@@ -592,7 +543,6 @@ trait OrderTraits
                 //  Action was executed successfully
                 return ['success' => true, 'response' => $order];
             }
-            
         } catch (\Exception $e) {
             //  Log the error
             $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
@@ -601,64 +551,75 @@ trait OrderTraits
             return ['success' => false, 'response' => $response];
         }
 
-        return ['success' => false, 'response' => 'Proof of payment was not updated. The current lifecycle is not pending payment']; 
-
+        return ['success' => false, 'response' => 'Proof of payment was not updated. The current lifecycle is not pending payment'];
     }
 
-    public function checkAndCreateOrderInvoice($store, $order)
+    public function convertToInvoice($order, $store)
     {
         $auth_user = auth('api')->user();
+
+        //  Check if the store has any settings
+        $storeSettings = $store->settings['details'];
 
         $hasInvoices = $order->invoices->count();
 
         //  If we don't have an invoice create one
-        if ( !$hasInvoices ) {
-            
-            //  Get the settings details
-            $settings = $settings['details'];
+        if (!$hasInvoices) {
 
             //  Get the current date and time
-            $orderCreatedDateTime = Carbon::createFromFormat('Y-m-d H:i:s', $order->created_at);
+            $orderCreatedDateTime = Carbon::createFromFormat('Y-m-d H:i:s', ($order->created_date ?? $order->created_at));
 
             //  Create the invoice template
             $template = [
-                'heading' => $settings['invoiceTemplate']['heading'],
-                'reference_no_title' => $settings['invoiceTemplate']['reference_no_title'],
-                'reference_no_value' => null,                                                   //  Autogenerated
-                'created_date_title' => $settings['invoiceTemplate']['created_date_title'],
-                'created_date_value' => $orderCreatedDateTime,  
-                'expiry_date_title' => $settings['invoiceTemplate']['expiry_date_title'],
-                'expiry_date_value' => $orderCreatedDateTime->addDays( $settings['invoiceTemplate']['expire_after_no_of_days'] ),
-                'sub_total_title' => $settings['invoiceTemplate']['sub_total_title'],
-                'sub_total_value' => $order->sub_total,
-                'grand_total_title' => $settings['invoiceTemplate']['grand_total_title'],
-                'grand_total_value' => $order->grand_total,
+                'number' => $order['number'],
                 'currency_type' => $order['currency_type'],
-                'calculated_taxes' => $order->taxes,
-                'invoice_to_title' => $settings['invoiceTemplate']['invoice_to_title'],
-                //'customized_company_details' => $order->company->getBasicDetails() ?? null,
-                //'customized_client_details' => $order->client->getBasicDetails() ?? null,
-                'client_id' => $order->client_id,
-                'client_type' => $order->client_type,
-                'table_columns' => $settings['invoiceTemplate']['table_columns'],
                 'items' => $order['items'],
-                'notes' => $settings['invoiceTemplate']['notes'],
-                'colors' => $settings['invoiceTemplate']['colors'],
-                'footer' => $settings['invoiceTemplate']['footer'],
-                'company_branch_id' => $order->company_branch_id,
-                'company_id' => $order->company_id,
+                'taxes' => $order['taxes'],
+                'discounts' => $order['discounts'],
+                'coupons' => $order['coupons'],
+                'sub_total' => $order['sub_total'],
+                'item_tax_total' => $order['item_tax_total'],
+                'global_tax_total' => $order['global_tax_total'],
+                'grand_tax_total' => $order['grand_tax_total'],
+                'item_discount_total' => $order['item_discount_total'],
+                'global_discount_total' => $order['global_discount_total'],
+                'grand_discount_total' => $order['grand_discount_total'],
+                'shipping_total' => $order['shipping_total'],
+                'grand_total' => $order['grand_total'],
+                'billing_info' => $order['billing_info'],
+                'shipping_info' => $order['shipping_info'],
+                'company_info' => $order['company_info'],
+                'created_date' => $orderCreatedDateTime,
+                'expiry_date' => $orderCreatedDateTime->addDays($storeSettings['invoiceTemplate']['expire_after_no_of_days']),
+                'isRecurring' => 0,
+                'recurring_settings' => null,
+                'invoice_parent_id' => null,
+                'invoiceable_id' => $order['id'],
+                'invoiceable_type' => 'order',
+                'meta' => [
+                    'heading_title' => $storeSettings['invoiceTemplate']['heading_title'],
+                    'reference_no_title' => $storeSettings['invoiceTemplate']['reference_no_title'],                                             //  Autogenerated
+                    'created_date_title' => $storeSettings['invoiceTemplate']['created_date_title'],
+                    'expiry_date_title' => $storeSettings['invoiceTemplate']['expiry_date_title'],
+                    'sub_total_title' => $storeSettings['invoiceTemplate']['sub_total_title'],
+                    'grand_total_title' => $storeSettings['invoiceTemplate']['grand_total_title'],
+                    'recipient_title' => $storeSettings['invoiceTemplate']['recipient_title'],
+                    'table_columns' => $storeSettings['invoiceTemplate']['table_columns'],
+                    'notes' => $storeSettings['invoiceTemplate']['notes'],
+                    'colors' => $storeSettings['invoiceTemplate']['colors'],
+                    'footer_notes' => $storeSettings['invoiceTemplate']['footer_notes']
+                ]
             ];
 
             //  Create a new invoice
             return ( new Invoice() )->initiateCreate($template);
-            
         }
 
         return false;
     }
 
-    public function checkAndSendOrderInvoice($invoice, $order, $store){
-
+    public function checkAndSendOrderInvoice($invoice, $order, $store)
+    {
         $auth_user = auth('api')->user();
         $deliveryMethods = request('deliveryMethods');
 
@@ -667,8 +628,8 @@ trait OrderTraits
          ******************************/
 
         //  If specified to send invoice via mail
-        if ( isset($deliveryMethods) && !empty($deliveryMethods) ) {
-            
+        if (isset($deliveryMethods) && !empty($deliveryMethods)) {
+
             $mailDetails = request('mail');
 
             //  If specified to send invoice via sms
@@ -679,25 +640,24 @@ trait OrderTraits
 
             //  If specified to send invoice via mail and we have the mail details
             if (in_array('Email', $deliveryMethods) && isset($mailDetails) && !empty($mailDetails)) {
-                
                 //  Email details
                 $primaryEmails = $mailDetails['primaryEmails'];
                 $ccEmails = $mailDetails['ccEmails'];
                 $bccEmails = $mailDetails['bccEmails'];
                 $subject = /* $mailDetails['subject']; */ 'Thank you for your order!';
                 $message = /* $mailDetails['message']; */ 'Your order was received thank you.';
-                
+
                 //  Send via email
                 return $this->sendOrderAsMail(
-                            $order, $invoice, 
-                            $mailDetails = [ 
-                                'primaryEmails' => $primaryEmails, 'ccEmails' => $ccEmails, 'bccEmails' => $bccEmails, 
-                                'subject' => $subject,  'message' => $message
-                            ], 
+                            $order, $invoice,
+                            $mailDetails = [
+                                'primaryEmails' => $primaryEmails, 'ccEmails' => $ccEmails, 'bccEmails' => $bccEmails,
+                                'subject' => $subject,  'message' => $message,
+                            ],
                             $auth_user,
                             $config = [
-                                'attach_order_pdf' => request('attach_order_pdf') || true, 
-                                'attach_invoice_pdf' => request('attach_order_pdf') || true, 
+                                'attach_order_pdf' => request('attach_order_pdf') || true,
+                                'attach_invoice_pdf' => request('attach_order_pdf') || true,
                                 'attach_bank_details_pdf' => request('attach_order_pdf') || true,
                             ]
                         );
@@ -705,22 +665,20 @@ trait OrderTraits
         }
 
         return false;
-
     }
 
     public function sendOrderAsMail($order, $invoice, $mailDetails = [], $user = null, $mailConfig = [])
     {
-
         //  Default settings for the mailDetails
         $defaultMailDetails = array(
-            'primaryEmails' => null, 'ccEmails' => null, 'bccEmails' => null, 'subject' => null,  'message' => null
+            'primaryEmails' => null, 'ccEmails' => null, 'bccEmails' => null, 'subject' => null,  'message' => null,
         );
 
         //  Replace defaults with any provided options
         $mailDetails = array_merge($defaultMailDetails, $mailDetails);
 
         //  Default settings
-        $defaultMailConfig = array( 'attach_order_pdf' => true, 'attach_invoice_pdf' => true, 'attach_bank_details_pdf' => true);
+        $defaultMailConfig = array('attach_order_pdf' => true, 'attach_invoice_pdf' => true, 'attach_bank_details_pdf' => true);
 
         //  Replace defaults with any provided options
         $mailConfig = array_merge($defaultMailConfig, $mailConfig);
@@ -760,7 +718,6 @@ trait OrderTraits
         $message = $this->replaceShortcodes($order, $message);
         $subject = $this->replaceShortcodes($order, $subject);
 
-        
         //  Foreach email
         foreach ($primaryEmails as $primaryEmail) {
             /******************************
@@ -771,20 +728,20 @@ trait OrderTraits
             $orderPDF = $this->getOrderAsPDF($order);
 
             //  Invoice PDF
-            $invoicePDF = ( new Invoice )->getInvoiceAsPDF($invoice);
+            $invoicePDF = ( new Invoice() )->getInvoiceAsPDF($invoice);
 
             //  Store Bank Account PDF
-            $bankDetailsPDF = ( new Store )->getStoreBankAccountDetailsAsPDF($order->store);
+            $bankDetailsPDF = ( new Store() )->getStoreBankAccountDetailsAsPDF($order->store);
 
             $mailData = [$subject, $message];
-            
+
             Mail::to($primaryEmail)->send(new OrderMail(
-                $subject, $message, 
+                $subject, $message,
                 //  Order and Invoice
                 $order, $invoice,
                 //  Order PDF Details
                 $orderPDF,
-                //  Invoice PDF Details 
+                //  Invoice PDF Details
                 $invoicePDF,
                 //  Bank Account PDF Details
                 $bankDetailsPDF,
@@ -801,16 +758,15 @@ trait OrderTraits
 
             //  Record activity of order sent receipt
             $orderSentActivity = oq_saveActivity($order, $auth_user, $status, ['order' => $order->summarize(), 'mail' => $mail]);
-        
+
             //  Action was executed successfully
             return ['success' => true, 'response' => $mail];
         }
     }
-    
-    public function getOrderAsPDF($order){
 
+    public function getOrderAsPDF($order)
+    {
         return PDF::loadView('pdf.order', array('order' => $order));
-
     }
 
     /*  replaceShortcodes() method:
@@ -828,14 +784,14 @@ trait OrderTraits
         $company = $order->customized_company_details;
         $currency = $order->currency_type['currency']['symbol'] ?? '';
         $sub_total = $currency.number_format($order->sub_total_value, 2, ',', '.');
-        $grand_total = $currency.number_format($order->grand_total_value, 2, ',', '.');
+        $grand_total = $currency.number_format($order->grand_total, 2, ',', '.');
 
         //  Custom Order Variables - Shortcodes
         $customFields = [
             '[order_heading]' => $order->heading,
             '[order_reference_no]' => '#'.$order->reference_no_value,
-            '[created_date]' => (new Carbon($order->created_date_value))->format('M d Y'),
-            '[expiry_date]' => (new Carbon($order->expiry_date_value))->format('M d Y'),
+            '[created_date]' => (new Carbon($order->created_date))->format('M d Y'),
+            '[expiry_date]' => (new Carbon($order->expiry_date))->format('M d Y'),
             '[sub_total]' => $sub_total,
             '[grand_total]' => $grand_total,
             '[currency]' => $currency,

@@ -37,6 +37,7 @@ class CreateUsersTable extends Migration
             $table->string('password')->nullable();
             $table->boolean('verified')->default(0);
             $table->boolean('setup')->default(0);
+            $table->string('account_type')->default('basic');   //  SuperAdmin
 
             /*  Social Info  */
             $table->string('facebook_link')->nullable();

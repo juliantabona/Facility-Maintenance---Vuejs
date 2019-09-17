@@ -8,8 +8,10 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use App\Traits\LifecycleTraits;
 
 Relation::morphMap([
+    'company' => 'App\Company',
     'jobcard' => 'App\Jobcard',
     'order' => 'App\Order',
+    'store' => 'App\Store',
 ]);
 
 class Lifecycle extends Model
@@ -29,6 +31,15 @@ class Lifecycle extends Model
     protected $fillable = [
         'stages', 'default', 'type', 'company_branch_id', 'company_id',
     ];
+
+    
+    /**
+     * Get all the resources that can hold lifecycles e.g companies and stores
+     */  
+    public function lifecycleable()
+    {
+        return $this->morphTo();
+    }
 
     /**
      * Get all of the jobcards that are assigned this lifecycle.

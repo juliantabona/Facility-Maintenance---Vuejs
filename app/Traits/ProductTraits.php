@@ -11,8 +11,42 @@ use App\Document;
 use App\Notifications\ProductCreated;
 use App\Notifications\ProductUpdated;
 
+//  Resources
+use App\Http\Resources\Product as ProductResource;
+use App\Http\Resources\Products as ProductsResource;
+
 trait ProductTraits
 {
+
+    /*  convertToApiFormat() method:
+     *
+     *  Converts to the appropriate Api Response Format
+     *
+     */
+    public function convertToApiFormat($products = null)
+    {
+
+        try {
+
+            if( $products ){
+                
+                //  Transform the products
+                return new ProductsResource($products);
+
+            }else{
+                
+                //  Transform the product
+                return new ProductResource($this);
+
+            }
+
+        } catch (\Exception $e) {
+
+            //  Log the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+        }
+    }
 
     /*  initiateGetAll() method:
      *

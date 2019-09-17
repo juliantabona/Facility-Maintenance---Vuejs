@@ -29,7 +29,7 @@ class Tag extends Model
 
     protected $allowedFilters = [];
 
-    protected $orderable = [];
+    protected $allowedOrderableColumns = [];
 
     /**
      * Get all of the products that are assigned this Tag.

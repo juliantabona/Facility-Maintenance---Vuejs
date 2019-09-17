@@ -23,7 +23,6 @@
                     <Carousel v-model="checkoutProgress" dots="none" arrow="never" class="pb-5 mt-2 mb-2">
                         
                         <!--   Account Details -->
-
                         <CarouselItem>
                             <Card class="ml-1 mr-1">   
                                 <accountStep
@@ -31,6 +30,7 @@
                                     @updated:billingInfo="localBillingInfo = $event"
                                     @proceed="checkoutProgress = checkoutProgress + 1">
                                 </accountStep>
+                                Bill To: {{ localBillingInfo }}
                             </Card>
                         </CarouselItem>
 
@@ -106,11 +106,12 @@
             return {
                 user: auth.user,
                 localProducts: this.products,
+                storeId: (this.$route.params || {}).storeId,
                 checkoutProgress: 0,
 
                 selectedPaymentMethod: null,
-                localBillingInfo: this.billingInfo,
-                localShippingInfo: this.shippingInfo,
+                localBillingInfo: null,
+                localShippingInfo: null,
                 customerNote: '',
 
             }
@@ -136,7 +137,7 @@
                 let orderData = { 
 
                         //  Customer Info
-                        submitted_by: user.id,
+                        reference_id: this.user.id,
                         billing_info: this.localBillingInfo,
                         shipping_info: this.localShippingInfo,
                         customer_note: this.customerNote,
@@ -145,15 +146,16 @@
                         payment_method: this.selectedPaymentMethod,
 
                         //  Store, Company & Branch Info
-                        store_id: this.store.id,
+                        store_id: this.storeId,
 
                         //  Mail/Sms delivery info
                         deliveryMethods: ['Email'],
                         mail: {
-                            primaryEmails: [ user.email ],
+                            primaryEmails: [ this.user.email ],
                             ccEmails: [],
                             bccEmails: []
-                        }
+                        },
+                        cart: cartInstance.cart
 
                  };
 

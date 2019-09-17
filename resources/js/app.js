@@ -77,6 +77,11 @@ import Store from './store.js';
 
 window.store = new Store();
 
+//  Import Cart For storing and managing the users cart [A custom js file we created]
+import Cart from './cart.js';
+
+window.cartInstance = new Cart();
+
 //  Global event manager, to emit changes/updates
 //  such as when user has logged in e.g) auth.js
 window.Event = new Vue;

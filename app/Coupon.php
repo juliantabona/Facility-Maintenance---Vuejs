@@ -2,16 +2,18 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Eloquent\Model;
+use App\Traits\CouponTraits;
 
 Relation::morphMap([
-    'product' => 'App\Product',
-    'shop' => 'App\Shop',
+    'product' => 'App\Product'
 ]);
 
 class Coupon extends Model
 {
+    use CouponTraits;
+
     protected $casts = [
         'meta' => 'array',
     ];
@@ -26,18 +28,27 @@ class Coupon extends Model
     ];
 
     /**
-     * Get all of the owning coupon models.
+     *  Get the owner from the morphTo relationship.
+     *  Coupons can be assigned to multiple types of
+     *  owning resources e.g companies, stores,
+     *  e.t.c
      */
-    public function couponable()
+    public function owner()
     {
         return $this->morphTo();
     }
 
+    /**
+     *  Coupons can be assigned to multiple types of
+     *  resources e.g products
+     */
+    public function products()
+    {
+        return $this->morphedByMany('App\Product', 'allocatable', 'coupon_allocations');
+    }
+
     public function recentActivities()
     {
-        return $this->morphMany('App\RecentActivity', 'trackable')
-                    ->where('trackable_id', $this->id)
-                    ->where('trackable_type', 'coupon')
-                    ->orderBy('created_at', 'desc');
+        return $this->morphMany('App\RecentActivity', 'owner')->orderBy('created_at', 'desc');
     }
 }

@@ -26,17 +26,25 @@ class Invoice extends Model
      */
     protected $casts = [
         'currency_type' => 'array',
-        'calculated_taxes' => 'array',
-        'customized_company_details' => 'array',
-        'customized_client_details' => 'array',
-        'table_columns' => 'array',
         'items' => 'array',
-        'notes' => 'array',
-        'colors' => 'array',
+        'taxes' => 'array',
+        'discounts' => 'array',
+        'coupons' => 'array',
+        'billing_info' => 'array',
+        'shipping_info' => 'array',
+        'company_info' => 'array',
         'recurring_settings' => 'array',
+        'meta' => 'array',
     ];
 
-    protected $dates = ['created_date_value', 'expiry_date_value'];
+    /**
+     * The attributes that should be mutated to dates.
+     *
+     * @var array
+     */
+    protected $dates = [
+        'created_date', 'expiry_date'
+    ];
 
     protected $with = ['reminders'];
 
@@ -46,11 +54,33 @@ class Invoice extends Model
      * @var array
      */
     protected $fillable = [
-        'status', 'heading', 'reference_no_title', 'reference_no_value', 'created_date_title', 'created_date_value',
-        'expiry_date_title', 'expiry_date_value', 'sub_total_title', 'sub_total_value', 'grand_total_title', 'grand_total_value',
-        'currency_type', 'calculated_taxes', 'invoice_to_title', 'customized_company_details', 'customized_client_details', 'client_id', 'client_type',
-        'table_columns', 'items', 'notes', 'colors', 'footer', 'isRecurring', 'recurring_settings', 'invoice_parent_id', 'quotation_id',
-        'company_branch_id', 'company_id',
+        /*  Basic Info  */
+        'number', 'currency_type', 'created_date', 'expiry_date',
+
+        /*  Item Info  */
+        'items',
+
+        /*  Store Info  */
+        'taxes', 'discounts', 'coupons',
+
+        /*  Grand Total, Sub Total, Tax Total, Discount Total, Shipping Total  */
+        'sub_total', 'item_tax_total', 'global_tax_total', 'grand_tax_total', 'item_discount_total',
+        'global_discount_total', 'grand_discount_total', 'shipping_total', 'grand_total',
+
+        /*  Customer Info  */
+        'client_id', 'client_type', 'billing_info', 'shipping_info',
+
+        /*  Company Info  */
+        'company_info',
+
+        /*  Recurring Settings  */
+        'isRecurring', 'recurring_settings', 'invoice_parent_id',
+
+        /*  Allocation Details  */
+        'invoiceable_id', 'invoiceable_type',
+
+        /*  Meta Data  */
+        'meta'
     ];
 
     /**
@@ -65,7 +95,7 @@ class Invoice extends Model
     ];
 
     protected $allowedFilters = [
-        'id', 'reference_no_value', 'grand_total_value', 'created_date_value', 'expiry_date_value', 'created_at',
+        'id', 'reference_no_value', 'grand_total', 'created_date', 'expiry_date', 'created_at',
 
         //  Nested within JSON
         //  'notes > details',
@@ -74,8 +104,8 @@ class Invoice extends Model
         'client.id', 'client.name', 'client.city', 'client.state_or_region', 'client.address', 'client.industry', 'client.type', 'client.website_link', 'client.phone_ext', 'client.phone_num', 'client.email', 'client.created_at',
     ];
 
-    protected $orderable = [
-        'id', 'reference_no_value', 'grand_total_value', 'created_date_value', 'expiry_date_value', 'created_at',
+    protected $allowedOrderableColumns = [
+        'id', 'reference_no_value', 'grand_total', 'created_date', 'expiry_date', 'created_at',
     ];
 
     /**
@@ -145,7 +175,13 @@ class Invoice extends Model
 
     public function client()
     {
-        return $this->belongsTo('App\Company', 'client_id');
+        //  Get the dynamic class e.g \App\User or App\Company e.t.c
+        $dynamicModel = oq_generateDynamicModel($this->client_type);
+
+        //  Check if this is a valid dynamic class
+        if (class_exists($dynamicModel)) {
+            return $this->hasOne($dynamicModel, 'id', 'client_id');
+        }
     }
 
     /**
@@ -249,7 +285,7 @@ class Invoice extends Model
 
     public function gethasExpiredAttribute()
     {
-        $expiryDate = $this->expiry_date_value->getTimestamp();
+        $expiryDate = $this->expiry_date->getTimestamp();
         $now = Carbon::now()->getTimestamp();
 
         return ($now > $expiryDate) ? true : false;

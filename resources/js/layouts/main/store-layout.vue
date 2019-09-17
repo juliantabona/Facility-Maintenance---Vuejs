@@ -2,7 +2,7 @@
   /*  Import Ecommerce Stylesheet based on the Wookie Theme
       - https://themeforest.net/item/wokiee-ecommerce-html-template/22564267
   */
-  @import '/css/wookie-shop-theme.css';
+  @import '/css/wookie-store-theme.css';
 
   /*  Style the go back to top button */
   .back-to-top {
@@ -38,17 +38,17 @@
   <div class="layout">
 
       <Layout>
-          <!-- Shop Header -->
+          <!-- Store Header -->
           <storeHeader :isCollapsed="isCollapsed" @toggleCollapsed="isCollapsed = !isCollapsed"></storeHeader>
 
           <Layout class="ivu-layout-has-sider" :style="{ background: '#ffffff' }">
 
             <Layout :style="{ background: '#ffffff', marginTop: '115px', padding: '10px'}">
 
-                <!-- Shop content -->
+                <!-- Store content -->
                 <Content :style="{ position: 'relative', minHeight: '1000px' }">
                     
-                  <!-- Put Shop, Cart, Checkout, e.t.c resource content here -->
+                  <!-- Put Store, Cart, Checkout, e.t.c resource content here -->
                   <!-- Both authenticated and guest users can access this content -->
 
                   <transition name="slide">

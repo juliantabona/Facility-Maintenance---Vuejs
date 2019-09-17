@@ -27,13 +27,13 @@ class CostCenter extends Model
 
     protected $allowedFilters = [];
 
-    protected $orderable = [];
+    protected $allowedOrderableColumns = [];
 
     /**
      * Get all of the jobcards that are assigned this costcenter.
      */
     public function jobcards()
     {
-        return $this->morphedByMany('App\Jobcard', 'trackable', 'costcenter_allocations');
+        return $this->morphedByMany('App\Jobcard', 'allocatable', 'costcenter_allocations');
     }
 }

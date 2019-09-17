@@ -22,7 +22,7 @@ class Directory extends Model
         'id', 'type', 'model_id', 'model_type', 'owning_branch_id', 'owning_company_id', 'created_at',
     ];
 
-    protected $orderable = [
+    protected $allowedOrderableColumns = [
         'id', 'type', 'model_id', 'model_type', 'owning_branch_id', 'owning_company_id', 'created_at',
     ];
 }

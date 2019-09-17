@@ -65,12 +65,12 @@ class RecentActivity extends Model
         'id', 'company_branch_id', 'created_at',
     ];
 
-    protected $orderable = [
+    protected $allowedOrderableColumns = [
         'id', 'company_branch_id', 'created_at',
     ];
 
     /**
-     * Get all of the owning documentable models.
+     * Get all of the owning owner models.
      */
     public function trackable()
     {

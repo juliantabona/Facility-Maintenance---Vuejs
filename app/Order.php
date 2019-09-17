@@ -2,11 +2,16 @@
 
 namespace App;
 
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\Model;
 use App\AdvancedFilter\Dataviewer;
 use App\Traits\OrderTraits;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+
+Relation::morphMap([
+    'store' => 'App\Store',
+]);
 
 class Order extends Model
 {
@@ -19,11 +24,24 @@ class Order extends Model
      * @var string
      */
     protected $casts = [
-        'meta_data' => 'array',
-        'currency_type' => 'array',
+        'meta' => 'array',
         'items' => 'array',
+        'taxes' => 'array',
+        'coupons' => 'array',
+        'discounts' => 'array',
         'billing_info' => 'array',
         'shipping_info' => 'array',
+        'company_info' => 'array',
+        'currency_type' => 'array',
+    ];
+
+    /**
+     * The attributes that should be mutated to dates.
+     *
+     * @var array
+     */
+    protected $dates = [
+        'created_date',
     ];
 
     protected $with = ['lifecycle'];
@@ -34,47 +52,57 @@ class Order extends Model
      * @var array
      */
     protected $fillable = [
-            /*  Basic Info  */
-           'number', 'currency_type', 'meta_data',
 
-            /*  Item Info  */
-            'items',
+        /*  Basic Info  */
+        'number', 'currency_type', 'created_date',
 
-            /*  Shop Info  */
-            'shop_taxes', 'shop_discounts', 'shop_coupons',
+        /*  Item Info  */
+        'items',
 
-            /*  Grand Total, Sub Total, Tax Total, Discount Total, Shipping Total  */
-            'sub_total', 'cart_tax_total', 'shop_tax_total', 'grand_tax_total',
-            'cart_discount_total', 'shop_discount_total', 'grand_discount_total',
-            'shipping_total', 'grand_total',
+        /*  Store Info  */
+        'taxes', 'discounts', 'coupons',
 
-            /*  Customer Info  */
-            'submitted_by', 'client_type', 'client_ip_address', 'client_user_agent',
-            'customer_note', 'billing_info', 'shipping_info',
+        /*  Grand Total, Sub Total, Tax Total, Discount Total, Shipping Total  */
+        'sub_total', 'item_tax_total', 'global_tax_total', 'grand_tax_total', 'item_discount_total',
+        'global_discount_total', 'grand_discount_total', 'shipping_total', 'grand_total',
 
-            /*  Store & Company Info  */
-            'store_id', 'company_branch_id', 'company_id'
+        /*  Customer Info  */
+        'reference_id', 'reference_ip_address', 'reference_user_agent', 'customer_note',
+        'customer_id', 'customer_type', 'billing_info', 'shipping_info',
+
+        /*  Company Info  */
+        'company_info',
+
+        /*  Allocation Details  */
+        'orderable_id', 'orderable_type',
+
+        /*  Meta Data  */
+        'meta'
+
     ];
 
-    protected $allowedFilters = [
-        'id', 'number', 'currency_type', 'meta_data', 'items', 'shop_taxes', 'shop_discounts', 'shop_coupons', 
-        'sub_total', 'cart_tax_total', 'shop_tax_total', 'grand_tax_total', 'cart_discount_total', 'shop_discount_total', 
-        'grand_discount_total', 'shipping_total', 'grand_total', 'submitted_by', 'client_type', 'client_ip_address', 
-        'client_user_agent', 'customer_note', 'billing_info', 'shipping_info', 'store_id', 'company_branch_id',
-        'company_id', 'created_at',
-    ];
+    protected $allowedFilters = [];
 
-    protected $orderable = [
-        'id', 'number', 'currency_type', 'meta_data', 'items', 'shop_taxes', 'shop_discounts', 'shop_coupons', 
-        'sub_total', 'cart_tax_total', 'shop_tax_total', 'grand_tax_total', 'cart_discount_total', 'shop_discount_total', 
-        'grand_discount_total', 'shipping_total', 'grand_total', 'submitted_by', 'client_type', 'client_ip_address', 
-        'client_user_agent', 'customer_note', 'billing_info', 'shipping_info', 'store_id', 'company_branch_id',
-        'company_id', 'created_at',
-    ];
+    protected $allowedOrderableColumns = [];
 
-    public function store()
+    /**
+     *  Get the owner from the morphTo relationship.
+     *  Orders can be assigned to multiple types of
+     *  owning resources e.g stores
+     */
+    public function owner()
     {
-        return $this->belongsTo('App\Store', 'store_id');
+        return $this->morphTo();
+    }
+
+    /**
+     *  Get the customer from the morphTo relationship.
+     *  Orders can be assigned to multiple types of
+     *  customers e.g user/company
+     */
+    public function customer()
+    {
+        return $this->morphTo();
     }
 
     public function company()
@@ -87,15 +115,9 @@ class Order extends Model
         return $this->belongsTo('App\CompanyBranch', 'company_branch_id');
     }
 
-    public function client()
+    public function reference()
     {
-        //  Get the dynamic class e.g \App\User or App\Company e.t.c
-        $dynamicModel = oq_generateDynamicModel($this->client_type);
-
-        //  Check if this is a valid dynamic class
-        if (class_exists($dynamicModel)) {
-            return $this->hasOne($dynamicModel, 'id', 'submitted_by');
-        }
+        return $this->hasOne('App\User', 'id', 'reference_id');
     }
 
     public function transactions()
@@ -116,7 +138,7 @@ class Order extends Model
 
     public function documents()
     {
-        return $this->morphMany('App\Document', 'documentable');
+        return $this->morphMany('App\Document', 'owner');
     }
 
     public function files()
@@ -126,75 +148,61 @@ class Order extends Model
 
     public function invoices()
     {
-        return $this->morphToMany('App\Invoice', 'trackable', 'invoice_allocations');
+        return $this->morphToMany('App\Invoice', 'allocatable', 'invoice_allocations');
     }
 
     public function lifecycle()
     {
-        return $this->morphToMany('App\Lifecycle', 'trackable', 'lifecycle_allocations');
+        return $this->morphToMany('App\Lifecycle', 'allocatable', 'lifecycle_allocations');
     }
 
-    public function comments()
-    {
-        return $this->morphToMany('App\Comment', 'trackable', 'comment_allocations')->orderBy('comment_allocations.created_at', 'asc');
-    }
-
+    /* 
+     *  Get the order messages
+     */
     public function messages()
     {
-        return $this->comments()->where('type', 'message');
+        return $this->morphMany('App\Message', 'messageable')->orderBy('messages.created_at', 'asc');
     }
 
+    /* 
+     *  Get the order reviews
+     */
     public function reviews()
     {
-        return $this->comments()->where('type', 'review');
+        return $this->morphMany('App\Review', 'reviewable')->orderBy('reviews.created_at', 'asc');
     }
 
     public function recentActivities()
     {
-        return $this->morphMany('App\RecentActivity', 'trackable')
-                    ->where('trackable_id', $this->id)
-                    ->where('trackable_type', 'order');
+        return $this->morphMany('App\RecentActivity', 'owner');
     }
 
     public function createdActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'order')->where('type', 'created')
-                    ->orderBy('created_at', 'desc');
+        return $this->recentActivities()->where('type', 'created')->orderBy('created_at', 'desc');
     }
 
     public function approvedActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'order')->where('type', 'approved')
-                    ->orderBy('created_at', 'desc');
+        return $this->recentActivities()->where('type', 'approved')->orderBy('created_at', 'desc');
     }
 
     public function updatedLifecycleStagesActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'order')->where('type', 'updated lifecycle stage')
-                    ->orderBy('created_at', 'desc');
+        return $this->recentActivities()->where('type', 'updated lifecycle stage')->orderBy('created_at', 'desc');
     }
 
     public function reversedLifecycleStagesActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'order')->where('type', 'reversed lifecycle stage')
-                    ->orderBy('created_at', 'desc');
+        return $this->recentActivities()->where('type', 'reversed lifecycle stage')->orderBy('created_at', 'desc');
     }
 
     protected $appends = [
-                            'average_rating', 'model_type', 'created_at_format',
+                            'model_type', 'created_at_format',
                             'phone_list', 'transaction_total', 'refund_total', 'outstanding_balance',
                             'status_title', 'status_description', 'lifecycle_status_activity',
                             'current_lifecycle_stage', 'current_lifecycle_main_status', 'lifecycle_stages',
                         ];
-
-    public function getAverageRatingAttribute()
-    {
-        $reviews = $this->reviews()->get() ?? [];
-
-        if( count( $reviews ) ){
-            return collect( $reviews )->avg('rating_value');
-        }
-    }
 
     //  Getter for the type of model
     public function getModelTypeAttribute()
@@ -218,7 +226,7 @@ class Order extends Model
     //  Get the refund total amount
     public function getTransactionTotalAttribute()
     {
-        return $this->transactions()->sum('amount');
+        return $this->transactions()->sum('payment_amount');
     }
 
     //  Get the refund total amount
@@ -349,116 +357,121 @@ class Order extends Model
                                 ->orderBy('created_at', 'asc')
                                 ->whereIn('type', ['created', 'updated lifecycle stage', 'reversed lifecycle stage'])
                                 ->get();
-
         $activityHistory = [];
 
         foreach ($lifecycleStages as $key => $currStage) {
-            
             $createdStatus = ($currStage['type'] == 'created');
             $updatedStatus = ($currStage['type'] == 'updated lifecycle stage');
             $reversedStatus = ($currStage['type'] == 'reversed lifecycle stage');
+            
+            if( !$createdStatus ){
+                //  Current stage details
+                $currType = $currStage['activity']['type'];
+                $currInstance = $currStage['activity']['instance'];
+                $currIsPending = ($currStage['activity']['pending_status'] == 'true') ?? false;
+                $currIsPendingReason =
+                    //  Check if we have a pending_status_reason
+                    ((isset($currStage['activity']['pending_status_reason']) && !empty($currStage['activity']['pending_status_reason'])) ? (
+                        //  Check if the pending_status_reason is equal to "Other"
+                        ($currStage['activity']['pending_status_reason']) == 'Other'
+                            //  if the pending_status_reason is equal to "Other" then use the other_pending_status_reason
+                            ? $currStage['activity']['other_pending_status_reason']
+                            //  Otherwise use the pending_status_reason value
+                            : $currStage['activity']['pending_status_reason'])
+                    //  If we don't have a pending_status_reason then set the value to null
+                    : null);
 
-            //  Current stage details
-            $currType = $currStage['activity']['type'];
-            $currInstance = $currStage['activity']['instance'];
-            $currIsPending = ($currStage['activity']['pending_status'] == 'true') ?? false;
-            $currIsPendingReason = 
-                //  Check if we have a pending_status_reason
-                ((isset($currStage['activity']['pending_status_reason']) && !empty($currStage['activity']['pending_status_reason'])) ? (
-                    //  Check if the pending_status_reason is equal to "Other"
-                    ($currStage['activity']['pending_status_reason']) == 'Other' 
-                        //  if the pending_status_reason is equal to "Other" then use the other_pending_status_reason
-                        ? $currStage['activity']['other_pending_status_reason']
-                        //  Otherwise use the pending_status_reason value
-                        : $currStage['activity']['pending_status_reason'])
-                //  If we don't have a pending_status_reason then set the value to null
-                : null);
+                $currIsSkipped = ($currStage['activity']['skip_status'] == 'true') ?? false;
+                $currIsSkippedReason =
+                    //  Check if we have a skip_status_reason
+                    ((isset($currStage['activity']['skip_status_reason']) && !empty($currStage['activity']['skip_status_reason'])) ? (
+                        //  Check if the skip_status_reason is equal to "Other"
+                        ($currStage['activity']['skip_status_reason']) == 'Other'
+                            //  if the skip_status_reason is equal to "Other" then use the other_skip_status_reason
+                            ? $currStage['activity']['other_skip_status_reason']
+                            //  Otherwise use the skip_status_reason value
+                            : $currStage['activity']['skip_status_reason'])
+                    //  If we don't have a skip_status_reason then set the value to null
+                    : null);
+                $currIsManualVerification = ($currStage['activity']['manual_verification_status'] == 'true') ?? false;
+                $currIsCancelled = ($currStage['activity']['cancelled_status'] == 'true') ?? false;
+                $currIsCancelledReason =
+                    //  Check if we have a cancelled_status_reason
+                    ((isset($currStage['activity']['cancelled_status_reason']) && !empty($currStage['activity']['cancelled_status_reason'])) ? (
+                        //  Check if the cancelled_status_reason is equal to "Other"
+                        ($currStage['activity']['cancelled_status_reason']) == 'Other'
+                            //  if the cancelled_status_reason is equal to "Other" then use the other_cancelled_status_reason
+                            ? $currStage['activity']['other_cancelled_status_reason']
+                            //  Otherwise use the cancelled_status_reason value
+                            : $currStage['activity']['cancelled_status_reason'])
+                    //  If we don't have a cancelled_status_reason then set the value to null
+                    : null);
 
-            $currIsSkipped = ($currStage['activity']['skip_status'] == 'true') ?? false;
-            $currIsSkippedReason = 
-                //  Check if we have a skip_status_reason
-                ((isset($currStage['activity']['skip_status_reason']) && !empty($currStage['activity']['skip_status_reason'])) ? (
-                    //  Check if the skip_status_reason is equal to "Other"
-                    ($currStage['activity']['skip_status_reason']) == 'Other' 
-                        //  if the skip_status_reason is equal to "Other" then use the other_skip_status_reason
-                        ? $currStage['activity']['other_skip_status_reason']
-                        //  Otherwise use the skip_status_reason value
-                        : $currStage['activity']['skip_status_reason'])
-                //  If we don't have a skip_status_reason then set the value to null
-                : null);
-            $currIsManualVerification = ($currStage['activity']['manual_verification_status'] == 'true') ?? false;
-            $currIsCancelled = ($currStage['activity']['cancelled_status'] == 'true') ?? false;
-            $currIsCancelledReason = 
-                //  Check if we have a cancelled_status_reason
-                ((isset($currStage['activity']['cancelled_status_reason']) && !empty($currStage['activity']['cancelled_status_reason'])) ? (
-                    //  Check if the cancelled_status_reason is equal to "Other"
-                    ($currStage['activity']['cancelled_status_reason']) == 'Other' 
-                        //  if the cancelled_status_reason is equal to "Other" then use the other_cancelled_status_reason
-                        ? $currStage['activity']['other_cancelled_status_reason']
-                        //  Otherwise use the cancelled_status_reason value
-                        : $currStage['activity']['cancelled_status_reason'])
-                //  If we don't have a cancelled_status_reason then set the value to null
-                : null);
+                
+                //  If this is not the first lifecycle stage
+                if ($key > 0) {
+                    $prevStage = $lifecycleStages[$key - 1];
 
-            //  Previous stage details
-            if ($key > 0) {
-                $prevStage = $lifecycleStages[$key - 1];
-                $prevType = $prevStage['activity']['type'] ?? null;
-                $prevInstance = $prevStage['activity']['instance'] ?? null;
-                $prevIsPending = ($prevStage['activity']['pending_status'] == 'true') ?? null;
-                $prevIsSkipped = ($prevStage['activity']['skip_status'] == 'true') ?? null;
-                $prevIsManualVerification = ($prevStage['activity']['manual_verification_status'] == 'true') ?? null;
-                $prevIsCancelled = ($prevStage['activity']['cancelled_status'] == 'true') ?? null;
-            } else {
-                $prevType = null;
-                $prevInstance = null;
+                    //  And if the previous stage is not a creation stage
+                    if($prevStage['type'] != 'created'){
+                        //  Previous stage details
+                        $prevType = $prevStage['activity']['type'] ?? null;
+                        $prevInstance = $prevStage['activity']['instance'] ?? null;
+                        $prevIsPending = ($prevStage['activity']['pending_status'] == 'true') ?? null;
+                        $prevIsSkipped = ($prevStage['activity']['skip_status'] == 'true') ?? null;
+                        $prevIsManualVerification = ($prevStage['activity']['manual_verification_status'] == 'true') ?? null;
+                        $prevIsCancelled = ($prevStage['activity']['cancelled_status'] == 'true') ?? null;
+                    }
+                } else {
+                    $prevType = null;
+                    $prevInstance = null;
+                }
+
             }
 
             //  If this is a type of created
             if ($createdStatus) {
                 array_push($activityHistory, [
                     'title' => 'Open',
-                    'description' => 'Received on '.(new Carbon($currStage->created_at))->format('M d Y @ H:iA')
+                    'description' => 'Received on '.(new Carbon($currStage->created_at))->format('M d Y @ H:iA'),
                 ]);
 
             //  If this is a type of updated lifecycle
             } elseif ($updatedStatus) {
-
                 //  If the current stage is pending and is a payment stage
                 if ($currIsPending == true) {
                     if ($currType == 'payment') {
                         array_push($activityHistory, [
                             'title' => 'Pending Payment',
                             'description' => 'Set to pending payment on '.(new Carbon($currStage->created_at))->format('M d Y @ H:iA'),
-                            'reason' => $currIsPendingReason
-                            
+                            'reason' => $currIsPendingReason,
                         ]);
                     } elseif ($currType == 'delivery') {
                         array_push($activityHistory, [
                             'title' => 'Pending Delivery',
                             'description' => 'Set to pending delivery on '.(new Carbon($currStage->created_at))->format('M d Y @ H:iA'),
-                            'reason' => $currIsPendingReason
+                            'reason' => $currIsPendingReason,
                         ]);
                     }
-                }elseif ($currIsSkipped == true) {
+                } elseif ($currIsSkipped == true) {
                     if ($currType == 'payment') {
                         array_push($activityHistory, [
                             'title' => 'Skipped Payment',
                             'description' => 'Payment was skipped on '.(new Carbon($currStage->created_at))->format('M d Y @ H:iA'),
-                            'reason' => $currIsSkippedReason
+                            'reason' => $currIsSkippedReason,
                         ]);
                     } elseif ($currType == 'delivery') {
                         array_push($activityHistory, [
                             'title' => 'Skipped Delivery',
                             'description' => 'Delivery was skipped on '.(new Carbon($currStage->created_at))->format('M d Y @ H:iA'),
-                            'reason' => $currIsSkippedReason
+                            'reason' => $currIsSkippedReason,
                         ]);
                     }
-                }elseif ($currIsCancelled == true) {
+                } elseif ($currIsCancelled == true) {
                     array_push($activityHistory, [
                         'title' => 'Cancelled',
                         'description' => 'Set to cancelled on '.(new Carbon($currStage->created_at))->format('M d Y @ H:iA'),
-                        'reason' => $currIsCancelledReason
+                        'reason' => $currIsCancelledReason,
                     ]);
                 } elseif ($currIsCancelled == false && $prevIsCancelled == true) {
                     //  Then this is an undo setting the status to delivered
@@ -466,20 +479,20 @@ class Order extends Model
                         'title' => 'Undo Cancellation',
                         'description' => 'Reversed to undo cancellation. Updated on '.(new Carbon($currStage['created_at']))->format('M d Y @ H:iA'),
                     ]);
-                } else{
+                } else {
                     if ($currType == 'payment') {
                         array_push($activityHistory, [
                             'title' => 'Paid',
-                            'description' => 'Paid amount of '. $currStage['activity']['meta']['payment_amount']
-                                            .' via ' . $currStage['activity']['meta']['payment_method']
-                                            .' on ' . (new Carbon($currStage->created_at))->format('M d Y @ H:iA'),
+                            'description' => 'Paid amount of '.$currStage['activity']['meta']['payment_amount']
+                                            .' via '.$currStage['activity']['meta']['payment_method']
+                                            .' on '.(new Carbon($currStage->created_at))->format('M d Y @ H:iA'),
                         ]);
                     } elseif ($currType == 'delivery') {
                         array_push($activityHistory, [
                             'title' => 'Delivered',
-                            'description' => 'Delivered via '. $currStage['activity']['meta']['courier']
-                                            .' on ' . (new Carbon($currStage['activity']['meta']['date_delivered']))->format('M d Y')
-                                            .' @ ' . (new Carbon($currStage['activity']['meta']['time_delivered']))->format('H:iA'),
+                            'description' => 'Delivered via '.$currStage['activity']['meta']['courier']
+                                            .' on '.(new Carbon($currStage['activity']['meta']['date_delivered']))->format('M d Y')
+                                            .' @ '.(new Carbon($currStage['activity']['meta']['time_delivered']))->format('H:iA'),
                         ]);
                     } elseif ($currType == 'closed') {
                         array_push($activityHistory, [
@@ -489,9 +502,8 @@ class Order extends Model
                     }
                 }
 
-            //  If this is a type of reversed lifecycle
+                //  If this is a type of reversed lifecycle
             } elseif ($reversedStatus) {
-
                 //  If the current stage is pending and is a payment stage
                 if ($currIsPending == true) {
                     if ($currType == 'payment') {
@@ -507,7 +519,7 @@ class Order extends Model
                             'description' => 'Resumed order after pending delivery on '.(new Carbon($currStage['created_at']))->format('M d Y @ H:iA'),
                         ]);
                     }
-                }elseif ($currIsSkipped == true) {
+                } elseif ($currIsSkipped == true) {
                     if ($currType == 'payment') {
                         array_push($activityHistory, [
                             'title' => 'Undo Skip Payment',
@@ -519,7 +531,7 @@ class Order extends Model
                             'description' => 'Reversed to undo skipping payment. Updated on '.(new Carbon($currStage->created_at))->format('M d Y @ H:iA'),
                         ]);
                     }
-                } else{
+                } else {
                     if ($currType == 'payment') {
                         //  Then this is an undo setting the status to paid
                         array_push($activityHistory, [
@@ -543,12 +555,11 @@ class Order extends Model
             }
 
             //  Add extra details linked to this stage such as who created the activity
-            if( isset($activityHistory[$key]['title']) && !empty($activityHistory[$key]['title']) ){
+            if (isset($activityHistory[$key]['title']) && !empty($activityHistory[$key]['title'])) {
                 $activityHistory[$key]['type'] = $currType ?? 'open';
-                $activityHistory[$key]['instance'] =$currInstance ?? 1;
+                $activityHistory[$key]['instance'] = $currInstance ?? 1;
                 $activityHistory[$key]['created_by'] = $currStage->createdBy->only(['id', 'first_name', 'last_name', 'full_name']);
             }
-
         }
 
         return $activityHistory;
@@ -559,13 +570,8 @@ class Order extends Model
         $lifecycleHistory = $this->getLifecycleStatusActivityAttribute() ?? [];
 
         if (count($lifecycleHistory)) {
-
             //  Get the last in ativity in the lifecycle history
             return end($lifecycleHistory);
-
         }
-
     }
-
-
 }

@@ -31,7 +31,7 @@ class Category extends Model
 
     protected $allowedFilters = [];
 
-    protected $orderable = [];
+    protected $allowedOrderableColumns = [];
 
     /**
      * Get all of the jobcards that are assigned this category.
@@ -46,7 +46,7 @@ class Category extends Model
      */
     public function jobcards()
     {
-        return $this->morphedByMany('App\Jobcard', 'trackable', 'category_allocations');
+        return $this->morphedByMany('App\Jobcard', 'allocatable', 'category_allocations');
     }
 
 }

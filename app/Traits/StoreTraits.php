@@ -12,9 +12,194 @@ use App\Notifications\StoreUpdated;
 //  Other
 use PDF;
 use Carbon\Carbon;
+use App\Http\Resources\Store as StoreResource;
+use App\Http\Resources\Stores as StoresResource;
 
 trait StoreTraits
 {
+
+    /*  convertToApiFormat() method:
+     *
+     *  Converts to the appropriate Api Response Format
+     *
+     */
+    public function convertToApiFormat($stores = null)
+    {
+
+        try {
+
+            if( $stores ){
+
+                //  Transform the stores
+                return new StoresResource($stores);
+
+            }else{
+
+                //  Transform the store
+                return new StoreResource($this);
+
+            }
+
+        } catch (\Exception $e) {
+
+            //  Log the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+        }
+    }
+
+
+
+    /*  getStores() method:
+     *
+     *  This is used to return stores
+     *
+     */
+    public function getStores( $options = [] )
+    {
+        /************************************
+        *  CHECK IF THE USER IS AUTHORIZED  *
+        /************************************/
+
+        try {
+
+            //  If we have provided the users id
+            if( isset($options['user_id']) && !empty(isset($options['user_id'])) ){
+                
+                //  Get the specified user
+                $user = User::find( $options['user_id'] );
+            
+                //  Filter the stores by the user type
+                $userTypes = request('userTypes');
+
+                if( isset($userTypes) && !empty($userTypes) ){
+                    
+                    if($userTypes == 'admin'){
+                        //  Get stores where this user is an admin
+                        $stores = $user->storesWhereUserIsAdmin;
+                    }elseif($userTypes == 'staff'){
+                        //  Get stores where this user is an staff member
+                        $stores = $user->storesWhereUserIsStaff;
+                    }elseif($userTypes == 'client'){
+                        //  Get stores where this user is an client
+                        $stores = $user->storesWhereUserIsClient;
+                    }elseif($userTypes == 'vendor'){
+                        //  Get stores where this user is an vendor
+                        $stores = $user->storesWhereUserIsVendor;
+                    }else{
+                        /*  Incase $userTypes is a list e.g) admin,staff ... e.t.c
+                         *  This means we want stores where the user plays anyone
+                         *  of those roles.
+                         */
+                        $userTypes = explode(',', $userTypes );
+
+                        //  If we have atleast one userType
+                        if (count($userTypes)) {
+                            //  Get stores related to the listed user types
+                            $stores = $user->stores()->whereHas('users', function ($query) use($userTypes) {
+                                            $query->whereIn('user_allocations.type', $userTypes);
+                                        })->get();
+                        }
+                    }
+
+                }else{
+
+                    //  Get the specified stores for this user
+                    $stores = $user->stores()->get();
+                }
+
+            }else{
+
+                //  Get all the stores
+                $stores = $this->all();
+
+            }
+
+            if( $stores ){
+
+                //  Transform the stores
+                return new StoresResource($stores);
+
+            }else{
+
+                //  Otherwise we don't have a resource to return
+                return oq_api_notify_no_resource();
+            
+            }
+
+        } catch (\Exception $e) {
+
+            //  Log the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+        }
+    }
+
+    /*  getStore() method:
+     *
+     *  This is used to return the specified store
+     *
+     */
+    public function getStore( $store_id = null, $options = [] )
+    {
+        /************************************
+        *  CHECK IF THE USER IS AUTHORIZED  *
+        /************************************/
+
+        try {
+
+            //  If we have provided the users id
+            if( isset($options['user_id']) && !empty(isset($options['user_id'])) ){
+                
+                //  Get the specified store for this user
+                $store = User::find( $options['user_id'] )->stores()->where('stores.id', $store_id)->first();
+            
+            }else{
+
+                //  Get the specified store
+                $store = $this->where('id', $store_id)->first();
+
+            }
+
+            if( $store ){
+
+                //  Transform the store
+                return new StoreResource($store);
+
+            }else{
+
+                //  Otherwise we don't have a resource to return
+                return oq_api_notify_no_resource();
+            
+            }
+
+        } catch (\Exception $e) {
+
+            //  Log the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     /*  initiateGetAll() method:
      *
