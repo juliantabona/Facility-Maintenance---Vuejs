@@ -16,9 +16,7 @@ class ProductPolicy
      */
     public function before($user, $ability)
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
+        return $user->isSuperAdmin();
     }
     
     /**
@@ -31,9 +29,7 @@ class ProductPolicy
     public function viewAll(User $user)
     {
         //  Only the Super Admin can view all products
-        if( $user->isSuperAdmin() ){
-            return true;
-        }
+        return $user->isSuperAdmin();
     }
 
     /**
@@ -45,10 +41,8 @@ class ProductPolicy
      */
     public function view(User $user, Product $product)
     {
-        //  Only an Admin or Staff member can view this product
-        if( $product->owner->isAdminOrStaff($user->id) ){
-            return true;
-        }
+        //  Only an Admin or Staff member of the product owner can view this product
+        return $product->owner->isAdminOrStaff($user->id);
     }
 
     /**
@@ -71,10 +65,8 @@ class ProductPolicy
      */
     public function update(User $user, Product $product)
     {
-        //  Only an Admin or Staff member can update this product
-        if( $product->owner->isAdminOrStaff($user->id) ){
-            return true;
-        }
+        //  Only an Admin or Staff member of the product owner can update this product
+        return $product->owner->isAdminOrStaff($user->id);
     }
 
     /**
@@ -86,10 +78,8 @@ class ProductPolicy
      */
     public function delete(User $user, Product $product)
     {
-        //  Only an Admin can delete this product
-        if( $product->owner->isAdmin($user->id) ){
-            return true;
-        }
+        //  Only an Admin or Staff member of the product owner can delete this product
+        return $product->owner->isAdmin($user->id);
     }
 
     /**
@@ -101,10 +91,8 @@ class ProductPolicy
      */
     public function restore(User $user, Product $product)
     {
-        //  Only an Admin can restore this product
-        if( $product->owner->isAdmin($user->id) ){
-            return true;
-        }
+        //  Only an Admin or Staff member of the product owner can restore this product
+        return $product->owner->isAdmin($user->id);
     }
 
     /**
@@ -116,9 +104,7 @@ class ProductPolicy
      */
     public function forceDelete(User $user, Product $product)
     {
-        //  Only an Admin can force delete this product
-        if( $product->owner->isAdmin($user->id) ){
-            return true;
-        }
+        //  Only an Admin or Staff member of the product owner can force delete this product
+        return $product->owner->isAdmin($user->id);
     }
 }

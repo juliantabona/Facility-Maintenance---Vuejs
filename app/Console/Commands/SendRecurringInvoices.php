@@ -43,7 +43,7 @@ class SendRecurringInvoices extends Command
         $nowTimestamp = Carbon::now()->getTimestamp();                   //   make sure its relative to timezone
 
         // Get all invoices that are set to recurring
-        $invoices = Invoice::with(['childInvoices'])->where('isRecurring', 1)->get();
+        $invoices = Invoice::with(['childInvoices'])->where('is_recurring', 1)->get();
 
         //  Filter to only those that have been approved
         $invoices = collect($invoices)->filter(function ($invoice) { return $invoice->has_approved; });
@@ -65,7 +65,7 @@ class SendRecurringInvoices extends Command
                 //  If this is the last invoice to send before we reach the limit
                 if (($stopOnCount + 1) == $recurringInvoiceCount) {
                     //  Stop making this a recurring invoice
-                    $invoice->update(['isRecurring', 0]);
+                    $invoice->update(['is_recurring', 0]);
 
                     //  Record stop recurring activity
 
@@ -81,7 +81,7 @@ class SendRecurringInvoices extends Command
                 //  If we have reached or exceeded the limit we will stop here
                 if ($stopDateTimestamp < $nowTimestamp) {
                     //  Stop making this a recurring invoice
-                    $invoice->update(['isRecurring', 0]);
+                    $invoice->update(['is_recurring', 0]);
 
                     //  Record stop recurring activity
 
@@ -180,7 +180,7 @@ class SendRecurringInvoices extends Command
                 // We will deep copy the parent and edit to make the child copy
                 $childInvoice = $invoice->replicate();
                 //  Set the recurring status to be off
-                $childInvoice->isRecurring = 0;
+                $childInvoice->is_recurring = 0;
                 //  Remove the recurring settings
                 $childInvoice->recurring_settings = null;
                 //  Link this child invoice to the parent

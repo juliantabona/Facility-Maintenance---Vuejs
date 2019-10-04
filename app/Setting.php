@@ -2,15 +2,15 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Model;
-use App\AdvancedFilter\Dataviewer;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use App\Traits\SettingTraits;
+use App\AdvancedFilter\Dataviewer;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
     'user' => 'App\User',
-    'company' => 'App\Company',
     'store' => 'App\Store',
+    'company' => 'App\Company',
 ]);
 
 class Setting extends Model
@@ -28,17 +28,43 @@ class Setting extends Model
      * @var array
      */
     protected $fillable = [
-        'details', 'owner_id', 'owner_type',
+
+        /*  Setting Details  */
+        'details',
+
+        /*  Ownership Information  */
+        'owner_id', 'owner_type',
+        
     ];
 
-    /**
-     *  Get the owner from the morphTo relationship.
-     *  Settings can be assigned to multiple types of
-     *  owning resources e.g users, companies, stores,
-     *  e.t.c
+    /* 
+     *  Returns the owner of the settings
      */
     public function owner()
     {
         return $this->morphTo();
     }
+
+    /* 
+     *  Returns recent activities owned by this settings
+     */
+    public function recentActivities()
+    {
+        return $this->morphMany('App\RecentActivity', 'owner')->orderBy('created_at', 'desc');
+    }
+    
+    /* ATTRIBUTES */
+
+    protected $appends = [
+        'resource_type'
+    ];
+
+    /* 
+     *  Returns the resource type
+     */
+    public function getResourceTypeAttribute()
+    {
+        return strtolower(class_basename($this));
+    }
+
 }

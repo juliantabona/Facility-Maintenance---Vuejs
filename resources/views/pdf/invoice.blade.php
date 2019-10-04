@@ -240,7 +240,7 @@
             $secondaryColor = $invoice['colors'][1]; 
             $company = $invoice['customized_company_details'];
             $companyLogo = $company['logo']['url'];
-            $client = $invoice['customized_client_details'];
+            $client = $invoice['customized_customer_details'];
             $clientName = $client['name'] ?? $client['full_name'];
             $companyPhones = isset($company['phones']) ? collect(array_filter($company['phones'], function($phone){ return $phone['show'] ?? false; }))->values() : [];
             $clientPhones = isset($client['phones']) ? collect(array_filter($client['phones'], function($phone){ return $phone['show'] ?? false; }))->values() : [];

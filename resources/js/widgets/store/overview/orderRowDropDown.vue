@@ -133,11 +133,11 @@
                         </div>
                         <scrollBox class="border">
 
-                            <Steps v-if="(localOrder.lifecycle_status_activity).length" 
+                            <Steps v-if="(localOrder.lifecycle_history).length" 
                                 direction="vertical" class="pt-2 pl-2 pr-3 pb-2" style="max-height: 190px;"
-                                :current="((localOrder.lifecycle_status_activity).length || 0) - 1">
+                                :current="((localOrder.lifecycle_history).length || 0) - 1">
                                 
-                                <Step v-for="(status, i) in localOrder.lifecycle_status_activity" :key="i"
+                                <Step v-for="(status, i) in localOrder.lifecycle_history" :key="i"
                                     :title="status.title" :content="status.description" 
                                     @mouseover.native="updateStatusPoptip(status)">
                                 </Step>

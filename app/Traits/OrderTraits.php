@@ -509,7 +509,7 @@ trait OrderTraits
                 $orderPendingPaymentActivityArray['id'] = null;
 
                 //  Set the created by to the users id instead of the whole user data
-                $orderPendingPaymentActivityArray['created_by'] = $orderPendingPaymentActivityArray['created_by']['id'] ?? null;
+                $orderPendingPaymentActivityArray['user_id'] = $orderPendingPaymentActivityArray['created_by']['id'] ?? null;
 
                 //  Set pending payment to false to turn it off
                 $orderPendingPaymentActivityArray['activity']['pending_status'] = false;
@@ -591,7 +591,7 @@ trait OrderTraits
                 'company_info' => $order['company_info'],
                 'created_date' => $orderCreatedDateTime,
                 'expiry_date' => $orderCreatedDateTime->addDays($storeSettings['invoiceTemplate']['expire_after_no_of_days']),
-                'isRecurring' => 0,
+                'is_recurring' => 0,
                 'recurring_settings' => null,
                 'invoice_parent_id' => null,
                 'invoiceable_id' => $order['id'],
@@ -780,7 +780,7 @@ trait OrderTraits
      */
     public function replaceShortcodes($order, $data)
     {
-        $client = $order->customized_client_details;
+        $client = $order->customized_customer_details;
         $company = $order->customized_company_details;
         $currency = $order->currency_type['currency']['symbol'] ?? '';
         $sub_total = $currency.number_format($order->sub_total_value, 2, ',', '.');

@@ -82,8 +82,8 @@ trait CompanyTraits
                     }elseif($userTypes == 'staff'){
                         //  Get companies where this user is an staff member
                         $companies = $user->companiesWhereUserIsStaff;
-                    }elseif($userTypes == 'client'){
-                        //  Get companies where this user is an client
+                    }elseif($userTypes == 'customer'){
+                        //  Get companies where this user is an customer
                         $companies = $user->companiesWhereUserIsClient;
                     }elseif($userTypes == 'vendor'){
                         //  Get companies where this user is an vendor
@@ -467,7 +467,7 @@ trait CompanyTraits
                 //  Check whether or not to update the auth user as belonging to this company
                 $this->checkAndAssignCompanyToAuth($company);
 
-                //  Check whether or not the auth company has a relationship with the created company e.g) client/supplier
+                //  Check whether or not the auth company has a relationship with the created company e.g) customer/supplier
                 $this->checkAndCreateRelationship($company);
 
                 //  Check whether or not the company has any logo to upload
@@ -552,10 +552,10 @@ trait CompanyTraits
 
         /*  relationship:
          *  This is a variable used to determine if the current company being created has 
-         *  a relationship as a client/supplier to the auth users main company. Sometimes
+         *  a relationship as a customer/supplier to the auth users main company. Sometimes
          *  when creating a new company, we may want to assign that company as either a 
-         *  client/supplier to the company directory. We can do this if the relationship
-         *  variable has been set with the appropriate type (client/supplier)
+         *  customer/supplier to the company directory. We can do this if the relationship
+         *  variable has been set with the appropriate type (customer/supplier)
          */
         $relationship = request('relationship') ?? null;
 
@@ -572,7 +572,7 @@ trait CompanyTraits
                 'company_id' => $company->id,                           //  id of the current company
                 'owning_branch_id' => $auth_user->company_branch_id,    //  id of the owning company branch
                 'owning_company_id' => $auth_user->company_id,          //  id of the owning company 
-                'type' => request('relationship'),                      //  relationship type e.g client/supplier
+                'type' => request('relationship'),                      //  relationship type e.g customer/supplier
                 'created_at' => DB::raw('now()'),                       
                 'updated_at' => DB::raw('now()')
             ]);
@@ -749,7 +749,7 @@ trait CompanyTraits
                 //  Check whether or not to update the auth user as belonging to this company
                 $this->checkAndAssignCompanyToAuth($company);
 
-                //  Check whether or not the auth company has a relationship with the created company e.g) client/supplier
+                //  Check whether or not the auth company has a relationship with the created company e.g) customer/supplier
                 $this->checkAndCreateRelationship($company);
 
                 //  Check whether or not the company has any logo to upload
@@ -922,8 +922,8 @@ trait CompanyTraits
                 //  Get all the available companies so far
                 $companies = $data['response'];
 
-                //  From the list of companies we will group them by their directory_type e.g) client, supplier, e.t.c
-                //  After this we will map through each group (client, supplier, e.t.c) and get the status name, total sum of
+                //  From the list of companies we will group them by their directory_type e.g) customer, supplier, e.t.c
+                //  After this we will map through each group (customer, supplier, e.t.c) and get the status name, total sum of
                 //  the grand totals as well as the total count of grouped companies of that activity.
                 /*
                  *  Example of returned output:
@@ -999,7 +999,7 @@ trait CompanyTraits
                         return $availableStats[strtolower($stat_name)];
                     } else {
                         return [
-                                    'name' => $stat_name,         //  e.g) Supplier, Client
+                                    'name' => $stat_name,         //  e.g) Supplier, Customer
                                     'total_count' => 0,
                                 ];
                     }

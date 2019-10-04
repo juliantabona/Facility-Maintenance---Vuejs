@@ -2,16 +2,16 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Model;
-use App\AdvancedFilter\Dataviewer;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use App\Traits\LifecycleTraits;
+use App\AdvancedFilter\Dataviewer;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
+    'store' => 'App\Store',
+    'order' => 'App\Order',
     'company' => 'App\Company',
     'jobcard' => 'App\Jobcard',
-    'order' => 'App\Order',
-    'store' => 'App\Store',
 ]);
 
 class Lifecycle extends Model
@@ -21,6 +21,8 @@ class Lifecycle extends Model
 
     protected $casts = [
         'stages' => 'array',
+
+        'default' => 'boolean', //  Return the following 1/0 as true/false
     ];
 
     /**
@@ -29,28 +31,64 @@ class Lifecycle extends Model
      * @var array
      */
     protected $fillable = [
-        'stages', 'default', 'type', 'company_branch_id', 'company_id',
+
+        /*  Lifecycle Details  */
+        'stages', 'default', 'type',
+
+        /*  Ownership Information  */
+        'owner_id', 'owner_type',
+
     ];
 
-    
-    /**
-     * Get all the resources that can hold lifecycles e.g companies and stores
-     */  
-    public function lifecycleable()
+    /* 
+     *  Returns the owner of the lifecycle
+     */
+    public function owner()
     {
         return $this->morphTo();
     }
 
-    /**
-     * Get all of the jobcards that are assigned this lifecycle.
+    /*
+     *  Returns all jobcards that this lifecycle has been allocated to 
      */
     public function jobcards()
     {
-        return $this->morphedByMany('App\Jobcard', 'trackable', 'lifecycle_allocations');
+        return $this->morphedByMany('App\Jobcard', 'owner', 'lifecycle_allocations');
     }
 
-    public function owningCompany()
+    /*
+     *  Returns all orders that this lifecycle has been allocated to 
+     */
+    public function orders()
     {
-        return $this->belongsTo('App\Company', 'company_id');
+        return $this->morphedByMany('App\Order', 'owner', 'lifecycle_allocations');
     }
+
+    /* 
+     *  Returns recent activities owned by this lifecycle
+     */
+    public function recentActivities()
+    {
+        return $this->morphMany('App\RecentActivity', 'owner')->orderBy('created_at', 'desc');
+    }
+
+    /* ATTRIBUTES */
+
+    protected $appends = [
+        'resource_type'
+    ];
+
+    /* 
+     *  Returns the resource type
+     */
+    public function getResourceTypeAttribute()
+    {
+        return strtolower(class_basename($this));
+    }
+
+    public function setDefaultAttribute($value)
+    {
+        $this->attributes['default'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+    }
+
 }

@@ -766,7 +766,7 @@
                         other_cancelled_status_reason: ((stageData || {}).activity || {}).other_cancelled_status_reason || null,
 
                         //  Notify client status variables
-                        notified_client_status: ((stageData || {}).activity || {}).cancelled_status || false
+                        notified_customer_status: ((stageData || {}).activity || {}).cancelled_status || false
                 }
             },
             getPaymentTemplate(stage, overides){

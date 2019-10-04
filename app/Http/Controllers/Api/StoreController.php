@@ -20,65 +20,86 @@ class StoreController extends Controller
     {
         //  Check if the user is authourized to view all stores
         if ($this->user->can('viewAll', Store::class)) {
+
             //  Get the stores
             $stores = Store::paginate();
 
             //  Check if the stores exist
             if ($stores) {
+
                 //  Return an API Readable Format of the Store Instance
                 return ( new \App\Store() )->convertToApiFormat($stores);
+
             } else {
+
                 //  Not Found
                 return oq_api_notify_no_resource();
+
             }
         } else {
+
             //  Not Authourized
             return oq_api_not_authorized();
+
         }
     }
 
     public function getStore($store_id)
     {
         //  Get the store
-        $store = Store::where('id', $store_id)->first();
+        $store = Store::where('id', $store_id)->first() ?? null;
 
         //  Check if the store exists
         if ($store) {
+
             //  Check if the user is authourized to view the store
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the Store Instance
                 return $store->convertToApiFormat();
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
     public function getStoreSettings($store_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store settings
         $settings = $store->settings ?? null;
 
         //  Check if the settings exist
         if ($settings) {
+
             //  Check if the user is authourized to view the store settings
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the Setting Instance
                 return $settings->convertToApiFormat();
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
@@ -89,72 +110,93 @@ class StoreController extends Controller
     public function getStoreLogo($store_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store logo
         $logo = $store->logo ?? null;
 
         //  Check if the logo exists
         if ($logo) {
+
             //  Check if the user is authourized to view the store logo
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the Document Instance
                 return $logo->convertToApiFormat();
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
     public function getStoreDocuments($store_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store documents
-        $documents = $store->documents ?? null;
+        $documents = $store->documents()->paginate() ?? null;
 
         //  Check if the documents exist
         if ($documents) {
+
             //  Check if the user is authourized to view the store documents
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the Document Instance
                 return ( new \App\Document() )->convertToApiFormat($documents);
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
     public function getStoreDocument($store_id, $document_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store document
         $document = $store->documents()->where('id', $document_id)->first() ?? null;
 
         //  Check if the document exists
         if ($document) {
+
             //  Check if the user is authourized to view the store document
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the Document Instance
                 return $document->convertToApiFormat();
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
@@ -165,48 +207,62 @@ class StoreController extends Controller
     public function getStorePhones($store_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store phones
-        $phones = $store->phones ?? null;
+        $phones = $store->phones()->paginate() ?? null;
 
         //  Check if the phones exist
         if ($phones) {
+
             //  Check if the user is authourized to view the store phones
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the Phone Instance
                 return ( new \App\Phone() )->convertToApiFormat($phones);
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+                
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
     public function getStorePhone($store_id, $phone_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store phone
         $phone = $store->phones()->where('id', $phone_id)->first() ?? null;
 
         //  Check if the phone exists
         if ($phone) {
+
             //  Check if the user is authourized to view the store phone
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the Phone Instance
                 return $phone->convertToApiFormat();
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
@@ -217,172 +273,221 @@ class StoreController extends Controller
     public function getStoreUsers($store_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store users
-        $users = $store->users ?? null;
+        $users = $store->users()->paginate() ?? null;
 
         //  Check if the users exist
         if ($users) {
+
             //  Check if the user is authourized to view the store users
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the User Instance
                 return ( new \App\User() )->convertToApiFormat($users);
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
     public function getStoreAdmins($store_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store admins
-        $admins = $store->admins ?? null;
+        $admins = $store->admins()->paginate() ?? null;
 
         //  Check if the admins exist
         if ($admins) {
+
             //  Check if the user is authourized to view the store admins
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the User Instance
                 return ( new \App\User() )->convertToApiFormat($admins);
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
     public function getStoreStaff($store_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store staff
-        $staff = $store->staff ?? null;
+        $staff = $store->staff()->paginate() ?? null;
 
         //  Check if the staff exists
         if ($staff) {
+
             //  Check if the user is authourized to view the store staff
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the User Instance
                 return ( new \App\User() )->convertToApiFormat($staff);
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
-    public function getStoreClients($store_id)
+    public function getStoreUserCustomers($store_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
-        //  Get the store user clients
-        $userClients = $store->userClients ?? null;
+        //  Get the store user customers
+        $userCustomers = $store->userCustomers()->paginate() ?? null;
 
-        //  Check if the user clients exist
-        if ($userClients) {
-            //  Check if the user is authourized to view the store user clients
+        //  Check if the user customers exist
+        if ($userCustomers) {
+
+            //  Check if the user is authourized to view the store user customers
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the User Instance
-                return ( new \App\User() )->convertToApiFormat($userClients);
+                return ( new \App\User() )->convertToApiFormat($userCustomers);
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
-    public function getStoreVendors($store_id)
+    public function getStoreUserVendors($store_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store user vendors
-        $userVendors = $store->userVendors ?? null;
+        $userVendors = $store->userVendors()->paginate() ?? null;
 
-        //  Check if the user clients exist
+        //  Check if the user vendors exist
         if ($userVendors) {
+
             //  Check if the user is authourized to view the store user vendors
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the User Instance
                 return ( new \App\User() )->convertToApiFormat($userVendors);
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
     public function getStoreUser($store_id, $user_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store phone
         $user = $store->users()->where('users.id', $user_id)->first() ?? null;
 
         //  Check if the user exists
         if ($user) {
+
             //  Check if the user is authourized to view the store user
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the User Instance
                 return $user->convertToApiFormat();
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
     /*********************************
-     *  COMPANY RELATED RESOURCES    *
+     *  OWNERSHIP RELATED RESOURCES  *
     *********************************/
 
-    public function getStoreCompany($store_id)
+    public function getStoreOwner($store_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
-        //  Get the store company
-        $company = $store->company ?? null;
+        //  Get the store owner
+        $owner = $store->owner ?? null;
 
-        //  Check if the company exists
-        if ($company) {
-            //  Check if the user is authourized to view the store company
+        //  Check if the owner exists
+        if ($owner) {
+
+            //  Check if the user is authourized to view the store owner
             if ($this->user->can('view', $store)) {
-                //  Return an API Readable Format of the Company Instance
-                return $company->convertToApiFormat();
+
+                //  Return an API Readable Format of the Owning Model Instance
+                return $owner->convertToApiFormat();
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
@@ -393,48 +498,62 @@ class StoreController extends Controller
     public function getStoreProducts($store_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
-
+        $store = Store::findOrFail($store_id);
+        
         //  Get the store products
-        $products = $store->products ?? null;
+        $products = $store->products()->paginate() ?? null;
 
         //  Check if the products exist
         if ($products) {
+
             //  Check if the user is authourized to view the store products
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the Product Instance
                 return ( new \App\Product() )->convertToApiFormat($products);
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
     public function getStoreProduct($store_id, $product_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store product
         $product = $store->products()->where('id', $product_id)->first() ?? null;
 
         //  Check if the product exists
         if ($product) {
+
             //  Check if the user is authourized to view the store product
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the Product Instance
                 return $product->convertToApiFormat();
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
@@ -445,48 +564,62 @@ class StoreController extends Controller
     public function getStoreOrders($store_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store orders
-        $orders = $store->orders ?? null;
+        $orders = $store->orders()->paginate() ?? null;
 
         //  Check if the orders exist
         if ($orders) {
+
             //  Check if the user is authourized to view the store orders
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the Order Instance
                 return ( new \App\Order() )->convertToApiFormat($orders);
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
     public function getStoreOrder($store_id, $order_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store order
         $order = $store->orders()->where('orders.id', $order_id)->first() ?? null;
 
         //  Check if the order exists
         if ($order) {
+
             //  Check if the user is authourized to view the store order
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the Order Instance
                 return $order->convertToApiFormat();
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
@@ -497,48 +630,62 @@ class StoreController extends Controller
     public function getStoreTaxes($store_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store taxes
-        $taxes = $store->taxes ?? null;
+        $taxes = $store->taxes()->paginate() ?? null;
 
         //  Check if the taxes exist
         if ($taxes) {
+
             //  Check if the user is authourized to view the store taxes
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the Tax Instance
                 return ( new \App\Tax() )->convertToApiFormat($taxes);
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
     public function getStoreTax($store_id, $tax_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store tax
         $tax = $store->taxes()->where('taxes.id', $tax_id)->first() ?? null;
 
         //  Check if the tax exists
         if ($tax) {
+
             //  Check if the user is authourized to view the store tax
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the Tax Instance
                 return $tax->convertToApiFormat();
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
@@ -549,48 +696,62 @@ class StoreController extends Controller
     public function getStoreDiscounts($store_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store discounts
-        $discounts = $store->discounts ?? null;
+        $discounts = $store->discounts()->paginate() ?? null;
 
         //  Check if the discounts exist
         if ($discounts) {
+
             //  Check if the user is authourized to view the store discounts
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the Discount Instance
                 return ( new \App\Discount() )->convertToApiFormat($discounts);
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
     public function getStoreDiscount($store_id, $discount_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store discount
         $discount = $store->discounts()->where('discounts.id', $discount_id)->first() ?? null;
 
         //  Check if the discount exists
         if ($discount) {
+
             //  Check if the user is authourized to view the store discount
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the Discount Instance
                 return $discount->convertToApiFormat();
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
@@ -601,48 +762,62 @@ class StoreController extends Controller
     public function getStoreCoupons($store_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store coupons
-        $coupons = $store->coupons ?? null;
+        $coupons = $store->coupons()->paginate() ?? null;
 
         //  Check if the coupons exist
         if ($coupons) {
+
             //  Check if the user is authourized to view the store coupons
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the Coupon Instance
                 return ( new \App\Coupon() )->convertToApiFormat($coupons);
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
     public function getStoreCoupon($store_id, $coupon_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store coupons
         $coupons = $store->coupons()->where('coupons.id', $coupon_id)->first() ?? null;
 
         //  Check if the coupons exist
         if ($coupons) {
+
             //  Check if the user is authourized to view the store coupons
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the Coupon Instance
                 return $coupons->convertToApiFormat();
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
@@ -653,48 +828,62 @@ class StoreController extends Controller
     public function getStoreMessages($store_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store messages
-        $messages = $store->messages ?? null;
+        $messages = $store->messages()->paginate() ?? null;
 
         //  Check if the messages exist
         if ($messages) {
+
             //  Check if the user is authourized to view the store messages
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the Message Instance
                 return ( new \App\Message() )->convertToApiFormat($messages);
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
     public function getStoreMessage($store_id, $message_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store message
         $message = $store->messages()->where('messages.id', $message_id)->first() ?? null;
 
         //  Check if the message exists
         if ($message) {
+
             //  Check if the user is authourized to view the store message
             if ($this->user->can('view', $store)) {
+                
                 //  Return an API Readable Format of the Message Instance
                 return $message->convertToApiFormat();
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
@@ -705,48 +894,62 @@ class StoreController extends Controller
     public function getStoreReviews($store_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store reviews
-        $reviews = $store->reviews ?? null;
+        $reviews = $store->reviews()->paginate() ?? null;
 
         //  Check if the reviews exist
         if ($reviews) {
+
             //  Check if the user is authourized to view the store reviews
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the Review Instance
                 return ( new \App\Review() )->convertToApiFormat($reviews);
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
     public function getStoreReview($store_id, $review_id)
     {
         //  Get the store
-        $store = Store::find($store_id);
+        $store = Store::findOrFail($store_id);
 
         //  Get the store review
         $review = $store->reviews()->where('reviews.id', $review_id)->first() ?? null;
 
         //  Check if the review exists
         if ($review) {
+
             //  Check if the user is authourized to view the store review
             if ($this->user->can('view', $store)) {
+
                 //  Return an API Readable Format of the Reviews Instance
                 return $review->convertToApiFormat();
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 

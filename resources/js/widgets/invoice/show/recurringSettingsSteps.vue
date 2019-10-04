@@ -33,7 +33,7 @@
             <recurringPaymentPlanStage 
                 resourceName="invoice"
                 resourceNamePlural="invoices"
-                :client="localInvoice.customized_client_details"
+                :client="localInvoice.customized_customer_details"
                 :recurringSettings="localInvoice.recurring_settings" 
                 :disabled="!localInvoice.has_set_recurring_schedule_plan"
                 :showCheckMark="localInvoice.has_set_recurring_payment_plan && !(((localInvoice.recurring_settings || {}).editing || {}).paymentPlan)"
@@ -54,7 +54,7 @@
             <recurringDeliveryPlanStage 
                 resourceName="invoice"
                 resourceNamePlural="invoices"
-                :client="localInvoice.customized_client_details"
+                :client="localInvoice.customized_customer_details"
                 smsTemplate="invoice-sms"
                 :smsTemplateData="localInvoice"
                 :testSmsUrl="'/api/invoices/'+localInvoice.id+'/send?test=1'"
@@ -152,7 +152,7 @@
                 
             //  Delivery settings
             var deliveryMailSubject = 'Invoice [invoice_reference_no]';
-            var deliveryMailAddress = this.localInvoice.customized_client_details.email;
+            var deliveryMailAddress = this.localInvoice.customized_customer_details.email;
             var deliveryMailMessage = 
                 '<p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:12px;font-family:arial, \'helvetica neue\', helvetica, sans-serif;line-height:18px;color:#000000;">  \
                     Good day,  \

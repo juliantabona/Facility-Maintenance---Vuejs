@@ -2,10 +2,10 @@
 
 namespace App\Http\Resources;
 
-use Illuminate\Http\Resources\Json\JsonResource;
 use App\Http\Resources\User as UserResource;
 use App\Http\Resources\Order as OrderResource;
 use App\Http\Resources\Store as StoreResource;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 class Message extends JsonResource
 {
@@ -21,6 +21,8 @@ class Message extends JsonResource
 
             'id' => $this->id,
             'text' => $this->text,
+            'meta' => $this->meta,
+            'user_id' => $this->user_id,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 
@@ -39,28 +41,28 @@ class Message extends JsonResource
 
                 //  Link to the resource that received the message
                 'message_to' =>  
-                    function(){
-                        switch ($this->messageable_type) {
+                    (function() {
+                        switch ($this->owner_type) {
                             case 'user':
                                 return [ 
-                                    'href' => ($this->messageable_id == auth('api')->user()->id)  
+                                    'href' => ($this->owner_id == auth('api')->user()->id)  
                                         ? route('my-account')
-                                            : route('user', ['user_id' => $this->messageable_id]),
+                                            : route('user', ['user_id' => $this->owner_id]),
                                     'title' => 'The user that received this message'
                                 ];
                             case 'store':
                                 return [ 
-                                    'href' => route('store', ['store_id' => $this->messageable_id]),
+                                    'href' => route('store', ['store_id' => $this->owner_id]),
                                     'title' => 'The store that received this message'
                                 ];
                             case 'order':
                                 return [ 
-                                    'href' => route('order', ['order_id' => $this->messageable_id]),
+                                    'href' => route('order', ['order_id' => $this->owner_id]),
                                     'title' => 'The order that received this message'
                                 ];
                             default: null;
                         }
-                    },
+                    })(),
 
                 //  Link to user who sent this message
                 'message_by' => [ 
@@ -77,9 +79,9 @@ class Message extends JsonResource
 
                 //  The resource that received the message
                 'message_to' =>  
-                    $this->when( !empty($this->recipient),
-                        function(){
-                            switch ($this->messageable_type) {
+                    $this->when( !empty($this->owner),
+                        (function() {
+                            switch ($this->owner_type) {
                                 case 'user':
                                     return  (new UserResource($this->owner)); break;
                                 case 'store':
@@ -88,7 +90,7 @@ class Message extends JsonResource
                                     return  (new OrderResource($this->owner)); break;
                                 default: null;
                             }
-                        }
+                        })()
                 ),
 
                 //  The user who sent this message

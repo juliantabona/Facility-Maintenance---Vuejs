@@ -59,7 +59,7 @@
                     </basicButton>
 
                     <!-- Recurring Settings Icon Button -->
-                    <span v-if="localInvoice.isRecurring" class="float-right d-block pt-2">
+                    <span v-if="localInvoice.is_recurring" class="float-right d-block pt-2">
                         <div @click="showRecurringSettings = !showRecurringSettings" :style="{ position: 'relative', zIndex: '1' }">
                             <Icon :style="showRecurringSettings ? { fontSize: '20px',height: '33px',color: '#2d8cf0',background: '#eee',borderRadius: '50% 50% 0 0',padding: '3px 6px',marginTop: '-3px',boxShadow: '#c8c8c8 1px 1px 1px inset',cursor: 'pointer' }: { cursor: 'pointer' }"
                                 type="ios-settings-outline" :size="20" />
@@ -67,7 +67,7 @@
                     </span>
 
                     <!-- Make recurring switch -->
-                    <toggleSwitch v-bind:toggleValue.sync="localInvoice.isRecurring" 
+                    <toggleSwitch v-bind:toggleValue.sync="localInvoice.is_recurring" 
                         @update:toggleValue="updateReccuring($event)"
                         :ripple="false" :showIcon="true" onIcon="ios-repeat" offIcon="ios-repeat" 
                         title="Make Recurring:" onText="Yes" offText="No" poptipMsg="Turn on to make recurring"
@@ -270,12 +270,12 @@
                                 <companyOrIndividualDetails 
                                     :editMode="editMode"
                                     refName="Client"
-                                    :profile="localInvoice.customized_client_details" 
+                                    :profile="localInvoice.customized_customer_details" 
                                     :profileId="( createMode ? $route.query.clientId : null )" 
                                     :showCompanyOrUserSelector="false"
                                     :showClientOrSupplierSelector="true"
                                     @updated:companyOrIndividual="updateClient($event)"
-                                    @updated:phones="updatePhoneChanges(localInvoice.customized_client_details, $event)"
+                                    @updated:phones="updatePhoneChanges(localInvoice.customized_customer_details, $event)"
                                     @reUpdateParent="storeOriginalInvoice()">
                                 </companyOrIndividualDetails>
 
@@ -407,7 +407,7 @@
                         grand_total: 0,
                         currency_type: null,
                         customized_company_details: null,
-                        customized_client_details: null,
+                        customized_customer_details: null,
                         client_id: null,
                         calculated_taxes: [],
                         table_columns: [],
@@ -460,7 +460,7 @@
 
                 //  Invoice Shorthands
                 company: this.invoice.customized_company_details,
-                client: this.invoice.customized_client_details,
+                client: this.invoice.customized_customer_details,
                 currencySymbol: ((this.invoice.currency_type || {}).currency || {}).symbol,
                 
             }
@@ -522,7 +522,7 @@
             },
             updateReccuring(val){
                 
-                this.localInvoice.isRecurring = val ? 1 : 0;
+                this.localInvoice.is_recurring = val ? 1 : 0;
                 
                 this.showRecurringSettings = val;
                 
@@ -541,14 +541,14 @@
                     });
                 }
 
-                this.client = this.$set(this.localInvoice, 'customized_client_details', newClient);
+                this.client = this.$set(this.localInvoice, 'customized_customer_details', newClient);
                 
                 this.invoiceHasChanged = this.checkIfinvoiceHasChanged();
 
             },
             updateClient(newClientDetails){
 
-                this.client = this.$set(this.localInvoice, 'customized_client_details', newClientDetails);
+                this.client = this.$set(this.localInvoice, 'customized_customer_details', newClientDetails);
 
                 this.invoiceHasChanged = this.checkIfinvoiceHasChanged();
 
@@ -846,7 +846,7 @@
                         //  Fetch the associated client if specified
                         var self = this;
                         this.fetchCompanyInfo(this.$route.query.clientId).then( data => {
-                            self.client = self.$set(self.localInvoice, 'customized_client_details', data);
+                            self.client = self.$set(self.localInvoice, 'customized_customer_details', data);
                         });
                     }
                     

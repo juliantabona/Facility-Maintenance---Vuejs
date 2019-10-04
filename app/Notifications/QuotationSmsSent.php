@@ -60,7 +60,7 @@ class QuotationSmsSent extends Notification
             'currency_type' => $this->quotation->currency_type,
             'created_date' => $this->quotation->created_date,
             'expiry_date' => $this->quotation->expiry_date,
-            'customized_client_details' => $this->quotation->customized_client_details,
+            'customized_customer_details' => $this->quotation->customized_customer_details,
             'quotation_id' => $this->quotation->quotation_id,
             'company_id' => $this->quotation->company_id,
             'company_branch_id' => $this->quotation->company_branch_id,

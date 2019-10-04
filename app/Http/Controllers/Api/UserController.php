@@ -22,20 +22,27 @@ class UserController extends Controller
     {
         //  Check if the user is authourized to view all users
         if ($this->user->can('viewAll', User::class)) {
+
             //  Get the users
             $users = User::paginate();
 
             //  Check if the users exist
             if ($users) {
+
                 //  Return an API Readable Format of the User Instance
                 return ( new \App\User() )->convertToApiFormat($users);
+
             } else {
+
                 //  Not Found
                 return oq_api_notify_no_resource();
+
             }
         } else {
+
             //  Not Authourized
             return oq_api_not_authorized();
+
         }
     }
 
@@ -45,21 +52,28 @@ class UserController extends Controller
         $user_id = $request->route('user_id') ?? auth('api')->user()->id;
 
         //  Get the user
-        $user = User::where('id', $user_id)->first();
+        $user = User::where('id', $user_id)->first() ?? null;
 
         //  Check if the user exists
         if ($user) {
+
             //  Check if the user is authourized to view the user
             if ($this->user->can('view', $user)) {
+
                 //  Return an API Readable Format of the Company Instance
                 return $user->convertToApiFormat();
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
@@ -69,24 +83,31 @@ class UserController extends Controller
         $user_id = $request->route('user_id') ?? auth('api')->user()->id;
 
         //  Get the user
-        $user = User::find($user_id);
+        $user = User::findOrFail($user_id);
 
         //  Get the user settings
         $settings = $user->settings ?? null;
 
         //  Check if the settings exists
         if ($settings) {
+
             //  Check if the user is authourized to view the user settings
             if ($this->user->can('view', $user)) {
+
                 //  Return an API Readable Format of the Setting Instance
                 return $settings->convertToApiFormat();
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
@@ -96,24 +117,31 @@ class UserController extends Controller
         $user_id = $request->route('user_id') ?? auth('api')->user()->id;
 
         //  Get the user
-        $user = User::find($user_id);
+        $user = User::findOrFail($user_id);
 
         //  Get the user profile image
         $profile_image = $user->profile_image ?? null;
 
         //  Check if the profile image exists
         if ($profile_image) {
+
             //  Check if the user is authourized to view the user's profile image
             if ($this->user->can('view', $user)) {
+
                 //  Return an API Readable Format of the Document Instance
                 return $profile_image->convertToApiFormat();
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
@@ -123,24 +151,31 @@ class UserController extends Controller
         $user_id = $request->route('user_id') ?? auth('api')->user()->id;
 
         //  Get the user
-        $user = User::find($user_id);
+        $user = User::findOrFail($user_id);
 
         //  Get the user documents
-        $documents = $user->documents ?? null;
+        $documents = $user->documents()->paginate() ?? null;
 
         //  Check if the documents exists
         if ($documents) {
+
             //  Check if the user is authourized to view the user's documents
             if ($this->user->can('view', $user)) {
+
                 //  Return an API Readable Format of the Document Instance
                 return ( new \App\Document() )->convertToApiFormat($documents);
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+            
         }
     }
 
@@ -153,24 +188,31 @@ class UserController extends Controller
         $document_id = $request->route('document_id');
 
         //  Get the user
-        $user = User::find($user_id);
+        $user = User::findOrFail($user_id);
 
         //  Get the user document
         $document = $user->documents()->where('id', $document_id)->first() ?? null;
 
         //  Check if the document exists
         if ($document) {
+
             //  Check if the user is authourized to view the user document
             if ($this->user->can('view', $user)) {
+
                 //  Return an API Readable Format of the Document Instance
                 return $document->convertToApiFormat();
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
@@ -185,10 +227,10 @@ class UserController extends Controller
         $user_id = $request->route('user_id') ?? auth('api')->user()->id;
 
         //  Get the user
-        $user = User::find($user_id);
+        $user = User::findOrFail($user_id);
 
         //  Get the user phones
-        $phones = $user->phones ?? null;
+        $phones = $user->phones()->paginate() ?? null;
 
         //  Check if the phones exist
         if ($phones) {
@@ -222,7 +264,7 @@ class UserController extends Controller
         $phone_id = $request->route('phone_id');
 
         //  Get the user
-        $user = User::find($user_id);
+        $user = User::findOrFail($user_id);
 
         //  Get the user phone
         $phone = $user->phones()->where('id', $phone_id)->first() ?? null;
@@ -256,24 +298,31 @@ class UserController extends Controller
         $user_id = $request->route('user_id') ?? auth('api')->user()->id;
 
         //  Get the user
-        $user = User::find($user_id);
+        $user = User::findOrFail($user_id);
 
         //  Get the user companies
-        $companies = $user->companies ?? null;
+        $companies = $user->companies()->paginate() ?? null;
 
         //  Check if the companies exists
         if ($companies) {
+
             //  Check if the user is authourized to view the user companies
             if ($this->user->can('view', $user)) {
+
                 //  Return an API Readable Format of the Company Instance
                 return ( new \App\Company() )->convertToApiFormat($companies);
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
@@ -286,24 +335,31 @@ class UserController extends Controller
         $company_id = $request->route('company_id');
 
         //  Get the user
-        $user = User::find($user_id);
+        $user = User::findOrFail($user_id);
 
         //  Get the user company
         $company = $user->companies()->where('companies.id', $company_id)->first() ?? null;
 
         //  Check if the company exists
         if ($company) {
+
             //  Check if the user is authourized to view the user company
             if ($this->user->can('view', $user)) {
+
                 //  Return an API Readable Format of the Company Instance
                 return $company->convertToApiFormat();
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
@@ -313,24 +369,31 @@ class UserController extends Controller
         $user_id = $request->route('user_id') ?? auth('api')->user()->id;
 
         //  Get the user
-        $user = User::find($user_id);
+        $user = User::findOrFail($user_id);
 
         //  Get the user stores
-        $stores = $user->stores ?? null;
+        $stores = $user->stores()->paginate() ?? null;
         
         //  Check if the stores exists
         if ($stores) {
+
             //  Check if the user is authourized to view the user stores
             if ($this->user->can('view', $user)) {
+
                 //  Return an API Readable Format of the Store Instance
                 return ( new \App\Store() )->convertToApiFormat($stores);
+                
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 
@@ -343,24 +406,31 @@ class UserController extends Controller
         $store_id = $request->route('store_id');
 
         //  Get the user
-        $user = User::find($user_id);
+        $user = User::findOrFail($user_id);
 
         //  Get the user store
         $store = $user->stores()->where('stores.id', $store_id)->first() ?? null;
 
         //  Check if the store exists
         if ($store) {
+
             //  Check if the user is authourized to view the user store
             if ($this->user->can('view', $user)) {
+
                 //  Return an API Readable Format of the Store Instance
                 return $store->convertToApiFormat();
+
             } else {
+
                 //  Not Authourized
                 return oq_api_not_authorized();
+
             }
         } else {
+
             //  Not Found
             return oq_api_notify_no_resource();
+
         }
     }
 

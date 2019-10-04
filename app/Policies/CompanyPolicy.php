@@ -16,9 +16,7 @@ class CompanyPolicy
      */
     public function before($user, $ability)
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
+        return $user->isSuperAdmin();
     }
     
     /**
@@ -31,9 +29,7 @@ class CompanyPolicy
     public function viewAll(User $user)
     {
         //  Only the Super Admin can view all companies
-        if( $user->isSuperAdmin() ){
-            return true;
-        }
+        return $user->isSuperAdmin();
     }
 
     /**
@@ -47,9 +43,7 @@ class CompanyPolicy
     public function view(User $user, Company $company)
     {
         //  Only an Admin or Staff member can view this company
-        if( $company->isAdminOrStaff($user->id) ){
-            return true;
-        }
+        return $company->isAdminOrStaff($user->id);
     }
 
     /**
@@ -75,9 +69,7 @@ class CompanyPolicy
     public function update(User $user, Company $company)
     {
         //  Only an Admin or Staff member can update this company
-        if( $company->isAdminOrStaff($user->id) ){
-            return true;
-        }
+        return $company->isAdminOrStaff($user->id);
     }
 
     /**
@@ -90,10 +82,8 @@ class CompanyPolicy
      */
     public function delete(User $user, Company $company)
     {
-        //  Only an Admin delete this company
-        if( $company->isAdmin($user->id) ){
-            return true;
-        }
+        //  Only an Admin can delete this company
+        return $company->isAdmin($user->id);
     }
 
     /**
@@ -106,10 +96,8 @@ class CompanyPolicy
      */
     public function restore(User $user, Company $company)
     {
-        //  Only an Admin restore this company
-        if( $company->isAdmin($user->id) ){
-            return true;
-        }
+        //  Only an Admin can restore this company
+        return $company->isAdmin($user->id);
     }
 
     /**
@@ -123,8 +111,6 @@ class CompanyPolicy
     public function forceDelete(User $user, Company $company)
     {
         //  Only an Admin can force delete this company
-        if( $company->isAdmin($user->id) ){
-            return true;
-        }
+        return $company->isAdmin($user->id);
     }
 }

@@ -220,7 +220,7 @@
             },
             updateReccuring(val){
                 
-                this.localProduct.isRecurring = val ? 1 : 0;
+                this.localProduct.is_recurring = val ? 1 : 0;
                 
                 this.showRecurringSettings = val;
                 

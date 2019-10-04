@@ -281,7 +281,7 @@ trait JobcardTraits
                             ];
                         }
 
-                        $costcenters = DB::table('costcenter_allocations')->insert($costcenters);
+                        $costcenters = DB::table('cost_center_allocations')->insert($costcenters);
 
                     }
                 }

@@ -2,42 +2,39 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use App\AdvancedFilter\Dataviewer;
 use App\Traits\RecentActivityTraits;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
-    'jobcard' => 'App\Jobcard',
-    'quotation' => 'App\Quotation',
+    'tax' => 'App\Tax',
+    'tag' => 'App\Tag',
+    'user' => 'App\User',
+    'order' => 'App\Order',
+    'phone' => 'App\Phone',
+    'store' => 'App\Store',
+    'refund' => 'App\Review',
+    'coupon' => 'App\Coupon',
+    'review' => 'App\Rating',
+    'comment' => 'App\Comment',
     'invoice' => 'App\Invoice',
-    'appointment' => 'App\Appointment',
+    'jobcard' => 'App\Jobcard',
     'company' => 'App\Company',
-    'companybranch' => 'App\CompanyBranch',
+    'product' => 'App\Product',
+    'discount' => 'App\Discount',
     'category' => 'App\Category',
     'priority' => 'App\Priority',
-    'costcenter' => 'App\CostCenter',
     'document' => 'App\Document',
-    'product' => 'App\Product',
-    'tag' => 'App\Tag',
-    'phone' => 'App\Phone',
-    'user' => 'App\User',
-    'store' => 'App\Store',
-    'order' => 'App\Order',
-    'refund' => 'App\Refund',
+    'quotation' => 'App\Quotation',
+    'costcenter' => 'App\CostCenter',
+    'appointment' => 'App\Appointment',
     'transaction' => 'App\Transaction',
-    'coupon' => 'App\Coupon',
-    'discount' => 'App\Discount',
-    'tax' => 'App\Tax',
-    'rating' => 'App\Rating',   
-    'comment' => 'App\Comment',   
-    'billing_and_shipping_address' => 'App\BillingAndShippingAddress',   
 ]);
 
 class RecentActivity extends Model
 {
-    use Dataviewer;
-    use RecentActivityTraits;
+    use Dataviewer, RecentActivityTraits;
 
     protected $table = 'recent_activities';
 
@@ -45,7 +42,7 @@ class RecentActivity extends Model
         'activity' => 'array',
     ];
 
-    protected $with = ['createdBy'];
+    protected $with = ['user'];
 
     /**
      * The attributes that are mass assignable.
@@ -53,38 +50,33 @@ class RecentActivity extends Model
      * @var array
      */
     protected $fillable = [
-        'type', 'activity', 'company_branch_id', 'company_id', 'created_by',
+
+        /*  Activity Details  */
+        'type', 'activity', 'user_id',
+
+        /*  Ownership Information  */
+        'owner_id', 'owner_type',
+        
     ];
 
-    public function creator()
-    {
-        return $this->morphMany('App\Creator', 'creatable');
-    }
+    protected $allowedFilters = [];
 
-    protected $allowedFilters = [
-        'id', 'company_branch_id', 'created_at',
-    ];
+    protected $allowedOrderableColumns = [];
 
-    protected $allowedOrderableColumns = [
-        'id', 'company_branch_id', 'created_at',
-    ];
-
-    /**
-     * Get all of the owning owner models.
+    /*
+     *  Returns the owner of the activity
      */
-    public function trackable()
+    public function owner()
     {
         return $this->morphTo();
     }
 
-    public function jobcard()
+    /*
+     *  Returns the user responsible for the activity
+     */
+    public function user()
     {
-        return $this->belongsTo('App\Jobcard', 'trackable_id');
-    }
-
-    public function createdBy()
-    {
-        return $this->belongsTo('App\User', 'created_by');
+        return $this->belongsTo('App\User');
     }
 
     protected $appends = ['details'];

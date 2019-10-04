@@ -419,7 +419,7 @@ trait ProductTraits
          *  This is a variable used to determine if the current product being created has 
          *  categories. Sometimes when creating a new product, we may want to add categories
          *  to that product. We can do this if the relationship variable has been set with
-         *  the appropriate type (client/supplier)
+         *  the appropriate type (customer/supplier)
          */
         $categories = request('categories') ?? null;
 
@@ -458,7 +458,7 @@ trait ProductTraits
          *  This is a variable used to determine if the current product being created has 
          *  tags. Sometimes when creating a new product, we may want to add tags
          *  to that product. We can do this if the relationship variable has been set with
-         *  the appropriate type (client/supplier)
+         *  the appropriate type (customer/supplier)
          */
         $tags = request('tags') ?? null;
 

@@ -16,7 +16,7 @@
         <!-- Quotation Client  -->
         <Col span="6">
             <h6 class="text-secondary">Customer</h6>
-            <h5><router-link :to="{ name: urlName, params: { id: localQuotation.customized_client_details.id } }">{{ customerName }}</router-link></h5>         
+            <h5><router-link :to="{ name: urlName, params: { id: localQuotation.customized_customer_details.id } }">{{ customerName }}</router-link></h5>         
         </Col>
 
         <!-- Quotation Amount  -->
@@ -88,16 +88,16 @@
         },
         computed:{
             customerName: function(){
-                if( (this.localQuotation.customized_client_details || {}).model_type == 'user'){
-                    return (this.localQuotation.customized_client_details || {}).full_name;
-                }else if( (this.localQuotation.customized_client_details || {}).model_type == 'company'){
-                    return (this.localQuotation.customized_client_details || {}).name;
+                if( (this.localQuotation.customized_customer_details || {}).model_type == 'user'){
+                    return (this.localQuotation.customized_customer_details || {}).full_name;
+                }else if( (this.localQuotation.customized_customer_details || {}).model_type == 'company'){
+                    return (this.localQuotation.customized_customer_details || {}).name;
                 }
             },
             urlName: function(){
-                if(this.localQuotation.customized_client_details.model_type == 'user'){
+                if(this.localQuotation.customized_customer_details.model_type == 'user'){
                     return 'show-user';
-                }else if(this.localQuotation.customized_client_details.model_type == 'company'){
+                }else if(this.localQuotation.customized_customer_details.model_type == 'company'){
                     return 'show-company';
                 }
             }

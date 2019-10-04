@@ -2,20 +2,23 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Model;
-use App\AdvancedFilter\Dataviewer;
 use App\Traits\TaxTraits;
+use App\AdvancedFilter\Dataviewer;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
-    'product' => 'App\Product'
+    'store' => 'App\Store',
+    'order' => 'App\Order',
+    'product' => 'App\Product',
+    'company' => 'App\Company',
+    'invoice' => 'App\Invoice',
+    'quotation' => 'App\Quotation',
 ]);
+
 class Tax extends Model
 {
-    use TaxTraits;
-    use SoftDeletes;
-    use Dataviewer;
+    use Dataviewer, TaxTraits;
 
     /**
      * The attributes that are mass assignable.
@@ -23,40 +26,54 @@ class Tax extends Model
      * @var array
      */
     protected $fillable = [
-        'name', 'abbreviation', 'rate', 'company_branch_id', 'company_id',
+
+        /*  Tax Details  */
+        'name', 'abbreviation', 'description', 'rate',
+
+        /*  Ownership Information  */
+        'owner_id', 'owner_type',
+
     ];
 
-    protected $allowedFilters = [
-        'id', 'name', 'abbreviation', 'rate', 'created_at'
-    ];
+    protected $allowedFilters = [];
 
-    protected $allowedOrderableColumns = [
-        'id', 'name', 'abbreviation', 'rate', 'created_at',
-    ];
+    protected $allowedOrderableColumns = [];
 
-    /**
-     * Get all of the owning refund models.
+    /* 
+     *  Returns the owner of the tax
      */
-    public function taxable()
+    public function owner()
     {
         return $this->morphTo();
     }
 
-    /**
-     * Get the owner from the morphTo relationship
-     * This method returns a company/store
-     */
-    public function owner()
-    {
-        return $this->taxable();
-    }
-
-    /**
-     * Get all of the products that are assigned this tax.
+    /*
+     *  Returns all products that this tax has been allocated to 
      */
     public function products()
     {
-        return $this->morphedByMany('App\Product', 'taxable');
+        return $this->morphedByMany('App\Product', 'owner', 'tax_allocations');
+    }
+
+    /* 
+     *  Returns recent activities owned by this tax
+     */
+    public function recentActivities()
+    {
+        return $this->morphMany('App\RecentActivity', 'owner')->orderBy('created_at', 'desc');
     }
     
+    /* ATTRIBUTES */
+
+    protected $appends = [
+        'resource_type'
+    ];
+
+    /* 
+     *  Returns the resource type
+     */
+    public function getResourceTypeAttribute()
+    {
+        return strtolower(class_basename($this));
+    }
 }

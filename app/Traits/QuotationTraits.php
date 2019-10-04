@@ -2,33 +2,83 @@
 
 namespace App\Traits;
 
-//  Mails
-use Mail;
-use App\Mail\QuotationMail;
-use App\Mail\QuotationReceiptMail;
-//  Notifications
-use App\Notifications\QuotationCreated;
-use App\Notifications\QuotationUpdated;
-use App\Notifications\QuotationApproved;
-//  Notifications when sending the quotation via email or sms
-use App\Notifications\QuotationSmsSent;
-use App\Notifications\QuotationTestSmsSent;
-use App\Notifications\QuotationEmailSent;
-use App\Notifications\QuotationTestEmailSent;
-use App\Notifications\QuotationReceiptSmsSent;
-use App\Notifications\QuotationReceiptTestSmsSent;
-use App\Notifications\QuotationReceiptEmailSent;
-use App\Notifications\QuotationReceiptTestEmailSent;
-//  Other
 use PDF;
+use Mail;
 use App\Invoice;
 use App\Company;
 use Carbon\Carbon;
 use Twilio as Twilio;
+
+//  Mails
+use App\Mail\QuotationMail;
+use App\Mail\QuotationReceiptMail;
+
+//  Notifications
+use App\Notifications\QuotationSmsSent;
+use App\Notifications\QuotationCreated;
+use App\Notifications\QuotationUpdated;
+use App\Notifications\QuotationApproved;
+use App\Notifications\QuotationEmailSent;
+use App\Notifications\QuotationTestSmsSent;
+use App\Notifications\QuotationTestEmailSent;
+use App\Notifications\QuotationReceiptSmsSent;
+use App\Notifications\QuotationReceiptEmailSent;
+use App\Notifications\QuotationReceiptTestSmsSent;
+use App\Notifications\QuotationReceiptTestEmailSent;
+
+//  Resources
+use App\Http\Resources\Quotation as QuotationResource;
+use App\Http\Resources\Quotations as QuotationsResource;
+
 use Illuminate\Pagination\LengthAwarePaginator;
 
 trait QuotationTraits
 {
+    /*  convertToApiFormat() method:
+     *
+     *  Converts to the appropriate Api Response Format
+     *
+     */
+    public function convertToApiFormat($quotations = null)
+    {
+
+        try {
+
+            if( $quotations ){
+
+                //  Transform the quotations
+                return new QuotationsResource($quotations);
+
+            }else{
+
+                //  Transform the quotation
+                return new QuotationResource($this);
+
+            }
+
+        } catch (\Exception $e) {
+
+            //  Log the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public function sampleTemplate()
     {
@@ -307,8 +357,8 @@ trait QuotationTraits
             'calculated_taxes' => $quotation['calculated_taxes'],
             'quotation_to_title' => $quotation['quotation_to_title'],
             'customized_company_details' => $quotation['customized_company_details'],
-            'customized_client_details' => $quotation['customized_client_details'],
-            'client_id' => $quotation['customized_client_details']['id'],
+            'customized_customer_details' => $quotation['customized_customer_details'],
+            'client_id' => $quotation['customized_customer_details']['id'],
             'table_columns' => $quotation['table_columns'],
             'items' => $quotation['items'],
             'notes' => $quotation['notes'],
@@ -405,8 +455,8 @@ trait QuotationTraits
             'calculated_taxes' => $quotation['calculated_taxes'],
             'quotation_to_title' => $quotation['quotation_to_title'],
             'customized_company_details' => $quotation['customized_company_details'],
-            'customized_client_details' => $quotation['customized_client_details'],
-            'client_id' => $quotation['customized_client_details']['id'],
+            'customized_customer_details' => $quotation['customized_customer_details'],
+            'client_id' => $quotation['customized_customer_details']['id'],
             'table_columns' => $quotation['table_columns'],
             'items' => $quotation['items'],
             'notes' => $quotation['notes'],
@@ -634,7 +684,7 @@ trait QuotationTraits
         $currency = $quotation['currency_type']['currency']['symbol'];
         $grand_total = $currency.number_format($quotation->grand_total, 2, ',', '.');
         $expiry_date = (new Carbon($quotation->expiry_date))->format('M d Y');
-        $client = $quotation->customized_client_details;
+        $client = $quotation->customized_customer_details;
         $company = $quotation->customized_company_details;
 
         foreach ($quotation->items as $x => $item) {
@@ -898,7 +948,7 @@ trait QuotationTraits
      */
     public function replaceShortcodes($quotation, $data)
     {
-        $client = $quotation->customized_client_details;
+        $client = $quotation->customized_customer_details;
         $company = $quotation->customized_company_details;
         $currency = $quotation->currency_type['currency']['symbol'] ?? '';
         $sub_total = $currency.number_format($quotation->sub_total_value, 2, ',', '.');
@@ -1034,8 +1084,8 @@ trait QuotationTraits
                     'calculated_taxes' => $quotation['calculated_taxes'],
                     'invoice_to_title' => $invoiceTemplate['invoice_to_title'],
                     'customized_company_details' => $quotation['customized_company_details'],
-                    'customized_client_details' => $quotation['customized_client_details'],
-                    'client_id' => $quotation['customized_client_details']['id'],
+                    'customized_customer_details' => $quotation['customized_customer_details'],
+                    'client_id' => $quotation['customized_customer_details']['id'],
                     'table_columns' => $quotation['table_columns'],
                     'items' => $quotation['items'],
                     'notes' => $quotation['notes'],

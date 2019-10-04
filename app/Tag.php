@@ -2,14 +2,12 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Model;
-use App\AdvancedFilter\Dataviewer;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use App\Traits\TagTraits;
+use App\AdvancedFilter\Dataviewer;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
-    'jobcard' => 'App\Jobcard',
-    'appointment' => 'App\Appointment',
     'product' => 'App\Product',
 ]);
 
@@ -24,27 +22,55 @@ class Tag extends Model
      * @var array
      */
     protected $fillable = [
-        'name', 'type', 'company_id'
+
+        /*  Tag Details  */
+        'name', 'type',
+
+        /*  Ownership Information  */
+        'owner_id', 'owner_type',
+
     ];
 
     protected $allowedFilters = [];
 
     protected $allowedOrderableColumns = [];
 
-    /**
-     * Get all of the products that are assigned this Tag.
+    /* 
+     *  Returns the owner of the tag
+     */
+    public function owner()
+    {
+        return $this->morphTo();
+    }
+
+    /*
+     *  Returns all products that this tag has been allocated to 
      */
     public function products()
     {
-        return $this->morphedByMany('App\Products', 'trackable', 'tag_allocations');
+        return $this->morphedByMany('App\Product', 'owner', 'tag_allocations');
     }
 
+    /* 
+     *  Returns recent activities owned by this tag
+     */
     public function recentActivities()
     {
-        return $this->morphMany('App\RecentActivity', 'trackable')
-                    ->where('trackable_id', $this->id)
-                    ->where('trackable_type', 'tag')
-                    ->orderBy('created_at', 'desc');
+        return $this->morphMany('App\RecentActivity', 'owner')->orderBy('created_at', 'desc');
+    }
+
+    /* ATTRIBUTES */
+
+    protected $appends = [
+        'resource_type'
+    ];
+
+    /* 
+     *  Returns the resource type
+     */
+    public function getResourceTypeAttribute()
+    {
+        return strtolower(class_basename($this));
     }
 
 }

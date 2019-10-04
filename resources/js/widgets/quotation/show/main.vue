@@ -202,12 +202,12 @@
                                 <companyOrIndividualDetails 
                                     :editMode="editMode"
                                     refName="Client"
-                                    :profile="localQuotation.customized_client_details" 
+                                    :profile="localQuotation.customized_customer_details" 
                                     :profileId="( createMode ? $route.query.clientId : null )" 
                                     :showCompanyOrUserSelector="false"
                                     :showClientOrSupplierSelector="true"
                                     @updated:companyOrIndividual="updateClient($event)"
-                                    @updated:phones="updatePhoneChanges(localQuotation.customized_client_details, $event)"
+                                    @updated:phones="updatePhoneChanges(localQuotation.customized_customer_details, $event)"
                                     @reUpdateParent="storeOriginalQuotation()">
                                 </companyOrIndividualDetails>
 
@@ -338,7 +338,7 @@
                         grand_total: 0,
                         currency_type: null,
                         customized_company_details: null,
-                        customized_client_details: null,
+                        customized_customer_details: null,
                         client_id: null,
                         calculated_taxes: [],
                         table_columns: [],
@@ -392,7 +392,7 @@
 
                 //  Quotation Shorthands
                 company: this.quotation.customized_company_details,
-                client: this.quotation.customized_client_details,
+                client: this.quotation.customized_customer_details,
                 currencySymbol: ((this.quotation.currency_type || {}).currency || {}).symbol,
                 
             }
@@ -441,7 +441,7 @@
             },
             updateReccuring(val){
                 
-                this.localQuotation.isRecurring = val ? 1 : 0;
+                this.localQuotation.is_recurring = val ? 1 : 0;
                 
                 this.showRecurringSettings = val;
                 
@@ -460,14 +460,14 @@
                     });
                 }
 
-                this.client = this.$set(this.localQuotation, 'customized_client_details', newClient);
+                this.client = this.$set(this.localQuotation, 'customized_customer_details', newClient);
                 
                 this.quotationHasChanged = this.checkIfquotationHasChanged();
 
             },
             updateClient(newClientDetails){
 
-                this.client = this.$set(this.localQuotation, 'customized_client_details', newClientDetails);
+                this.client = this.$set(this.localQuotation, 'customized_customer_details', newClientDetails);
 
                 this.quotationHasChanged = this.checkIfquotationHasChanged();
 
@@ -765,7 +765,7 @@
                         //  Fetch the associated client if specified
                         var self = this;
                         this.fetchCompanyInfo(this.$route.query.clientId).then( data => {
-                            self.client = self.$set(self.localQuotation, 'customized_client_details', data);
+                            self.client = self.$set(self.localQuotation, 'customized_customer_details', data);
                         });
                     }
                     

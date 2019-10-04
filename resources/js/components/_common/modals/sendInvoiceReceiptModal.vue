@@ -16,7 +16,7 @@
 
                 <deliveryWidget 
                     :deliveryMethods="deliveryMethods"
-                    :clientDetails="localInvoice.customized_client_details"
+                    :clientDetails="localInvoice.customized_customer_details"
                     :deliveryPhones="localDeliveryPhones"
                     :deliveryMailAddress="localDeliveryMailAddress"
                     :deliveryMailSubject="localDeliveryMailSubject"
@@ -75,7 +75,7 @@
                 deliveryMethods: ['Sms' /*, Email */],
                 localDeliveryPhones: [],
                 localDeliveryMailSubject: this.subject || 'Receipt For Invoice #'+this.invoice['reference_no_value'],
-                localDeliveryMailAddress: this.invoice.customized_client_details.email,
+                localDeliveryMailAddress: this.invoice.customized_customer_details.email,
                 localDeliveryMailMessage: this.emailMsg(),
                 shortcodes: this.getShotCodes(),
                 
@@ -156,7 +156,7 @@
                 var currency = (((this.invoice || {}).currency_type || {}).currency || {}).symbol || '';
                 var sub_total = this.formatPrice( (this.invoice.sub_total_value || 0), currency);
                 var grand_total = this.formatPrice( (this.invoice.grand_total || 0), currency);
-                var client = ((this.invoice || {}).customized_client_details || {});
+                var client = ((this.invoice || {}).customized_customer_details || {});
                 var company = ((this.invoice || {}).customized_company_details || {});
 
                 var shortcodes = {

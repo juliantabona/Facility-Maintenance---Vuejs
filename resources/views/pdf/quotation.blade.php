@@ -239,7 +239,7 @@
             $primaryColor = $quotation['colors'][0];
             $secondaryColor = $quotation['colors'][1]; 
             $company = $quotation['customized_company_details'];
-            $client = $quotation['customized_client_details'];
+            $client = $quotation['customized_customer_details'];
             $clientName = $client['name'] ?? $client['full_name'];
             $companyPhones = isset($company['phones']) ? collect(array_filter($company['phones'], function($phone){ return $phone['show']; }))->values() : [];
             $clientPhones = isset($client['phones']) ? collect(array_filter($client['phones'], function($phone){ return $phone['show']; }))->values() : [];

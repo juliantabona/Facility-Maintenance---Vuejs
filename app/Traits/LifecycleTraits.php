@@ -218,7 +218,7 @@ trait LifecycleTraits
             "pending_status" => true,
             "cancelled_status" => false,
             "failed_payment_status" => false,
-            "notified_client_status" => false,
+            "notified_customer_status" => false,
             "meta" => []
         ];
 
@@ -235,7 +235,7 @@ trait LifecycleTraits
             "pending_status" => false,
             "cancelled_status" => false,
             "failed_payment_status" => true,
-            "notified_client_status" => false,
+            "notified_customer_status" => false,
             "meta" => []
         ];
         return $this->initiateUpdateLifecycleProgress($modelId, $modelType, $stageData);

@@ -70,7 +70,7 @@ class Company extends JsonResource
                 //  Link to company users
                 'oq:users' => [ 
                     'href' => route('company-users', ['company_id' => $this->id]),
-                    'title' => 'Users associated with this company as admins, staff members, clients, vendors, e.t.c',
+                    'title' => 'Users associated with this company as admins, staff members, customers, vendors, e.t.c',
                     'total' => $this->users()->count()
                 ],
 
@@ -88,11 +88,11 @@ class Company extends JsonResource
                     'total' => $this->staff()->count()
                 ],
 
-                //  Link to company user clients
-                'oq:user_clients' => [ 
-                    'href' => route('company-user-clients', ['company_id' => $this->id]),
-                    'title' => 'Users associated with this company as clients',
-                    'total' => $this->userClients()->count()
+                //  Link to company user customers
+                'oq:user_customers' => [ 
+                    'href' => route('company-user-customers', ['company_id' => $this->id]),
+                    'title' => 'Users associated with this company as customers',
+                    'total' => $this->userCustomers()->count()
                 ],
 
                 //  Link to company user vendors

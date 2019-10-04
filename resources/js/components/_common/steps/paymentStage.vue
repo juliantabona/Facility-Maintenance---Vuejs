@@ -89,7 +89,7 @@
                                                 <Icon type="ios-information-circle-outline" :size="24" :style="{ marginTop:'-3px' }" />
                                                 <span class="font-weight-bold">Get paid on time by scheduling payment reminders for your customer:</span>
                                                 <Alert class="mt-2 mb-1" :style="{ zIndex:'1' }">
-                                                    <span class="font-weight-bold">NOTE:</span> Email reminders will be sent to - "{{ localInvoice.customized_client_details.email }}"
+                                                    <span class="font-weight-bold">NOTE:</span> Email reminders will be sent to - "{{ localInvoice.customized_customer_details.email }}"
                                                 </Alert>
                                             </h6>
                                         </Col>

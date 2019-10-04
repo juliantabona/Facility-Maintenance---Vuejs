@@ -84,7 +84,7 @@ class Store extends JsonResource
                 //  Link to store users
                 'oq:users' => [ 
                     'href' => route('store-users', ['store_id' => $this->id]),
-                    'title' => 'Users associated with this store as admins, staff members, clients, vendors, e.t.c',
+                    'title' => 'Users associated with this store as admins, staff members, customers, vendors, e.t.c',
                     'total' => $this->users()->count()
                 ],
 
@@ -102,11 +102,11 @@ class Store extends JsonResource
                     'total' => $this->staff()->count()
                 ],
 
-                //  Link to store user clients
-                'oq:user_clients' => [ 
-                    'href' => route('store-user-clients', ['store_id' => $this->id]),
-                    'title' => 'Users associated with this store as clients',
-                    'total' => $this->userClients()->count()
+                //  Link to store user customers
+                'oq:user_customers' => [ 
+                    'href' => route('store-user-customers', ['store_id' => $this->id]),
+                    'title' => 'Users associated with this store as customers',
+                    'total' => $this->userCustomers()->count()
                 ],
 
                 //  Link to store user vendors

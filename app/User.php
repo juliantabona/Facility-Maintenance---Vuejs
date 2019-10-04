@@ -2,22 +2,15 @@
 
 namespace App;
 
+use App\Traits\UserTraits;
 use Laravel\Passport\HasApiTokens;
+use App\AdvancedFilter\Dataviewer;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use App\AdvancedFilter\Dataviewer;
-use App\Traits\UserTraits;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, Notifiable;
-    use Dataviewer;
-    use UserTraits;
-
-    public function restore()
-    {
-        $this->restoreA();
-    }
+    use HasApiTokens, Notifiable, Dataviewer, UserTraits;
 
     /**
      * The attributes that should be mutated to dates.
@@ -36,11 +29,9 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
+
         /*  Basic Info  */
         'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 
-        
-        /*  Address Info  */
-        'address_1', 'address_2', 'country', 'province', 'city', 'postal_or_zipcode', 
         
         /*  Address Info  */
         'email', 'additional_email',  'username', 'password', 'verified', 'setup', 'account_type',
@@ -49,24 +40,13 @@ class User extends Authenticatable
         'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link',
 
         /*  Company Info  */
-        'company_branch_id', 'company_id'
+        'company_id'
+
     ];
 
-    protected $allowedFilters = [
-        'id', 'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 
-        'address_1', 'address_2', 'country', 'province', 'city', 'postal_or_zipcode', 
-        'email', 'additional_email',  'username', 'password', 'verified', 'setup', 'account_type',
-        'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link',
-        'company_branch_id', 'company_id', 'created_at',
-    ];
+    protected $allowedFilters = [];
 
-    protected $allowedOrderableColumns = [
-        'id', 'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 
-        'address_1', 'address_2', 'country', 'province', 'city', 'postal_or_zipcode', 
-        'email', 'additional_email',  'username', 'password', 'verified', 'setup', 'account_type',
-        'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link',
-        'company_branch_id', 'company_id', 'created_at',
-    ];
+    protected $allowedOrderableColumns = [];
 
     /**
      * The attributes that should be hidden for arrays.
@@ -115,7 +95,7 @@ class User extends Authenticatable
      */
     public function files()
     {
-        return $this->documents()->documentType('file');
+        return $this->documents()->whereDocumentType('file');
     }
 
     /* 
@@ -142,7 +122,7 @@ class User extends Authenticatable
      */
     public function mobiles()
     {
-        return $this->phones()->phoneType('mobile');
+        return $this->phones()->wherePhoneType('mobile');
     }
 
     /* 
@@ -150,7 +130,7 @@ class User extends Authenticatable
      */
     public function telephones()
     {
-        return $this->phones()->phoneType('tel');
+        return $this->phones()->wherePhoneType('tel');
     }
 
     /* 
@@ -158,7 +138,7 @@ class User extends Authenticatable
      */
     public function fax()
     {
-        return $this->phones()->phoneType('fax');
+        return $this->phones()->wherePhoneType('fax');
     }
 
     /* 
@@ -179,13 +159,13 @@ class User extends Authenticatable
 
     /*
      *  Returns all the companies the user has been allocated to. This includes allocations
-     *  of the user as admin, staff, client, vendor e.t.c. Any allocation will pass as a 
+     *  of the user as admin, staff, customer, vendor e.t.c. Any allocation will pass as a 
      *  valid company to retrieve on this instance. We can then filter our results to be
      *  more specific (using a scope) e.g) Get all companies where the user is an admin. 
      */
     public function companies()
     {
-        return $this->morphedByMany('App\Company', 'allocatable', 'user_allocations');
+        return $this->morphedByMany('App\Company', 'owner', 'user_allocations');
     }
 
     /* 
@@ -225,11 +205,11 @@ class User extends Authenticatable
     }
 
     /* 
-     *  Returns companies where the user is a client
+     *  Returns companies where the user is a customer
      */
-    public function companiesWhereUserIsClient()
+    public function companiesWhereUserIsCustomer()
     {
-        return $this->companies()->whereUserType('client');
+        return $this->companies()->whereUserType('customer');
     }
 
     /* 
@@ -242,13 +222,13 @@ class User extends Authenticatable
 
     /*
      *  Returns all the stores the user has been allocated to. This includes allocations
-     *  of the user as admin, staff, client, vendor e.t.c. Any allocation will pass as a 
+     *  of the user as admin, staff, customer, vendor e.t.c. Any allocation will pass as a 
      *  valid store to retrieve on this instance. We can then filter our results to be
      *  more specific (using a scope) e.g) Get all stores where the user is an admin. 
      */
     public function stores()
     {
-        return $this->morphedByMany('App\Store', 'allocatable', 'user_allocations');
+        return $this->morphedByMany('App\Store', 'owner', 'user_allocations');
     }
 
     /* 
@@ -268,11 +248,11 @@ class User extends Authenticatable
     }
 
     /* 
-     *  Returns stores where the user is a client
+     *  Returns stores where the user is a customer
      */
-    public function storesWhereUserIsClient()
+    public function storesWhereUserIsCustomer()
     {
-        return $this->stores()->whereUserType('client');
+        return $this->stores()->whereUserType('customer');
     }
 
     /* 
@@ -300,17 +280,17 @@ class User extends Authenticatable
         return ($this->account_type == 'superadmin');
     }
 
-    /*
-     *   Returns the recent activities associated with this user
+    /* 
+     *  Returns recent activities owned by this user
      */
     public function recentActivities()
     {
-        return $this->morphMany('App\RecentActivity', 'trackable')->orderBy('created_at', 'desc');
+        return $this->morphMany('App\RecentActivity', 'owner')->orderBy('created_at', 'desc');
     }
 
     /*  Attributes */
 
-    protected $appends = ['full_name', 'address', 'profile_image', 'resource_type'];
+    protected $appends = ['profile_image', 'full_name', 'address', 'resource_type'];
 
     /* 
      *  Returns the users profile picture
@@ -341,6 +321,6 @@ class User extends Authenticatable
      */
     public function getResourceTypeAttribute()
     {
-        return str_to_lower(class_basename($this));
+        return strtolower(class_basename($this));
     }
 }

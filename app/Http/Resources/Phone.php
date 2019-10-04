@@ -2,7 +2,10 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Resources\User as UserResource;
+use App\Http\Resources\Store as StoreResource;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\Company as CompanyResource;
 
 class Phone extends JsonResource
 {

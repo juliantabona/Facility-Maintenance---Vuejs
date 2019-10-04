@@ -161,7 +161,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             Route::get('/users', 'Api\CompanyController@getCompanyUsers')->name('users');
             Route::get('/users/admins', 'Api\CompanyController@getCompanyAdmins')->name('admins');
             Route::get('/users/staff', 'Api\CompanyController@getCompanyStaff')->name('staff');
-            Route::get('/users/clients', 'Api\CompanyController@getCompanyUserClients')->name('user-clients');
+            Route::get('/users/customers', 'Api\CompanyController@getCompanyuserCustomers')->name('user-customers');
             Route::get('/users/vendors', 'Api\CompanyController@getCompanyUserVendors')->name('user-vendors');
             Route::get('/users/{user_id}', 'Api\CompanyController@getCompanyUser')->name('user')->where('user_id', '[0-9]+');
 
@@ -192,7 +192,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     //Route::get('companies/stats', 'Api\CompanyController@getEstimatedStats');
     //Route::post('companies/{company_id}/approve', 'Api\CompanyController@approve');
     //Route::get('companies/{company_id}/wallets', 'Api\CompanyController@getWallets');
-    //Route::get('companies/{company_id}/clients', 'Api\CompanyController@getClients');
+    //Route::get('companies/{company_id}/customers', 'Api\CompanyController@getCustomers');
 
     /*********************************
     /*********************************
@@ -232,12 +232,12 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             Route::get('/users', 'Api\StoreController@getStoreUsers')->name('users');
             Route::get('/users/admins', 'Api\StoreController@getStoreAdmins')->name('admins');
             Route::get('/users/staff', 'Api\StoreController@getStoreStaff')->name('staff');
-            Route::get('/users/clients', 'Api\StoreController@getStoreClients')->name('user-clients');
-            Route::get('/users/vendors', 'Api\StoreController@getStoreVendors')->name('user-vendors');
+            Route::get('/users/customers', 'Api\StoreController@getStoreUserCustomers')->name('user-customers');
+            Route::get('/users/vendors', 'Api\StoreController@getStoreUserVendors')->name('user-vendors');
             Route::get('/users/{user_id}', 'Api\StoreController@getStoreUser')->name('user')->where('user_id', '[0-9]+');
 
             //  Company related resources
-            Route::get('/company', 'Api\StoreController@getStoreCompany')->name('company');
+            Route::get('/owner', 'Api\StoreController@getStoreOwner')->name('owner');
 
             //  Product related resources
             Route::get('/products', 'Api\StoreController@getStoreProducts')->name('products');
@@ -319,15 +319,348 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             Route::get('/coupons', 'Api\ProductController@getProductCoupons')->name('coupons');
             Route::get('/coupons/{coupon_id}', 'Api\ProductController@getProductCoupon')->name('coupon')->where('coupon_id', '[0-9]+');
 
-            //  Message related resources
-            Route::get('/messages', 'Api\ProductController@getProductMessages')->name('messages');
-            Route::get('/messages/{message_id}', 'Api\ProductController@getProductMessage')->name('message')->where('message_id', '[0-9]+');
-
             //  Review related resources
             Route::get('/reviews', 'Api\ProductController@getProductReviews')->name('reviews');
             Route::get('/reviews/{review_id}', 'Api\ProductController@getProductReview')->name('review')->where('review_id', '[0-9]+');
 
         });
+    });
+
+    /*********************************
+    /*********************************
+     *  ORDER RESOURCE ROUTES        *
+    /*********************************
+    *********************************/
+
+    Route::prefix('orders')->group(function () {
+
+        //  Multiple orders
+        Route::get('/', 'Api\OrderController@getOrders')->name('orders');
+
+        //  Single order
+        Route::get('/{order_id}', 'Api\OrderController@getOrder')->name('order')->where('order_id', '[0-9]+');
+
+        //  Single order resources
+        Route::prefix('{order_id}')->name('order-')->group(function ($group) {
+
+            //  Allow only intergers for order_id on all group routes
+            foreach ($group->getRoutes() as $route) {
+                $route->where('order_id', '[0-9]+');
+            }
+
+            //  Merchant related resources
+            Route::get('/merchant', 'Api\OrderController@getOrderMerchant')->name('merchant');
+
+            //  Customer related resources
+            Route::get('/customer', 'Api\OrderController@getOrderCustomer')->name('customer');
+
+            //  Reference related resources
+            Route::get('/reference', 'Api\OrderController@getOrderReference')->name('reference');
+
+            //  Document related resources
+            Route::get('/documents', 'Api\OrderController@getOrderDocuments')->name('documents');
+            Route::get('/documents/{document_id}', 'Api\OrderController@getOrderDocument')->name('document')->where('document_id', '[0-9]+');
+
+            //  Invoice related resources
+            Route::get('/invoices', 'Api\OrderController@getOrderInvoices')->name('invoices');
+            Route::get('/invoices/{invoice_id}', 'Api\OrderController@getOrderInvoice')->name('invoice')->where('invoice_id', '[0-9]+');
+
+            //  Tax related resources
+            Route::get('/taxes', 'Api\OrderController@getOrderTaxes')->name('taxes');
+            Route::get('/taxes/{tax_id}', 'Api\OrderController@getOrderTax')->name('tax')->where('tax_id', '[0-9]+');
+
+            //  Discount related resources
+            Route::get('/discounts', 'Api\OrderController@getOrderDiscounts')->name('discounts');
+            Route::get('/discounts/{discount_id}', 'Api\OrderController@getOrderDiscount')->name('discount')->where('discount_id', '[0-9]+');
+
+            //  Coupon related resources
+            Route::get('/coupons', 'Api\OrderController@getOrderCoupons')->name('coupons');
+            Route::get('/coupons/{coupon_id}', 'Api\OrderController@getOrderCoupon')->name('coupon')->where('coupon_id', '[0-9]+');
+
+            //  Message related resources
+            Route::get('/messages', 'Api\OrderController@getOrderMessages')->name('messages');
+            Route::get('/messages/{message_id}', 'Api\OrderController@getOrderMessage')->name('message')->where('message_id', '[0-9]+');
+
+            //  Review related resources
+            Route::get('/reviews', 'Api\OrderController@getOrderReviews')->name('reviews');
+            Route::get('/reviews/{review_id}', 'Api\OrderController@getOrderReview')->name('review')->where('review_id', '[0-9]+');
+
+            //  Route::post('/proof-of-payment', 'Api\OrderController@saveProofOfPayment');
+
+            //  Lifecycle related resources
+            Route::prefix('lifecycle')->name('lifecycle-')->group(function ($group) {
+
+                $endpoints = ['resume', 'approve', 'decline', 'proceed', 'undo', 'update', 'pending', 'skip', 'cancel', 'notify'];
+
+                foreach ($endpoints as $endpoint) {
+
+                    Route::post('/'.$endpoint, 'Api\LifecycleController@'.$endpoint)->name($endpoint);
+
+                }     
+
+            });    
+
+        });
+    });
+
+    /*********************************
+    /*********************************
+     *  INVOICE RESOURCE ROUTES      *
+    /*********************************
+    *********************************/
+
+    Route::prefix('invoices')->group(function () {
+
+        //  Multiple invoices
+        Route::get('/', 'Api\InvoiceController@getInvoices')->name('invoices');
+
+        //  Single invoice
+        Route::get('/{invoice_id}', 'Api\InvoiceController@getInvoice')->name('invoice')->where('invoice_id', '[0-9]+');
+
+        //  Single invoice resources
+        Route::prefix('{invoice_id}')->name('invoice-')->group(function ($group) {
+
+            //  Allow only intergers for invoice_id on all group routes
+            foreach ($group->getRoutes() as $route) {
+                $route->where('invoice_id', '[0-9]+');
+            }
+
+            //  Owner related resources
+            Route::get('/owner', 'Api\InvoiceController@getInvoiceOwner')->name('owner');
+
+            //  Merchant related resources
+            Route::get('/merchant', 'Api\InvoiceController@getInvoiceMerchant')->name('merchant');
+
+            //  Customer related resources
+            Route::get('/customer', 'Api\InvoiceController@getInvoiceCustomer')->name('customer');
+
+            //  Reference related resources
+            Route::get('/reference', 'Api\InvoiceController@getInvoiceReference')->name('reference');
+
+            //  Quotation related resources
+            Route::get('/quotation', 'Api\InvoiceController@getInvoiceQuotation')->name('quotation');
+
+            //  Child invoice(s) related resources
+            Route::get('/child-invoices', 'Api\InvoiceController@getChildInvoices')->name('child-invoices');
+            
+            //  Parent invoice related resources
+            Route::get('/parent-invoice', 'Api\InvoiceController@getParentInvoice')->name('parent-invoice');
+
+            //  Document related resources
+            Route::get('/proof-of-payment', 'Api\InvoiceController@getInvoiceProofOfPayment')->name('proof-of-payment');
+            Route::get('/documents', 'Api\InvoiceController@getInvoiceDocuments')->name('documents');
+            Route::get('/documents/{document_id}', 'Api\InvoiceController@getInvoiceDocument')->name('document')->where('document_id', '[0-9]+');
+            
+            //  Transaction related resources
+            Route::get('/transactions', 'Api\InvoiceController@getInvoiceTransactions')->name('transactions');
+            Route::get('/transactions/{transaction_id}', 'Api\InvoiceController@getInvoiceTransaction')->name('transaction')->where('transaction_id', '[0-9]+');
+
+            //  Payment related resources
+            Route::get('/payments', 'Api\InvoiceController@getInvoicePayments')->name('payments');
+            Route::get('/payments/{payment_id}', 'Api\InvoiceController@getInvoicePayment')->name('payment')->where('payment_id', '[0-9]+');
+
+            //  Refund related resources
+            Route::get('/refunds', 'Api\InvoiceController@getInvoiceRefunds')->name('refunds');
+            Route::get('/refunds/{refund_id}', 'Api\InvoiceController@getInvoiceRefund')->name('refund')->where('refund_id', '[0-9]+');
+
+            //  Tax related resources
+            Route::get('/taxes', 'Api\InvoiceController@getInvoiceTaxes')->name('taxes');
+            Route::get('/taxes/{tax_id}', 'Api\InvoiceController@getInvoiceTax')->name('tax')->where('tax_id', '[0-9]+');
+
+            //  Discount related resources
+            Route::get('/discounts', 'Api\InvoiceController@getInvoiceDiscounts')->name('discounts');
+            Route::get('/discounts/{discount_id}', 'Api\InvoiceController@getInvoiceDiscount')->name('discount')->where('discount_id', '[0-9]+');
+
+            //  Coupon related resources
+            Route::get('/coupons', 'Api\InvoiceController@getInvoiceCoupons')->name('coupons');
+            Route::get('/coupons/{coupon_id}', 'Api\InvoiceController@getInvoiceCoupon')->name('coupon')->where('coupon_id', '[0-9]+');    
+
+        });
+    });
+
+
+    /*********************************
+    /*********************************
+     *  QUOTATION RESOURCE ROUTES    *
+    /*********************************
+    *********************************/
+
+    Route::prefix('quotations')->group(function () {
+
+        //  Multiple quotations
+        Route::get('/', 'Api\QuotationController@getQuotations')->name('quotations');
+
+        //  Single quotation
+        Route::get('/{quotation_id}', 'Api\QuotationController@getQuotation')->name('quotation')->where('quotation_id', '[0-9]+');
+
+        //  Single quotation resources
+        Route::prefix('{quotation_id}')->name('quotation-')->group(function ($group) {
+
+            //  Allow only intergers for quotation_id on all group routes
+            foreach ($group->getRoutes() as $route) {
+                $route->where('quotation_id', '[0-9]+');
+            }
+
+            //  Owner related resources
+            Route::get('/owner', 'Api\QuotationController@getQuotationOwner')->name('owner');
+
+            //  Merchant related resources
+            Route::get('/merchant', 'Api\QuotationController@getQuotationMerchant')->name('merchant');
+
+            //  Customer related resources
+            Route::get('/customer', 'Api\QuotationController@getQuotationCustomer')->name('customer');
+
+            //  Reference related resources
+            Route::get('/reference', 'Api\QuotationController@getQuotationReference')->name('reference');
+
+            //  Quotation related resources
+            Route::get('/invoices', 'Api\QuotationController@getQuotationInvoices')->name('invoices');
+
+            //  Document related resources
+            Route::get('/documents', 'Api\QuotationController@getQuotationDocuments')->name('documents');
+            Route::get('/documents/{document_id}', 'Api\QuotationController@getQuotationDocument')->name('document')->where('document_id', '[0-9]+');
+            
+            //  Tax related resources
+            Route::get('/taxes', 'Api\QuotationController@getQuotationTaxes')->name('taxes');
+            Route::get('/taxes/{tax_id}', 'Api\QuotationController@getQuotationTax')->name('tax')->where('tax_id', '[0-9]+');
+
+            //  Discount related resources
+            Route::get('/discounts', 'Api\QuotationController@getQuotationDiscounts')->name('discounts');
+            Route::get('/discounts/{discount_id}', 'Api\QuotationController@getQuotationDiscount')->name('discount')->where('discount_id', '[0-9]+');
+
+            //  Coupon related resources
+            Route::get('/coupons', 'Api\QuotationController@getQuotationCoupons')->name('coupons');
+            Route::get('/coupons/{coupon_id}', 'Api\QuotationController@getQuotationCoupon')->name('coupon')->where('coupon_id', '[0-9]+');    
+
+        });
+    });
+
+    /*********************************
+    /*********************************
+     *  TAX RESOURCE ROUTES          *
+    /*********************************
+    *********************************/
+
+    Route::prefix('taxes')->group(function () {
+
+        //  Multiple taxes
+        Route::get('/', 'Api\TaxController@getTaxes')->name('taxes');
+
+        //  Single tax
+        Route::get('/{tax_id}', 'Api\TaxController@getTax')->name('tax')->where('tax_id', '[0-9]+');
+
+        //  Single tax resources
+        Route::prefix('{tax_id}')->name('tax-')->group(function ($group) {
+
+            //  Allow only intergers for tax_id on all group routes
+            foreach ($group->getRoutes() as $route) {
+                $route->where('tax_id', '[0-9]+');
+            }
+
+            //  Owner related resources
+            Route::get('/owner', 'Api\TaxController@getTaxOwner')->name('owner');
+
+            //  Product related resources
+            Route::get('/products', 'Api\TaxController@getTaxProducts')->name('products');
+            Route::get('/products/{product_id}', 'Api\TaxController@getTaxProduct')->name('product')->where('product_id', '[0-9]+');
+
+        });
+    });
+
+    /*********************************
+    /*********************************
+     *  DISCOUNT RESOURCE ROUTES     *
+    /*********************************
+    *********************************/
+
+    Route::prefix('discounts')->group(function () {
+
+        //  Multiple discounts
+        Route::get('/', 'Api\DiscountController@getDiscounts')->name('discounts');
+
+        //  Single discount
+        Route::get('/{discount_id}', 'Api\DiscountController@getDiscount')->name('discount')->where('discount_id', '[0-9]+');
+
+        //  Single discount resources
+        Route::prefix('{discount_id}')->name('discount-')->group(function ($group) {
+
+            //  Allow only intergers for discount_id on all group routes
+            foreach ($group->getRoutes() as $route) {
+                $route->where('discount_id', '[0-9]+');
+            }
+
+            //  Owner related resources
+            Route::get('/owner', 'Api\DiscountController@getDiscountOwner')->name('owner');
+
+            //  Product related resources
+            Route::get('/products', 'Api\DiscountController@getDiscountProducts')->name('products');
+            Route::get('/products/{product_id}', 'Api\DiscountController@getDiscountProduct')->name('product')->where('product_id', '[0-9]+');
+
+        });
+    });
+
+    /*********************************
+    /*********************************
+     *  COUPON RESOURCE ROUTES     *
+    /*********************************
+    *********************************/
+
+    Route::prefix('coupons')->group(function () {
+
+        //  Multiple coupons
+        Route::get('/', 'Api\CouponController@getCoupons')->name('coupons');
+
+        //  Single coupon
+        Route::get('/{coupon_id}', 'Api\CouponController@getCoupon')->name('coupon')->where('coupon_id', '[0-9]+');
+
+        //  Single coupon resources
+        Route::prefix('{coupon_id}')->name('coupon-')->group(function ($group) {
+
+            //  Allow only intergers for coupon_id on all group routes
+            foreach ($group->getRoutes() as $route) {
+                $route->where('coupon_id', '[0-9]+');
+            }
+
+            //  Owner related resources
+            Route::get('/owner', 'Api\CouponController@getCouponOwner')->name('owner');
+
+            //  Product related resources
+            Route::get('/products', 'Api\CouponController@getCouponProducts')->name('products');
+            Route::get('/products/{product_id}', 'Api\CouponController@getCouponProduct')->name('product')->where('product_id', '[0-9]+');
+
+        });
+    });
+
+    /*********************************
+    /*********************************
+     *  PHONE RESOURCE ROUTES     *
+    /*********************************
+    *********************************/
+
+    Route::prefix('phones')->group(function () {
+
+        //  Multiple phones
+        Route::get('/', 'Api\PhoneController@getPhones')->name('phones');
+
+        //  Single phone
+        Route::get('/{phone_id}', 'Api\PhoneController@getPhone')->name('phone')->where('phone_id', '[0-9]+');
+
+        //  Single phone resources
+        Route::prefix('{phone_id}')->name('phone-')->group(function ($group) {
+
+            //  Allow only intergers for phone_id on all group routes
+            foreach ($group->getRoutes() as $route) {
+                $route->where('phone_id', '[0-9]+');
+            }
+
+            //  Owner related resources
+            Route::get('/owner', 'Api\PhoneController@getPhoneOwner')->name('owner');
+
+            //  Wallet related resources
+            Route::get('/wallet', 'Api\PhoneController@getPhoneWallet')->name('wallet');
+
+        });
+
     });
 
 });
@@ -453,6 +786,7 @@ Route::get('notifications', 'Api\NotificationsController@index');
 /*   QUOTATION RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
 */
+/*
 Route::get('quotations', 'Api\QuotationController@index');
 Route::post('quotations', 'Api\QuotationController@store');  //  ok
 Route::get('quotations/stats', 'Api\QuotationController@getEstimatedStats');
@@ -462,10 +796,12 @@ Route::post('quotations/{quotation_id}/approve', 'Api\QuotationController@approv
 Route::post('quotations/{quotation_id}/send', 'Api\QuotationController@send');
 Route::post('quotations/{quotation_id}/skip-send', 'Api\QuotationController@skipSend');
 Route::post('quotations/{quotation_id}/convert', 'Api\QuotationController@convertToInvoice');
+*/
 
 /*   INVOICE RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
 */
+/*
 Route::get('invoices', 'Api\InvoiceController@index');
 Route::post('invoices', 'Api\InvoiceController@store');
 Route::get('invoices/stats', 'Api\InvoiceController@getEstimatedStats');
@@ -482,21 +818,11 @@ Route::post('invoices/{invoice_id}/recurring/update-schedule-plan', 'Api\Invoice
 Route::post('invoices/{invoice_id}/recurring/update-delivery-plan', 'Api\InvoiceController@updateRecurringSettingsDeliveryPlan');
 Route::post('invoices/{invoice_id}/recurring/update-payment-plan', 'Api\InvoiceController@updateRecurringSettingsPaymentPlan');
 Route::post('invoices/{invoice_id}/recurring/approve', 'Api\InvoiceController@approveRecurringSettings');
-
+*/
 /*   INVOICE RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
 */
 Route::post('sample-sms', 'Api\SmsController@sendSampleSms');
-
-/*   ORDER RESOURCE ROUTES
-     -  Get, Show, Update, Trash, Delete
-*/
-Route::get('orders', 'Api\OrderController@index');
-Route::post('orders', 'Api\OrderController@store');
-Route::get('orders/{order_id}', 'Api\OrderController@show');
-Route::post('orders/{order_id}', 'Api\OrderController@update');
-Route::get('orders/{order_id}/documents', 'Api\OrderController@getDocuments');
-Route::post('orders/{order}/proof-of-payment', 'Api\OrderController@saveProofOfPayment');
 
 /*   COMMENT RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
@@ -518,8 +844,9 @@ Route::delete('cart/empty', 'Api\CartController@empty');
 /*   TAXES RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
 */
+/*
 Route::get('taxes', 'Api\TaxController@index');
-
+*/
 /*   PHONE RESOURCE ROUTES
      -  Get, Show, Update, Trash, Delete
 */

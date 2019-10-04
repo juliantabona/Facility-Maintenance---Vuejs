@@ -16,9 +16,7 @@ class StorePolicy
      */
     public function before($user, $ability)
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
+        return $user->isSuperAdmin();
     }
     
     /**
@@ -31,9 +29,7 @@ class StorePolicy
     public function viewAll(User $user)
     {
         //  Only the Super Admin can view all stores
-        if( $user->isSuperAdmin() ){
-            return true;
-        }
+        return $user->isSuperAdmin();
     }
 
     /**
@@ -46,9 +42,7 @@ class StorePolicy
     public function view(User $user, Store $store)
     {
         //  Only an Admin or Staff member can view this store
-        if( $store->isAdminOrStaff($user->id) ){
-            return true;
-        }
+        return $store->isAdminOrStaff($user->id);
     }
 
     /**
@@ -72,9 +66,7 @@ class StorePolicy
     public function update(User $user, Store $store)
     {
         //  Only an Admin or Staff member can update this store
-        if( $store->isAdminOrStaff($user->id) ){
-            return true;
-        }
+        return $store->isAdminOrStaff($user->id);
     }
 
     /**
@@ -87,9 +79,7 @@ class StorePolicy
     public function delete(User $user, Store $store)
     {
         //  Only an Admin can delete this store
-        if( $store->isAdmin($user->id) ){
-            return true;
-        }
+        return $store->isAdmin($user->id);
     }
 
     /**
@@ -102,9 +92,7 @@ class StorePolicy
     public function restore(User $user, Store $store)
     {
         //  Only an Admin can restore this store
-        if( $store->isAdmin($user->id) ){
-            return true;
-        }
+        return $store->isAdmin($user->id);
     }
 
     /**
@@ -117,8 +105,6 @@ class StorePolicy
     public function forceDelete(User $user, Store $store)
     {
         //  Only an Admin can force delete this store
-        if( $store->isAdmin($user->id) ){
-            return true;
-        }
+        return $store->isAdmin($user->id);
     }
 }

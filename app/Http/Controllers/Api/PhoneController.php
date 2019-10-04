@@ -8,6 +8,144 @@ use App\Http\Controllers\Controller;
 
 class PhoneController extends Controller
 {
+
+    private $user;
+
+    public function __construct()
+    {
+        //  Authenticated User
+        $this->user = auth('api')->user();
+    }
+
+    public function getPhones()
+    {
+        //  Check if the user is authourized to view all phones
+        if ($this->user->can('viewAll', Phone::class)) {
+        
+            //  Get the phones
+            $phones = Phone::paginate();
+
+            //  Check if the phones exist
+            if ($phones) {
+
+                //  Return an API Readable Format of the Phone Instance
+                return ( new \App\Phone )->convertToApiFormat($phones);
+
+            }else{
+                
+                //  Not Found
+                return oq_api_notify_no_resource();
+
+            }
+
+        } else {
+
+            //  Not Authourized
+            return oq_api_not_authorized();
+
+        }
+    }
+
+    public function getPhone( $phone_id )
+    {
+        //  Get the phone
+        $phone = Phone::where('id', $phone_id)->first() ?? null;
+
+        //  Check if the phone exists
+        if ($phone) {
+
+            //  Check if the user is authourized to view the phone
+            if ($this->user->can('view', $phone)) {
+
+                //  Return an API Readable Format of the Phone Instance
+                return $phone->convertToApiFormat();
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+            }
+        }else{
+            
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
+    /*********************************
+     *  OWNER RELATED RESOURCES      *
+    *********************************/
+
+    public function getPhoneOwner( $phone_id )
+    {
+        //  Get the phone
+        $phone = Phone::findOrFail($phone_id);
+
+        //  Get the phone owner
+        $owner = $phone->owner ?? null;
+
+        //  Check if the owner exists
+        if ($owner) {
+
+            //  Check if the user is authourized to view the phone owner
+            if ($this->user->can('view', $phone)) {
+
+                //  Return an API Readable Format of the Model Instance
+                return $owner->convertToApiFormat();
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+
+            }
+        }else{
+            
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
+    /*********************************
+     *  WALLET RELATED RESOURCES     *
+    *********************************/
+
+    public function getPhoneWallet( $phone_id )
+    {
+        //  Get the phone
+        $phone = Phone::findOrFail($phone_id);
+
+        //  Get the phone wallet
+        $wallet = $phone->wallet ?? null;
+
+        //  Check if the wallet exists
+        if ($wallet) {
+
+            //  Check if the user is authourized to view the phone wallet
+            if ($this->user->can('view', $phone)) {
+
+                //  Return an API Readable Format of the Model Instance
+                return $wallet->convertToApiFormat();
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+
+            }
+        }else{
+            
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
+
+
+    /*
     public function index(Request $request)
     {
         //  Phone Instance
@@ -73,9 +211,6 @@ class PhoneController extends Controller
         //  Current authenticated user
         $user = auth('api')->user();
 
-        /*************************************************************
-         *   CHECK IF USER HAS PERMISSION TO DELETE PHONE DETAILS    *
-         ************************************************************/
         //  Delete the phone number
         try {
             //  Get the phone
@@ -95,4 +230,5 @@ class PhoneController extends Controller
             return oq_api_notify_error('Query Error', $e->getMessage(), 404);
         }
     }
+    */
 }

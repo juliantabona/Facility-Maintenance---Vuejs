@@ -4,12 +4,16 @@ namespace App;
 
 use DB;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Model;
-use App\AdvancedFilter\Dataviewer;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use App\Traits\QuotationTraits;
+use App\AdvancedFilter\Dataviewer;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
+    'user' => 'App\User',
+    'order' => 'App\Order',
+    'store' => 'App\Store',
+    'company' => 'App\Company',
     'jobcard' => 'App\Jobcard',
 ]);
 
@@ -24,19 +28,25 @@ class Quotation extends Model
      * @var string
      */
     protected $casts = [
-        'currency_type' => 'array',
-        'calculated_taxes' => 'array',
-        'customized_company_details' => 'array',
-        'customized_client_details' => 'array',
-        'table_columns' => 'array',
+        'meta' => 'array',
         'items' => 'array',
-        'notes' => 'array',
-        'colors' => 'array',
+        'taxes' => 'array',
+        'coupons' => 'array',
+        'discounts' => 'array',
+        'billing_info' => 'array',
+        'shipping_info' => 'array',
+        'company_info' => 'array',
+        'currency_type' => 'array'
     ];
 
-    protected $dates = ['created_date', 'expiry_date'];
-
-    protected $with = ['reminders'];
+    /**
+     * The attributes that should be mutated to dates.
+     *
+     * @var array
+     */
+    protected $dates = [
+        'created_date', 'expiry_date'
+    ];
 
     /**
      * The attributes that are mass assignable.
@@ -44,10 +54,35 @@ class Quotation extends Model
      * @var array
      */
     protected $fillable = [
-        'status', 'heading', 'reference_no_title', 'reference_no_value', 'created_date_title', 'created_date',
-        'expiry_date_title', 'expiry_date', 'sub_total_title', 'sub_total_value', 'grand_total_title', 'grand_total',
-        'currency_type', 'calculated_taxes', 'quotation_to_title', 'customized_company_details', 'customized_client_details', 'client_id',
-        'table_columns', 'items', 'notes', 'colors', 'footer', 'company_branch_id', 'company_id',
+
+        /*  Basic Info  */
+        'number', 'currency_type', 'created_date', 'expiry_date',
+
+        /*  Item Info  */
+        'items',
+
+        /*  Taxes, Disounts & Coupon Info  */
+        'taxes', 'discounts', 'coupons',
+
+        /*  Grand Total, Sub Total, Tax Total, Discount Total, Shipping Total  */
+        'sub_total', 'item_tax_total', 'global_tax_total', 'grand_tax_total', 'item_discount_total',
+        'global_discount_total', 'grand_discount_total', 'shipping_total', 'grand_total',
+
+        /*  Reference Info  */
+        'reference_id', 'reference_ip_address', 'reference_user_agent',
+
+        /*  Customer Info  */
+        'customer_id', 'customer_type', 'billing_info', 'shipping_info',
+
+        /*  Merchant Info  */
+        'merchant_id', 'merchant_type', 'merchant_info',
+
+        /*  Meta Data  */
+        'meta',
+
+        /*  Ownership Information  */
+        'owner_id', 'owner_type',
+
     ];
 
     /**
@@ -56,145 +91,244 @@ class Quotation extends Model
      * @var array
      */
     protected $hidden = [
-        //  Hide the recentActivities from the returned results
-        //  since they can be way too many
+        /*  Hide the recentActivities from the returned results since they can be way too many */
         'recentActivities',
     ];
 
     protected $allowedFilters = [
+
+        //  Quotation Filter
         'id', 'reference_no_value', 'grand_total', 'created_date', 'expiry_date', 'created_at',
 
-        //  Nested within JSON
-        //  'notes > details',
+        //  Customer Filter
+        'customer.id', 'customer.name', 'customer.city', 'customer.state_or_region', 'customer.address', 
+        'customer.industry', 'customer.type', 'customer.website_link', 'customer.phone_ext', 'customer.phone_num', 
+        'customer.email', 'customer.created_at',
 
-        // Nested within relationhip
-        'client.id', 'client.name', 'client.city', 'client.state_or_region', 'client.address', 'client.industry', 'client.type', 'client.website_link', 'client.phone_ext', 'client.phone_num', 'client.email', 'client.created_at',
+        //  Nested within JSON
+        //  'billing_info > name',
+
     ];
 
     protected $allowedOrderableColumns = [
         'id', 'reference_no_value', 'grand_total', 'created_date', 'expiry_date', 'created_at',
     ];
 
-    /**
-     * Get all of the owning trackable models.
+    /*
+     *  Returns the owner of the quotation 
+     *  The quotation can be owned by a particular 
+     *  order but have the store as the merchant
      */
-    public function trackable()
+    public function owner()
     {
         return $this->morphTo();
     }
 
+    /*
+     *  Returns the merchant of the quotation 
+     *  This refers to the seller of the goods/services
+     */
+    public function merchant()
+    {
+        return $this->morphTo();
+    }
+
+    /*
+     *  Returns the customer of the quotation
+     *  This refers to the consumer of the goods/services
+     */
+    public function customer()
+    {
+        return $this->morphTo();
+    }
+
+    /*
+     *  Returns the reference of the quotation
+     *  This refers to the user who submitted the quotation
+     */
+    public function reference()
+    {
+        return $this->belongsTo('App\User', 'reference_id');
+    }
+
+    /*  
+     *  Returns documents associated with this quotation. These are various files such as images,
+     *  videos, files and so on. Basically any file/image/video the user wants to save to 
+     *  this quotation is stored in this relation
+     */
+
+    public function documents()
+    {
+        return $this->morphMany('App\Document', 'owner');
+    }
+
+    /* 
+     *  Returns documents categorized as files
+     */
+    public function files()
+    {
+        return $this->documents()->whereType('file');
+    }
+
+    /*
+     *  Returns the quotation invoices
+     */
     public function invoices()
     {
         return $this->hasMany('App\Invoice', 'quotation_id');
     }
 
+    /* 
+     *  Returns the quotation taxes
+     */
+    public function taxes()
+    {
+        return $this->morphToMany('App\Tax', 'owner', 'tax_allocations');
+    }
+
+    /* 
+     *  Returns the quotation discounts
+     */
+    public function discounts()
+    {
+        return $this->morphToMany('App\Discount', 'owner', 'discount_allocations');
+    }
+
+    /* 
+     *  Returns the quotation coupons
+     */
+    public function coupons()
+    {
+        return $this->morphToMany('App\Coupon', 'owner', 'coupon_allocations');
+    }
+
+    /* 
+     *  Returns recent activities owned by this quotation
+     */
     public function recentActivities()
     {
-        return $this->morphMany('App\RecentActivity', 'trackable')
-                    ->where('trackable_id', $this->id)
-                    ->where('trackable_type', 'quotation')
-                    ->orderBy('created_at', 'desc');
+        return $this->morphMany('App\RecentActivity', 'owner')->orderBy('created_at', 'desc');
     }
 
+    /* 
+     *  Returns quotation creation activity
+     */
     public function createdActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'quotation')->where('type', 'created');
+        return $this->recentActivities()->whereType('created');
     }
 
+    /* 
+     *  Returns quotation approval activity
+     */
     public function approvedActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'quotation')->where('type', 'approved');
+        return $this->recentActivities()->whereType('approved');
     }
 
+    /* 
+     *  Returns quotation sent activity
+     */
     public function sentActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'quotation')->where(function ($q) {
-            $q->where('type', 'sent email')->orWhere('type', 'sent sms');
-        });
+        return $this->recentActivities()->whereType(['sent email', 'sent sms']);
     }
 
+    /* 
+     *  Returns quotation skipped sending activity
+     */
     public function skippedSendingActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'quotation')->where('type', 'skipped sending');
+        return $this->recentActivities()->whereType('skipped sending');
     }
 
+    /* 
+     *  Returns quotation converted to invoice activity
+     */
     public function convertedActivities()
     {
-        return $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'quotation')->where('type', 'converted');
+        return $this->recentActivities()->whereType('converted');
     }
 
-    public function client()
-    {
-        return $this->belongsTo('App\Company', 'client_id');
-    }
-
-    /**
-     * Get all of the quotation reminders.
+    protected $appends = [
+        'status', 'has_converted_to_invoice', 'has_expired', 
+        'has_cancelled', 'has_sent', 'has_skipped_sending', 'has_approved'
+    ];
+    
+    /*
+     *  Returns a confirmation of conversion to invoice
      */
-    public function reminders()
+    public function gethasConvertedToInvoiceAttribute()
     {
-        return $this->morphMany('App\Reminder', 'trackable');
+        //  Check if we have converted before
+        $status = $this->convertedActivities()->count() ? true : false;
+
+        //  Return the status
+        return ['status' => $status, 'last_converted_date' => $this->convertedActivities()->first()->created_date ?? null];
     }
 
-    protected $appends = ['last_approved_activity', 'last_sent_activity', 'last_skipped_sending_activity', 'last_converted_activity',
-                          'has_approved', 'has_sent', 'has_skipped_sending', 'has_converted', 'has_expired',
-                          'current_activity_status', 'activity_count', 'sent_quotation_activity_count', 'converted_activity_count',
-                        ];
-
-    public function getLastApprovedActivityAttribute()
-    {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('trackable_type', 'quotation')->where('type', 'approved')->first();
-    }
-
-    public function getLastSentActivityAttribute()
-    {
-        return $this->recentActivities()->select('id', 'type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('trackable_type', 'quotation')->where(function ($q) {
-            $q->where('type', 'sent email')->orWhere('type', 'sent sms');
-        })->first();
-    }
-
-    public function getLastSkippedSendingActivityAttribute()
-    {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('trackable_type', 'quotation')->where('type', 'skipped sending')->first();
-    }
-
-    public function getLastConvertedActivityAttribute()
-    {
-        return $this->recentActivities()->select('type', 'created_by', 'created_at')->where('trackable_id', $this->id)->where('trackable_type', 'quotation')->where('type', 'converted')->first();
-    }
-
-    public function gethasApprovedAttribute()
-    {
-        return $this->last_approved_activity ? true : false;
-    }
-
-    public function gethasSentAttribute()
-    {
-        return $this->last_sent_activity ? true : false;
-    }
-
-    public function gethasSkippedSendingAttribute()
-    {
-        return $this->last_skipped_sending_activity ? true : false;
-    }
-
-    public function gethasConvertedAttribute()
-    {
-        return $this->last_converted_activity ? true : false;
-    }
-
+    /*
+     *  Returns a confirmation of expiration
+     */
     public function gethasExpiredAttribute()
     {
+        //  Get the expiry date (as a timestamp)
         $expiryDate = $this->expiry_date->getTimestamp();
+
+        //  Get the current date (as a timestamp)
         $now = Carbon::now()->getTimestamp();
 
-        return ($now > $expiryDate) ? true : false;
+        //  Compare to see if the expiry date has been exceeded
+        $status = ($now > $expiryDate) ? true : false;
+
+        //  Return the status
+        return ['status' => $status, 'expiry_date' => $this->expiry_date];
     }
 
-    public function getCurrentActivityStatusAttribute()
+    /*
+     *  Returns a confirmation of sending the quotation via email/sms
+     */
+    public function gethasSentAttribute()
     {
-        //  If converted
-        if ($this->has_converted) {
+        //  Check if we have sent before
+        $status = $this->sentActivities()->count() ? true : false;
+
+        //  Return the status
+        return ['status' => $status, 'last_sent_date' => $this->sentActivities()->first()->created_date ?? null, 
+                'count' =>  $this->sentActivities()->count()];
+    }
+
+    /*
+     *  Returns a confirmation of avoiding to send the quotation via email/sms
+     */
+    public function gethasSkippedSendingAttribute()
+    {
+        //  Check if we have skipped sending before
+        $status = $this->skippedSendingActivities()->count() ? true : false;
+
+        //  Return the status
+        return ['status' => $status, 'last_skipped_date' => $this->skippedSendingActivities()->first()->created_date ?? null];
+    }
+
+    /*
+     *  Returns a confirmation of approval
+     */
+    public function gethasApprovedAttribute()
+    {
+        //  Check if we have approved before
+        $status = $this->approvedActivities()->count() ? true : false;
+
+        //  Return the status
+        return ['status' => $status, 'last_approved_date' => $this->approvedActivities()->first()->created_date ?? null];
+    }
+
+    /*
+     *  Returns the current quotation status
+     */
+    public function getStatusAttribute()
+    {
+        //  If converted to invoice
+        if ($this->has_converted_to_invoice) {
             return 'Converted';
 
         //  If expired
@@ -215,36 +349,4 @@ class Quotation extends Model
         }
     }
 
-    public function getActivityCountAttribute()
-    {
-        $count = $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'quotation')
-                                          ->select(DB::raw('count(*) as total'))
-                                          ->groupBy('trackable_type')
-                                          ->first();
-
-        return $count ? $count->only(['total']) : ['total' => 0];
-    }
-
-    public function getSentQuotationActivityCountAttribute()
-    {
-        $count = $this->recentActivities()->where('trackable_id', $this->id)->where('trackable_type', 'quotation')->where(function ($q) {
-            $q->where('type', 'sent email')->orWhere('type', 'sent sms');
-        })
-                                          ->select(DB::raw('count(*) as total'))
-                                          ->groupBy('type')
-                                          ->first();
-
-        return $count ? $count->only(['total']) : ['total' => 0];
-    }
-
-    public function getConvertedActivityCountAttribute()
-    {
-        $count = $this->recentActivities()->select(DB::raw('count(*) as total'))
-                                          ->where('trackable_id', $this->id)->where('trackable_type', 'quotation')
-                                          ->where('type', 'converted')
-                                          ->groupBy('type')
-                                          ->first();
-
-        return $count ? $count->only(['total']) : ['total' => 0];
-    }
 }

@@ -62,21 +62,15 @@ class Product extends JsonResource
 
             /*  Embedded Resources */
             '_embedded' => [
-                
+    
                 //  The product primary picture
-                'primary_picture' => $this->when( !empty($this->primary_image),  
-                    (new DocumentResource($this->primary_image))
-                ),
-
+                'primary_picture' => $this->primary_image ? (new DocumentsResource($this->primary_image)) : null,
+                
                 //  The product gallery pictures
-                'gallery_pictures' => $this->when( !empty($this->galleryImages),  
-                    (new DocumentsResource($this->galleryImages))
-                ),
+                'gallery_pictures' => count($this->gallery) ? (new DocumentsResource($this->gallery)) : null,
 
                 //  The product downloads
-                'downloads' => $this->when( !empty($this->downloads),  
-                    (new DocumentsResource($this->downloads))
-                )
+                'downloads' => count($this->downloads) ? (new DocumentsResource($this->downloads)) : null
                 
             ]
         ];

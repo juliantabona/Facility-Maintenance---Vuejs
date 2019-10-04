@@ -28,7 +28,7 @@ class SmsController extends Controller
 
         $company = $auth_user->company;
         $companySettings = $company->settings->details;
-        $sampleClient = Company::find(1);
+        $sampleCustomer = Company::find(1);
         
         if(!$phones){
             //  Type not specified
@@ -62,14 +62,14 @@ class SmsController extends Controller
                 'calculated_taxes' => [],
                 'invoice_to_title' => $companySettings['invoiceTemplate']['invoice_to_title'],
                 'customized_company_details' => $company,
-                'customized_client_details' => $sampleClient,
-                'client_id' => $sampleClient->id,
+                'customized_customer_details' => $sampleCustomer,
+                'customer_id' => $sampleCustomer->id,
                 'table_columns' => $companySettings['invoiceTemplate']['table_columns'],
                 'items' => [['name'=>$company->industry,'description'=>'','quantity'=>1,'unit_price'=>1250,'total_price'=>1250,'taxes'=>[]]],
                 'notes' => $companySettings['invoiceTemplate']['notes'],
                 'colors' => $companySettings['invoiceTemplate']['colors'],
                 'footer' => $companySettings['invoiceTemplate']['footer'],
-                'isRecurring' => 0,
+                'is_recurring' => 0,
                 'recurring_settings' => [],
                 'company_branch_id' => $auth_user->company_branch_id,
                 'company_id' => $auth_user->company_id,

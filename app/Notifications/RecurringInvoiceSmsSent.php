@@ -60,7 +60,7 @@ class RecurringInvoiceSmsSent extends Notification
             'currency_type' => $this->invoice->currency_type,
             'created_date' => $this->invoice->created_date,
             'expiry_date' => $this->invoice->expiry_date,
-            'customized_client_details' => $this->invoice->customized_client_details,
+            'customized_customer_details' => $this->invoice->customized_customer_details,
             'quotation_id' => $this->invoice->quotation_id,
             'company_id' => $this->invoice->company_id,
             'company_branch_id' => $this->invoice->company_branch_id,

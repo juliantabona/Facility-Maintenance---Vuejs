@@ -60,7 +60,7 @@
                     </basicButton>
 
                     <!-- Recurring Settings Icon Button -->
-                    <span v-if="localAppointment.isRecurring" class="float-right d-block pt-2">
+                    <span v-if="localAppointment.is_recurring" class="float-right d-block pt-2">
                         <div @click="showRecurringSettings = !showRecurringSettings" :style="{ position: 'relative', zIndex: '1' }">
                             <Icon :style="showRecurringSettings ? { fontSize: '20px',height: '33px',color: '#2d8cf0',background: '#eee',borderRadius: '50% 50% 0 0',padding: '3px 6px',marginTop: '-3px',boxShadow: '#c8c8c8 1px 1px 1px inset',cursor: 'pointer' }: { cursor: 'pointer' }"
                                 type="ios-settings-outline" :size="20" />
@@ -68,7 +68,7 @@
                     </span>
 
                     <!-- Make recurring switch -->
-                    <toggleSwitch v-bind:toggleValue.sync="localAppointment.isRecurring" 
+                    <toggleSwitch v-bind:toggleValue.sync="localAppointment.is_recurring" 
                         @update:toggleValue="updateReccuring($event)"
                         :ripple="false" :showIcon="true" onIcon="ios-repeat" offIcon="ios-repeat" 
                         title="Make Recurring:" onText="Yes" offText="No" poptipMsg="Turn on to make recurring"
@@ -422,7 +422,7 @@
             },
             updateReccuring(val){
                 
-                this.localAppointment.isRecurring = val ? 1 : 0;
+                this.localAppointment.is_recurring = val ? 1 : 0;
                 
                 this.showRecurringSettings = val;
                 

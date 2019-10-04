@@ -80,8 +80,8 @@ trait StoreTraits
                     }elseif($userTypes == 'staff'){
                         //  Get stores where this user is an staff member
                         $stores = $user->storesWhereUserIsStaff;
-                    }elseif($userTypes == 'client'){
-                        //  Get stores where this user is an client
+                    }elseif($userTypes == 'customer'){
+                        //  Get stores where this user is an customer
                         $stores = $user->storesWhereUserIsClient;
                     }elseif($userTypes == 'vendor'){
                         //  Get stores where this user is an vendor
@@ -544,7 +544,7 @@ trait StoreTraits
          *  This is a variable used to determine if the current store being created has 
          *  categories. Sometimes when creating a new store, we may want to add categories
          *  to that store. We can do this if the relationship variable has been set with
-         *  the appropriate type (client/supplier)
+         *  the appropriate type (customer/supplier)
          */
         $categories = request('categories') ?? null;
 
@@ -583,7 +583,7 @@ trait StoreTraits
          *  This is a variable used to determine if the current store being created has 
          *  tags. Sometimes when creating a new store, we may want to add tags
          *  to that store. We can do this if the relationship variable has been set with
-         *  the appropriate type (client/supplier)
+         *  the appropriate type (customer/supplier)
          */
         $tags = request('tags') ?? null;
 

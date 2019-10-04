@@ -2,17 +2,17 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Model;
-use App\AdvancedFilter\Dataviewer;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use App\Traits\DocumentTraits;
+use App\AdvancedFilter\Dataviewer;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
-    'company' => 'App\Company',
-    'product' => 'App\Product',
-    'store' => 'App\Store',
-    'order' => 'App\Order',
     'user' => 'App\User',
+    'order' => 'App\Order',
+    'store' => 'App\Store',
+    'product' => 'App\Product',
+    'company' => 'App\Company',
 ]);
 
 class Document extends Model
@@ -26,26 +26,47 @@ class Document extends Model
      * @var array
      */
     protected $fillable = [
-        'type', 'name', 'mime', 'size', 'url', 'who_created_id'
+
+        /*  Document Details  */
+        'name', 'type', 'mime', 'size', 'url', 
+        
+        /*  Ownership Information  */
+        'owner_id', 'owner_type',
+
     ];
 
     protected $allowedFilters = [];
 
     protected $allowedOrderableColumns = [];
 
-    /**
-     *  Get the owner from the morphTo relationship.
-     *  Documents can be assigned to multiple types of
-     *  owning resources e.g companies, stores, users,
-     *  products, e.t.c
+    /* 
+     *  Returns the owner of the document
      */
     public function owner()
     {
         return $this->morphTo();
     }
 
+    /* 
+     *  Returns recent activities owned by this document
+     */
     public function recentActivities()
     {
         return $this->morphMany('App\RecentActivity', 'owner')->orderBy('created_at', 'desc');
     }
+
+    /* ATTRIBUTES */
+
+    protected $appends = [
+        'resource_type'
+    ];
+
+    /* 
+     *  Returns the resource type
+     */
+    public function getResourceTypeAttribute()
+    {
+        return strtolower(class_basename($this));
+    }
+    
 }

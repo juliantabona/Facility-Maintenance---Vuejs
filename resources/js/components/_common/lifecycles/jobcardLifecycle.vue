@@ -442,7 +442,7 @@
                             time_started: (stageData || {}).time_started,
                             pending_status: (stageData || {}).pending_status || false,
                             cancelled_status: (stageData || {}).cancelled_status || false,
-                            notified_client_status: (stageData || {}).cancelled_status || false,
+                            notified_customer_status: (stageData || {}).cancelled_status || false,
                     }
 
                 return template;

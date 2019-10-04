@@ -70,7 +70,7 @@ class user extends JsonResource
                     'href' => ($this->id == auth('api')->user()->id)  
                                 ? route('my-companies') 
                                     : route('user-companies', ['user_id' => $this->id]),
-                    'title' => 'Companies that this user has created or been added to as admin, staff, client, vendor, e.t.c',
+                    'title' => 'Companies that this user has created or been added to as admin, staff, customer, vendor, e.t.c',
                     'total' => $this->companies()->count()
                 ],
 
@@ -88,11 +88,11 @@ class user extends JsonResource
                     'total' => $this->companiesWhereUserIsStaff()->count()
                 ],
 
-                //  Link to the users companies where their role is an client
-                'oq:companies_where_user_is_client' => [ 
-                    'href' => route('user-companies', ['user_id' => $this->id, 'userTypes' => 'client']),
-                    'title' => 'Companies that this user has been added to as a client',
-                    'total' => $this->companiesWhereUserIsClient()->count()
+                //  Link to the users companies where their role is an customer
+                'oq:companies_where_user_is_customer' => [ 
+                    'href' => route('user-companies', ['user_id' => $this->id, 'userTypes' => 'customer']),
+                    'title' => 'Companies that this user has been added to as a customer',
+                    'total' => $this->companiesWhereUserIsCustomer()->count()
                 ],
 
                 //  Link to the users companies where their role is an vendor

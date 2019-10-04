@@ -22,6 +22,7 @@ class Order extends JsonResource
             'number' => $this->number,
             'currency_type' => $this->currency_type,
             'created_date' => $this->created_date,
+            'items' => $this->items,
             'taxes' => $this->taxes,
             'discounts' => $this->discounts,
             'coupons' => $this->coupons,

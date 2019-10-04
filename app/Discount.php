@@ -2,12 +2,17 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Database\Eloquent\Model;
 use App\Traits\DiscountTraits;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
-    'product' => 'App\Product'
+    'store' => 'App\Store',
+    'order' => 'App\Order',
+    'product' => 'App\Product',
+    'company' => 'App\Company',
+    'invoice' => 'App\Invoice',
+    'quotation' => 'App\Quotation',
 ]);
 
 class Discount extends Model
@@ -24,36 +29,51 @@ class Discount extends Model
      * @var array
      */
     protected $fillable = [
-        'name', 'description', 'type', 'rate', 'meta'
+
+        /*  Discount Details  */
+        'name', 'description', 'type', 'rate', 'meta',
+
+        /*  Ownership Information  */
+        'owner_id', 'owner_type',
+
     ];
 
-    /**
-     * Get all of the owning refund models.
+    /* 
+     *  Returns the owner of the discount
      */
-    public function discountable()
+    public function owner()
     {
         return $this->morphTo();
     }
 
-    /**
-     * Get the owner from the morphTo relationship
-     * This method returns a company/store
-     */
-    public function owner()
-    {
-        return $this->discountable();
-    }
-
-    /**
-     * Get all of the products that are assigned this discount.
+    /*
+     *  Returns all products that this discount has been allocated to 
      */
     public function products()
     {
-        return $this->morphedByMany('App\Product', 'discountable');
+        return $this->morphedByMany('App\Product', 'owner', 'discount_allocations');
     }
 
+    /* 
+     *  Returns recent activities owned by this discount
+     */
     public function recentActivities()
     {
         return $this->morphMany('App\RecentActivity', 'owner')->orderBy('created_at', 'desc');
     }
+
+    /* ATTRIBUTES */
+
+    protected $appends = [
+        'resource_type'
+    ];
+
+    /* 
+     *  Returns the resource type
+     */
+    public function getResourceTypeAttribute()
+    {
+        return strtolower(class_basename($this));
+    }
+    
 }

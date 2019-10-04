@@ -2,14 +2,14 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Database\Eloquent\Model;
-use App\AdvancedFilter\Dataviewer;
 use App\Traits\MessageTraits;
+use App\AdvancedFilter\Dataviewer;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
+    'user' => 'App\User',
     'store' => 'App\Store',
-    'product' => 'App\Product',
     'order' => 'App\Order',
 ]);
 
@@ -28,7 +28,13 @@ class Message extends Model
      * @var array
      */
     protected $fillable = [
-        'text', 'meta', 'user_id', 'messageable_id', 'messageable_type'
+
+        /*  Message Details  */
+        'text', 'meta', 'user_id',
+
+        /*  Ownership Information  */
+        'owner_id', 'owner_type',
+        
     ];
     
     protected $allowedFilters = [];
@@ -37,32 +43,42 @@ class Message extends Model
 
     protected $with = ['user'];
 
-    /**
-     * Get all of the owning refund models.
+    /* 
+     *  Returns the recipient of the message
      */
-    public function messageable()
+    public function owner()
     {
         return $this->morphTo();
     }
 
-    /**
-     * Get the recipient from the morphTo relationship
-     * This method returns any resource that the Message
-     * Was being sent to e.g. A Message can be sent to a
-     * Store, Order, User, e.t.c
+    /* 
+     *  Returns the sender of the message
      */
-    public function recipient()
-    {
-        return $this->messageable();
-    }
-
     public function user()
     {
         return $this->belongsTo('App\User');
     }
 
+    /* 
+     *  Returns recent activities owned by this message
+     */
     public function recentActivities()
     {
         return $this->morphMany('App\RecentActivity', 'owner')->orderBy('created_at', 'desc');
     }
+
+    /* ATTRIBUTES */
+
+    protected $appends = [
+        'resource_type'
+    ];
+
+    /* 
+     *  Returns the resource type
+     */
+    public function getResourceTypeAttribute()
+    {
+        return strtolower(class_basename($this));
+    }
+
 }

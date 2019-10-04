@@ -36,6 +36,7 @@ class Tax extends JsonResource
                     'title' => 'This tax'
                 ]
             ]
+            
         ];
     }
 

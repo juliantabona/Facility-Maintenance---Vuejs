@@ -50,22 +50,22 @@
         <Row>
             <Col :span="24">
                 <span v-if="notificationType == 'InvoiceCreated'" class="wordwrap text-capitalize">
-                    <router-link :to="{ name: 'show-invoice', params: { id: notification.id }}">Invoice #{{ notification.data.reference_no_value }}</router-link> <b>created</b> for <router-link :to="{ name: 'show-client', params: { id: notification.data.customized_client_details.id }}">{{ notification.data.customized_client_details.name }}</router-link> by <a href="#">Julian Tabona</a>
+                    <router-link :to="{ name: 'show-invoice', params: { id: notification.id }}">Invoice #{{ notification.data.reference_no_value }}</router-link> <b>created</b> for <router-link :to="{ name: 'show-client', params: { id: notification.data.customized_customer_details.id }}">{{ notification.data.customized_customer_details.name }}</router-link> by <a href="#">Julian Tabona</a>
                 </span>  
                 <span v-if="notificationType == 'InvoiceApproved'" class="wordwrap text-capitalize">
-                    <router-link :to="{ name: 'show-invoice', params: { id: notification.id }}">Invoice #{{ notification.data.reference_no_value }}</router-link> <b>approved</b> for <router-link :to="{ name: 'show-client', params: { id: notification.data.customized_client_details.id }}">{{ notification.data.customized_client_details.name }}</router-link> by <a href="#">Julian Tabona</a>
+                    <router-link :to="{ name: 'show-invoice', params: { id: notification.id }}">Invoice #{{ notification.data.reference_no_value }}</router-link> <b>approved</b> for <router-link :to="{ name: 'show-client', params: { id: notification.data.customized_customer_details.id }}">{{ notification.data.customized_customer_details.name }}</router-link> by <a href="#">Julian Tabona</a>
                 </span>  
                 <span v-if="notificationType == 'InvoiceUpdated'" class="wordwrap text-capitalize">
-                    <router-link :to="{ name: 'show-invoice', params: { id: notification.id }}">Invoice #{{ notification.data.reference_no_value }}</router-link> <b>updated</b> for <router-link :to="{ name: 'show-client', params: { id: notification.data.customized_client_details.id }}">{{ notification.data.customized_client_details.name }}</router-link> by <a href="#">Julian Tabona</a>
+                    <router-link :to="{ name: 'show-invoice', params: { id: notification.id }}">Invoice #{{ notification.data.reference_no_value }}</router-link> <b>updated</b> for <router-link :to="{ name: 'show-client', params: { id: notification.data.customized_customer_details.id }}">{{ notification.data.customized_customer_details.name }}</router-link> by <a href="#">Julian Tabona</a>
                 </span>  
                 <span v-if="notificationType == 'InvoiceSent'" class="wordwrap text-capitalize">
-                    <router-link :to="{ name: 'show-invoice', params: { id: notification.id }}">Invoice #{{ notification.data.reference_no_value }}</router-link> <b>sent</b> for <router-link :to="{ name: 'show-client', params: { id: notification.data.customized_client_details.id }}">{{ notification.data.customized_client_details.name }}</router-link> by <a href="#">Julian Tabona</a>
+                    <router-link :to="{ name: 'show-invoice', params: { id: notification.id }}">Invoice #{{ notification.data.reference_no_value }}</router-link> <b>sent</b> for <router-link :to="{ name: 'show-client', params: { id: notification.data.customized_customer_details.id }}">{{ notification.data.customized_customer_details.name }}</router-link> by <a href="#">Julian Tabona</a>
                 </span>  
                 <span v-if="notificationType == 'InvoicePaid'" class="wordwrap text-capitalize">
-                    <router-link :to="{ name: 'show-invoice', params: { id: notification.id }}">Invoice #{{ notification.data.reference_no_value }}</router-link> <b>paid</b> for <router-link :to="{ name: 'show-client', params: { id: notification.data.customized_client_details.id }}">{{ notification.data.customized_client_details.name }}</router-link> by <a href="#">Julian Tabona</a>
+                    <router-link :to="{ name: 'show-invoice', params: { id: notification.id }}">Invoice #{{ notification.data.reference_no_value }}</router-link> <b>paid</b> for <router-link :to="{ name: 'show-client', params: { id: notification.data.customized_customer_details.id }}">{{ notification.data.customized_customer_details.name }}</router-link> by <a href="#">Julian Tabona</a>
                 </span>  
                 <span v-if="notificationType == 'InvoicePaymentCancelled'" class="wordwrap text-capitalize">
-                    <router-link :to="{ name: 'show-invoice', params: { id: notification.id }}">Invoice #{{ notification.data.reference_no_value }}</router-link> <b>payment cancelled</b> for <router-link :to="{ name: 'show-client', params: { id: notification.data.customized_client_details.id }}">{{ notification.data.customized_client_details.name }}</router-link> by <a href="#">Julian Tabona</a>
+                    <router-link :to="{ name: 'show-invoice', params: { id: notification.id }}">Invoice #{{ notification.data.reference_no_value }}</router-link> <b>payment cancelled</b> for <router-link :to="{ name: 'show-client', params: { id: notification.data.customized_customer_details.id }}">{{ notification.data.customized_customer_details.name }}</router-link> by <a href="#">Julian Tabona</a>
                 </span>  
             </Col>
                 

@@ -48,7 +48,7 @@ class CompanyController extends Controller
     public function getCompany($company_id)
     {
         //  Get the company
-        $company = Company::where('id', $company_id)->first();
+        $company = Company::where('id', $company_id)->first() ?? null;
 
         //  Check if the company exists
         if ($company) {
@@ -75,7 +75,7 @@ class CompanyController extends Controller
     public function getCompanySettings($company_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
         //  Get the company settings
         $settings = $company->settings ?? null;
@@ -108,7 +108,7 @@ class CompanyController extends Controller
     public function getCompanyLogo($company_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
         //  Get the company logo
         $logo = $company->logo ?? null;
@@ -139,10 +139,10 @@ class CompanyController extends Controller
     public function getCompanyDocuments($company_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
         //  Get the company documents
-        $documents = $company->documents ?? null;
+        $documents = $company->documents()->paginate() ?? null;
 
         //  Check if the documents exist
         if ($documents) {
@@ -170,7 +170,7 @@ class CompanyController extends Controller
     public function getCompanyDocument($company_id, $document_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
         //  Get the company document
         $document = $company->documents()->where('id', $document_id)->first() ?? null;
@@ -205,10 +205,10 @@ class CompanyController extends Controller
     public function getCompanyPhones($company_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
         //  Get the company phones
-        $phones = $company->phones ?? null;
+        $phones = $company->phones()->paginate() ?? null;
 
         //  Check if the phones exist
         if ($phones) {
@@ -236,7 +236,7 @@ class CompanyController extends Controller
     public function getCompanyPhone($company_id, $phone_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
         //  Get the company phone
         $phone = $company->phones()->where('id', $phone_id)->first() ?? null;
@@ -271,10 +271,10 @@ class CompanyController extends Controller
     public function getCompanyUsers($company_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
         //  Get the company users
-        $users = $company->users ?? null;
+        $users = $company->users()->paginate() ?? null;
 
         //  Check if the users exist
         if ($users) {
@@ -302,10 +302,10 @@ class CompanyController extends Controller
     public function getCompanyAdmins($company_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
         //  Get the company admins
-        $admins = $company->admins ?? null;
+        $admins = $company->admins()->paginate() ?? null;
 
         //  Check if the admins exist
         if ($admins) {
@@ -333,10 +333,10 @@ class CompanyController extends Controller
     public function getCompanyStaff($company_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
         //  Get the company staff
-        $staff = $company->staff ?? null;
+        $staff = $company->staff()->paginate() ?? null;
 
         //  Check if the staff exists
         if ($staff) {
@@ -361,22 +361,22 @@ class CompanyController extends Controller
         }
     }
 
-    public function getCompanyUserClients($company_id)
+    public function getCompanyUserCustomers($company_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
-        //  Get the company user clients
-        $userClients = $company->userClients ?? null;
+        //  Get the company user customers
+        $userCustomers = $company->userCustomers()->paginate() ?? null;
 
-        //  Check if the user clients exist
-        if ($userClients) {
+        //  Check if the user customers exist
+        if ($userCustomers) {
 
-            //  Check if the user is authourized to view the company user clients
+            //  Check if the user is authourized to view the company user customers
             if ($this->user->can('view', $company)) {
 
                 //  Return an API Readable Format of the User Instance
-                return ( new \App\User )->convertToApiFormat($userClients);
+                return ( new \App\User )->convertToApiFormat($userCustomers);
 
             } else {
 
@@ -395,12 +395,12 @@ class CompanyController extends Controller
     public function getCompanyUserVendors($company_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
         //  Get the company user vendors
-        $userVendors = $company->userVendors ?? null;
+        $userVendors = $company->userVendors()->paginate() ?? null;
 
-        //  Check if the user clients exist
+        //  Check if the user vendors exist
         if ($userVendors) {
 
             //  Check if the user is authourized to view the company user vendors
@@ -426,7 +426,7 @@ class CompanyController extends Controller
     public function getCompanyUser($company_id, $user_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
         //  Get the company phone
         $user = $company->users()->where('users.id', $user_id)->first() ?? null;
@@ -461,10 +461,10 @@ class CompanyController extends Controller
     public function getCompanyProducts($company_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
         //  Get the company products
-        $products = $company->products ?? null;
+        $products = $company->products()->paginate() ?? null;
 
         //  Check if the products exist
         if ($products) {
@@ -492,7 +492,7 @@ class CompanyController extends Controller
     public function getCompanyProduct($company_id, $product_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
         //  Get the company product
         $product = $company->products()->where('id', $product_id)->first() ?? null;
@@ -527,10 +527,10 @@ class CompanyController extends Controller
     public function getCompanyTaxes($company_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
         //  Get the company taxes
-        $taxes = $company->taxes ?? null;
+        $taxes = $company->taxes()->paginate() ?? null;
 
         //  Check if the taxes exist
         if ($taxes) {
@@ -558,7 +558,7 @@ class CompanyController extends Controller
     public function getCompanyTax($company_id, $tax_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
         //  Get the company tax
         $tax = $company->taxes()->where('taxes.id', $tax_id)->first() ?? null;
@@ -593,10 +593,10 @@ class CompanyController extends Controller
     public function getCompanyDiscounts($company_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
         //  Get the company discounts
-        $discounts = $company->discounts ?? null;
+        $discounts = $company->discounts()->paginate() ?? null;
 
         //  Check if the discounts exist
         if ($discounts) {
@@ -624,7 +624,7 @@ class CompanyController extends Controller
     public function getCompanyDiscount($company_id, $discount_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
         //  Get the company discount
         $discount = $company->discounts()->where('discounts.id', $discount_id)->first() ?? null;
@@ -659,10 +659,10 @@ class CompanyController extends Controller
     public function getCompanyCoupons($company_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
         //  Get the company coupons
-        $coupons = $company->coupons ?? null;
+        $coupons = $company->coupons()->paginate() ?? null;
 
         //  Check if the coupons exist
         if ($coupons) {
@@ -690,7 +690,7 @@ class CompanyController extends Controller
     public function getCompanyCoupon($company_id, $coupon_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
         //  Get the company coupons
         $coupons = $company->coupons()->where('coupons.id', $coupon_id)->first() ?? null;
@@ -725,10 +725,10 @@ class CompanyController extends Controller
     public function getCompanyStores($company_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
         //  Get the company stores
-        $stores = $company->stores ?? null;
+        $stores = $company->stores()->paginate() ?? null;
 
         //  Check if the stores exist
         if ($stores) {
@@ -756,7 +756,7 @@ class CompanyController extends Controller
     public function getCompanyStore($company_id, $store_id)
     {
         //  Get the company
-        $company = Company::find($company_id);
+        $company = Company::findOrFail($company_id);
 
         //  Get the company store
         $store = $company->stores()->where('id', $store_id)->first() ?? null;
@@ -854,7 +854,7 @@ class CompanyController extends Controller
 
         try {
             //  refetch the updated company
-            $company = Company::find($company_id);
+            $company = Company::findOrFail($company_id);
 
             //  Eager load other relationships wanted if specified
             if (request('connections')) {

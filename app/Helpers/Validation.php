@@ -3,13 +3,12 @@
 /**************************************************************
 ***************************************************************
 ***************************************************************
-    User RELATED VALIDATION
+    USER RELATED VALIDATION
 ***************************************************************
 ***************************************************************
 **************************************************************/
 
-/*  Validation for when creating a company.This could
- *  be the users company, client, or supplier.
+/*  Validation for when creating a user.
  */
 function oq_user_create_v_rules()
 {
@@ -65,8 +64,7 @@ function oq_user_create_v_msgs()
 ***************************************************************
 **************************************************************/
 
-/*  Validation for when creating a company.This could
- *  be the users company, client, or supplier.
+/*  Validation for when creating a company.
  */
 function oq_company_create_v_rules()
 {
@@ -140,8 +138,7 @@ function oq_document_create_v_msgs()
 ***************************************************************
 **************************************************************/
 
-/*  Validation for when creating a company.This could
- *  be the users company, client, or supplier.
+/*  Validation for when creating a jobcard.
  */
 function oq_jobcard_create_v_rules($user = null)
 {

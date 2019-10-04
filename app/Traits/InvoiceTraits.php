@@ -2,36 +2,95 @@
 
 namespace App\Traits;
 
+use PDF;
+use Carbon\Carbon;
+use Twilio as Twilio;
+
 //  Mails
 use Mail;
 use App\Mail\InvoiceMail;
 use App\Mail\InvoiceReceiptMail;
+
 //  Notifications
+use App\Notifications\InvoicePaid;
+use App\Notifications\InvoiceSmsSent;
 use App\Notifications\InvoiceCreated;
 use App\Notifications\InvoiceUpdated;
 use App\Notifications\InvoiceApproved;
-//  Notifications when sending the invoice via email or sms
-use App\Notifications\InvoiceSmsSent;
-use App\Notifications\InvoiceTestSmsSent;
 use App\Notifications\InvoiceEmailSent;
+use App\Notifications\InvoiceTestSmsSent;
 use App\Notifications\InvoiceTestEmailSent;
 use App\Notifications\InvoiceReceiptSmsSent;
-use App\Notifications\InvoiceReceiptTestSmsSent;
 use App\Notifications\InvoiceReceiptEmailSent;
-use App\Notifications\InvoiceReceiptTestEmailSent;
-use App\Notifications\InvoicePaid;
 use App\Notifications\InvoicePaymentCancelled;
+use App\Notifications\InvoiceReceiptTestSmsSent;
+use App\Notifications\InvoiceReceiptTestEmailSent;
+use App\Notifications\InvoiceRecurringSettingsApproved;
 use App\Notifications\InvoiceRecurringSettingsPaymentPlanUpdated;
 use App\Notifications\InvoiceRecurringSettingsDeliveryPlanUpdated;
-use App\Notifications\InvoiceRecurringSettingsApproved;
-//  Other
-use PDF;
-use Carbon\Carbon;
-use Twilio as Twilio;
+
+//  Resources
+use App\Http\Resources\Invoice as InvoiceResource;
+use App\Http\Resources\Invoices as InvoicesResource;
+
 use Illuminate\Pagination\LengthAwarePaginator;
 
 trait InvoiceTraits
 {
+    /*  convertToApiFormat() method:
+     *
+     *  Converts to the appropriate Api Response Format
+     *
+     */
+    public function convertToApiFormat($invoices = null)
+    {
+
+        try {
+
+            if( $invoices ){
+
+                //  Transform the invoices
+                return new InvoicesResource($invoices);
+
+            }else{
+
+                //  Transform the invoice
+                return new InvoiceResource($this);
+
+            }
+
+        } catch (\Exception $e) {
+
+            //  Log the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public function sampleTemplate()
     {
@@ -458,7 +517,7 @@ trait InvoiceTraits
             'company_info' => $invoice['company_info'],
             'created_date' => $invoice['created_date'],
             'expiry_date' => $invoice['expiry_date'],
-            'isRecurring' => $invoice['isRecurring'],
+            'is_recurring' => $invoice['is_recurring'],
             'recurring_settings' => $invoice['recurring_settings'],
             'invoice_parent_id' => $invoice['invoice_parent_id'],
             'meta' => [
@@ -574,7 +633,7 @@ trait InvoiceTraits
             'company_info' => $invoice['company_info'],
             'created_date' => $invoice['created_date'],
             'expiry_date' => $invoice['expiry_date'],
-            'isRecurring' => $invoice['isRecurring'],
+            'is_recurring' => $invoice['is_recurring'],
             'recurring_settings' => $invoice['recurring_settings'],
             'invoice_parent_id' => $invoice['invoice_parent_id'],
             'meta' => [
@@ -1126,7 +1185,7 @@ trait InvoiceTraits
      */
     public function replaceShortcodes($invoice, $data)
     {
-        $client = $invoice->customized_client_details;
+        $client = $invoice->customized_customer_details;
         $company = $invoice->customized_company_details;
         $currency = $invoice->currency_type['currency']['symbol'] ?? '';
         $sub_total = $currency.number_format($invoice->sub_total_value, 2, ',', '.');
@@ -1241,7 +1300,7 @@ trait InvoiceTraits
 
             //  Create a template to hold the setting details
             $template = [
-                'isRecurring' => 1,
+                'is_recurring' => 1,
                 'recurring_settings' => $settingsData,
             ];
 
@@ -1314,7 +1373,7 @@ trait InvoiceTraits
 
             //  Create a template to hold the setting details
             $template = [
-                'isRecurring' => 1,
+                'is_recurring' => 1,
                 'recurring_settings' => $settingsData,
             ];
 
@@ -1383,7 +1442,7 @@ trait InvoiceTraits
 
             //  Create a template to hold the setting details
             $template = [
-                'isRecurring' => 1,
+                'is_recurring' => 1,
                 'recurring_settings' => $settingsData,
             ];
 
@@ -1452,7 +1511,7 @@ trait InvoiceTraits
 
             //  Create a template to hold the setting details
             $template = [
-                'isRecurring' => 1,
+                'is_recurring' => 1,
                 'recurring_settings' => $settingsData,
             ];
 

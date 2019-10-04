@@ -16,7 +16,7 @@
 
                 <deliveryWidget 
                     :deliveryMethods="deliveryMethods"
-                    :clientDetails="localQuotation.customized_client_details"
+                    :clientDetails="localQuotation.customized_customer_details"
                     :deliveryPhones="localDeliveryPhones"
                     :deliveryMailAddress="localDeliveryMailAddress"
                     :deliveryMailSubject="localDeliveryMailSubject"
@@ -75,7 +75,7 @@
                 deliveryMethods: ['Sms' /*, Email */],
                 localDeliveryPhones: [],
                 localDeliveryMailSubject: this.subject || 'Quotation #'+this.quotation['reference_no_value'],
-                localDeliveryMailAddress: this.quotation.customized_client_details.email,
+                localDeliveryMailAddress: this.quotation.customized_customer_details.email,
                 localDeliveryMailMessage: this.emailMsg(),
                 shortcodes: this.getShotCodes(),
                 
@@ -93,7 +93,7 @@
                 var currency = (((this.quotation || {}).currency_type || {}).currency || {}).symbol || '';
                 var grand_total = this.formatPrice( (this.quotation.grand_total || 0), currency);
                 var expiry_date = moment(this.quotation.expiry_date).format('MMM DD YYYY');
-                var client = ((this.quotation || {}).customized_client_details || {});
+                var client = ((this.quotation || {}).customized_customer_details || {});
                 var company = ((this.quotation || {}).customized_company_details || {});
 
                 for( var x = 0; x < this.quotation.items.length; x++  ){
@@ -175,7 +175,7 @@
                 var currency = (((this.quotation || {}).currency_type || {}).currency || {}).symbol || '';
                 var sub_total = this.formatPrice( (this.quotation.sub_total_value || 0), currency);
                 var grand_total = this.formatPrice( (this.quotation.grand_total || 0), currency);
-                var client = ((this.quotation || {}).customized_client_details || {});
+                var client = ((this.quotation || {}).customized_customer_details || {});
                 var company = ((this.quotation || {}).customized_company_details || {});
 
                 var shortcodes = {

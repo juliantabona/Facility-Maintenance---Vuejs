@@ -48,7 +48,7 @@ class ProductController extends Controller
     public function getProduct( $product_id )
     {
         //  Get the product
-        $product = Product::where('id', $product_id)->first();
+        $product = Product::where('id', $product_id)->first() ?? null;
 
         //  Check if the product exists
         if ($product) {
@@ -79,7 +79,7 @@ class ProductController extends Controller
     public function getProductOwner( $product_id )
     {
         //  Get the product
-        $product = Product::find($product_id);
+        $product = Product::findOrFail($product_id);
 
         //  Get the product owner
         $owner = $product->owner ?? null;
@@ -114,7 +114,7 @@ class ProductController extends Controller
     public function getProductPicture( $product_id )
     {
         //  Get the product
-        $product = Product::find($product_id);
+        $product = Product::findOrFail($product_id);
 
         //  Get the product primary image
         $primary_image = $product->primary_image ?? null;
@@ -145,10 +145,10 @@ class ProductController extends Controller
     public function getProductGallery( $product_id )
     {
         //  Get the product
-        $product = Product::find($product_id);
+        $product = Product::findOrFail($product_id);
 
         //  Get the product gallery images
-        $gallery_images = $product->galleryImages ?? null;
+        $gallery_images = $product->gallery()->paginate() ?? null;
 
         //  Check if the gallery images exist
         if ($gallery_images) {
@@ -176,10 +176,10 @@ class ProductController extends Controller
     public function getProductDownloads( $product_id )
     {
         //  Get the product
-        $product = Product::find($product_id);
+        $product = Product::findOrFail($product_id);
 
         //  Get the product downloads
-        $downloads = $product->downloads ?? null;
+        $downloads = $product->downloads()->paginate() ?? null;
 
         //  Check if the downloads exist
         if ($downloads) {
@@ -207,10 +207,10 @@ class ProductController extends Controller
     public function getProductDocuments( $product_id )
     {
         //  Get the product
-        $product = Product::find($product_id);
+        $product = Product::findOrFail($product_id);
 
         //  Get the product documents
-        $documents = $product->documents ?? null;
+        $documents = $product->documents()->paginate() ?? null;
 
         //  Check if the documents exist
         if ($documents) {
@@ -238,7 +238,7 @@ class ProductController extends Controller
     public function getProductDocument( $product_id, $document_id )
     {
         //  Get the product
-        $product = Product::find($product_id);
+        $product = Product::findOrFail($product_id);
 
         //  Get the product document
         $document = $product->documents()->where('id', $document_id)->first() ?? null;
@@ -274,10 +274,10 @@ class ProductController extends Controller
     {
         {
             //  Get the product
-            $product = Product::find($product_id);
+            $product = Product::findOrFail($product_id);
     
             //  Get the product orders
-            $orders = $product->orders ?? null;
+            $orders = $product->orders()->paginate() ?? null;
     
             //  Check if the orders exist
             if ($orders) {
@@ -306,7 +306,7 @@ class ProductController extends Controller
     public function getProductOrder( $product_id, $order_id )
     {
         //  Get the product
-        $product = Product::find($product_id);
+        $product = Product::findOrFail($product_id);
 
         //  Get the product order
         $order = $product->orders()->where('orders.id', $order_id)->first() ?? null;
@@ -341,10 +341,10 @@ class ProductController extends Controller
     public function getProductTaxes( $product_id )
     {
         //  Get the product
-        $product = Product::find($product_id);
+        $product = Product::findOrFail($product_id);
 
         //  Get the product taxes
-        $taxes = $product->taxes ?? null;
+        $taxes = $product->taxes()->paginate() ?? null;
 
         //  Check if the taxes exist
         if ($taxes) {
@@ -372,7 +372,7 @@ class ProductController extends Controller
     public function getProductTax( $product_id, $tax_id )
     {
         //  Get the product
-        $product = Product::find($product_id);
+        $product = Product::findOrFail($product_id);
 
         //  Get the product tax
         $tax = $product->taxes()->where('taxes.id', $tax_id)->first() ?? null;
@@ -407,10 +407,10 @@ class ProductController extends Controller
     public function getProductDiscounts( $product_id )
     {
         //  Get the product
-        $product = Product::find($product_id);
+        $product = Product::findOrFail($product_id);
 
         //  Get the store discounts
-        $discounts = $product->discounts ?? null;
+        $discounts = $product->discounts()->paginate() ?? null;
 
         //  Check if the discounts exist
         if ($discounts) {
@@ -438,7 +438,7 @@ class ProductController extends Controller
     public function getProductDiscount( $product_id, $discount_id )
     {
         //  Get the product
-        $product = Product::find($product_id);
+        $product = Product::findOrFail($product_id);
 
         //  Get the product discount
         $discount = $product->discounts()->where('discounts.id', $discount_id)->first() ?? null;
@@ -473,10 +473,10 @@ class ProductController extends Controller
     public function getProductCoupons( $product_id )
     {
         //  Get the product
-        $product = Product::find($product_id);
+        $product = Product::findOrFail($product_id);
 
         //  Get the product coupons
-        $coupons = $product->coupons ?? null;
+        $coupons = $product->coupon()->paginate() ?? null;
 
         //  Check if the coupons exist
         if ($coupons) {
@@ -504,7 +504,7 @@ class ProductController extends Controller
     public function getProductCoupon( $product_id, $coupon_id )
     {
         //  Get the product
-        $product = Product::find($product_id);
+        $product = Product::findOrFail($product_id);
 
         //  Get the product coupons
         $coupons = $product->coupons()->where('coupons.id', $coupon_id)->first() ?? null;
@@ -539,10 +539,10 @@ class ProductController extends Controller
     public function getProductReviews( $product_id )
     {
         //  Get the product
-        $product = Product::find($product_id);
+        $product = Product::findOrFail($product_id);
 
         //  Get the product reviews
-        $reviews = $product->reviews ?? null;
+        $reviews = $product->reviews()->paginate() ?? null;
 
         //  Check if the reviews exist
         if ($reviews) {
@@ -570,7 +570,7 @@ class ProductController extends Controller
     public function getProductReview( $product_id, $review_id )
     {
         //  Get the product
-        $product = Product::find($product_id);
+        $product = Product::findOrFail($product_id);
 
         //  Get the product review
         $review = $product->reviews()->where('reviews.id', $review_id)->first() ?? null;

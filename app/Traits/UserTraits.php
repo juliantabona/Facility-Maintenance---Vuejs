@@ -181,11 +181,11 @@ trait UserTraits
         $allocation = strtolower(request('allocation'));
 
         /*
-         *  $type = client, supplier, staff
+         *  $type = customer, supplier, staff
         /*
          *  The $type variable is used to determine which type of company to pull.
          *  The user may request data of type.
-         *  1) client: A company that is listed as a client/customer
+         *  1) customer: A company that is listed as a customer/customer
          *  2) supplier: A company that is listed as a supplier/vendor/hawker
          */
         $type = strtolower(request('type'));
@@ -214,10 +214,10 @@ trait UserTraits
             $model = $auth_user->company;
         }
 
-        /*  If user indicated to only return client dierctories
+        /*  If user indicated to only return customer dierctories
         */
-        if ($type == 'client') {
-            $auth_users = $model->userClients();
+        if ($type == 'customer') {
+            $auth_users = $model->userCustomers();
 
         /*  If user indicated to only return supplier dierctories
         */
@@ -232,7 +232,7 @@ trait UserTraits
         /*  If user did not indicate any specific group
         */
         } else {
-            //  If the $type is a list e.g) client,supplier
+            //  If the $type is a list e.g) customer,supplier
             $type = explode(',', $type);
 
             if (count($type)) {
@@ -376,7 +376,7 @@ trait UserTraits
                     $auth_user = $user;
                 }
 
-                //  Check whether or not the auth company has a relationship with the created user e.g) client/supplier
+                //  Check whether or not the auth company has a relationship with the created user e.g) customer/supplier
                 $this->checkAndCreateRelationship($user);
 
                 //  Check if the user has any phones to add and replace
@@ -483,7 +483,7 @@ trait UserTraits
 
                 $user = User::find($user_id);
 
-                //  Check whether or not the auth company has a relationship with the created user e.g) client/supplier
+                //  Check whether or not the auth company has a relationship with the created user e.g) customer/supplier
                 $this->checkAndCreateRelationship($user);
 
                 //  Check if the user has any phones to add and replace
@@ -527,10 +527,10 @@ trait UserTraits
 
         /*  relationship:
          *  This is a variable used to determine if the current user being created has
-         *  a relationship as a client/supplier to the auth users main company. Sometimes
+         *  a relationship as a customer/supplier to the auth users main company. Sometimes
          *  when creating a new user, we may want to assign that user as either a
-         *  client/supplier to the user directory. We can do this if the relationship
-         *  variable has been set with the appropriate type (client/supplier)
+         *  customer/supplier to the user directory. We can do this if the relationship
+         *  variable has been set with the appropriate type (customer/supplier)
          */
         $relationship = request('relationship') ?? null;
 
@@ -546,7 +546,7 @@ trait UserTraits
                 'user_id' => $user->id,                                 //  id of the current user
                 'owning_branch_id' => $auth_user->company_branch_id,    //  id of the owning company branch
                 'owning_company_id' => $auth_user->company_id,          //  id of the owning company
-                'type' => request('relationship'),                      //  relationship type e.g client/supplier
+                'type' => request('relationship'),                      //  relationship type e.g customer/supplier
                 'created_at' => DB::raw('now()'),
                 'updated_at' => DB::raw('now()'),
             ]);
@@ -670,8 +670,8 @@ trait UserTraits
                 //  Get all the available users so far
                 $auth_users = $data['response'];
 
-                //  From the list of users we will group them by their directory_type e.g) client, supplier, e.t.c
-                //  After this we will map through each group (client, supplier, e.t.c) and get the status name, total sum of
+                //  From the list of users we will group them by their directory_type e.g) customer, supplier, e.t.c
+                //  After this we will map through each group (customer, supplier, e.t.c) and get the status name, total sum of
                 //  the grand totals as well as the total count of grouped users of that activity.
                 /*
                  *  Example of returned output:
@@ -790,8 +790,8 @@ trait UserTraits
         $response = $http->post(URL::to('/').'/oauth/token', [
             'form_params' => [
                 'grant_type' => 'password',
-                'client_id' => '6',
-                'client_secret' => 'x3yhgWVqF8sSaMev4JI3yvsVxfbgkfRJmqzlpiMQ',
+                'customer_id' => '2',
+                'customer_secret' => '8BMbdQUBaVMbspLnmUhE0XVjbv4QDlyGJyTsNW4s',
                 'username' => $this->email,
                 'password' => $request->input('password'),
                 'scope' => '',

@@ -114,14 +114,14 @@ trait CustomerTraits
         /*  If user indicated to only return virtual customers
         */
         } elseif ($customerType == 'user') {
-            $customerArray = ['users' => $model->userClients()];
+            $customerArray = ['users' => $model->userCustomers()];
 
         /*  If user did not indicate any specific group
         */
         } else {
             //  Otherwise get all customers
             $customerArray = [
-                'users' => $model->userClients(),
+                'users' => $model->userCustomers(),
                 'companies' => $model->companyClients(),
             ];
         }

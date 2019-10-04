@@ -2,9 +2,10 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Database\Eloquent\Model;
 use App\Traits\ReviewTraits;
+use App\AdvancedFilter\Dataviewer;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
     'store' => 'App\Store',
@@ -14,6 +15,7 @@ Relation::morphMap([
 
 class Review extends Model
 {
+    use Dataviewer;
     use ReviewTraits;
 
     /**
@@ -22,36 +24,57 @@ class Review extends Model
      * @var array
      */
     protected $fillable = [
-        'rating', 'text', 'user_id', 'reviewable_id', 'reviewable_type'
+
+        /*  Review Details  */
+        'rating', 'text', 'user_id',
+
+        /*  Ownership Information  */
+        'owner_id', 'owner_type',
+        
     ];
+
+    protected $allowedFilters = [];
+
+    protected $allowedOrderableColumns = [];
 
     protected $with = ['user'];
 
-    /**
-     * Review can be assigned to multiple resources including
-     * Stores, Products, Orders, e.t.c
+    /* 
+     *  Returns the recipient of the review
      */
-    public function reviewable()
+    public function owner()
     {
         return $this->morphTo();
     }
 
-    /**
-     * Get the owner from the morphTo relationship
-     * This method returns a company/store
+    /* 
+     *  Returns the sender of the review
      */
-    public function owner()
-    {
-        return $this->reviewable();
-    }
-
     public function user()
     {
         return $this->belongsTo('App\User');
     }
 
+    /* 
+     *  Returns recent activities owned by this message
+     */
     public function recentActivities()
     {
         return $this->morphMany('App\RecentActivity', 'owner')->orderBy('created_at', 'desc');
     }
+
+    /* ATTRIBUTES */
+
+    protected $appends = [
+        'resource_type'
+    ];
+
+    /* 
+     *  Returns the resource type
+     */
+    public function getResourceTypeAttribute()
+    {
+        return strtolower(class_basename($this));
+    }
+
 }

@@ -2,12 +2,17 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Database\Eloquent\Model;
 use App\Traits\CouponTraits;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
-    'product' => 'App\Product'
+    'store' => 'App\Store',
+    'order' => 'App\Order',
+    'product' => 'App\Product',
+    'company' => 'App\Company',
+    'invoice' => 'App\Invoice',
+    'quotation' => 'App\Quotation',
 ]);
 
 class Coupon extends Model
@@ -19,36 +24,65 @@ class Coupon extends Model
     ];
 
     /**
+     * The attributes that should be mutated to dates.
+     *
+     * @var array
+     */
+    protected $dates = [
+        'start_date', 'end_date'
+    ];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
-        'name', 'description', 'code', 'type', 'rate', 'meta', 'start_date', 'end_date'
+
+        /*  Discount Details  */
+        'name', 'description', 'code', 'type', 'rate', 'meta', 'start_date', 'end_date',
+
+        /*  Ownership Information  */
+        'owner_id', 'owner_type',
+
     ];
 
-    /**
-     *  Get the owner from the morphTo relationship.
-     *  Coupons can be assigned to multiple types of
-     *  owning resources e.g companies, stores,
-     *  e.t.c
+    /* 
+     *  Returns the owner of the coupon
      */
     public function owner()
     {
         return $this->morphTo();
     }
 
-    /**
-     *  Coupons can be assigned to multiple types of
-     *  resources e.g products
+    /*
+     *  Returns all products that this coupon has been allocated to 
      */
     public function products()
     {
-        return $this->morphedByMany('App\Product', 'allocatable', 'coupon_allocations');
+        return $this->morphedByMany('App\Product', 'owner', 'coupon_allocations');
     }
 
+    /* 
+     *  Returns recent activities owned by this coupon
+     */
     public function recentActivities()
     {
         return $this->morphMany('App\RecentActivity', 'owner')->orderBy('created_at', 'desc');
     }
+
+    /* ATTRIBUTES */
+
+    protected $appends = [
+        'resource_type'
+    ];
+
+    /* 
+     *  Returns the resource type
+     */
+    public function getResourceTypeAttribute()
+    {
+        return strtolower(class_basename($this));
+    }
+    
 }

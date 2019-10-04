@@ -2,10 +2,12 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Database\Eloquent\Model;
-use App\AdvancedFilter\Dataviewer;
+use DB;
 use App\Traits\StoreTraits;
+use App\AdvancedFilter\Dataviewer;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
     'company' => 'App\Company',
@@ -24,6 +26,7 @@ class Store extends Model
      * @var array
      */
     protected $fillable = [
+
         /*  Basic Info  */
         'name', 'abbreviation', 'description', 'type', 'industry',  
         
@@ -35,15 +38,20 @@ class Store extends Model
 
         /*  Ownership Info  */
         'owner_id', 'owner_type'
+
     ];
 
-    protected $allowedFilters = [
-        
-    ];
+    protected $allowedFilters = [];
 
-    protected $allowedOrderableColumns = [
-        
-    ];
+    protected $allowedOrderableColumns = [];
+
+    /* 
+     *  Scope by type
+     */
+    public function scopeWhereType($query, $type)
+    {
+        return $query;
+    }
 
     /*  
      *  Returns documents associated with this store. These are various files such as images,
@@ -57,19 +65,11 @@ class Store extends Model
     }
 
     /* 
-     *  Scope the documents by type
-     */
-    public function scopeWhereDocumentType($query, $type)
-    {
-        return $query->where('type', '=', $type);
-    }
-
-    /* 
      *  Returns documents categorized as files
      */
     public function files()
     {
-        return $this->documents()->documentType('file');
+        return $this->documents()->whereType('file');
     }
 
     /* 
@@ -84,19 +84,11 @@ class Store extends Model
     }
 
     /* 
-     *  Scope the phones by type
-     */
-    public function scopeWherePhoneType($query, $type)
-    {
-        return $query->where('type', '=', $type);
-    }
-
-    /* 
      *  Returns phones categorized as mobile phones
      */
     public function mobiles()
     {
-        return $this->phones()->phoneType('mobile');
+        return $this->phones()->whereType('mobile');
     }
 
     /* 
@@ -104,7 +96,7 @@ class Store extends Model
      */
     public function telephones()
     {
-        return $this->phones()->phoneType('tel');
+        return $this->phones()->whereType('tel');
     }
 
     /* 
@@ -112,7 +104,7 @@ class Store extends Model
      */
     public function fax()
     {
-        return $this->phones()->phoneType('fax');
+        return $this->phones()->whereType('fax');
     }
 
     /* 
@@ -133,14 +125,14 @@ class Store extends Model
 
     /* 
      *  Returns all the users that are associated with this store. This includes associations
-     *  were the user as admin, staff, client, vendor e.t.c. Any association to this company 
+     *  were the user as admin, staff, customer, vendor e.t.c. Any association to this store 
      *  will pass as a valid user to retrieve on this relationship. We can then filter our 
      *  results to be more specific (using a scope) e.g) Get all users where the user 
      *  is an admin.
      */
     public function users()
     {
-        return $this->morphToMany('App\User', 'allocatable', 'user_allocations');
+        return $this->morphToMany('App\User', 'owner', 'user_allocations');
     }
 
     /* 
@@ -188,11 +180,11 @@ class Store extends Model
     }
 
     /* 
-     *  Returns users where the user is a client
+     *  Returns users where the user is a customer
      */
-    public function userClients()
+    public function userCustomers()
     {
-        return $this->users()->whereUserType('client');
+        return $this->users()->whereUserType('customer');
     }
 
     /* 
@@ -212,7 +204,7 @@ class Store extends Model
     }
 
     /* 
-     *  Checks if a given user is a staff member to the company
+     *  Checks if a given user is a staff member to the store
      */
     public function isStaff($user_id)
     {
@@ -220,7 +212,7 @@ class Store extends Model
     }
 
     /* 
-     *  Checks if a given user is an admin or staff member to the company
+     *  Checks if a given user is an admin or staff member to the store
      */
     public function isAdminOrStaff($user_id)
     {
@@ -233,22 +225,6 @@ class Store extends Model
     public function owner()
     {
         return $this->morphTo();
-    }
-
-    /* 
-     *  Returns products owned by this store
-     */
-    public function products()
-    {
-        return $this->morphMany('App\Product', 'owner');
-    }
-
-    /* 
-     *  Returns orders owned by this store
-     */
-    public function orders()
-    {
-        return $this->morphMany('App\Order', 'owner');
     }
 
     /* 
@@ -276,27 +252,88 @@ class Store extends Model
     }
 
     /* 
+     *  Returns products owned by this store
+     */
+    public function products()
+    {
+        return $this->morphMany('App\Product', 'owner');
+    }
+
+    /* 
+     *  Returns orders owned by this store
+     */
+    public function orders()
+    {
+        return $this->morphMany('App\Order', 'merchant');
+    }
+
+    /* 
      *  Returns messages sent to this store
      */
     public function messages()
     {
-        return $this->morphMany('App\Message', 'owner')->orderBy('messages.created_at', 'asc');
+        return $this->morphMany('App\Message', 'owner')->latest();
     }
 
     /* 
-     *  Returns reviews made to this store
+     *  Returns reviews sent to this store
      */
     public function reviews()
     {
-        return $this->morphMany('App\Review', 'owner')->orderBy('reviews.created_at', 'asc');
+        return $this->morphMany('App\Review', 'owner')->latest();
     }
 
+
+    /*************************************/
+    /*  BILLING RELATED RELATIONSHIPS    */
+    /*************************************/
+
     /* 
-     *  Returns reviews made to this store
+     *  Returns invoices owned by this store
+     */
+    public function invoices()
+    {
+        return $this->morphMany('App\Invoice', 'owner');
+    }
+
+
+    /*************************************/
+    /*  MISCELLANEOUS RELATIONSHIPS      */
+    /*************************************/
+
+    /* 
+     *  Returns lifecycles owned by this store
      */
     public function availableLifecycles()
     {
-        return $this->morphMany('App\Lifecycle', 'lifecycleable');
+        return $this->morphMany('App\Lifecycle', 'owner');
+    }
+
+    /* 
+     *  Returns lifecycles owned by this store for managing orders
+     */
+    public function orderLifecycles()
+    {
+        return $this->availableLifecycles()->where('type', 'order');
+    }
+
+    /* 
+     *  Returns categories owned by this store.
+     *  Examples are "Electrical", "Mechanical", "Construction", "Renovation"
+     *  Note: Categories can be used by multiple resources and are categorized 
+     *  using the type attribute to identify and distinguish the relevant resources.
+     */
+    public function availableCategories()
+    {
+        return $this->morphMany('App\Category', 'owner')->whereNull('parent_category_id');
+    }
+
+    /* 
+     *  Returns categories owned by this store for managing products
+     */
+    public function productCategories()
+    {
+        return $this->availableCategories()->where('type', 'product');
     }
 
     public function interests()
@@ -304,15 +341,37 @@ class Store extends Model
         return $this->hasMany('App\StoreInterests');
     }
 
+    /* 
+     *  Returns recent activities owned by this store
+     */
     public function recentActivities()
     {
-        return $this->morphMany('App\RecentActivity', 'trackable')->orderBy('created_at', 'desc');
+        return $this->morphMany('App\RecentActivity', 'owner')->orderBy('created_at', 'desc');
     }
+
+    /* 
+     *  Returns store creation activity
+     */
+    public function createdActivities()
+    {
+        return $this->recentActivities()->whereType('created');
+    }
+
+    /* 
+     *  Returns store approval activity
+     */
+    public function approvedActivities()
+    {
+        return $this->recentActivities()->whereType('approved');
+    }
+
 
     /* ATTRIBUTES */
 
     protected $appends = [
-        'logo', 'address', 'resource_type'
+        'logo', 'address', 'average_rating', 'resource_type', 'phone_list', 
+        'last_approved_activity', 'is_approved', 'current_activity_status',
+        'activity_count'
     ];
 
     /* 
@@ -324,11 +383,28 @@ class Store extends Model
     }
 
     /* 
-     *  Returns the users default address
+     *  Returns the store default address
      */
     public function getAddressAttribute()
     {
         return $this->addresses()->where('default', 1)->first();
+    }
+    
+    /* 
+     *  Returns the store average rating
+     */
+    public function getAverageRatingAttribute()
+    {
+        //  Get the store reviews
+        $reviews = $this->reviews ?? [];
+
+        //  If we have any reviews
+        if( $reviews ){
+            
+            //  Return the average of the ratings combined
+            return collect( $reviews )->avg('rating');
+
+        }
     }
 
     /* 
@@ -336,7 +412,56 @@ class Store extends Model
      */
     public function getResourceTypeAttribute()
     {
-        return str_to_lower(class_basename($this));
+        return strtolower(class_basename($this));
+    }
+
+    /* 
+     *  Returns the store phones separated with commas
+     */
+    public function getPhoneListAttribute()
+    {
+        $phoneList = '';
+        $phones = $this->phones()->get();
+
+        foreach ($phones as $key => $phone) {
+            $phoneList .= ($key != 0 ? ', ' : '').'(+'.$phone['calling_code']['calling_code'].') '.$phone['number'];
+        }
+
+        return $phoneList;
+    }
+
+    /* 
+     *  Returns the last approved activity
+     */
+    public function getLastApprovedActivityAttribute()
+    {
+        return $this->approvedActivities()->select('type', 'user_id', 'created_at')->first();
+    }
+
+    /* 
+     *  Returns true/false if the store was approved
+     */
+    public function getIsApprovedAttribute()
+    {
+        return $this->last_approved_activity ? true : false;
+    }
+
+    /* 
+     *  Returns the status of the store
+     */
+    public function getCurrentActivityStatusAttribute()
+    {
+        return $this->is_approved ? 'Approved' : 'Draft';
+    }
+
+    /* 
+     *  Returns the total number of activities
+     */
+    public function getActivityCountAttribute()
+    {
+        $count = $this->recentActivities()->select(DB::raw('count(*) as total'))->groupBy('owner_type')->first();
+
+        return $count ? $count->only(['total']) : ['total' => 0];
     }
 
 }

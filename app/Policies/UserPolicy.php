@@ -15,11 +15,7 @@ class UserPolicy
      */
     public function before($user, $ability)
     {
-        /*
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-        */
+        return $user->isSuperAdmin();
     }
     
     /**
@@ -32,9 +28,7 @@ class UserPolicy
     public function viewAll(User $user)
     {
         //  Only the Super Admin can view all users
-        if( $user->isSuperAdmin() ){
-            return true;
-        }
+        return $user->isSuperAdmin();
     }
 
     /**
@@ -47,9 +41,7 @@ class UserPolicy
     public function view(User $user, User $model)
     {
         //  Only the owner can view this user
-        if( $user->isAccountOwner($model->id) ){
-            return true;
-        }
+        $user->isAccountOwner($model->id);
     }
 
     /**
@@ -60,7 +52,7 @@ class UserPolicy
      */
     public function create(User $user)
     {
-        //
+        //  Any Authenticated user can create another user
     }
 
     /**
@@ -73,9 +65,7 @@ class UserPolicy
     public function update(User $user, User $model)
     {
         //  Only the owner can update this user
-        if( $user->isAccountOwner($model->id) ){
-            return true;
-        }
+        return $user->isAccountOwner($model->id);
     }
 
     /**
@@ -88,9 +78,7 @@ class UserPolicy
     public function delete(User $user, User $model)
     {
         //  Only the owner can delete this user
-        if( $user->isAccountOwner($model->id) ){
-            return true;
-        }
+        return $user->isAccountOwner($model->id);
     }
 
     /**
@@ -103,9 +91,7 @@ class UserPolicy
     public function restore(User $user, User $model)
     {
         //  Only the owner can restore this user
-        if( $user->isAccountOwner($model->id) ){
-            return true;
-        }
+        return $user->isAccountOwner($model->id);
     }
 
     /**
@@ -117,9 +103,7 @@ class UserPolicy
      */
     public function forceDelete(User $user, User $model)
     {
-        //  Only the owner can forceDelete this user
-        if( $user->isAccountOwner($model->id) ){
-            return true;
-        }
+        //  Only the owner can force delete this user
+        return $user->isAccountOwner($model->id);
     }
 }
