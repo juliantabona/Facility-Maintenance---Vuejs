@@ -88,7 +88,7 @@ class Lifecycle extends Model
 
     public function setDefaultAttribute($value)
     {
-        $this->attributes['default'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+        $this->attributes['default'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
     }
 
 }

@@ -38,6 +38,59 @@ trait PhoneTraits
         }
     }
 
+    /*  initiateCreate() method:
+     *
+     *  This method is used to create a new phone.
+     */
+    public function initiateCreate( $template = null )
+    {
+        /*
+         *  The $phone variable represents the phone dataset
+         *  provided through the request received.
+         */
+        $phone = request('phone');
+
+        /*
+         *  The $template variable represents structure of the phone.
+         *  If no template is provided, we create one using the 
+         *  request data.
+         */
+        $template = $template ?? [
+            'type' => $phone['type'] ?? null,
+            'calling_code' => $phone['calling_code'] ?? null,
+            'number' => $phone['number'] ?? null,
+            'provider' => $phone['provider'] ?? null
+        ];
+
+        try {
+
+            /*
+             *  Create a new phone, then retrieve a fresh instance
+             */
+            $phone = $this->create($template)->fresh();
+
+            /*  If the phone was created successfully  */
+            if( $phone ){   
+
+                /*  Return a fresh instance of the phone  */
+                return $phone->fresh();
+
+            }
+
+        } catch (\Exception $e) {
+
+            //  Return the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+        }
+
+    }
+
+
+
+
+
+
     public function initiateGet()
     {
         //  Current authenticated user
@@ -92,106 +145,6 @@ trait PhoneTraits
 
                 //  Return the error response
                 return ['success' => false, 'response' => $response];
-            }
-        }
-    }
-
-    public function initiateCreate($modelId=null, $modelType=null, $phones=null, $replace=false){
-        //  Current authenticated user
-        $user = auth('api')->user();
-
-        //  Query data
-        $phones = $phones ? $phones : request('phones');
-        $modelId = $modelId ? $modelId : request('modelId');                      //  The id of the associated model
-        $modelType = $modelType ? $modelType : request('modelType');              //  Associated model e.g) user, company
-        $replace = $replace ? $replace : request('replace');                      //  Whether to delete the old phones
-
-        /******************************************************
-         *   CHECK IF USER HAS PERMISSION TO CREATE PHONES    *
-         ******************************************************/
-
-        /*********************************************
-         *   VALIDATE PHONE INFORMATION            *
-         ********************************************/
-
-        if (!$modelType) {
-            //  Model type not specified
-            return ['success' => false, 'response' => oq_api_notify_error('Include model type e.g) user, company, e.t.c', null, 404)];
-        } elseif (!$modelId) {
-            //  Model id not specified
-            return ['success' => false, 'response' => oq_api_notify_error('Include associated model id e.g) 1, 2, 3 e.t.c', null, 404)];
-        } elseif (!$phones) {
-            //  Phone details not specified
-            return ['success' => false, 'response' => oq_api_notify_error('Include phone details. Must be an array of phones', null, 404)];
-        } else {
-            //  Create the dynamic model
-            $dynamicModel = ('\App\\'.ucfirst($modelType));  //  \App\User
-
-            //  Check if this is a valid dynamic class (If the model class exists)
-            if (class_exists($dynamicModel)) {
-
-                //  Find the associated record by model id
-                try {
-                    $dynamicModel = $dynamicModel::find($modelId);
-                } catch (\Exception $e) {
-                    return ['success' => false, 'response' => oq_api_notify_error('Query Error', $e->getMessage(), 404)];
-                }
-
-                //  Check if we have a record returned
-                if ($dynamicModel) {
-
-                    //  Array to hold all the phones saved into the database
-                    $savedPhones = [];
-
-                    //  Create the phone number
-                    try {
-
-                        //  Delete the old phones if we are replacing
-                        if($replace){
-                            //  Delete old phones
-                            $deleted = $dynamicModel->phones()->delete();
-                        }
-                        
-                        foreach($phones as $phone){
-
-                            //  Model record exists
-                            $template = [
-                                'type' => $phone['type'] ?? null,
-                                'provider' => $phone['provider'] ?? null,
-                                'number' => $phone['number'] ?? null,
-                                'calling_code' => $phone['calling_code'] ?? null,
-                                'company_branch_id' => $user->companyBranch->id ?? null,
-                                'company_id' => $user->companyBranch->company->id ?? null,
-                                'created_by' => $user->id ?? null,
-                            ];
-
-                            //  Create new phone
-                            $phone = $dynamicModel->phones()->create($template);
-
-                            //  Record activity of a phone created
-                            $status = 'created';
-                            $phoneCreatedActivity = oq_saveActivity($phone, $user, $status, $template);
-
-                            //  re-retrieve the instance to get all of the fields in the table.
-                            $phone = $phone->fresh();
-
-                            array_push($savedPhones, $phone);
-                        }
-
-                    } catch (\Exception $e) {
-                        return ['success' => false, 'response' => oq_api_notify_error('Query Error', $e->getMessage(), 404)];
-                    }
-
-                    //  return phone number
-                    return ['success' => true, 'response' => $savedPhones];
-
-                } else {
-                    //  Model record does not exist
-                    return ['success' => false, 'response' => oq_api_notify_no_resource()];
-                }
-            } else {
-                //  Model class does not exist
-                return ['success' => false, 'response' => oq_api_notify_error('Class "'.$modelType.'" does not exist.', null, 404)];
             }
         }
     }

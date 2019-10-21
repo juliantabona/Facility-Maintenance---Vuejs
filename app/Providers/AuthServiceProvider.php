@@ -7,22 +7,24 @@ use App\User;
 use App\Order;
 use App\Store;                                                                                                        
 use App\Coupon;   
-use App\Company;
+use App\Account;
 use App\Product;                                                                                                        
 use App\Invoice;
 use App\Discount;                                                                                                     
 use App\Quotation;                                                                                                        
+use App\UssdInterface;                                                                                                        
 use App\Policies\TaxPolicy;
 use App\Policies\UserPolicy;
 use App\Policies\OrderPolicy;
 use App\Policies\StorePolicy;
 use App\Policies\CouponPolicy;
 use Laravel\Passport\Passport;
-use App\Policies\CompanyPolicy;
+use App\Policies\AccountPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\InvoicePolicy;
 use App\Policies\DiscountPolicy;
 use App\Policies\QuotationPolicy;
+use App\Policies\UssdInterfacePolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
@@ -38,11 +40,12 @@ class AuthServiceProvider extends ServiceProvider
         Order::class => OrderPolicy::class,
         Store::class => StorePolicy::class,
         Coupon::class => CouponPolicy::class,
-        Company::class => CompanyPolicy::class,
+        Account::class => AccountPolicy::class,
         Product::class => ProductPolicy::class,
         Invoice::class => InvoicePolicy::class,
         Discount::class => DiscountPolicy::class,
         Quotation::class => QuotationPolicy::class,
+        UssdInterface::class => UssdInterfacePolicy::class,
     ];
 
     /**

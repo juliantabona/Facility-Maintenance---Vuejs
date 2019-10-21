@@ -4,14 +4,14 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateCompaniesTable extends Migration
+class CreateAccountsTable extends Migration
 {
     /**
      * Run the migrations.
      */
     public function up()
     {
-        Schema::create('companies', function (Blueprint $table) {
+        Schema::create('accounts', function (Blueprint $table) {
 
             $table->increments('id');
 
@@ -34,6 +34,9 @@ class CreateCompaniesTable extends Migration
             $table->string('linkedin_link')->nullable();
             $table->string('instagram_link')->nullable();
             $table->string('youtube_link')->nullable();
+
+            /*  Currency Info  */
+            $table->json('currency')->nullable();
             
             $table->softDeletes();
             
@@ -48,6 +51,6 @@ class CreateCompaniesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('companies');
+        Schema::dropIfExists('accounts');
     }
 }

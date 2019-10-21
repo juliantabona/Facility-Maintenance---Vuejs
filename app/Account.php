@@ -3,18 +3,26 @@
 namespace App;
 
 use DB;
-use App\Traits\CompanyTraits;
+use App\Traits\AccountTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Company extends Model
+class Account extends Model
 {
     use Dataviewer;
     use SoftDeletes;
-    use CompanyTraits;
+    use AccountTraits;
 
-    protected $table = 'companies';
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $casts = [
+        'currency' => 'array'
+    ];
 
     protected $with = ['phones'];
 
@@ -32,26 +40,20 @@ class Company extends Model
         'email', 'additional_email', 'setup', 
         
         /*  Social Info  */
-        'website_link', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link'
+        'website_link', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link',
+
+        /*  Currency Info  */
+        'currency'
 
     ];
 
     protected $allowedFilters = [];
 
     protected $allowedOrderableColumns = [];
-
-    /* 
-     *  Scope by type
-     */
-    public function scopeWhereType($query, $type)
-    {
-        return $query;
-    }
-
     /*  
-     *  Returns documents associated with this company. These are various files such as images,
+     *  Returns documents associated with this account. These are various files such as images,
      *  videos, files and so on. Basically any file/image/video the user wants to save to 
-     *  this company is stored in this relation
+     *  this account is stored in this relation
      */
 
     public function documents()
@@ -68,7 +70,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns phones associated with this company. This includes all
+     *  Returns phones associated with this account. This includes all
      *  types of phones such as telephones, mobiles and fax numbers.
      *  We can then filter our results to be more specific (using a scope) 
      *  e.g) Get only mobile phones
@@ -103,7 +105,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns addresses associated with this company
+     *  Returns addresses associated with this account
      */
     public function addresses()
     {
@@ -111,7 +113,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns the company settings
+     *  Returns the account settings
      */
     public function settings()
     {
@@ -119,8 +121,48 @@ class Company extends Model
     }
 
     /* 
-     *  Returns all the users that are associated with this company. This includes associations
-     *  were the user as admin, staff, customer, vendor e.t.c. Any association to this company 
+     *  Returns all the contacts that are associated with this account. We can filter our 
+     *  results to be more specific (using a scope) e.g) Get all contacts that are 
+     *  customers, vendors or that use a particular number or email.
+     */
+    public function contacts()
+    {
+        return $this->morphToMany('App\Contact', 'owner', 'contact_allocations');
+    }
+
+    public function customerContacts()
+    {
+        return $this->contacts()->where('is_customer', 1);
+    }
+
+    public function vendorContacts()
+    {
+        return $this->contacts()->where('is_vendor', 1);
+    }
+
+    public function contactsWithMobilePhone($mobile = null)
+    {
+        /*  If we have a mobile phone specified  */
+        if($mobile){
+
+            /*  Return any contact using the provided mobile number  */
+            return $this->contacts()->whereHas('mobiles', function (Builder $query) use( $mobile ){
+                    $query->where('calling_code', $mobile['calling_code'])
+                            ->where('number', $mobile['number']);
+            });
+
+        /*  If no mobile phone was specified  */
+        }else{
+
+            /*  Otherwise only return contacts using mobile phones  */
+            return $this->contacts()->whereHas('mobiles');
+
+        }
+    }
+
+    /* 
+     *  Returns all the users that are associated with this account. This includes associations
+     *  were the user as admin, staff, customer, vendor e.t.c. Any association to this account 
      *  will pass as a valid user to retrieve on this relationship. We can then filter our 
      *  results to be more specific (using a scope) e.g) Get all users where the user 
      *  is an admin.
@@ -191,7 +233,7 @@ class Company extends Model
     }
 
     /* 
-     *  Checks if a given user is an admin to the company
+     *  Checks if a given user is an admin to the account
      */
     public function isAdmin($user_id)
     {
@@ -199,7 +241,7 @@ class Company extends Model
     }
 
     /* 
-     *  Checks if a given user is a staff member to the company
+     *  Checks if a given user is a staff member to the account
      */
     public function isStaff($user_id)
     {
@@ -207,7 +249,7 @@ class Company extends Model
     }
 
     /* 
-     *  Checks if a given user is an admin or staff member to the company
+     *  Checks if a given user is an admin or staff member to the account
      */
     public function isAdminOrStaff($user_id)
     {
@@ -220,7 +262,7 @@ class Company extends Model
     /*************************************/
 
     /* 
-     *  Returns stores owned by this company
+     *  Returns stores owned by this account
      */
     public function stores()
     {
@@ -228,7 +270,7 @@ class Company extends Model
     }
     
     /* 
-     *  Returns taxes owned by this company
+     *  Returns taxes owned by this account
      */
     public function taxes()
     {
@@ -236,7 +278,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns discounts owned by this company
+     *  Returns discounts owned by this account
      */
     public function discounts()
     {
@@ -244,7 +286,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns coupons owned by this company
+     *  Returns coupons owned by this account
      */
     public function coupons()
     {
@@ -252,7 +294,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns products owned by this company
+     *  Returns products owned by this account
      */
     public function products()
     {
@@ -265,7 +307,7 @@ class Company extends Model
     /*************************************/
 
     /* 
-     *  Returns quotations owned by this company
+     *  Returns quotations owned by this account
      */
     public function quotations()
     {
@@ -273,7 +315,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns quotations where this company is the customer
+     *  Returns quotations where this account is the customer
      */
     public function receivedQuotations()
     {
@@ -281,7 +323,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns invoices owned by this company
+     *  Returns invoices owned by this account
      */
     public function invoices()
     {
@@ -289,7 +331,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns invoices where this company is the customer
+     *  Returns invoices where this account is the customer
      */
     public function receivedInvoices()
     {
@@ -302,7 +344,7 @@ class Company extends Model
     /*************************************/
 
     /* 
-     *  Returns sms credits owned by this company
+     *  Returns sms credits owned by this account
      */
     public function smsCredits()
     {
@@ -310,7 +352,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns mobile phones owned by this company that are
+     *  Returns mobile phones owned by this account that are
      *  linked to mobile money accounts
      */
     public function wallets()
@@ -319,7 +361,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns lifecycles owned by this company
+     *  Returns lifecycles owned by this account
      */
     public function availableLifecycles()
     {
@@ -327,7 +369,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns lifecycles owned by this company for managing jobcards
+     *  Returns lifecycles owned by this account for managing jobcards
      */
     public function jobcardLifecycles()
     {
@@ -335,7 +377,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns priorities owned by this company.
+     *  Returns priorities owned by this account.
      *  Examples are "low", "medium", "high", "urgent", "emergency"
      *  Note: Priorities can be used by multiple resources and are categorized 
      *  using the type attribute to identify and distinguish the relevant resources.
@@ -346,7 +388,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns priorities owned by this company for managing jobcards
+     *  Returns priorities owned by this account for managing jobcards
      */
     public function jobcardPriorities()
     {
@@ -354,7 +396,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns cost centers owned by this company.
+     *  Returns cost centers owned by this account.
      *  Examples are "Manufacturing", "Contruction", "Maintenance"
      *  Note: Cost centers can be used by multiple resources and are categorized 
      *  using the type attribute to identify and distinguish the relevant resources.
@@ -365,7 +407,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns cost centers owned by this company for managing jobcards
+     *  Returns cost centers owned by this account for managing jobcards
      */
     public function jobcardCostCenters()
     {
@@ -373,7 +415,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns categories owned by this company.
+     *  Returns categories owned by this account.
      *  Examples are "Electrical", "Mechanical", "Construction", "Renovation"
      *  Note: Categories can be used by multiple resources and are categorized 
      *  using the type attribute to identify and distinguish the relevant resources.
@@ -384,7 +426,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns categories owned by this company for managing jobcards
+     *  Returns categories owned by this account for managing jobcards
      */
     public function jobcardCategories()
     {
@@ -425,7 +467,7 @@ class Company extends Model
     ];
 
     /* 
-     *  Returns the company logo
+     *  Returns the account logo
      */
     public function getLogoAttribute()
     {
@@ -433,7 +475,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns the company default address
+     *  Returns the account default address
      */
     public function getAddressAttribute()
     {
@@ -449,7 +491,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns the company phones separated with commas
+     *  Returns the account phones separated with commas
      */
     public function getPhoneListAttribute()
     {
@@ -472,7 +514,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns true/false if the company was approved
+     *  Returns true/false if the account was approved
      */
     public function getIsApprovedAttribute()
     {
@@ -480,7 +522,7 @@ class Company extends Model
     }
 
     /* 
-     *  Returns the status of the company
+     *  Returns the status of the account
      */
     public function getCurrentActivityStatusAttribute()
     {

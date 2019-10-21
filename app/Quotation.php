@@ -28,15 +28,15 @@ class Quotation extends Model
      * @var string
      */
     protected $casts = [
-        'meta' => 'array',
-        'items' => 'array',
-        'taxes' => 'array',
-        'coupons' => 'array',
-        'discounts' => 'array',
+        'metadata' => 'array',
+        'currency' => 'array',
+        'tax_lines' => 'array',
+        'item_lines' => 'array',
         'billing_info' => 'array',
+        'coupon_lines' => 'array',
         'shipping_info' => 'array',
-        'company_info' => 'array',
-        'currency_type' => 'array'
+        'merchant_info' => 'array',
+        'discount_lines' => 'array',
     ];
 
     /**
@@ -56,13 +56,13 @@ class Quotation extends Model
     protected $fillable = [
 
         /*  Basic Info  */
-        'number', 'currency_type', 'created_date', 'expiry_date',
+        'number', 'currency', 'created_date', 'expiry_date',
 
         /*  Item Info  */
-        'items',
+        'item_lines',
 
         /*  Taxes, Disounts & Coupon Info  */
-        'taxes', 'discounts', 'coupons',
+        'tax_lines', 'discount_lines', 'coupon_lines',
 
         /*  Grand Total, Sub Total, Tax Total, Discount Total, Shipping Total  */
         'sub_total', 'item_tax_total', 'global_tax_total', 'grand_tax_total', 'item_discount_total',
@@ -72,7 +72,7 @@ class Quotation extends Model
         'reference_id', 'reference_ip_address', 'reference_user_agent',
 
         /*  Customer Info  */
-        'customer_id', 'customer_type', 'billing_info', 'shipping_info',
+        'customer_id', 'billing_info', 'shipping_info',
 
         /*  Merchant Info  */
         'merchant_id', 'merchant_type', 'merchant_info',

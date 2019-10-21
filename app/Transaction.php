@@ -75,7 +75,7 @@ class Transaction extends Model
 
     public function setAutomaticAttribute($value)
     {
-        $this->attributes['automatic'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+        $this->attributes['automatic'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
     }
 
 }

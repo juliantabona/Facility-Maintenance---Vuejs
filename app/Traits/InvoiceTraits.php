@@ -3,6 +3,7 @@
 namespace App\Traits;
 
 use PDF;
+use App\Store;
 use Carbon\Carbon;
 use Twilio as Twilio;
 
@@ -66,6 +67,210 @@ trait InvoiceTraits
 
         }
     }
+
+    /*  initiateCreate() method:
+     *
+     *  This method is used to create a new invoice.
+     */
+    public function initiateCreate( $template_overide = [] )
+    {
+        /*
+         *  The $invoice variable represents the invoice dataset
+         *  provided through the request received.
+         */
+        $invoice = $template_overide ?? request('invoice');
+
+        $items = $invoice['items'];
+        $merchant_id = $invoice['merchant_id'];
+        $customer_id = $invoice['customer_id'];
+        $reference_id = $invoice['reference_id'];
+
+        /*  If we have the merchant id  */
+        if( $merchant_id ){
+
+            /*  Retrieve the merchant details using the merchant id  */
+            $merchant = Store::find( $merchant_id );
+
+        }
+
+        /*  If we have the customer id  */
+        if( $customer_id ){
+
+            /*  Retrieve the invoice customer details from the merchant contacts  */
+            $customer = $merchant->contacts()->where('contacts.id', $customer_id )->first();
+
+        }
+
+        /*  If we have the reference id  */
+        if( $reference_id ){
+
+            /*  Retrieve the invoice reference details from the merchant contacts  */
+            $reference = $merchant->contacts()->where('contacts.id', $reference_id )->first();
+
+        }
+
+        /*  If we have the cart items  */
+        if( $items ){
+
+            /*  Retrieve the invoice cart details from the items provided  */
+            $cart = ( new \App\MyCart() )->getCartDetails( $merchant, $items );
+
+        }
+
+        /*
+         *  The $template variable represents structure of the invoice.
+         *  If no template is provided, we create one using the 
+         *  request data.
+         */
+        $template = [
+
+            /*  Basic Info  */
+            'number' => null,
+            'currency_type' => $merchant->currency ?? null,
+            'created_date' => $invoice['created_date'] ?? Carbon::now()->format('Y-m-d H:i:s'),
+            'expiry_date' =>  $invoice['expiry_date'] ?? Carbon::now()->format('Y-m-d H:i:s'),
+
+            /*  Item Info  */
+            'item_lines' => $cart['items'] ?? null,
+
+            /*  Taxes, Discounts & Coupons Info  */
+            'tax_lines' => $merchant->taxes ?? null,
+            'discount_lines' => $merchant->discounts ?? null,
+            'coupon_lines' => $merchant->coupons ?? null,
+
+            /*  Grand Total, Sub Total, Tax Total, Discount Total, Shipping Total  */
+            'sub_total' => $cart['sub_total'] ?? 0,
+            'item_tax_total' => $cart['item_tax_total'] ?? 0,
+            'global_tax_total' => $cart['global_tax_total'] ?? 0,
+            'grand_tax_total' => $cart['grand_tax_total'] ?? 0,
+            'item_discount_total' => $cart['item_discount_total'] ?? 0,
+            'global_discount_total' => $cart['global_discount_total'] ?? 0,
+            'grand_discount_total' => $cart['grand_discount_total'] ?? 0,
+            'shipping_total' => $cart['shipping_total'] ?? 0,
+            'grand_total' => $cart['grand_total'] ?? 0,
+
+            /*  Reference Info  */
+            'reference_id' => $reference->id ?? null,
+            'reference_ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+            'reference_user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+            
+            /*  Customer Info  */
+            'customer_id' => $customer->id ?? null,
+            'billing_info' => $customer->getBillingInfo() ?? null,
+            'shipping_info' => $customer->getShippingInfo() ?? null,
+            'customer_note' => $invoice['customer_note'] ?? null,
+
+            /*  Merchant Info  */
+            'merchant_id' => $merchant->id ?? null,
+            'merchant_type' => $merchant->resource_type ?? null,
+            'merchant_info' => $merchant->getBasicInfo() ?? null,
+
+            /*  Meta Data  */
+            'metadata' => isset($merchant) ? $this->getMetadataInfo($merchant) : null
+
+        ];
+
+        /*
+         *  Replace the default template with any custom data
+         */
+        $template = array_merge($template, $template_overide);
+
+        try {
+
+            /*
+             *  Create new a invoice, then retrieve a fresh instance
+             */
+            $invoice = $this->create($template)->fresh();
+
+            /*  If the invoice was created successfully  */
+            if( $invoice ){
+
+                /*  Record the activity of the the invoice creation  */
+                $activity = $invoice->recordActivity('created');
+  
+                /*  Return a fresh instance of the invoice  */
+                return $invoice->fresh();
+
+            }
+
+        } catch (\Exception $e) {
+
+            //  Return the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+        }
+
+    }
+
+    /*  getMetadataInfo()
+     *
+     *  This method returns the metadata template that contains order
+     *  design and custom information defined by the orders owning
+     *  merchant
+     */
+    public function getMetadataInfo( $merchant )
+    {
+        /*  Get the merchants order settings  */
+        $invoiceSettings = $merchant->settings['details']['invoiceTemplate'] ?? null;
+
+        /*  If the merchants order settings were found  */
+        if( $invoiceSettings ){
+         
+            $template = [
+
+                'heading_title' =>  $invoiceSettings['heading_title'],
+                'reference_no_title' =>  $invoiceSettings['reference_no_title'],
+                'created_date_title' =>  $invoiceSettings['created_date_title'],
+                'sub_total_title' =>  $invoiceSettings['sub_total_title'],
+                'grand_total_title' =>  $invoiceSettings['grand_total_title'],
+                'recipient_title' =>  $invoiceSettings['recipient_title'],
+                'table_columns' =>  $invoiceSettings['table_columns'],
+                'notes' =>  $invoiceSettings['notes'],
+                'colors' =>  $invoiceSettings['colors'],
+                'footer_notes' =>  $invoiceSettings['footer_notes']
+
+            ];
+
+            return $template;
+
+        }
+    }
+
+
+    /*  recordActivity()
+     *
+     *  This method saves the activity of the invoice with a specified status
+     *  as well as activity data and the authenticated user responsible 
+     *  for the activity.
+     */
+    public function recordActivity($status, $data = null)
+    {   
+        return ( new \App\RecentActivity() )->saveActivity($this, $status, $data);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -463,7 +668,7 @@ trait InvoiceTraits
         }
     }
 
-    /*  initiateCreate() method:
+    /*  initiateCreate2() method:
      *
      *  This is used to create a new invoice. It also works
      *  to store the creation activity and broadcasting of
@@ -471,7 +676,7 @@ trait InvoiceTraits
      *  the invoice.
      *
      */
-    public function initiateCreate($template = null)
+    public function initiateCreate2($template = null)
     {
         //  Current authenticated user
         $auth_user = auth('api')->user();

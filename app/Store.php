@@ -6,17 +6,27 @@ use DB;
 use App\Traits\StoreTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
-    'company' => 'App\Company',
+    'account' => 'App\Account',
 ]);
 
 class Store extends Model
 {
     use Dataviewer;
     use StoreTraits;
+
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $casts = [
+        'currency' => 'array'
+    ];
 
     protected $with = ['phones'];
 
@@ -35,6 +45,9 @@ class Store extends Model
         
         /*  Social Info  */
         'website_link', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link',
+
+        /*  Currency Info  */
+        'currency',
 
         /*  Ownership Info  */
         'owner_id', 'owner_type'
@@ -121,6 +134,44 @@ class Store extends Model
     public function settings()
     {
         return $this->morphOne('App\Setting', 'owner');
+    }
+
+    /* 
+     *  Returns all the contacts that are associated with this store. We can filter our 
+     *  results to be more specific (using a scope) e.g) Get all contacts that are 
+     *  customers, vendors or that use a particular number or email.
+     */
+    public function contacts()
+    {
+        return $this->morphToMany('App\Contact', 'owner', 'contact_allocations');
+    }
+
+    public function customerContacts()
+    {
+        return $this->contacts()->where('is_customer', 1);
+    }
+
+    public function vendorContacts()
+    {
+        return $this->contacts()->where('is_vendor', 1);
+    }
+
+    public function contactsWithMobilePhone($mobile = null)
+    {
+        /*  If we have a mobile phone specified  */
+        if($mobile){
+            
+            /*  Return any contact using the provided mobile number  */
+            return $this->contacts()->whereHas('mobiles', function (Builder $query) use( $mobile ){
+                        $query->where('calling_code', $mobile['calling_code'])
+                                ->where('number', $mobile['number']);
+                    });
+
+        /*  If no mobile phone was specified  */
+        }else{
+            /*  Otherwise only return contacts using mobile phones  */
+            return $this->contacts()->whereHas('mobiles');
+        }
     }
 
     /* 

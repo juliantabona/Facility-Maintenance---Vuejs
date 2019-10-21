@@ -5,14 +5,14 @@ namespace App\Http\Resources;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
-class Companies extends ResourceCollection
+class Accounts extends ResourceCollection
 {
     /**
      * The resource that this resource collects.
      *
      * @var string
      */
-    public $collects = 'App\Http\Resources\Company';
+    public $collects = 'App\Http\Resources\Account';
 
     /**
      * Transform the resource collection into an array.
@@ -29,7 +29,7 @@ class Companies extends ResourceCollection
                 //  Link to current resource
                 'self' => [
                     'href' => url()->full(),
-                    'title' => 'These companies',
+                    'title' => 'These accounts',
                 ],
 
                 'first' => [
@@ -52,7 +52,7 @@ class Companies extends ResourceCollection
                     'title' => 'Last page of this collection',
                 ],
 
-                //  Link to search companies
+                //  Link to search accounts
                 'search' => [
                     'href' => url()->current().'?search={searchTerms}',
                     'templated' => true,
@@ -61,7 +61,7 @@ class Companies extends ResourceCollection
             ],
 
             '_embedded' => [
-                'companies' => $this->collection,
+                'accounts' => $this->collection,
             ],
 
             'total' => $this->total(),

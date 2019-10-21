@@ -19,8 +19,8 @@ class CreatePriorityAllocationsTable extends Migration
             $table->unsignedInteger('priority_id');
 
             /*  Ownership Information  */
-            $table->unsignedInteger('owner_id');
-            $table->string('owner_type');
+            $table->unsignedInteger('owner_id')->nullable();
+            $table->string('owner_type')->nullable();
 
             /*  Timestamps  */
             $table->timestamps();

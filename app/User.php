@@ -110,19 +110,11 @@ class User extends Authenticatable
     }
 
     /* 
-     *  Scope the phones by type
-     */
-    public function scopeWherePhoneType($query, $type)
-    {
-        return $query->where('type', '=', $type);
-    }
-
-    /* 
      *  Returns phones categorized as mobile phones
      */
     public function mobiles()
     {
-        return $this->phones()->wherePhoneType('mobile');
+        return $this->phones()->whereType('mobile');
     }
 
     /* 
@@ -130,7 +122,7 @@ class User extends Authenticatable
      */
     public function telephones()
     {
-        return $this->phones()->wherePhoneType('tel');
+        return $this->phones()->whereType('tel');
     }
 
     /* 
@@ -138,7 +130,7 @@ class User extends Authenticatable
      */
     public function fax()
     {
-        return $this->phones()->wherePhoneType('fax');
+        return $this->phones()->whereType('fax');
     }
 
     /* 
@@ -305,7 +297,7 @@ class User extends Authenticatable
      */
     public function getFullNameAttribute()
     {
-        return $this->first_name.' '.$this->last_name;
+        return trim($this->first_name.' '.$this->last_name);
     }
 
     /* 

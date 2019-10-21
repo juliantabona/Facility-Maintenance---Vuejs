@@ -25,8 +25,8 @@ class CreateAddressesTable extends Migration
             $table->boolean('default')->nullable()->default(false);
 
             /*  Ownership Information  */
-            $table->unsignedInteger('owner_id');
-            $table->string('owner_type');
+            $table->unsignedInteger('owner_id')->nullable();
+            $table->string('owner_type')->nullable();
 
             /*  Meta Data  */
             $table->json('meta')->nullable();

@@ -69,9 +69,9 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
         Route::get('/phones', 'Api\UserController@getUserPhones')->name('phones');
         Route::get('/phones/{phone_id}', 'Api\UserController@getUserPhone')->name('phone')->where('phone_id', '[0-9]+');
 
-        //  Company related resources
-        Route::get('/companies', 'Api\UserController@getUserCompanies')->name('companies');
-        Route::get('/companies/{company_id}', 'Api\UserController@getUserCompany')->name('company')->where('company_id', '[0-9]+');
+        //  Account related resources
+        Route::get('/accounts', 'Api\UserController@getUserAccounts')->name('accounts');
+        Route::get('/accounts/{account_id}', 'Api\UserController@getUserAccount')->name('account')->where('account_id', '[0-9]+');
 
         //  Store related resources
         Route::get('/stores', 'Api\UserController@getUserStores')->name('stores');
@@ -93,7 +93,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
         //  Single user
         Route::get('/{user_id}', 'Api\UserController@getUser')->name('user')->where('user_id', '[0-9]+');
 
-        //  Single company resources
+        //  Single account resources
         Route::prefix('{user_id}')->name('user-')->group(function ($group) {
             //  Allow only intergers for user_id on all group routes
             foreach ($group->getRoutes() as $route) {
@@ -112,9 +112,9 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             Route::get('/phones', 'Api\UserController@getUserPhones')->name('phones');
             Route::get('/phones/{phone_id}', 'Api\UserController@getUserPhone')->name('phone')->where('phone_id', '[0-9]+');
 
-            //  Company related resources
-            Route::get('/companies', 'Api\UserController@getUserCompanies')->name('companies');
-            Route::get('/companies/{company_id}', 'Api\UserController@getUserCompany')->name('company')->where('company_id', '[0-9]+');
+            //  Account related resources
+            Route::get('/accounts', 'Api\UserController@getUserAccounts')->name('accounts');
+            Route::get('/accounts/{account_id}', 'Api\UserController@getUserAccount')->name('account')->where('account_id', '[0-9]+');
 
             //  Store related resources
             Route::get('/stores', 'Api\UserController@getUserStores')->name('stores');
@@ -129,70 +129,70 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     /*********************************
     *********************************/
 
-    Route::prefix('companies')->group(function () {
+    Route::prefix('accounts')->group(function () {
 
-        //  Multiple companies
-        Route::get('/', 'Api\CompanyController@getCompanies')->name('companies');
+        //  Multiple accounts
+        Route::get('/', 'Api\AccountController@getAccounts')->name('accounts');
 
-        //  Single company
-        Route::get('/{company_id}', 'Api\CompanyController@getCompany')->name('company')->where('company_id', '[0-9]+');
+        //  Single account
+        Route::get('/{account_id}', 'Api\AccountController@getAccount')->name('account')->where('account_id', '[0-9]+');
 
-        //  Single company resources
-        Route::prefix('{company_id}')->name('company-')->group(function ($group) {
+        //  Single account resources
+        Route::prefix('{account_id}')->name('account-')->group(function ($group) {
 
-            //  Allow only intergers for company_id on all group routes
+            //  Allow only intergers for account_id on all group routes
             foreach ($group->getRoutes() as $route) {
-                $route->where('company_id', '[0-9]+');
+                $route->where('account_id', '[0-9]+');
             }
 
             //  Settings related resources
-            Route::get('/settings', 'Api\CompanyController@getCompanySettings')->name('settings');
+            Route::get('/settings', 'Api\AccountController@getAccountSettings')->name('settings');
 
             //  Document related resources
-            Route::get('/logo', 'Api\CompanyController@getCompanyLogo')->name('logo');
-            Route::get('/documents', 'Api\CompanyController@getCompanyDocuments')->name('documents');
-            Route::get('/documents/{document_id}', 'Api\CompanyController@getCompanyDocument')->name('document')->where('document_id', '[0-9]+');
+            Route::get('/logo', 'Api\AccountController@getAccountLogo')->name('logo');
+            Route::get('/documents', 'Api\AccountController@getAccountDocuments')->name('documents');
+            Route::get('/documents/{document_id}', 'Api\AccountController@getAccountDocument')->name('document')->where('document_id', '[0-9]+');
 
             //  Phone related resources
-            Route::get('/phones', 'Api\CompanyController@getCompanyPhones')->name('phones');
-            Route::get('/phones/{phone_id}', 'Api\CompanyController@getCompanyPhone')->name('phone')->where('phone_id', '[0-9]+');
+            Route::get('/phones', 'Api\AccountController@getAccountPhones')->name('phones');
+            Route::get('/phones/{phone_id}', 'Api\AccountController@getAccountPhone')->name('phone')->where('phone_id', '[0-9]+');
 
             //  User related resources
-            Route::get('/users', 'Api\CompanyController@getCompanyUsers')->name('users');
-            Route::get('/users/admins', 'Api\CompanyController@getCompanyAdmins')->name('admins');
-            Route::get('/users/staff', 'Api\CompanyController@getCompanyStaff')->name('staff');
-            Route::get('/users/customers', 'Api\CompanyController@getCompanyuserCustomers')->name('user-customers');
-            Route::get('/users/vendors', 'Api\CompanyController@getCompanyUserVendors')->name('user-vendors');
-            Route::get('/users/{user_id}', 'Api\CompanyController@getCompanyUser')->name('user')->where('user_id', '[0-9]+');
+            Route::get('/users', 'Api\AccountController@getAccountUsers')->name('users');
+            Route::get('/users/admins', 'Api\AccountController@getAccountAdmins')->name('admins');
+            Route::get('/users/staff', 'Api\AccountController@getAccountStaff')->name('staff');
+            Route::get('/users/customers', 'Api\AccountController@getAccountuserCustomers')->name('user-customers');
+            Route::get('/users/vendors', 'Api\AccountController@getAccountUserVendors')->name('user-vendors');
+            Route::get('/users/{user_id}', 'Api\AccountController@getAccountUser')->name('user')->where('user_id', '[0-9]+');
 
             //  Product related resources
-            Route::get('/products', 'Api\CompanyController@getCompanyProducts')->name('products');
-            Route::get('/products/{product_id}', 'Api\CompanyController@getCompanyProduct')->name('product')->where('product_id', '[0-9]+');
+            Route::get('/products', 'Api\AccountController@getAccountProducts')->name('products');
+            Route::get('/products/{product_id}', 'Api\AccountController@getAccountProduct')->name('product')->where('product_id', '[0-9]+');
 
             //  Tax related resources
-            Route::get('/taxes', 'Api\CompanyController@getCompanyTaxes')->name('taxes');
-            Route::get('/taxes/{tax_id}', 'Api\CompanyController@getCompanyTax')->name('tax')->where('tax_id', '[0-9]+');
+            Route::get('/taxes', 'Api\AccountController@getAccountTaxes')->name('taxes');
+            Route::get('/taxes/{tax_id}', 'Api\AccountController@getAccountTax')->name('tax')->where('tax_id', '[0-9]+');
 
             //  Discount related resources
-            Route::get('/discounts', 'Api\CompanyController@getCompanyDiscounts')->name('discounts');
-            Route::get('/discounts/{discount_id}', 'Api\CompanyController@getCompanyDiscount')->name('discount')->where('discount_id', '[0-9]+');
+            Route::get('/discounts', 'Api\AccountController@getAccountDiscounts')->name('discounts');
+            Route::get('/discounts/{discount_id}', 'Api\AccountController@getAccountDiscount')->name('discount')->where('discount_id', '[0-9]+');
 
             //  Coupon related resources
-            Route::get('/coupons', 'Api\CompanyController@getCompanyCoupons')->name('coupons');
-            Route::get('/coupons/{coupon_id}', 'Api\CompanyController@getCompanyCoupon')->name('coupon')->where('coupon_id', '[0-9]+');
+            Route::get('/coupons', 'Api\AccountController@getAccountCoupons')->name('coupons');
+            Route::get('/coupons/{coupon_id}', 'Api\AccountController@getAccountCoupon')->name('coupon')->where('coupon_id', '[0-9]+');
 
             //  Store related resources
-            Route::get('/stores', 'Api\CompanyController@getCompanyStores')->name('stores');
-            Route::get('/stores/{store_id}', 'Api\CompanyController@getCompanyStore')->name('store')->where('store_id', '[0-9]+');
+            Route::get('/stores', 'Api\AccountController@getAccountStores')->name('stores');
+            Route::get('/stores/{store_id}', 'Api\AccountController@getAccountStore')->name('store')->where('store_id', '[0-9]+');
 
         });
 
     });
 
-    //Route::get('companies/stats', 'Api\CompanyController@getEstimatedStats');
-    //Route::post('companies/{company_id}/approve', 'Api\CompanyController@approve');
-    //Route::get('companies/{company_id}/wallets', 'Api\CompanyController@getWallets');
-    //Route::get('companies/{company_id}/customers', 'Api\CompanyController@getCustomers');
+    //Route::get('accounts/stats', 'Api\AccountController@getEstimatedStats');
+    //Route::post('accounts/{account_id}/approve', 'Api\AccountController@approve');
+    //Route::get('accounts/{account_id}/wallets', 'Api\AccountController@getWallets');
+    //Route::get('accounts/{account_id}/customers', 'Api\AccountController@getCustomers');
 
     /*********************************
     /*********************************
@@ -236,7 +236,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             Route::get('/users/vendors', 'Api\StoreController@getStoreUserVendors')->name('user-vendors');
             Route::get('/users/{user_id}', 'Api\StoreController@getStoreUser')->name('user')->where('user_id', '[0-9]+');
 
-            //  Company related resources
+            //  Account related resources
             Route::get('/owner', 'Api\StoreController@getStoreOwner')->name('owner');
 
             //  Product related resources
@@ -629,6 +629,44 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             Route::get('/products/{product_id}', 'Api\CouponController@getCouponProduct')->name('product')->where('product_id', '[0-9]+');
 
         });
+    });
+
+    /*********************************
+    /*********************************
+     *  USSD RESOURCE ROUTES     *
+    /*********************************
+    *********************************/
+
+    Route::prefix('ussd')->group(function () {
+
+        Route::get('/', 'Api\UssdController@home')->name('ussd-home');
+
+        Route::prefix('stores')->group(function () {
+
+            //  Multiple USSD Stores
+            Route::get('/', 'Api\UssdController@getStores')->name('ussd-stores');
+
+            //  Single USSD Store
+            Route::get('/{store_code}', 'Api\UssdController@getStore')->name('ussd-store')->where('store_code', '[0-9]+');
+
+            //  Single Store resources
+            Route::prefix('{store_code}')->name('ussd-store-')->group(function ($group) {
+
+                //  Allow only intergers for store_code on all group routes
+                foreach ($group->getRoutes() as $route) {
+                    $route->where('store_code', '[0-9]+');
+                }
+
+                //  Owner related resources
+                Route::get('/owner', 'Api\UssdController@getUssdStoreOwner')->name('owner');
+
+                //  Product related resources
+                Route::get('/products', 'Api\UssdController@getUssdStoreProducts')->name('products');
+                Route::get('/products/{product_id}', 'Api\UssdController@getUssdStoreProduct')->name('products')->where('product_id', '[0-9]+');
+
+            });
+        });
+
     });
 
     /*********************************

@@ -25,7 +25,6 @@ use Carbon\Carbon;
 
 trait OrderTraits
 {
-
     /*  convertToApiFormat() method:
      *
      *  Converts to the appropriate Api Response Format
@@ -55,6 +54,245 @@ trait OrderTraits
 
         }
     }
+
+    /*  initiateCreate() method:
+     *
+     *  This method is used to create a new order.
+     */
+    public function initiateCreate( $template_overide = [] )
+    {
+        /*
+         *  The $order variable represents the order dataset
+         *  provided through the request received.
+         */
+        $order = $template_overide ?? request('order');
+
+        $items = $order['items'];
+        $merchant_id = $order['merchant_id'];
+        $customer_id = $order['customer_id'];
+        $reference_id = $order['reference_id'];
+
+        /*  If we have the merchant id  */
+        if( $merchant_id ){
+
+            /*  Retrieve the merchant details using the merchant id  */
+            $merchant = Store::find( $merchant_id );
+
+        }
+
+        /*  If we have the customer id  */
+        if( $customer_id ){
+
+            /*  Retrieve the order customer details from the merchant contacts  */
+            $customer = $merchant->contacts()->where('contacts.id', $customer_id )->first();
+
+        }
+
+        /*  If we have the reference id  */
+        if( $reference_id ){
+
+            /*  Retrieve the order reference details from the merchant contacts  */
+            $reference = $merchant->contacts()->where('contacts.id', $reference_id )->first();
+
+        }
+
+        /*  If we have the cart items  */
+        if( $items ){
+
+            /*  Retrieve the order cart details from the items provided  */
+            $cart = ( new \App\MyCart() )->getCartDetails( $merchant, $items );
+
+        }
+
+        /*
+         *  The $template variable represents structure of the order.
+         *  If no template is provided, we create one using the 
+         *  request data.
+         */
+        $template = [
+
+            /*  Basic Info  */
+            'number' => null,
+            'currency_type' => $merchant->currency,
+            'created_date' => Carbon::now()->format('Y-m-d H:i:s'),
+
+            /*  Item Info  */
+            'item_lines' => $cart['items'] ?? null,
+
+            /*  Taxes, Discounts & Coupons Info  */
+            'tax_lines' => $merchant->taxes ?? null,
+            'discount_lines' => $merchant->discounts ?? null,
+            'coupon_lines' => $merchant->coupons ?? null,
+
+            /*  Grand Total, Sub Total, Tax Total, Discount Total, Shipping Total  */
+            'sub_total' => $cart['sub_total'] ?? 0,
+            'item_tax_total' => $cart['item_tax_total'] ?? 0,
+            'global_tax_total' => $cart['global_tax_total'] ?? 0,
+            'grand_tax_total' => $cart['grand_tax_total'] ?? 0,
+            'item_discount_total' => $cart['item_discount_total'] ?? 0,
+            'global_discount_total' => $cart['global_discount_total'] ?? 0,
+            'grand_discount_total' => $cart['grand_discount_total'] ?? 0,
+            'shipping_total' => $cart['shipping_total'] ?? 0,
+            'grand_total' => $cart['grand_total'] ?? 0,
+
+            /*  Reference Info  */
+            'reference_id' => $reference->id ?? null,
+            'reference_ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+            'reference_user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+            
+            /*  Customer Info  */
+            'customer_id' => $customer->id ?? null,
+            'billing_info' => $customer->getBillingInfo() ?? null,
+            'shipping_info' => $customer->getShippingInfo() ?? null,
+            'customer_note' => $order['customer_note'] ?? null,
+
+            /*  Merchant Info  */
+            'merchant_id' => $merchant->id ?? null,
+            'merchant_type' => $merchant->resource_type ?? null,
+            'merchant_info' => $merchant->getBasicInfo() ?? null,
+
+            /*  Meta Data  */
+            'metadata' => isset($merchant) ? $this->getMetadataInfo($merchant) : null
+
+        ];
+
+        /*
+         *  Replace the default template with any custom data
+         */
+        $template = array_merge($template, $template_overide);
+
+        try {
+
+            /*
+             *  Create new a order, then retrieve a fresh instance
+             */
+            $order = $this->create($template)->fresh();
+
+            /*  If the order was created successfully  */
+            if( $order ){
+
+                /*  Record the activity of the the order creation  */
+                $activity = $order->recordActivity('created');
+  
+                /*  Convert the order into a payable invoice  */
+                $invoice = $order->convertToInvoice($template);
+
+                /*  Return a fresh instance of the order  */
+                return $order->fresh();
+
+                //  Set a manual status e.g "Open", "Paid", "Pending Payment", e.t.c
+                //  Create order lifecycle
+                //  Set order lifecycle to pending payment
+                //  Send order to merchant
+                //  Send invoice/receipt to customer
+
+
+            }
+
+        } catch (\Exception $e) {
+
+            //  Return the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+        }
+
+    }
+
+    /*  getMetadataInfo()
+     *
+     *  This method returns the metadata template that contains order
+     *  design and custom information defined by the orders owning
+     *  merchant
+     */
+    public function getMetadataInfo( $merchant )
+    {
+        /*  Get the merchants order settings  */
+        $orderSettings = $merchant->settings['details']['orderTemplate'] ?? null;
+
+        /*  If the merchants order settings were found  */
+        if( $orderSettings ){
+         
+            $template = [
+
+                'heading_title' =>  $orderSettings['heading_title'],
+                'reference_no_title' =>  $orderSettings['reference_no_title'],
+                'created_date_title' =>  $orderSettings['created_date_title'],
+                'sub_total_title' =>  $orderSettings['sub_total_title'],
+                'grand_total_title' =>  $orderSettings['grand_total_title'],
+                'recipient_title' =>  $orderSettings['recipient_title'],
+                'table_columns' =>  $orderSettings['table_columns'],
+                'notes' =>  $orderSettings['notes'],
+                'colors' =>  $orderSettings['colors'],
+                'footer_notes' =>  $orderSettings['footer_notes']
+
+            ];
+
+            return $template;
+
+        }
+    }
+    
+    /*  recordActivity()
+     *
+     *  This method saves the activity of the order with a specified status
+     *  as well as activity data and the authenticated user responsible 
+     *  for the activity.
+     */
+    public function recordActivity($status, $data = null)
+    {   
+        return ( new \App\RecentActivity() )->saveActivity($this, $status, $data);
+    }
+
+    public function convertToInvoice($template)
+    {
+        //  Create a new invoice
+        $invoice = ( new Invoice() )->initiateCreate($template);
+
+        /*  If the invoice was created successfully  */
+        if( $invoice ){
+
+            /*  Assign the new invoice to the order  */
+            $invoice->update([
+                'owner_id' => $this->id, 
+                'owner_type' => $this->resource_type
+            ]);
+
+        }
+
+        //  Return the created invoice
+        return $invoice;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     /*  initiateGetAll() method:
      *
@@ -312,7 +550,7 @@ trait OrderTraits
      *  the order.
      *
      */
-    public function initiateCreate($template = null)
+    public function initiateCreate2($template = null)
     {
         //  Current authenticated user
         $auth_user = auth('api')->user();
@@ -554,69 +792,7 @@ trait OrderTraits
         return ['success' => false, 'response' => 'Proof of payment was not updated. The current lifecycle is not pending payment'];
     }
 
-    public function convertToInvoice($order, $store)
-    {
-        $auth_user = auth('api')->user();
 
-        //  Check if the store has any settings
-        $storeSettings = $store->settings['details'];
-
-        $hasInvoices = $order->invoices->count();
-
-        //  If we don't have an invoice create one
-        if (!$hasInvoices) {
-
-            //  Get the current date and time
-            $orderCreatedDateTime = Carbon::createFromFormat('Y-m-d H:i:s', ($order->created_date ?? $order->created_at));
-
-            //  Create the invoice template
-            $template = [
-                'number' => $order['number'],
-                'currency_type' => $order['currency_type'],
-                'items' => $order['items'],
-                'taxes' => $order['taxes'],
-                'discounts' => $order['discounts'],
-                'coupons' => $order['coupons'],
-                'sub_total' => $order['sub_total'],
-                'item_tax_total' => $order['item_tax_total'],
-                'global_tax_total' => $order['global_tax_total'],
-                'grand_tax_total' => $order['grand_tax_total'],
-                'item_discount_total' => $order['item_discount_total'],
-                'global_discount_total' => $order['global_discount_total'],
-                'grand_discount_total' => $order['grand_discount_total'],
-                'shipping_total' => $order['shipping_total'],
-                'grand_total' => $order['grand_total'],
-                'billing_info' => $order['billing_info'],
-                'shipping_info' => $order['shipping_info'],
-                'company_info' => $order['company_info'],
-                'created_date' => $orderCreatedDateTime,
-                'expiry_date' => $orderCreatedDateTime->addDays($storeSettings['invoiceTemplate']['expire_after_no_of_days']),
-                'is_recurring' => 0,
-                'recurring_settings' => null,
-                'invoice_parent_id' => null,
-                'invoiceable_id' => $order['id'],
-                'invoiceable_type' => 'order',
-                'meta' => [
-                    'heading_title' => $storeSettings['invoiceTemplate']['heading_title'],
-                    'reference_no_title' => $storeSettings['invoiceTemplate']['reference_no_title'],                                             //  Autogenerated
-                    'created_date_title' => $storeSettings['invoiceTemplate']['created_date_title'],
-                    'expiry_date_title' => $storeSettings['invoiceTemplate']['expiry_date_title'],
-                    'sub_total_title' => $storeSettings['invoiceTemplate']['sub_total_title'],
-                    'grand_total_title' => $storeSettings['invoiceTemplate']['grand_total_title'],
-                    'recipient_title' => $storeSettings['invoiceTemplate']['recipient_title'],
-                    'table_columns' => $storeSettings['invoiceTemplate']['table_columns'],
-                    'notes' => $storeSettings['invoiceTemplate']['notes'],
-                    'colors' => $storeSettings['invoiceTemplate']['colors'],
-                    'footer_notes' => $storeSettings['invoiceTemplate']['footer_notes']
-                ]
-            ];
-
-            //  Create a new invoice
-            return ( new Invoice() )->initiateCreate($template);
-        }
-
-        return false;
-    }
 
     public function checkAndSendOrderInvoice($invoice, $order, $store)
     {

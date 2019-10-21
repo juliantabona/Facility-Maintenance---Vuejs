@@ -48,6 +48,98 @@ trait StoreTraits
         }
     }
 
+    /*  createContact() method:
+     *
+     *  This method is used to create and assign a new contact to 
+     *  the company. If the contact already exists, then we do not 
+     *
+     */
+    public function createContact( $contact = null )
+    {
+        if( $contact ){
+
+            /*  Check if a contact using the same mobile number exists for the store  */
+            $existingStoreContact = $this->contactsWithMobilePhone( $contact['phone'] )->first();
+
+            /*  If no contact was found for the store  */
+            if( !$existingStoreContact ){
+
+                /*  Check if a contact using the same mobile number exists for the store's owning account */
+                $existingAccountContact = $this->owner->contactsWithMobilePhone( $contact['phone'] )->first();
+
+                /*  If no contact was found for the store's owning account  */
+                if( !$existingAccountContact ){
+                    
+                    /*  Create a new contact using the initiateCreate() method from the ContactTraits  */
+                    $newContact = ( new \App\Contact() )->initiateCreate($contact);
+
+                    /*  Assign the new contact to the store's owning account  */
+                    $this->owner->contacts()->save($newContact);
+                    
+                    /*  Allocate the new contact to the current store  */
+                    $this->contacts()->save($newContact);
+
+                    /*  Return the contact  */
+                    return $newContact;
+
+                /*  If a contact was found for the account  */
+                }else{
+                    
+                    /*  Allocate the existing account contact to the current store  */
+                    $newContact = $this->contacts()->save($existingAccountContact);
+
+                    /*  Return the contact  */
+                    return $newContact;
+
+                }
+
+            /*  If a contact was found for the store  */
+            }else{
+
+                /*  Return the contact  */
+                return $existingStoreContact;
+
+            }
+
+        }
+    }
+
+    /*  getBasicInfo() method:
+     *
+     *  This method is used to get the general information about the store
+     *  This general information is used when drafting orders, invoices,
+     *  quotations and other resources that require the merchants 
+     *  information.
+     */
+    public function getBasicInfo()
+    {
+        /*  Return the general information from the store information  */
+        return collect($this->toArray())->only(['logo', 'name', 'email', 'phone', 'address']);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     /*  getStores() method:

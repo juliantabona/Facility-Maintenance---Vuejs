@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 Relation::morphMap([
     'user' => 'App\User',
     'store' => 'App\Store',
+    'contact' => 'App\Contact',
     'company' => 'App\Company',
 ]);
 
@@ -20,7 +21,6 @@ class Phone extends Model
         
         'default' => 'boolean', //  Return the following 1/0 as true/false
         
-        'calling_code' => 'array',
     ];
 
     /**
@@ -78,7 +78,7 @@ class Phone extends Model
     
     public function setDefaultAttribute($value)
     {
-        $this->attributes['default'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+        $this->attributes['default'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
     }
 
 }

@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
     'store' => 'App\Store',
-    'company' => 'App\Company',
+    'account' => 'App\Account',
+    'ussd_interface' => 'App\UssdInterface',
 ]);
 
 class Product extends Model
@@ -32,10 +33,10 @@ class Product extends Model
         'is_new' => 'boolean',
         'is_featured' => 'boolean',
         'show_on_store' => 'boolean',
-        'has_inventory' => 'boolean',
+        'allow_stock' => 'boolean',
         'allow_variants' => 'boolean',
         'allow_downloads' => 'boolean',
-        'auto_track_inventory' => 'boolean',
+        'auto_track_stock' => 'boolean',
     ];
 
     protected $with = ['gallery', 'taxes', 'discounts', 'coupons', 'categories', 'tags'];
@@ -48,10 +49,10 @@ class Product extends Model
     protected $fillable = [
 
         /*  Product Details  */
-        'name', 'description', 'type', 'cost_per_item', 'unit_price', 'unit_sale_price',
-        'sku', 'barcode', 'stock_quantity', 'has_inventory', 'auto_track_inventory', 
-        'variants', 'variant_attributes', 'allow_variants', 'allow_downloads', 
-        'show_on_store', 'is_new', 'is_featured',
+        'name', 'description', 'type', 'cost_per_item', 'unit_regular_price', 'unit_sale_price',
+        'sku', 'barcode', 'stock_quantity', 'allow_stock', 'auto_track_stock', 'variants',
+        'variant_attributes', 'allow_variants', 'allow_downloads', 'show_on_store',
+        'is_new', 'is_featured',
 
         /*  Ownership Information  */
         'owner_id', 'owner_type'
@@ -171,7 +172,8 @@ class Product extends Model
     /* ATTRIBUTES */
 
     protected $appends = [
-        'primary_image', 'store_currency_symbol', 'average_rating', 'resource_type'
+        'primary_image', 'unit_price', 'discount_total', 'tax_total', 'sub_total' , 'grand_total', 
+        'on_sale', 'stock_status', 'currency', 'rating_count', 'average_rating', 'resource_type'
     ];
 
     /* 
@@ -183,22 +185,143 @@ class Product extends Model
     }
 
     /* 
-     *  Returns the product owner's currency symbol
+     *  Returns the product price for one unit
+     * 
+     *  This is the total price of the product based on the regular
+     *  price and the sale price.
      */
-    public function getStoreCurrencySymbolAttribute()
+    public function getUnitPriceAttribute()
     {
-        //  Get the owning resource settings
-        $settings = $this->owner->settings ?? null;
+        //  If the product is on sale, use the sale price otherwise the regular price
+        return $this->unit_sale_price ?? $this->unit_regular_price;
+    }
 
-        //  If we have the settings
-        if($settings){
+    /* 
+     *  Returns the product total discount
+     */
+     public function getDiscountTotalAttribute()
+     {
+         
+        $discount_total = 0;
 
-            //  Return the currency symbol if exists
-            return $settings['details']['general']['currency_type']['currency']['symbol'] ?? null;
+        //  Foreach discount
+        foreach ($this->discounts as $discount) {
+
+            //  If its a percentage rate based discount
+            if ($discount['type'] == 'rate') {
+
+                //  Calculate the percentage discount amount and add to the total discount
+                $discount_total += $discount['rate'] * $this->unit_price;
+
+            //  If its a fixed rate based discount
+            } elseif ($discount['type'] == 'fixed') {
+
+                //  Add the fixed discount to the total discount
+                $discount_total += $discount['amount'];
+
+            }
+            
+        }
+
+        return $discount_total;
+
+     }
+
+    /* 
+     *  Returns the product total tax
+     */
+     public function getTaxTotalAttribute()
+     {
+         
+        $tax_total = 0;
+
+        //  Foreach tax
+        foreach ($this->taxes as $tax) {
+
+            //  Calculate the percentage tax amount and add to the total tax
+            $tax_total += $tax['rate'] * $this->unit_price;
+
+        }
+
+        return $tax_total;
+     }
+ 
+    /* 
+     *  Returns the product sub-total price
+     * 
+     *  This is the total price of the product without the tax total and discount
+     *  total included. It is the total price of the product based on a quantity
+     *  of 1. It is exactly the same as the unit price since its only a quantity
+     *  of one, but when the quantity increases the sub-total will change
+     *  according to the quantity increase.
+     */
+    public function getSubTotalAttribute()
+    {
+        return $this->unit_price;
+    }
+
+    /* 
+     *  Returns the product grand-total price
+     * 
+     *  This is the total price of the product with the tax total
+     *  and discount total included. It shows how much the product
+     *  costs after taxing and discounting the product
+     */
+    public function getGrandTotalAttribute()
+    {
+        //  Calculate total price with taxes applied
+        $total = $this->unit_price + $this->tax_total;
+
+        //  Calculate total price with discounts applied
+        $total = $total - $this->discount_total;
+
+        //  Return the grand total price
+        return $total;
+    }
+
+    /* 
+     *  Returns true if the product is on sale
+     */
+    public function getOnSaleAttribute()
+    {
+        return isset($this->unit_sale_price) ? true : false;
+    }
+
+    /* 
+     *  Returns the product stock status
+     */
+    public function getStockStatusAttribute()
+    {
+        //  If we allow stock and the quantity is greater than 0
+        if( $this->allow_stock && $this->stock_quantity > 0 ){
+
+            return 'In stock';
+            
+        }else{
+
+            return 'Out of stock';
 
         }
     }
-    
+
+    /* 
+     *  Returns the product owner's currency
+     */
+    public function getCurrencyAttribute()
+    {
+        //  Get the store currency
+        return $this->owner->currency;
+    }
+
+    /* 
+     *  Returns the product's total number of ratings
+     */
+    public function getRatingCountAttribute()
+    {
+        //  Count the product reviews
+        $reviews = $this->reviews()->count();
+    }
+
     /* 
      *  Returns the product average rating
      */
@@ -224,39 +347,39 @@ class Product extends Model
         return strtolower(class_basename($this));
     }
 
-    public function setAllowInventoryAttribute($value)
+    public function setAllowStockAttribute($value)
     {
-        $this->attributes['allow_inventory'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+        $this->attributes['allow_stock'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
     }
 
-    public function setAutoTrackInventoryAttribute($value)
+    public function setAutoTrackStockAttribute($value)
     {
-        $this->attributes['auto_track_inventory'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+        $this->attributes['auto_track_stock'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
     }
 
     public function setAllowVariantsAttribute($value)
     {
-        $this->attributes['allow_variants'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+        $this->attributes['allow_variants'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
     }
 
     public function setAllowDownloadsAttribute($value)
     {
-        $this->attributes['allow_downloads'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+        $this->attributes['allow_downloads'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
     }
 
     public function setShowOnStoreAttribute($value)
     {
-        $this->attributes['show_on_store'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+        $this->attributes['show_on_store'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
     }
 
     public function setIsNewAttribute($value)
     {
-        $this->attributes['is_new'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+        $this->attributes['is_new'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
     }
 
     public function setIsFeaturedAttribute($value)
     {
-        $this->attributes['is_featured'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+        $this->attributes['is_featured'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
     }
 
 }

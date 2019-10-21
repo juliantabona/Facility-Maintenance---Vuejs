@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Company;
+use App\Account;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
-class CompanyController extends Controller
+class AccountController extends Controller
 {
     private $user;
 
@@ -16,19 +16,19 @@ class CompanyController extends Controller
         $this->user = auth('api')->user();
     }
 
-    public function getCompanies()
+    public function getAccounts()
     {
-        //  Check if the user is authourized to view all companies
-        if ($this->user->can('viewAll', Company::class)) {
+        //  Check if the user is authourized to view all accounts
+        if ($this->user->can('viewAll', Account::class)) {
         
-            //  Get the companies
-            $companies = Company::paginate();
+            //  Get the accounts
+            $accounts = Account::paginate();
 
-            //  Check if the companies exist
-            if ($companies) {
+            //  Check if the accounts exist
+            if ($accounts) {
 
-                //  Return an API Readable Format of the Company Instance
-                return ( new \App\Company )->convertToApiFormat($companies);
+                //  Return an API Readable Format of the Account Instance
+                return ( new \App\Account )->convertToApiFormat($accounts);
 
             }else{
                 
@@ -45,19 +45,19 @@ class CompanyController extends Controller
         }
     }
 
-    public function getCompany($company_id)
+    public function getAccount($account_id)
     {
-        //  Get the company
-        $company = Company::where('id', $company_id)->first() ?? null;
+        //  Get the account
+        $account = Account::where('id', $account_id)->first() ?? null;
 
-        //  Check if the company exists
-        if ($company) {
+        //  Check if the account exists
+        if ($account) {
 
-            //  Check if the user is authourized to view the company
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account
+            if ($this->user->can('view', $account)) {
 
-                //  Return an API Readable Format of the Company Instance
-                return $company->convertToApiFormat();
+                //  Return an API Readable Format of the Account Instance
+                return $account->convertToApiFormat();
 
             } else {
 
@@ -72,19 +72,19 @@ class CompanyController extends Controller
         }
     }
 
-    public function getCompanySettings($company_id)
+    public function getAccountSettings($account_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company settings
-        $settings = $company->settings ?? null;
+        //  Get the account settings
+        $settings = $account->settings ?? null;
 
         //  Check if the settings exist
         if ($settings) {
 
-            //  Check if the user is authourized to view the company settings
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account settings
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the Setting Instance
                 return $settings->convertToApiFormat();
@@ -105,19 +105,19 @@ class CompanyController extends Controller
     /*********************************
      *  DOCUMENT RELATED RESOURCES   *
     *********************************/
-    public function getCompanyLogo($company_id)
+    public function getAccountLogo($account_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company logo
-        $logo = $company->logo ?? null;
+        //  Get the account logo
+        $logo = $account->logo ?? null;
 
         //  Check if the logo exists
         if ($logo) {
 
-            //  Check if the user is authourized to view the company logo
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account logo
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the Document Instance
                 return $logo->convertToApiFormat();
@@ -136,19 +136,19 @@ class CompanyController extends Controller
         }
     }
 
-    public function getCompanyDocuments($company_id)
+    public function getAccountDocuments($account_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company documents
-        $documents = $company->documents()->paginate() ?? null;
+        //  Get the account documents
+        $documents = $account->documents()->paginate() ?? null;
 
         //  Check if the documents exist
         if ($documents) {
 
-            //  Check if the user is authourized to view the company documents
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account documents
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the Document Instance
                 return ( new \App\Document )->convertToApiFormat($documents);
@@ -167,19 +167,19 @@ class CompanyController extends Controller
         }
     }
 
-    public function getCompanyDocument($company_id, $document_id)
+    public function getAccountDocument($account_id, $document_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company document
-        $document = $company->documents()->where('id', $document_id)->first() ?? null;
+        //  Get the account document
+        $document = $account->documents()->where('id', $document_id)->first() ?? null;
 
         //  Check if the document exists
         if ($document) {
 
-            //  Check if the user is authourized to view the company document
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account document
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the Document Instance
                 return $document->convertToApiFormat();
@@ -202,19 +202,19 @@ class CompanyController extends Controller
      *  PHONE RELATED RESOURCES      *
     *********************************/
 
-    public function getCompanyPhones($company_id)
+    public function getAccountPhones($account_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company phones
-        $phones = $company->phones()->paginate() ?? null;
+        //  Get the account phones
+        $phones = $account->phones()->paginate() ?? null;
 
         //  Check if the phones exist
         if ($phones) {
 
-            //  Check if the user is authourized to view the company phones
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account phones
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the Phone Instance
                 return ( new \App\Phone )->convertToApiFormat($phones);
@@ -233,19 +233,19 @@ class CompanyController extends Controller
         }
     }
 
-    public function getCompanyPhone($company_id, $phone_id)
+    public function getAccountPhone($account_id, $phone_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company phone
-        $phone = $company->phones()->where('id', $phone_id)->first() ?? null;
+        //  Get the account phone
+        $phone = $account->phones()->where('id', $phone_id)->first() ?? null;
 
         //  Check if the phone exists
         if ($phone) {
 
-            //  Check if the user is authourized to view the company phone
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account phone
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the Phone Instance
                 return $phone->convertToApiFormat();
@@ -268,19 +268,19 @@ class CompanyController extends Controller
      *  USER RELATED RESOURCES       *
     *********************************/
 
-    public function getCompanyUsers($company_id)
+    public function getAccountUsers($account_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company users
-        $users = $company->users()->paginate() ?? null;
+        //  Get the account users
+        $users = $account->users()->paginate() ?? null;
 
         //  Check if the users exist
         if ($users) {
 
-            //  Check if the user is authourized to view the company users
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account users
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the User Instance
                 return ( new \App\User )->convertToApiFormat($users);
@@ -299,19 +299,19 @@ class CompanyController extends Controller
         }
     }
 
-    public function getCompanyAdmins($company_id)
+    public function getAccountAdmins($account_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company admins
-        $admins = $company->admins()->paginate() ?? null;
+        //  Get the account admins
+        $admins = $account->admins()->paginate() ?? null;
 
         //  Check if the admins exist
         if ($admins) {
 
-            //  Check if the user is authourized to view the company admins
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account admins
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the User Instance
                 return ( new \App\User )->convertToApiFormat($admins);
@@ -330,19 +330,19 @@ class CompanyController extends Controller
         }
     }
 
-    public function getCompanyStaff($company_id)
+    public function getAccountStaff($account_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company staff
-        $staff = $company->staff()->paginate() ?? null;
+        //  Get the account staff
+        $staff = $account->staff()->paginate() ?? null;
 
         //  Check if the staff exists
         if ($staff) {
 
-            //  Check if the user is authourized to view the company staff
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account staff
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the User Instance
                 return ( new \App\User )->convertToApiFormat($staff);
@@ -361,19 +361,19 @@ class CompanyController extends Controller
         }
     }
 
-    public function getCompanyUserCustomers($company_id)
+    public function getAccountUserCustomers($account_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company user customers
-        $userCustomers = $company->userCustomers()->paginate() ?? null;
+        //  Get the account user customers
+        $userCustomers = $account->userCustomers()->paginate() ?? null;
 
         //  Check if the user customers exist
         if ($userCustomers) {
 
-            //  Check if the user is authourized to view the company user customers
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account user customers
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the User Instance
                 return ( new \App\User )->convertToApiFormat($userCustomers);
@@ -392,19 +392,19 @@ class CompanyController extends Controller
         }
     }
 
-    public function getCompanyUserVendors($company_id)
+    public function getAccountUserVendors($account_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company user vendors
-        $userVendors = $company->userVendors()->paginate() ?? null;
+        //  Get the account user vendors
+        $userVendors = $account->userVendors()->paginate() ?? null;
 
         //  Check if the user vendors exist
         if ($userVendors) {
 
-            //  Check if the user is authourized to view the company user vendors
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account user vendors
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the User Instance
                 return ( new \App\User )->convertToApiFormat($userVendors);
@@ -423,19 +423,19 @@ class CompanyController extends Controller
         }
     }
 
-    public function getCompanyUser($company_id, $user_id)
+    public function getAccountUser($account_id, $user_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company phone
-        $user = $company->users()->where('users.id', $user_id)->first() ?? null;
+        //  Get the account phone
+        $user = $account->users()->where('users.id', $user_id)->first() ?? null;
 
         //  Check if the user exists
         if ($user) {
 
-            //  Check if the user is authourized to view the company user
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account user
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the User Instance
                 return $user->convertToApiFormat();
@@ -458,19 +458,19 @@ class CompanyController extends Controller
      *  PRODUCT RELATED RESOURCES    *
     *********************************/
 
-    public function getCompanyProducts($company_id)
+    public function getAccountProducts($account_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company products
-        $products = $company->products()->paginate() ?? null;
+        //  Get the account products
+        $products = $account->products()->paginate() ?? null;
 
         //  Check if the products exist
         if ($products) {
 
-            //  Check if the user is authourized to view the company products
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account products
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the Product Instance
                 return ( new \App\Product )->convertToApiFormat($products);
@@ -489,19 +489,19 @@ class CompanyController extends Controller
         }
     }
 
-    public function getCompanyProduct($company_id, $product_id)
+    public function getAccountProduct($account_id, $product_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company product
-        $product = $company->products()->where('id', $product_id)->first() ?? null;
+        //  Get the account product
+        $product = $account->products()->where('id', $product_id)->first() ?? null;
 
         //  Check if the product exists
         if ($product) {
 
-            //  Check if the user is authourized to view the company product
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account product
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the Product Instance
                 return $product->convertToApiFormat();
@@ -524,19 +524,19 @@ class CompanyController extends Controller
      *  TAX RELATED RESOURCES        *
     *********************************/
 
-    public function getCompanyTaxes($company_id)
+    public function getAccountTaxes($account_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company taxes
-        $taxes = $company->taxes()->paginate() ?? null;
+        //  Get the account taxes
+        $taxes = $account->taxes()->paginate() ?? null;
 
         //  Check if the taxes exist
         if ($taxes) {
 
-            //  Check if the user is authourized to view the company taxes
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account taxes
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the Tax Instance
                 return  ( new \App\Tax )->convertToApiFormat($taxes);
@@ -555,19 +555,19 @@ class CompanyController extends Controller
         }
     }
 
-    public function getCompanyTax($company_id, $tax_id)
+    public function getAccountTax($account_id, $tax_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company tax
-        $tax = $company->taxes()->where('taxes.id', $tax_id)->first() ?? null;
+        //  Get the account tax
+        $tax = $account->taxes()->where('taxes.id', $tax_id)->first() ?? null;
 
         //  Check if the tax exists
         if ($tax) {
 
-            //  Check if the user is authourized to view the company tax
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account tax
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the Tax Instance
                 return $tax->convertToApiFormat();
@@ -590,19 +590,19 @@ class CompanyController extends Controller
      *  DISCOUNT RELATED RESOURCES   *
     *********************************/
 
-    public function getCompanyDiscounts($company_id)
+    public function getAccountDiscounts($account_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company discounts
-        $discounts = $company->discounts()->paginate() ?? null;
+        //  Get the account discounts
+        $discounts = $account->discounts()->paginate() ?? null;
 
         //  Check if the discounts exist
         if ($discounts) {
 
-            //  Check if the user is authourized to view the company discounts
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account discounts
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the Discount Instance
                 return  ( new \App\Discount )->convertToApiFormat($discounts);
@@ -621,19 +621,19 @@ class CompanyController extends Controller
         }
     }
 
-    public function getCompanyDiscount($company_id, $discount_id)
+    public function getAccountDiscount($account_id, $discount_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company discount
-        $discount = $company->discounts()->where('discounts.id', $discount_id)->first() ?? null;
+        //  Get the account discount
+        $discount = $account->discounts()->where('discounts.id', $discount_id)->first() ?? null;
 
         //  Check if the discount exists
         if ($discount) {
 
-            //  Check if the user is authourized to view the company discount
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account discount
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the Discount Instance
                 return $discount->convertToApiFormat();
@@ -656,19 +656,19 @@ class CompanyController extends Controller
      *  COUPONS RELATED RESOURCES    *
     *********************************/
 
-    public function getCompanyCoupons($company_id)
+    public function getAccountCoupons($account_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company coupons
-        $coupons = $company->coupons()->paginate() ?? null;
+        //  Get the account coupons
+        $coupons = $account->coupons()->paginate() ?? null;
 
         //  Check if the coupons exist
         if ($coupons) {
 
-            //  Check if the user is authourized to view the company coupons
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account coupons
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the Coupon Instance
                 return  ( new \App\Coupon )->convertToApiFormat($coupons);
@@ -687,19 +687,19 @@ class CompanyController extends Controller
         }
     }
 
-    public function getCompanyCoupon($company_id, $coupon_id)
+    public function getAccountCoupon($account_id, $coupon_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company coupons
-        $coupons = $company->coupons()->where('coupons.id', $coupon_id)->first() ?? null;
+        //  Get the account coupons
+        $coupons = $account->coupons()->where('coupons.id', $coupon_id)->first() ?? null;
 
         //  Check if the coupons exist
         if ($coupons) {
 
-            //  Check if the user is authourized to view the company coupons
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account coupons
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the Coupon Instance
                 return $coupons->convertToApiFormat();
@@ -722,19 +722,19 @@ class CompanyController extends Controller
      *  STORE RELATED RESOURCES      *
     *********************************/
 
-    public function getCompanyStores($company_id)
+    public function getAccountStores($account_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company stores
-        $stores = $company->stores()->paginate() ?? null;
+        //  Get the account stores
+        $stores = $account->stores()->paginate() ?? null;
 
         //  Check if the stores exist
         if ($stores) {
 
-            //  Check if the user is authourized to view the company stores
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account stores
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the Store Instance
                 return  ( new \App\Store )->convertToApiFormat($stores);
@@ -753,19 +753,19 @@ class CompanyController extends Controller
         }
     }
 
-    public function getCompanyStore($company_id, $store_id)
+    public function getAccountStore($account_id, $store_id)
     {
-        //  Get the company
-        $company = Company::findOrFail($company_id);
+        //  Get the account
+        $account = Account::findOrFail($account_id);
 
-        //  Get the company store
-        $store = $company->stores()->where('id', $store_id)->first() ?? null;
+        //  Get the account store
+        $store = $account->stores()->where('id', $store_id)->first() ?? null;
 
         //  Check if the store exists
         if ($store) {
 
-            //  Check if the user is authourized to view the company store
-            if ($this->user->can('view', $company)) {
+            //  Check if the user is authourized to view the account store
+            if ($this->user->can('view', $account)) {
 
                 //  Return an API Readable Format of the Store Instance
                 return $store->convertToApiFormat();
@@ -789,17 +789,17 @@ class CompanyController extends Controller
     public function index()
     {
         //  Invoice Instance
-        $data = ( new Company() )->initiateGetAll();
+        $data = ( new Account() )->initiateGetAll();
         $success = $data['success'];
         $response = $data['response'];
 
-        //  If the companies were found successfully
+        //  If the accounts were found successfully
         if ($success) {
-            //  If this is a success then we have the paginated list of companies
-            $companies = $response;
+            //  If this is a success then we have the paginated list of accounts
+            $accounts = $response;
 
             //  Action was executed successfully
-            return oq_api_notify($companies, 200);
+            return oq_api_notify($accounts, 200);
         }
 
         //  If the data was not a success then return the response
@@ -808,63 +808,63 @@ class CompanyController extends Controller
 
     public function store(Request $request)
     {
-        //  Start creating the company
-        $companyInstance = new Company();
-        $data = $companyInstance->initiateCreate();
+        //  Start creating the account
+        $accountInstance = new Account();
+        $data = $accountInstance->initiateCreate();
         $success = $data['success'];
         $response = $data['response'];
 
-        //  If the company was created successfully
+        //  If the account was created successfully
         if ($success) {
-            //  If this is a success then we have a company returned
-            $company = $response;
+            //  If this is a success then we have a account returned
+            $account = $response;
 
             //  Action was executed successfully
-            return oq_api_notify($company, 200);
+            return oq_api_notify($account, 200);
         }
 
         //  If the data was not a success then return the response
         return $response;
     }
 
-    public function update($company_id)
+    public function update($account_id)
     {
-        //  Company Instance
-        $data = ( new Company() )->initiateUpdate($company_id);
+        //  Account Instance
+        $data = ( new Account() )->initiateUpdate($account_id);
         $success = $data['success'];
         $response = $data['response'];
 
-        //  If the company was updated successfully
+        //  If the account was updated successfully
         if ($success) {
-            //  If this is a success then we have a company returned
-            $company = $response;
+            //  If this is a success then we have a account returned
+            $account = $response;
 
             //  Action was executed successfully
-            return oq_api_notify($company, 200);
+            return oq_api_notify($account, 200);
         }
 
         //  If the data was not a success then return the response
         return $response;
     }
 
-    public function show($company_id)
+    public function show($account_id)
     {
-        //  Current authenticated company
-        $company = auth('api')->company();
+        //  Current authenticated account
+        $account = auth('api')->account();
 
         try {
-            //  refetch the updated company
-            $company = Company::findOrFail($company_id);
+            //  refetch the updated account
+            $account = Account::findOrFail($account_id);
 
             //  Eager load other relationships wanted if specified
             if (request('connections')) {
-                $company->load(oq_url_to_array(request('connections')));
+                $account->load(oq_url_to_array(request('connections')));
             }
 
-            //  If the company was found successfully
-            if ($company) {
+            //  If the account was found successfully
+            if ($account) {
                 //  Action was executed successfully
-                return oq_api_notify($company, 200);
+                return oq_api_notify($account, 200);
             }
         } catch (\Exception $e) {
             return oq_api_notify_error('Query Error', $e->getMessage(), 404);
@@ -874,20 +874,20 @@ class CompanyController extends Controller
         return oq_api_notify_no_resource();
     }
 
-    public function approve($company_id)
+    public function approve($account_id)
     {
-        //  Company Instance
-        $data = ( new Company() )->initiateApprove($company_id);
+        //  Account Instance
+        $data = ( new Account() )->initiateApprove($account_id);
         $success = $data['success'];
         $response = $data['response'];
 
-        //  If the company was approved successfully
+        //  If the account was approved successfully
         if ($success) {
-            //  If this is a success then we have the company
-            $company = $response;
+            //  If this is a success then we have the account
+            $account = $response;
 
             //  Action was executed successfully
-            return oq_api_notify($company, 200);
+            return oq_api_notify($account, 200);
         }
 
         //  If the data was not a success then return the response
@@ -897,7 +897,7 @@ class CompanyController extends Controller
     public function getStaff()
     {
         //  Invoice Instance
-        $data = ( new Company() )->initiateGetStaff();
+        $data = ( new Account() )->initiateGetStaff();
         $success = $data['success'];
         $response = $data['response'];
 
@@ -914,28 +914,28 @@ class CompanyController extends Controller
         return $response;
     }
 
-    public function getClients(Request $request, $company_id)
+    public function getClients(Request $request, $account_id)
     {
         try {
-            //  Get the associated company clients
-            $company = Company::where('id', $company_id)->first();
-            $companyClients = $company->companyClients();
-            $companyClients = $company->companyClients();
+            //  Get the associated account clients
+            $account = Account::where('id', $account_id)->first();
+            $accountClients = $account->accountClients();
+            $accountClients = $account->accountClients();
 
-            //  If we have any company so far
+            //  If we have any account so far
 
             $count = request('count');
 
             if (isset($count) && $count == 1) {
-                //  Get the company wallets
-                $companyClients = $companyClients->count();
-                $companyClients = $companyClients->count();
+                //  Get the account wallets
+                $accountClients = $accountClients->count();
+                $accountClients = $accountClients->count();
             }
 
             $response = [
-                'companys' => $companyClients,
-                'companies' => $companyClients,
-                'total' => $companyClients + $companyClients
+                'accounts' => $accountClients,
+                'accounts' => $accountClients,
+                'total' => $accountClients + $accountClients
             ];
 
             //  Action was executed successfully
@@ -949,15 +949,15 @@ class CompanyController extends Controller
         return oq_api_notify_no_resource();
     }
 
-    public function getLogo(Request $request, $company_id)
+    public function getLogo(Request $request, $account_id)
     {
         try {
-            //  Get the associated company
-            $company = Company::where('id', $company_id)->first();
-            $companyLogo = $company->logo;
+            //  Get the associated account
+            $account = Account::where('id', $account_id)->first();
+            $accountLogo = $account->logo;
 
             //  Action was executed successfully
-            return oq_api_notify($companyLogo, 200);
+            return oq_api_notify($accountLogo, 200);
 
         } catch (\Exception $e) {
             return oq_api_notify_error('Query Error', $e->getMessage(), 404);
@@ -967,16 +967,16 @@ class CompanyController extends Controller
         return oq_api_notify_no_resource();
     }
 
-    public function getWallets(Request $request, $company_id)
+    public function getWallets(Request $request, $account_id)
     {
         try {
-            //  Get the associated company
-            $company = Company::where('id', $company_id)->first();
+            //  Get the associated account
+            $account = Account::where('id', $account_id)->first();
 
-            //  If we have any company so far
-            if ($company) {
-                //  Get the company wallets
-                $wallets = $company->wallets;
+            //  If we have any account so far
+            if ($account) {
+                //  Get the account wallets
+                $wallets = $account->wallets;
 
                 //  Action was executed successfully
                 return oq_api_notify($wallets, 200);
@@ -991,12 +991,12 @@ class CompanyController extends Controller
 
     public function getEstimatedStats()
     {
-        //  Start creating the company
-        $data = ( new Company() )->getStatistics();
+        //  Start creating the account
+        $data = ( new Account() )->getStatistics();
         $success = $data['success'];
         $response = $data['response'];
 
-        //  If the company statistics were found successfully
+        //  If the account statistics were found successfully
         if ($success) {
             //  If this is a success then we have the statistics returned
             $stats = $response;
@@ -1009,16 +1009,16 @@ class CompanyController extends Controller
         return $response;
     }
 
-    public function settings(Request $request, $company_id)
+    public function settings(Request $request, $account_id)
     {
         try {
-            //  Get the associated company
-            $company = Company::where('id', $company_id)->first();
+            //  Get the associated account
+            $account = Account::where('id', $account_id)->first();
 
-            //  If we have any company so far
-            if ($company) {
-                //  Get the company settings
-                $settings = $company->settings;
+            //  If we have any account so far
+            if ($account) {
+                //  Get the account settings
+                $settings = $account->settings;
 
                 //  Action was executed successfully
                 return oq_api_notify($settings, 200);
@@ -1031,7 +1031,7 @@ class CompanyController extends Controller
         return oq_api_notify_no_resource();
     }
 
-    public function delete($company_id)
+    public function delete($account_id)
     {
     }
 

@@ -35,9 +35,12 @@ class CreateStoresTable extends Migration
             $table->string('instagram_link')->nullable();
             $table->string('youtube_link')->nullable();
 
+            /*  Currency Info  */
+            $table->json('currency')->nullable();
+            
             /*  Ownership Information  */
-            $table->unsignedInteger('owner_id');
-            $table->string('owner_type');
+            $table->unsignedInteger('owner_id')->nullable();
+            $table->string('owner_type')->nullable();
             
             $table->softDeletes();
             

@@ -12,21 +12,21 @@ class CreateOrdersTable extends Migration
     public function up()
     {
         Schema::create('orders', function (Blueprint $table) {
-            
+        
             $table->increments('id');
 
             /*  Basic Info  */
             $table->string('number')->nullable();
-            $table->string('currency_type')->nullable();
+            $table->string('currency')->nullable();
             $table->timestampTz('created_date')->nullable();
 
             /*  Item Info  */
-            $table->json('items')->nullable();
+            $table->json('item_lines')->nullable();
 
             /*  Taxes, Disounts & Coupon Info  */
-            $table->json('taxes')->nullable();
-            $table->json('discounts')->nullable();
-            $table->json('coupons')->nullable();
+            $table->json('tax_lines')->nullable();
+            $table->json('discount_lines')->nullable();
+            $table->json('coupon_lines')->nullable();
 
             /*  Grand Total, Sub Total, Tax Total, Discount Total, Shipping Total  */
             $table->float('sub_total')->nullable();
@@ -46,7 +46,6 @@ class CreateOrdersTable extends Migration
 
             /*  Customer Info  */
             $table->unsignedInteger('customer_id')->nullable();
-            $table->string('customer_type')->nullable();
             $table->string('customer_note')->nullable();
             $table->json('billing_info')->nullable();
             $table->json('shipping_info')->nullable();
@@ -57,7 +56,7 @@ class CreateOrdersTable extends Migration
             $table->json('merchant_info')->nullable();
 
             /*  Meta Data  */
-            $table->json('meta')->nullable();
+            $table->json('metadata')->nullable();
 
             $table->softDeletes();
             $table->timestamps();

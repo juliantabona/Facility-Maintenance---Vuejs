@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 Relation::morphMap([
     'user' => 'App\User',
     'store' => 'App\Store',
+    'contact' => 'App\Contact',
     'company' => 'App\Company',
 ]);
 
@@ -70,7 +71,7 @@ class Address extends Model
 
     public function setDefaultAttribute($value)
     {
-        $this->attributes['default'] = ( ($value === 'true' || $value === '1') ? 1 : 0);
+        $this->attributes['default'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
     }
 
 }

@@ -6,7 +6,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use App\Http\Resources\Setting as SettingResource;
 use App\Http\Resources\Document as DocumentResource;
 
-class Company extends JsonResource
+class Account extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -58,66 +58,66 @@ class Company extends JsonResource
                 //  Link to current resource
                 'self' => [ 
                     'href' => url()->full(),
-                    'title' => 'This company'
+                    'title' => 'This account'
                 ],
 
-                //  Link to the company logo
+                //  Link to the account logo
                 'oq:logo' => [ 
-                    'href' => route('company-logo', ['company_id' => $this->id]),
-                    'title' => 'This company\'s logo'
+                    'href' => route('account-logo', ['account_id' => $this->id]),
+                    'title' => 'This account\'s logo'
                 ],
 
-                //  Link to company users
+                //  Link to account users
                 'oq:users' => [ 
-                    'href' => route('company-users', ['company_id' => $this->id]),
-                    'title' => 'Users associated with this company as admins, staff members, customers, vendors, e.t.c',
+                    'href' => route('account-users', ['account_id' => $this->id]),
+                    'title' => 'Users associated with this account as admins, staff members, customers, vendors, e.t.c',
                     'total' => $this->users()->count()
                 ],
 
-                //  Link to company admins
+                //  Link to account admins
                 'oq:admins' => [ 
-                    'href' => route('company-admins', ['company_id' => $this->id]),
-                    'title' => 'Users associated with this company as admins',
+                    'href' => route('account-admins', ['account_id' => $this->id]),
+                    'title' => 'Users associated with this account as admins',
                     'total' => $this->admins()->count()
                 ],
 
-                //  Link to company staff members
+                //  Link to account staff members
                 'oq:staff_members' => [ 
-                    'href' => route('company-staff', ['company_id' => $this->id]),
-                    'title' => 'Users associated with this company as staff members',
+                    'href' => route('account-staff', ['account_id' => $this->id]),
+                    'title' => 'Users associated with this account as staff members',
                     'total' => $this->staff()->count()
                 ],
 
-                //  Link to company user customers
+                //  Link to account user customers
                 'oq:user_customers' => [ 
-                    'href' => route('company-user-customers', ['company_id' => $this->id]),
-                    'title' => 'Users associated with this company as customers',
+                    'href' => route('account-user-customers', ['account_id' => $this->id]),
+                    'title' => 'Users associated with this account as customers',
                     'total' => $this->userCustomers()->count()
                 ],
 
-                //  Link to company user vendors
+                //  Link to account user vendors
                 'oq:user_vendors' => [ 
-                    'href' => route('company-user-vendors', ['company_id' => $this->id]),
-                    'title' => 'Users associated with this company as vendors',
+                    'href' => route('account-user-vendors', ['account_id' => $this->id]),
+                    'title' => 'Users associated with this account as vendors',
                     'total' => $this->userVendors()->count()
                 ],
 
-                //  Link to company recent activities
+                //  Link to account recent activities
                 'oq:activities' => [ 
                     'href' => '...', 
-                    'title' => 'Recent activities for this company'
+                    'title' => 'Recent activities for this account'
                 ],
 
-                //  Link to company settings
+                //  Link to account settings
                 'oq:settings' => [ 
-                    'href' => route('company-settings', ['company_id' => $this->id]),
-                    'title' => 'Settings for this company'
+                    'href' => route('account-settings', ['account_id' => $this->id]),
+                    'title' => 'Settings for this account'
                 ],
 
-                //  Link to company stores
+                //  Link to account stores
                 'oq:stores' => [ 
-                    'href' => route('company-stores', ['company_id' => $this->id]),
-                    'title' => 'Stores for this company'
+                    'href' => route('account-stores', ['account_id' => $this->id]),
+                    'title' => 'Stores for this account'
                 ]
 
             ],
@@ -125,12 +125,12 @@ class Company extends JsonResource
             /*  Embedded Resources */
             '_embedded' => [
 
-                //  The company logo
+                //  The account logo
                 'logo' => $this->when( !empty($this->logo),  
                     (new DocumentResource($this->logo))
                 ),
 
-                //  The company settings
+                //  The account settings
                 'settings' => new SettingResource($this->whenLoaded('settings')),
                 
             ]

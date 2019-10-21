@@ -17,13 +17,21 @@ trait MyCartTraits
     {
     }
 
-    public function initiateGetCartDetails($cart, $storeId)
+    /*  getCartDetails() method:
+     *
+     *  This method is used to get the details of the a cart. It requires the merchant
+     *  details as well as the items in the cart. The items variable is an array of
+     *  individual items with an "id" and "quantity". The method will fetch all the
+     *  items by "id" and get their details as well as calculate the individual 
+     *  items and cart sub-totals, grand-totals, tax-totals and discounts-totals.
+     *  Finally the method will return all the calculations and items.
+     */
+    public function getCartDetails($merchant, $items)
     {
         try {
-            //  Get the store and settings
-            $store = Store::find($storeId);
 
-            $cart_items = $this->buildItems($cart['items']);
+            //  Get the cart items
+            $cart_items = $this->buildItems($items);
 
             //  Total of only the cart items combined
             $sub_total = 0;
@@ -52,145 +60,178 @@ trait MyCartTraits
             //  The total of all the cart item costs and taxes
             $grand_total = 0;
 
+            //  Foreach cart item
             foreach ($cart_items as $key => $item) {
-                //  If we have a sale price then use the sale price otherwise use the regular price
-                $price = !empty($item['unit_sale_price']) ? $item['unit_sale_price'] : $item['unit_price'];
-                $item_total_price = ($price * $item['quantity']);
 
-                //  Calculate the sub total
-                $sub_total += $item_total_price;
+                /*  Calculate the sub total  */
+                $sub_total += $item['sub_total'];
 
-                //  Calculate the cart item taxes
-                foreach ($item['taxes'] as $key => $tax) {
-                    $item_tax_total += $tax['rate'] * $item_total_price;
-                }
+                /*  Calculate the total cart item taxes  */
+                $item_tax_total += $item['tax_total'];
 
-                //  Calculate the cart item discounts
-                foreach ($item['discounts'] as $key => $discount) {
-                    //  If its a percentage rate based discount
-                    if ($discount['type'] == 'rate') {
-                        $item_discount_total += $discount['rate'] * $item_total_price;
+                /*  Calculate the total cart item discounts  */  
+                $item_discount_total += $item['discount_total'];
 
-                    //  If its a fixed rate based discount
-                    } elseif ($discount['type'] == 'fixed') {
-                        $item_discount_total += $discount['amount'];
-                    }
-                }
             }
 
-            //  Calculate the store taxes
-            foreach ($store['taxes'] as $key => $tax) {
+            //  Foreach merchant tax, calculate the total merchant tax
+            foreach ($merchant->taxes as $key => $tax) {
+
                 $global_tax_total += $tax['rate'] * $sub_total;
-            }
 
-            //  Calculate the store discounts
-            foreach ($store['discounts'] as $key => $discount) {
+            }            
+
+            //  Foreach merchant discount, calculate the total merchant discount
+            foreach ($merchant->discounts as $key => $discount) {
+
                 //  If its a percentage rate based discount
                 if ($discount['type'] == 'rate') {
+
                     $global_discount_total += $discount['rate'] * $sub_total;
+
 
                 //  If its a fixed rate based discount
                 } elseif ($discount['type'] == 'fixed') {
+
                     $global_discount_total += $discount['amount'];
+
                 }
             }
 
-            //  Calculate the grand total tax
+            /*  Calculate the grand total tax  */   
             $grand_tax_total = $item_tax_total + $global_tax_total;
 
-            //  Calculate the grand total discount
+            /*  Calculate the grand total discount  */     
             $grand_discount_total = $item_discount_total + $global_discount_total;
 
-            //  Calculate the grand total
+            /*  Calculate the grand total  */     
             $grand_total = $sub_total + $grand_tax_total + $shipping_total - $grand_discount_total;
 
             $cartDetails = [
                 'items' => $cart_items,
-                'item_tax_total' => $item_tax_total,
-                'global_tax_total' => $global_tax_total,
-                'grand_tax_total' => $grand_tax_total,
-                'item_discount_total' => $item_discount_total,
-                'global_discount_total' => $global_discount_total,
-                'grand_discount_total' => $grand_discount_total,
-                'grand_total' => $grand_total,
+                'items_inline' => $this->getItemsInline($cart_items),
+                'currency' => $merchant->currency,
+                'sub_total' => $this->convertToMoney($sub_total),
+                'item_tax_total' => $this->convertToMoney($item_tax_total),
+                'global_tax_total' => $this->convertToMoney($global_tax_total),
+                'grand_tax_total' => $this->convertToMoney($grand_tax_total),
+                'item_discount_total' => $this->convertToMoney($item_discount_total),
+                'global_discount_total' => $this->convertToMoney($global_discount_total),
+                'grand_discount_total' => $this->convertToMoney($grand_discount_total),
+                'shipping_total' => $this->convertToMoney($shipping_total),
+                'grand_total' => $this->convertToMoney($grand_total)
             ];
 
             //  Action was executed successfully
-            return ['success' => true, 'response' => $cartDetails];
+            return $cartDetails;
+
         } catch (\Exception $e) {
+
             //  Log the error
             $response = oq_api_notify_error('Query Error', $e->getMessage(), 404);
 
             //  Return the error response
             return ['success' => false, 'response' => $response];
+
         }
+    }
+
+    public function convertToMoney($amount = 0){
+
+        return number_format($amount, 2, '.', ',');
+        
     }
 
     public function buildItems($items)
     {
+        /*  Item Structure
+         *  
+         *  Each item from the $items array should contain the item price
+         *  as well as the item quantity.
+         *
+         *  $items = [
+                ['id'=>1, quantity=>2],
+                ['id'=>2, quantity=>3]
+            ]
+         */
+
         $cartItems = [];
 
         //  Lets get the ids of the items in the cart
-        $relatedItemIds = collect($items)->map(function ($item) {
+        $itemIds = collect($items)->map(function ($item) {
+            
             return $item['id'];
+
         });
 
-        //  Lets get the items from the db related to the cart
-        $relatedItems = Product::whereIn('id', $relatedItemIds)->get();
+        //  Lets get the items from the DB that are related to the cart items
+        $relatedItems = Product::whereIn('id', $itemIds)->get();
 
+        //  Foreach item
         foreach ($items as $key => $item) {
+
+            //  Foreach related item
             foreach ($relatedItems as $key => $relatedItem) {
+
+                //  If the related item id and the cart item id match
                 if ($relatedItem['id'] == $item['id']) {
-                    //  If we have a sale price then use the sale price otherwise use the regular price
-                    $price = ($relatedItem['unit_sale_price']) ? $relatedItem['unit_sale_price'] : $relatedItem['unit_price'];
-                    $quantity = ($item['quantity'] ?? 1);
-                    $sub_total = $price * $quantity;
-                    $tax_total = 0;
-                    $discount_total = 0;
-                    $grand_total = 0;
 
-                    //  Calculate the item taxes
-                    foreach ($relatedItem['taxes'] as $key => $tax) {
-                        $tax_total = $tax_total + ($tax['rate'] * $sub_total);
-                    }
+                    /*  Get the item quantity  */ 
+                    $quantity =  $item['quantity'] ?? 1;
 
-                    //  Calculate the item discounts
-                    foreach ($relatedItem['discounts'] as $key => $discount) {
-                        //  If its a percentage rate based discount
-                        if ($discount['type'] == 'rate') {
-                            $discount_total = $discount_total + ($discount['rate'] * $sub_total);
+                    /*  Update the related item sub total  */   
+                    $relatedItem['price'] = $relatedItem['price'];
+                    $sub_total = $relatedItem['price'];
 
-                        //  If its a fixed rate based discount
-                        } elseif ($discount['type'] == 'fixed') {
-                            $discount_total = $discount_total + ($discount['amount']);
-                        }
-                    }
+                    /*  Get the related item grand total  */  
+                    $grand_total = $relatedItem['grand_total'];
 
-                    //  Calculate the grand total
-                    $grand_total = $sub_total + $tax_total - $discount_total;
+                    /*  Build the cart item using the related item information  */
+                    $cartItem = collect($relatedItem->toArray())->only([
+                        'id', 'name', 'description','primary_image',  'type', 'currency', 'unit_price',  
+                        'unit_regular_price', 'unit_sale_price', 'tax_total', 'discount_total', 'sub_total', 
+                        'grand_total', 'on_sale', 'resource_type'
+                    ]);
 
-                    $cartItem = [
-                        'id' => $relatedItem['id'],
-                        'primary_image' => $relatedItem['primary_image'],
-                        'name' => $relatedItem['name'],
-                        'store_currency_symbol' => $relatedItem['store_currency_symbol'],
-                        'unit_price' => $relatedItem['unit_price'],
-                        'unit_sale_price' => $relatedItem['unit_sale_price'],
-                        'quantity' => $quantity,
-                        'sub_total' => $sub_total,
-                        'tax_total' => $tax_total,
-                        'grand_total' => $grand_total,
-                        'taxes' => $relatedItem['taxes'],
-                        'discounts' => $relatedItem['discounts'],
-                        'selectedVariable' => null,
-                    ];
+                    /*  Update the details of the cart item to match its quantity  */
+                    $cartItem['quantity'] = $quantity;
+                    $cartItem['sub_total'] = $cartItem['sub_total'] * $quantity;
+                    $cartItem['tax_total'] = $cartItem['tax_total'] * $quantity;
+                    $cartItem['discount_total'] = $cartItem['discount_total'] * $quantity;
+                    $cartItem['grand_total'] = $cartItem['grand_total'] * $quantity;
 
+                    /*  Add the current cart item to the rest of the cart items  */
                     array_push($cartItems, $cartItem);
                 }
             }
         }
 
         return $cartItems;
+    }
+
+    /*  getItemsInline()
+     *  
+     * This method returns the cart items listed in a single string
+     * showing each item with its name and quantity separated with
+     * a comma e.g 3x(Tomato), 2x(Anion), 1x(Garlic)
+     * 
+     */
+    public function getItemsInline($items)
+    {
+        $items_inline = '';
+
+        foreach($items as $item){
+
+            //  Get the item quantity and name
+            $items_inline .= $item['quantity']."x(".ucfirst($item['name']).")";
+            
+            //  Separate items using a comma
+            $items_inline .= (next($items)) ? ', ' : '';
+
+        }
+
+        return $items_inline;
+        
     }
 
     public function initiateCreate()

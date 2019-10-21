@@ -10,13 +10,13 @@ use App\Invoice;
 use App\Quotation;
 use App\Document;
 use App\Traits\CountryTraits;
-use App\Notifications\CompanyCreated;
-use App\Notifications\CompanyApproved;
+use App\Notifications\AccountCreated;
+use App\Notifications\AccountApproved;
 //  Resources
-use App\Http\Resources\Company as CompanyResource;
-use App\Http\Resources\Companies as CompaniesResource;
+use App\Http\Resources\Account as AccountResource;
+use App\Http\Resources\Accounts as AccountsResource;
 
-trait CompanyTraits
+trait AccountTraits
 {
 
     use CountryTraits;
@@ -27,20 +27,20 @@ trait CompanyTraits
      *  Converts to the appropriate Api Response Format
      *
      */
-    public function convertToApiFormat($companies = null)
+    public function convertToApiFormat($accounts = null)
     {
 
         try {
 
-            if( $companies ){
+            if( $accounts ){
 
-                //  Transform the companies
-                return new CompaniesResource($companies);
+                //  Transform the accounts
+                return new AccountsResource($accounts);
 
             }else{
 
-                //  Transform the company
-                return new CompanyResource($this);
+                //  Transform the account
+                return new AccountResource($this);
 
             }
 
@@ -52,12 +52,12 @@ trait CompanyTraits
         }
     }
 
-    /*  getCompanies() method:
+    /*  getAccounts() method:
      *
      *  This is used to return companies
      *
      */
-    public function getCompanies( $options = [] )
+    public function getAccounts( $options = [] )
     {
         /************************************
         *  CHECK IF THE USER IS AUTHORIZED  *
@@ -120,7 +120,7 @@ trait CompanyTraits
             if( $companies ){
 
                 //  Transform the companies
-                return new CompaniesResource($companies);
+                return new AccountsResource($companies);
 
             }else{
 
@@ -465,7 +465,7 @@ trait CompanyTraits
                 $this->checkOrCreateNewBranch($company);
 
                 //  Check whether or not to update the auth user as belonging to this company
-                $this->checkAndAssignCompanyToAuth($company);
+                $this->checkAndAssignAccountToAuth($company);
 
                 //  Check whether or not the auth company has a relationship with the created company e.g) customer/supplier
                 $this->checkAndCreateRelationship($company);
@@ -488,7 +488,7 @@ trait CompanyTraits
                 /*****************************
                  *   SEND NOTIFICATIONS      *
                  *****************************/
-                $auth_user->notify(new CompanyCreated($company));
+                $auth_user->notify(new AccountCreated($company));
 
                 /*****************************
                  *   RECORD ACTIVITY         *
@@ -524,7 +524,7 @@ trait CompanyTraits
 
     }
 
-    public function checkAndAssignCompanyToAuth($company)
+    public function checkAndAssignAccountToAuth($company)
     {
         $auth_user = auth('api')->user();
 
@@ -747,7 +747,7 @@ trait CompanyTraits
                 $this->checkOrCreateNewBranch($company);
 
                 //  Check whether or not to update the auth user as belonging to this company
-                $this->checkAndAssignCompanyToAuth($company);
+                $this->checkAndAssignAccountToAuth($company);
 
                 //  Check whether or not the auth company has a relationship with the created company e.g) customer/supplier
                 $this->checkAndCreateRelationship($company);
@@ -771,7 +771,7 @@ trait CompanyTraits
                  *   SEND NOTIFICATIONS      *
                  *****************************/
 
-                // $auth_user->notify(new CompanyUpdated($company));
+                // $auth_user->notify(new AccountUpdated($company));
 
                 /*****************************
                  *   RECORD ACTIVITY         *
@@ -824,7 +824,7 @@ trait CompanyTraits
                  *   SEND NOTIFICATIONS      *
                  *****************************/
 
-                //  $auth_user->notify(new CompanyApproved($company));
+                //  $auth_user->notify(new AccountApproved($company));
 
                 /*****************************
                  *   RECORD ACTIVITY         *
@@ -1006,7 +1006,7 @@ trait CompanyTraits
                 });
 
                 //  Calculate the overall stats e.g) Total Count
-                $totalCount = ['name' => 'Total Companies', 'total_count' => 0];
+                $totalCount = ['name' => 'Total Accounts', 'total_count' => 0];
 
                 foreach ($stats as $stat) {
                     $totalCount['total_count'] += $stat['total_count'];

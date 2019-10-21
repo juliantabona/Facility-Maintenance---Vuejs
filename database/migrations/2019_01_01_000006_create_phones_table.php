@@ -17,14 +17,14 @@ class CreatePhonesTable extends Migration
 
             /*  Phone Details  */
             $table->string('type')->nullable();
-            $table->json('calling_code')->nullable();
-            $table->unsignedInteger('number');
+            $table->smallInteger('calling_code')->nullable();
+            $table->unsignedInteger('number')->nullable();
             $table->string('provider')->nullable();
             $table->boolean('default')->nullable()->default(false);
 
             /*  Ownership Information  */
-            $table->unsignedInteger('owner_id');
-            $table->string('owner_type');
+            $table->unsignedInteger('owner_id')->nullable();
+            $table->string('owner_type')->nullable();
 
             /*  Timestamps  */
             $table->timestamps();
