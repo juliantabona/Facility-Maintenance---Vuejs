@@ -186,10 +186,10 @@ class UssdController extends Controller
     {
         
 
-        $sessionId   = $_POST["sessionId"];
-        $serviceCode = $_POST["serviceCode"];
-        $phoneNumber = $_POST["phoneNumber"];
-        $text        = $_POST["text"];
+        $sessionId   = $request->get('sessionId');
+        $serviceCode = $request->get('serviceCode');
+        $phoneNumber = $request->get('phoneNumber');
+        $text        = $request->get('text');
 
         /*  Return the response to the user  */
         return response($sessionId.' - '.$serviceCode.' - '.$phoneNumber.' - '.$text)->header('Content-Type', 'text/plain');
