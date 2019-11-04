@@ -18,6 +18,8 @@ class UssdController extends Controller
     private $offset;
     private $products;
     private $currency;
+    private $session_id;
+    private $service_code;
     private $ussd_interface;
     private $selected_product;
     private $selected_products;
@@ -31,12 +33,18 @@ class UssdController extends Controller
          *  Otherwise create a User Instance for Guest Users
          */
         $this->user = auth('api')->user() ?? (new \App\User());
-
+        
         /*  Get the USSD TEXT value (User Response)  */
         $this->text = $request->get('text');
 
         /*  Get the USSD MSISDN value (User Phone)  */
         $this->msisdn = $request->get('phoneNumber');
+
+        /*  Get the Session Id  */
+        $this->session_id = $request->get('sessionId');
+
+        /*  Get the Service Code  */
+        $this->service_code = $request->get('serviceCode');
 
         $this->user['phone'] = [
             'calling_code' => substr($this->msisdn, 0, 3),
@@ -184,15 +192,60 @@ class UssdController extends Controller
      */
     public function home(Request $request)
     {
-        
+        /*  If we could not get the user's phone number  */
+        if (!$this->hasProvidedPhoneDetails()) {
+            return $this->displayCustomErrorPage('Sorry, please provide you mobile number.');
+        }
 
-        $sessionId   = $request->get('sessionId');
-        $serviceCode = $request->get('serviceCode');
-        $phoneNumber = $request->get('phoneNumber');
-        $text        = $request->get('text');
+        /*  If the user has not responded to the landing page  */
+        if (!$this->hasResponded()) {
+            /*  Display the landing page (The first page of the USSD)  */
+            $response = $this->displayLandingPage();
+
+        /*  If the user has already responded to the landing page  */
+        } else {
+            /*  If the user already indicated to provide a ussd code  */
+            if ($this->wantsToEnterUssdCode()) {
+                /*  If the user already provided the ussd code  */
+                if ($this->hasProvidedUssdCode()) {
+                    /*  Check if a store using the ussd code provided exists  */
+                    if ($this->isValidUssdCode()) {
+                        /*  Allow the user to start shopping (At the store specified)  */
+                        $response = $this->visitStore();
+
+                    /*  If no store using the provided ussd code exists  */
+                    } else {
+                        $this->displayStoreDoesNotExistPage();
+                    }
+
+                    /*  If the user hasn't yet provided the ussd code  */
+                } else {
+                    $response = $this->displayEnterUssdCodePage();
+                }
+
+                /*  If the user already indicated to search a store (They don't have a ussd code)  */
+            } elseif ($this->wantsToSearchStore()) {
+                /*  If the user already selected a category  */
+                if ($this->hasSelectedStoreCategory()) {
+                    /*  If the user already selected a specific store from the category list  */
+                    if ($this->hasSelectedStoreFromCategory()) {
+                        /*  Make a redirect to the store specified  */
+                        $this->redirectToStore();
+                    } else {
+                        $response = $this->displayCategoryStores();
+                    }
+                } else {
+                    $response = $this->displayStoreCategoriesPage();
+                }
+
+                /*  Selected an option that does not exist  */
+            } else {
+                return $this->displayCustomErrorPage('You selected an incorrect option. Please try again');
+            }
+        }
 
         /*  Return the response to the user  */
-        return response($sessionId.' - '.$serviceCode.' - '.$phoneNumber.' - '.$text)->header('Content-Type', 'text/plain');
+        return response($response)->header('Content-Type', 'text/plain');
         //return response($response)->header('Content-Type', 'application/json');
         //  return response($response."\n\n".'characters: '.strlen($response))->header('Content-Type', 'text/plain');
     }
