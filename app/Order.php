@@ -51,7 +51,7 @@ class Order extends Model
      */
     protected $fillable = [
         /*  Basic Info  */
-        'number', 'currency', 'created_date',
+        'number', 'currency', 'created_date', 'manual_status',
 
         /*  Item Info  */
         'item_lines',
@@ -80,6 +80,46 @@ class Order extends Model
 
     protected $allowedOrderableColumns = [];
 
+
+    /* 
+     *  Scope orders by status
+     */
+    public function scopeOpen($query)
+    {
+        return $query->where('manual_status', 'open');
+    }
+
+    public function scopeCancelled($query)
+    {
+        return $query->where('manual_status', 'cancelled');
+    }
+
+    public function scopePendingPayment($query)
+    {
+        return $query->where('manual_status', 'pending payment');
+    }
+
+    public function scopePaid($query)
+    {
+        return $query->where('manual_status', 'paid');
+    }
+
+    public function scopePendingDelivery($query)
+    {
+        return $query->where('manual_status', 'pending delivery');
+    }
+
+    public function scopeDelivered($query)
+    {
+        return $query->where('manual_status', 'delivered');
+    }
+
+    public function scopeCompleted($query)
+    {
+        return $query->where('manual_status', 'closed');
+    }
+
+
     /*
      *  Returns the merchant of the order 
      *  This refers to the seller of the goods/services
@@ -100,11 +140,11 @@ class Order extends Model
 
     /*
      *  Returns the reference of the order
-     *  This refers to the user who submitted the order
+     *  This refers to the user who submitted/placed the order
      */
     public function reference()
     {
-        return $this->belongsTo('App\User', 'reference_id');
+        return $this->belongsTo('App\Contact', 'reference_id');
     }
 
     /* 
@@ -133,7 +173,6 @@ class Order extends Model
     {
         return $this->documents()->whereType('file');
     }
-
 
     /* 
      *  Returns the order taxes
@@ -232,11 +271,18 @@ class Order extends Model
     }
 
     protected $appends = [
-                            'transaction_total', 'refund_total', 'outstanding_balance',
-                            'resource_type', 'created_at_format', 'lifecycle_status_title',
-                            'lifecycle_status_description', 'lifecycle_history', 'lifecycle_flow'
-                            
-                        ];
+        'resource_type', 'transaction_total', 'refund_total', 'outstanding_balance',
+        'created_at_format', 'lifecycle_status_title', 'lifecycle_status_description', 
+        'lifecycle_history', 'lifecycle_flow'
+    ];
+
+    /* 
+     *  Returns the resource type
+     */
+    public function getResourceTypeAttribute()
+    {
+        return strtolower(class_basename($this));
+    }
 
     /* 
      *  Returns the total payment made to this order
@@ -260,14 +306,6 @@ class Order extends Model
     public function getOutstandingBalanceAttribute()
     {
         //return $this->invoice()->outstanding_balance;
-    }
-
-    /* 
-     *  Returns the resource type
-     */
-    public function getResourceTypeAttribute()
-    {
-        return strtolower(class_basename($this));
     }
 
     /* 

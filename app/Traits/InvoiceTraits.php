@@ -80,40 +80,52 @@ trait InvoiceTraits
          */
         $invoice = $template_overide ?? request('invoice');
 
-        $items = $invoice['items'];
-        $merchant_id = $invoice['merchant_id'];
-        $customer_id = $invoice['customer_id'];
-        $reference_id = $invoice['reference_id'];
-
         /*  If we have the merchant id  */
-        if( $merchant_id ){
+        if( $invoice['merchant_id'] ){
 
             /*  Retrieve the merchant details using the merchant id  */
-            $merchant = Store::find( $merchant_id );
+            $merchant = Store::find( $invoice['merchant_id'] );
 
         }
 
-        /*  If we have the customer id  */
-        if( $customer_id ){
+        /*  If we have the customer contact id  */
+        if( isset($invoice['customer_id']) && !empty($invoice['customer_id']) ){
 
-            /*  Retrieve the invoice customer details from the merchant contacts  */
-            $customer = $merchant->contacts()->where('contacts.id', $customer_id )->first();
+            /*  Retrieve the customer contact details from the existing merchant contacts  */
+            $customer = $merchant->findContactById( $invoice['customer_id'] );
 
+        /*  If we have the customer contact information  */
+        }elseif( isset($invoice['customer_info']) && !empty($invoice['customer_info']) ){
+
+            /*  Create a new customer contact  */
+            $customer = $merchant->createContact( $invoice['customer_info'] );
         }
 
-        /*  If we have the reference id  */
-        if( $reference_id ){
+        /*  If we have the reference contact id  */
+        if( isset($invoice['reference_id']) && !empty($invoice['reference_id']) ){
 
-            /*  Retrieve the invoice reference details from the merchant contacts  */
-            $reference = $merchant->contacts()->where('contacts.id', $reference_id )->first();
+            /*  Retrieve the reference contact details from the existing merchant contacts  */
+            $reference = $merchant->findContactById( $invoice['reference_id'] );
+
+        /*  If we have the reference contact information  */
+        }elseif( isset($invoice['reference_info']) && !empty($invoice['reference_info']) ){
+
+            /*  Create a new reference contact  */
+            $reference = $merchant->createContact( $invoice['reference_info'] );
+
+        /*  If we do not have any reference related information  */
+        }else{
+
+            /*  Use the customer contact as the reference contact  */
+            $reference = $customer;
 
         }
 
         /*  If we have the cart items  */
-        if( $items ){
+        if( isset($invoice['items']) && !empty($invoice['items']) ){
 
-            /*  Retrieve the invoice cart details from the items provided  */
-            $cart = ( new \App\MyCart() )->getCartDetails( $merchant, $items );
+            /*  Retrieve the cart details from the items provided  */
+            $cart = ( new \App\MyCart() )->getCartDetails( $merchant, $invoice['items'] );
 
         }
 
@@ -126,9 +138,9 @@ trait InvoiceTraits
 
             /*  Basic Info  */
             'number' => null,
-            'currency_type' => $merchant->currency ?? null,
-            'created_date' => $invoice['created_date'] ?? Carbon::now()->format('Y-m-d H:i:s'),
-            'expiry_date' =>  $invoice['expiry_date'] ?? Carbon::now()->format('Y-m-d H:i:s'),
+            'currency' => $merchant->currency ?? null,
+            'created_date' => Carbon::now()->format('Y-m-d H:i:s'),
+            'expiry_date' =>  Carbon::now()->format('Y-m-d H:i:s'),
 
             /*  Item Info  */
             'item_lines' => $cart['items'] ?? null,
@@ -185,6 +197,9 @@ trait InvoiceTraits
             /*  If the invoice was created successfully  */
             if( $invoice ){
 
+                /*  Set the invoice number  */
+                $invoice->setInvoiceNumber();
+
                 /*  Record the activity of the the invoice creation  */
                 $activity = $invoice->recordActivity('created');
   
@@ -234,6 +249,215 @@ trait InvoiceTraits
             return $template;
 
         }
+    }
+
+
+    /*  setInvoiceNumber()
+     *
+     *  This method creates a unique invoice number using the invoice id.
+     *  It does this by padding the unique invoice id with leading zero's
+     *  "0" so that the invoice number is always atleast 5 digits long
+     */
+    public function setInvoiceNumber()
+    {
+        /*  Generate a unique invoice number. 
+         *  Get the invoice id, and Pad the left side with leading "0"
+         *  e.g 123 = 00123, 1234 = 01234, 12345 = 12345
+         */
+        $invoice_number = str_pad($this->id, 5, 0, STR_PAD_LEFT);
+
+        /*  Set the unique invoice number  */
+        $this->update(['number' => $invoice_number]);
+    }
+
+    public function smsInvoiceToCustomer()
+    {
+        /*  Get the customer's default mobile number or the first available mobile number  */
+        $mobile = $this->customer->getMobilePhone();
+
+        /*  If we have a mobile phone  */
+        if( $mobile ){
+
+            /*  Structure the phone number  */
+            $phone_number = '+'.$mobile['calling_code'].$mobile['number'];
+
+            /*  Send invoice sms  */
+            Twilio::message($phone_number, $this->createInvoiceSms());
+
+        }
+    }
+
+    public function createInvoiceSms()
+    {
+        /*  Set the character limit  */
+        $character_limit = 160;
+
+        /*  Get the invoice number  */
+        $invoice_number = $this->number;
+
+        /*  Get the invoice grand total  */
+        $grand_total = number_format($this->grand_total, 2, '.', ',');
+
+        /*  Get the currency symbol or currency code  */
+        $currency = $this->currency['symbol'] ?? $this->currency['code'];
+
+        /*  Get the invoice expiry date  */
+        $expiry_date = (new Carbon($this->expiry_date))->format('M d Y');
+
+        /*  Get the reference/customer contact mobile number  */
+        $mobile = $this->reference->getMobilePhone() ?? $this->customer->getMobilePhone();
+        $mobile_number = $mobile['calling_code'].$mobile['number'] ?? null;
+
+        /*  Get the cart items (inline) e.g 1x(Product 1), 2x(Product 2)  */
+        $items_inline = ( new \App\MyCart() )->getItemsSummarizedInline($this->item_lines);
+
+        /*  Craft the sms message  */
+        $invoice_number = 'Invoice #'.$invoice_number.', ';
+        $items = 'for '.$items_inline;
+        $amount = 'Amount: '.$currency.$grand_total.' ';
+        $due_date = 'due '.$expiry_date.'.';
+        $dial = 'Dial '.config('app.CUSTOMER_USSD_CODE').' to pay';
+
+        $characters_left = ($character_limit - strlen($invoice_number.$amount.$due_date.$dial));
+        $summarized_items = $this->truncateWithDots($items.(strlen($items) < $characters_left ? '.' : ''), $characters_left);
+        $sms = $invoice_number.$summarized_items.$amount.$due_date.$dial;
+
+        /*  Return the sms message  */
+        return $sms;
+    }
+
+    public function smsInvoiceReceiptToCustomer()
+    {
+        /*  Get the customer's default mobile number or the first available mobile number  */
+        $mobile = $this->customer->getMobilePhone();
+
+        /*  If we have a mobile phone  */
+        if( $mobile ){
+
+            /*  Structure the phone number  */
+            $phone_number = '+'.$mobile['calling_code'].$mobile['number'];
+
+            /*  Send invoice sms  */
+            Twilio::message($phone_number, $this->createInvoiceReceiptSms());
+
+        }
+    }
+
+    public function createInvoiceReceiptSms()
+    {
+        /*  Set the character limit  */
+        $character_limit = 160;
+
+        /*  Get the invoice number  */
+        $invoice_number = $this->number;
+
+        /*  Get the order number (if linked to order)  */
+        $order_number = $this->owner->resource_type == 'order' ? $this->owner->number : null;
+
+        /*  Get the invoice grand total  */
+        $grand_total = number_format($this->grand_total, 2, '.', ',');
+
+        /*  Get the currency symbol or currency code  */
+        $currency = $this->currency['symbol'] ?? $this->currency['code'];
+
+        /*  Get the reference contact mobil number  */
+        $mobile = $this->reference->default_mobile ?? $this->reference->mobiles()->first();
+        $mobile_number = $mobile['calling_code'].$mobile['number'];
+
+        /*  Get the cart items (inline)  e.g 1x(Product 1), 2x(Product 3)  */
+        $items_inline = ( new \App\MyCart() )->getItemsSummarizedInline($this->item_lines);
+
+        /*  Craft the sms message  */
+        $invoice_number = 'Payment confirmation: Invoice #'.$invoice_number;
+        $order_number = ($order_number) ? ', Order #'.$order_number.' ' : ' ';
+        $items = 'for '.$items_inline;
+        $amount = 'Amount: '.$currency.$grand_total.'.';
+        $dial = 'Dial '.config('app.CUSTOMER_USSD_CODE').' to view orders, invoices & reciepts';
+
+        $characters_left = ($character_limit - strlen($invoice_number.$order_number.$amount.$dial));
+        $summarized_items = $this->truncateWithDots($items.(strlen($items) < $characters_left ? '.' : ''), $characters_left);
+        $sms = $invoice_number.$order_number.$summarized_items.$amount.$dial;
+
+        /*  Return the sms message  */
+        return $sms;
+    }
+
+    public function truncateWithDots($string, $limit)
+    {
+        return (strlen($string) > $limit) ? substr($string, $limit - 3).'...' : $string;
+    }
+
+    public function recordAutomaticPayment($transaction = [])
+    {
+        if( !empty($transaction) ){
+
+            $template = [
+                'type' => 'payment',
+                'automatic' => true,
+                'status' => 'success',
+                'payment_type' => $transaction['payment_type'] ?? null,
+                'payment_amount' => $transaction['payment_amount'] ?? 0,
+            ];
+
+            return $this->recordTransaction($template);
+        }
+
+        return false;
+    }
+
+    public function recordManualPayment($transaction = [])
+    {
+        if( !empty($transaction) ){
+
+            $template = [
+                'type' => 'payment',
+                'automatic' => false,
+                'status' => 'success',
+                'payment_type' => $transaction['payment_type'] ?? null,
+                'payment_amount' => $transaction['payment_amount'] ?? 0,
+            ];
+
+            return $this->recordTransaction($template);
+        }
+
+        return false;
+
+    }
+
+    public function recordTransaction($template = [])
+    {
+        $transaction = ( new \App\Transaction() )->initiateCreate($template);
+
+        /*  If the transaction was created successfully  */
+        if( $transaction ){
+
+            /*  Assign the new transaction to the invoice  */
+            $transaction->update([
+                'owner_id' => $this->id, 
+                'owner_type' => $this->resource_type
+            ]);
+
+            /*  If the invoice belongs to an Order  */
+            if( $this->owner->resource_type == 'order'){
+                
+                /*  If the transaction of status is "success"  */
+                if( $transaction['status'] == 'success' ){
+
+                    /*  Set the order status to "Paid"  */
+                    $this->owner->setStatusToPaid();
+
+                }elseif( $transaction['status'] == 'failed' ){
+
+                    /*  Set the order status to "Failed Payment"  */
+                    $this->owner->setStatusToFailedPayment();
+
+                }
+
+            }
+
+        }
+
+        return $transaction;
     }
 
 
@@ -1128,45 +1352,7 @@ trait InvoiceTraits
         }
     }
 
-    public function getCompiledSmsMessage($invoice)
-    {
-        $items = '';
-        $referenceNo = $invoice->reference_no_value;
-        $currency = $invoice->currency_type->currency->symbol;
-        $grand_total = $currency.number_format($invoice->grand_total, 2, ',', '.');
-        $expiry_date = (new Carbon($invoice->expiry_date))->format('M d Y');
-        $company = collect($invoice->customized_company_details);
 
-        foreach ($invoice->items as $x => $item) {
-            $x == 0 ? $items .= '' : $items .= ' ';
-            $items .= (collect($item)['quantity'].'x '.(collect($item)['name']));
-        }
-
-        $characterLimit = 160;
-        //  Company info text limit = 23
-        $companyName = $this->truncateWithDots(trim($company['name']), 21).(strlen($company['name']) <= 21 ? ':' : '');       //  Optimum Quality:
-        //  Reference text limit = 16
-        $reference = 'Invoice #'.$referenceNo;                        //  Invoice #002
-        //  Amount text limit = 20
-        $amount = 'Amount '.$grand_total;                           //  Amount P350.00
-        //  Due date text limit = 21
-        $dueDate = ' due '.$expiry_date;                              //  due on 15 Feb 2018
-        //  Reply for payment text limit = 32
-        $replyWith = '.Reply with '.$referenceNo.'#<pin> to pay';     //  Reply with 002#<pin> to pay
-
-        //  items text limit = 49
-        $charLeft = ($characterLimit - strlen($companyName.$reference.$amount.$dueDate.$replyWith));
-        $items = $this->truncateWithDots(' for '.$items.(strlen($items) <= $charLeft ? '.' : ''), $charLeft);    //  for 1x Basic Website, 1x Web Hosting, 5x Emails.
-
-        $message = $companyName.$reference.$items.$amount.$dueDate.$replyWith;
-
-        return $message;
-    }
-
-    public function truncateWithDots($string, $limit)
-    {
-        return (strlen($string) > $limit) ? substr($string, $limit - 3).'...' : $string;
-    }
 
     /*  sendInvoiceAsMail() method:
      *

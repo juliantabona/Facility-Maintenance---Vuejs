@@ -10,19 +10,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
-    'company' => 'App\Company',
+    'store' => 'App\Store',
 ]);
 
 class UssdInterface extends Model
 {
     use Dataviewer;
     use UssdInterfaceTraits;
-
-    protected $casts = [
-        
-        'default' => 'boolean', //  Return the following 1/0 as true/false
-
-    ];
 
     /**
      * The attributes that are mass assignable.
@@ -32,10 +26,10 @@ class UssdInterface extends Model
     protected $fillable = [
 
         /*  Basic Info  */
-        'name', 'description', 'live_mode',
+        'name', 'description', 'code',
 
         /*  Ownership Info  */
-        'store_id'
+        'owner_id', 'owner_type'
 
     ];
 
@@ -46,10 +40,10 @@ class UssdInterface extends Model
     /* 
      *  Returns the owner of the ussd interface
      */
-     public function owner()
-     {
-         return $this->belongsTo('App\Store', 'store_id');
-     }
+    public function owner()
+    {
+        return $this->morphTo();
+    }
  
     /* 
      *  Returns products allocated to this ussd interface
@@ -79,11 +73,6 @@ class UssdInterface extends Model
      public function getResourceTypeAttribute()
      {
          return strtolower(class_basename($this));
-     }
-     
-     public function setLiveModeAttribute($value)
-     {
-         $this->attributes['live_mode'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
      }
  
  }

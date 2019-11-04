@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 Relation::morphMap([
     'user' => 'App\User',
     'store' => 'App\Store',
+    'account' => 'App\Account',
     'contact' => 'App\Contact',
-    'company' => 'App\Company',
 ]);
 
 class Phone extends Model
@@ -20,6 +20,7 @@ class Phone extends Model
     protected $casts = [
         
         'default' => 'boolean', //  Return the following 1/0 as true/false
+        'verified' => 'boolean', //  Return the following 1/0 as true/false
         
     ];
 
@@ -31,12 +32,21 @@ class Phone extends Model
     protected $fillable = [
 
         /*  Phone Details  */
-        'type', 'calling_code', 'number', 'provider', 'default',
+        'type', 'calling_code', 'number', 'provider', 'default', 'verified',
 
         /*  Ownership Information  */
         'owner_id', 'owner_type'
 
     ];
+
+    /* 
+     *  Scope to only return verified records e.g
+     *  Returning only verified phones
+     */
+    public function scopeVerified($query)
+    {
+        return $query->where('verified', 1);
+    }
 
     /* 
      *  Returns the owner of the phone
@@ -79,6 +89,11 @@ class Phone extends Model
     public function setDefaultAttribute($value)
     {
         $this->attributes['default'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
+    }
+
+    public function setVerifiedAttribute($value)
+    {
+        $this->attributes['verified'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
     }
 
 }

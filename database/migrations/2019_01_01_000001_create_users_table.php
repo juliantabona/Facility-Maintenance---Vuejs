@@ -23,9 +23,6 @@ class CreateUsersTable extends Migration
             $table->string('bio')->nullable();
 
             /*  Account Info  */
-            $table->string('email')->nullable();
-            $table->string('additional_email')->nullable();
-            $table->string('username')->nullable();
             $table->string('password')->nullable();
             $table->boolean('verified')->default(0);
             $table->boolean('setup')->default(0);

@@ -6,6 +6,7 @@ use App\Traits\UserTraits;
 use Laravel\Passport\HasApiTokens;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
@@ -34,7 +35,7 @@ class User extends Authenticatable
         'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 
         
         /*  Address Info  */
-        'email', 'additional_email',  'username', 'password', 'verified', 'setup', 'account_type',
+        'password', 'verified', 'setup', 'account_type',
         
         /*  Social Info  */
         'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link',
@@ -57,6 +58,35 @@ class User extends Authenticatable
         'password', 'remember_token',
     ];
 
+    /**
+     *  Find the user instance for the given username.
+     *  This is used by Passport to get the user by
+     *  allowing our own custom logic to find the
+     *  user then return the result
+     *
+     *  @param  string  $username
+     *  @return \App\User
+     */
+    public function findForPassport($identity)
+    {
+        //  Get the users identity information. This identity can be
+        //  the users email or mobile number. We can assume that the
+        //  user provided either the email or the mobile number.
+        $identity = [
+            'email' => $identity,
+            'mobile_number' => $identity
+        ];
+
+        /*
+         *  Search for any existing user account with the given identity
+         *  email or mobile number
+         */
+        $user = (new \App\User)->findMatchingAccount($identity);
+
+        //  Return the user found
+        return $user;
+    }
+
     /*
      * Get the verification token. This token is used when activating
      * the users account after successful registration.
@@ -69,6 +99,51 @@ class User extends Authenticatable
     public function passwordResetTokens()
     {
         return $this->hasOne('App\PasswordResetTokens', 'email', 'email');
+    }
+
+    public function findMatchingAccount($identity = ['email' => null, 'mobile_number' => null])
+    {
+        /*  If we have an email or mobile number provided  */
+        if( !empty( $identity['email'] ) || !empty( $identity['mobile_number'] )){
+
+            $user = $this;
+
+            /*  If we have an email provided  */
+            if( !empty( $identity['email'] ) ){
+
+                /*  Get the provided email  */
+                $email = $identity['email'];
+
+                /*  Get the user that matches the given email  */
+                $user = $user->whereHas('emails', function (Builder $query) use ($email) {
+
+                    /*  Match the provided mobile number with verified emails of the users account  */
+                    $query->where('email', $email)->verified();
+
+                });
+            }
+            
+            /*  If we have an mobile number provided  */
+            if( !empty( $identity['mobile_number'] ) ){
+
+                /*  Get the provided mobile number  */
+                $mobile_number = $identity['mobile_number'];
+                
+                /*  Get the user that matches the given mobile number  */
+                $user = $user->orWhereHas('mobiles', function (Builder $query) use ($mobile_number) {
+
+                    /*  Match the provided mobile number with verified mobile numbers of the users account  */
+                    $query->where('number', $mobile_number)->verified();
+
+                });
+
+            }
+
+            return $user->first() ?? null;
+
+        }
+
+        return null;
     }
 
     /*  
@@ -108,7 +183,6 @@ class User extends Authenticatable
     {
         return $this->morphMany('App\Phone', 'owner')->orderBy('created_at', 'desc');
     }
-
     /* 
      *  Returns phones categorized as mobile phones
      */
@@ -139,6 +213,14 @@ class User extends Authenticatable
     public function addresses()
     {
         return $this->morphMany('App\Address', 'owner')->orderBy('created_at', 'desc');
+    }
+
+    /* 
+     *  Returns emails associated with this user
+     */
+    public function emails()
+    {
+        return $this->morphMany('App\Email', 'owner')->orderBy('created_at', 'desc');
     }
 
     /* 
@@ -223,6 +305,23 @@ class User extends Authenticatable
         return $this->morphedByMany('App\Store', 'owner', 'user_allocations');
     }
 
+    /*
+     *  Returns only stores that support USSD
+     */
+    public function ussdStores()
+    {
+        return $this->stores()->supportUssd();
+    }
+
+    /*
+     *  Returns only stores that don't support USSD
+     */
+    public function nonUssdStores()
+    {
+        return $this->stores()->dontSupportUssd();
+    }
+    
+
     /* 
      *  Returns stores where the user is an admin
      */
@@ -282,7 +381,43 @@ class User extends Authenticatable
 
     /*  Attributes */
 
-    protected $appends = ['profile_image', 'full_name', 'address', 'resource_type'];
+    protected $appends = [
+        'account_verified', 'email_verified', 'mobile_verified', 'profile_image', 'full_name', 
+        'phone_list', 'default_mobile', 'default_email', 'default_address', 'resource_type'
+    ];
+
+    /* 
+     *  Returns true/false whether the account has a verified
+     *  mobile number
+     */
+    public function getEmailVerifiedAttribute()
+    {
+        $verified_emails_count = $this->emails()->verified()->count();
+
+        return ($verified_emails_count) ? true : false;
+    }
+
+    /* 
+     *  Returns true/false whether the account has a verified
+     *  mobile number
+     */
+    public function getMobileVerifiedAttribute()
+    {
+        $verified_mobiles_count = $this->mobiles()->verified()->count();
+
+        return ($verified_mobiles_count) ? true : false;
+    }
+
+    /* 
+     *  Returns true/false whether the account is verified.
+     *  A verified account must contain atleast one verified
+     *  email or mobile number 
+     */
+    public function getAccountVerifiedAttribute()
+    {
+
+        return ($this->email_verified || $this->mobile_verified) ? true : false;
+    }    
 
     /* 
      *  Returns the users profile picture
@@ -301,9 +436,46 @@ class User extends Authenticatable
     }
 
     /* 
+     *  Returns the user phones separated with commas
+     */
+    public function getPhoneListAttribute()
+    {
+        $phoneList = '';
+        $phones = $this->phones()->whereIn('type', ['mobile', 'tel'])->get();
+
+        foreach ($phones as $key => $phone) {
+
+            /*  Merge the calling code and phone number  */
+            $phoneList .= ($key != 0 ? ', ' : '').'(+'.$phone['calling_code'].') '.$phone['number'];
+
+            /*  If this is not the last item add "," otherwise nothing  */
+            $phoneList .= (next($phones)) ? ', ' : '';
+
+        }
+
+        return $phoneList;
+    }
+
+    /* 
+     *  Returns the users default mobile phone
+     */
+    public function getDefaultMobileAttribute()
+    {
+        return $this->mobiles()->where('default', 1)->first();
+    }
+
+    /* 
+     *  Returns the users default email
+     */
+    public function getDefaultEmailAttribute()
+    {
+        return $this->emails()->where('default', 1)->first();
+    }
+
+    /* 
      *  Returns the users default address
      */
-    public function getAddressAttribute()
+    public function getDefaultAddressAttribute()
     {
         return $this->addresses()->where('default', 1)->first();
     }

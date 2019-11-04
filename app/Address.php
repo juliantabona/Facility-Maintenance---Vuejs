@@ -11,8 +11,8 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 Relation::morphMap([
     'user' => 'App\User',
     'store' => 'App\Store',
+    'account' => 'App\Account',
     'contact' => 'App\Contact',
-    'company' => 'App\Company',
 ]);
 
 class Address extends Model

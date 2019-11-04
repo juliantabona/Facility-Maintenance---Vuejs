@@ -42,13 +42,13 @@ trait ContactTraits
      *
      *  This method is used to create a new contact.
      */
-    public function initiateCreate( $template = null )
+    public function initiateCreate( $contact = null )
     {
         /*
          *  The $contact variable represents the contact dataset
          *  provided through the request received.
          */
-        $contact = $template ?? request('contact');
+        $contact = $contact ?? request('contact');
 
         /*
          *  The $template variable represents structure of the contact.
@@ -220,6 +220,12 @@ trait ContactTraits
 
     }
 
+    public function getMobilePhone()
+    {
+        /*  Get the contact default mobile number or the first available mobile number  */
+        return $this->default_mobile ?? $this->mobiles()->first();
+    }
+
     /*  getBillingInfo() method:
      *
      *  This method is used to get the contacts billing
@@ -228,7 +234,7 @@ trait ContactTraits
     public function getBillingInfo()
     {
         /*  Return the billing information  */
-        return collect($this->load(['emails', 'phones', 'addresses'])->toArray())->only([
+        return collect($this->toArray())->only([
             'name', 'default_email', 'default_mobile', 'default_address', 'emails', 'phones',  'addresses'
         ]);
     }
@@ -241,7 +247,7 @@ trait ContactTraits
     public function getShippingInfo()
     {
         /*  Return the shipping information from the contact information  */
-        return collect($this->load(['emails', 'phones', 'addresses'])->toArray())->only([
+        return collect($this->toArray())->only([
             'name', 'default_email', 'default_mobile', 'default_address', 'emails', 'phones',  'addresses'
         ]);
     }

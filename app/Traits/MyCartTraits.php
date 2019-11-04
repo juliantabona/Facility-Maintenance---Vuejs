@@ -109,7 +109,8 @@ trait MyCartTraits
 
             $cartDetails = [
                 'items' => $cart_items,
-                'items_inline' => $this->getItemsInline($cart_items),
+                'items_summarized_array' => $this->getItemsSummarizedInArray($cart_items),
+                'items_summarized_inline' => $this->getItemsSummarizedInline($cart_items),
                 'currency' => $merchant->currency,
                 'sub_total' => $this->convertToMoney($sub_total),
                 'item_tax_total' => $this->convertToMoney($item_tax_total),
@@ -209,14 +210,36 @@ trait MyCartTraits
         return $cartItems;
     }
 
-    /*  getItemsInline()
+    /*  getItemsSummarizedInArrayInArray()
+     *  
+     * This method returns the cart items listed in an array
+     * showing each item with its name and quantity e.g:
+     * ["3x(Tomato)", "2x(Anion)", "1x(Garlic)"]
+     * 
+     */
+    public function getItemsSummarizedInArray($items)
+    {
+        $items_inline = [];
+
+        foreach($items as $key => $item){
+
+            //  Get the item quantity and name then add to array
+            $items_inline[$key] = $item['quantity']."x(".ucfirst($item['name']).")";
+
+        }
+
+        return $items_inline;
+        
+    }
+
+    /*  getItemsSummarizedInline()
      *  
      * This method returns the cart items listed in a single string
      * showing each item with its name and quantity separated with
      * a comma e.g 3x(Tomato), 2x(Anion), 1x(Garlic)
      * 
      */
-    public function getItemsInline($items)
+    public function getItemsSummarizedInline($items)
     {
         $items_inline = '';
 
@@ -233,6 +256,7 @@ trait MyCartTraits
         return $items_inline;
         
     }
+
 
     public function initiateCreate()
     {

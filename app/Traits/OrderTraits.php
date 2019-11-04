@@ -3,25 +3,21 @@
 namespace App\Traits;
 
 use DB;
+use PDF;
+use Mail;
 use App\Store;
 use App\MyCart;
 use App\Company;
-use App\CompanyBranch;
-use App\RecentActivity;
 use App\Invoice;
 use App\Lifecycle;
-//  Mails
-use Mail;
+use Carbon\Carbon;
+use Twilio as Twilio;
+use App\CompanyBranch;
+use App\RecentActivity;
 use App\Mail\OrderMail;
-//  Notifications
 use App\Notifications\OrderCreated;
-use App\Notifications\OrderUpdated;
-//  Resources
 use App\Http\Resources\Order as OrderResource;
 use App\Http\Resources\Orders as OrdersResource;
-//  Other
-use PDF;
-use Carbon\Carbon;
 
 trait OrderTraits
 {
@@ -32,26 +28,17 @@ trait OrderTraits
      */
     public function convertToApiFormat($orders = null)
     {
-
         try {
-
-            if( $orders ){
-
+            if ($orders) {
                 //  Transform the orders
                 return new OrdersResource($orders);
-
-            }else{
-
+            } else {
                 //  Transform the order
                 return new OrderResource($this);
-
             }
-
         } catch (\Exception $e) {
-
             //  Log the error
             return oq_api_notify_error('Query Error', $e->getMessage(), 404);
-
         }
     }
 
@@ -59,7 +46,7 @@ trait OrderTraits
      *
      *  This method is used to create a new order.
      */
-    public function initiateCreate( $template_overide = [] )
+    public function initiateCreate($template_overide = [])
     {
         /*
          *  The $order variable represents the order dataset
@@ -67,53 +54,54 @@ trait OrderTraits
          */
         $order = $template_overide ?? request('order');
 
-        $items = $order['items'];
-        $merchant_id = $order['merchant_id'];
-        $customer_id = $order['customer_id'];
-        $reference_id = $order['reference_id'];
-
         /*  If we have the merchant id  */
-        if( $merchant_id ){
-
+        if ($order['merchant_id']) {
             /*  Retrieve the merchant details using the merchant id  */
-            $merchant = Store::find( $merchant_id );
-
+            $merchant = Store::find($order['merchant_id']);
         }
 
-        /*  If we have the customer id  */
-        if( $customer_id ){
+        /*  If we have the customer contact id  */
+        if (isset($order['customer_id']) && !empty($order['customer_id'])) {
+            /*  Retrieve the customer contact details from the existing merchant contacts  */
+            $customer = $merchant->findContactById($order['customer_id']);
 
-            /*  Retrieve the order customer details from the merchant contacts  */
-            $customer = $merchant->contacts()->where('contacts.id', $customer_id )->first();
-
+        /*  If we have the customer contact information  */
+        } elseif (isset($order['customer_info']) && !empty($order['customer_info'])) {
+            /*  Create a new customer contact  */
+            $customer = $merchant->createContact($order['customer_info']);
         }
 
-        /*  If we have the reference id  */
-        if( $reference_id ){
+        /*  If we have the reference contact id  */
+        if (isset($order['reference_id']) && !empty($order['reference_id'])) {
+            /*  Retrieve the reference contact details from the existing merchant contacts  */
+            $reference = $merchant->findContactById($order['reference_id']);
 
-            /*  Retrieve the order reference details from the merchant contacts  */
-            $reference = $merchant->contacts()->where('contacts.id', $reference_id )->first();
+        /*  If we have the reference contact information  */
+        } elseif (isset($order['reference_info']) && !empty($order['reference_info'])) {
+            /*  Create a new reference contact  */
+            $reference = $merchant->createContact($order['reference_info']);
 
+        /*  If we do not have any reference related information  */
+        } else {
+            /*  Use the customer contact as the reference contact  */
+            $reference = $customer;
         }
 
         /*  If we have the cart items  */
-        if( $items ){
-
-            /*  Retrieve the order cart details from the items provided  */
-            $cart = ( new \App\MyCart() )->getCartDetails( $merchant, $items );
-
+        if (isset($order['items']) && !empty($order['items'])) {
+            /*  Retrieve the cart details from the items provided  */
+            $cart = ( new \App\MyCart() )->getCartDetails($merchant, $order['items']);
         }
 
         /*
          *  The $template variable represents structure of the order.
-         *  If no template is provided, we create one using the 
+         *  If no template is provided, we create one using the
          *  request data.
          */
         $template = [
-
             /*  Basic Info  */
             'number' => null,
-            'currency_type' => $merchant->currency,
+            'currency' => $merchant->currency,
             'created_date' => Carbon::now()->format('Y-m-d H:i:s'),
 
             /*  Item Info  */
@@ -139,7 +127,7 @@ trait OrderTraits
             'reference_id' => $reference->id ?? null,
             'reference_ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
             'reference_user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
-            
+
             /*  Customer Info  */
             'customer_id' => $customer->id ?? null,
             'billing_info' => $customer->getBillingInfo() ?? null,
@@ -152,8 +140,7 @@ trait OrderTraits
             'merchant_info' => $merchant->getBasicInfo() ?? null,
 
             /*  Meta Data  */
-            'metadata' => isset($merchant) ? $this->getMetadataInfo($merchant) : null
-
+            'metadata' => isset($merchant) ? $this->getMetadataInfo($merchant) : null,
         ];
 
         /*
@@ -162,85 +149,113 @@ trait OrderTraits
         $template = array_merge($template, $template_overide);
 
         try {
-
             /*
              *  Create new a order, then retrieve a fresh instance
              */
             $order = $this->create($template)->fresh();
 
             /*  If the order was created successfully  */
-            if( $order ){
+            if ($order) {
+                /*  Set the order number  */
+                $order->setOrderNumber();
 
                 /*  Record the activity of the the order creation  */
                 $activity = $order->recordActivity('created');
-  
+
                 /*  Convert the order into a payable invoice  */
                 $invoice = $order->convertToInvoice($template);
 
+                /*  Convert the order into a payable invoice  */
+                $status = $order->setStatusToPendingPayment();
+
                 /*  Return a fresh instance of the order  */
                 return $order->fresh();
-
-                //  Set a manual status e.g "Open", "Paid", "Pending Payment", e.t.c
-                //  Create order lifecycle
-                //  Set order lifecycle to pending payment
-                //  Send order to merchant
-                //  Send invoice/receipt to customer
-
-
             }
-
         } catch (\Exception $e) {
-
             //  Return the error
             return oq_api_notify_error('Query Error', $e->getMessage(), 404);
-
         }
+    }
 
+    /*  setOrderNumber()
+     *
+     *  This method creates a unique order number using the order id.
+     *  It does this by padding the unique order id with leading zero's
+     *  "0" so that the order number is always atleast 5 digits long
+     */
+    public function setOrderNumber()
+    {
+        /*  Generate a unique order number.
+         *  Get the order id, and Pad the left side with leading "0"
+         *  e.g 123 = 00123, 1234 = 01234, 12345 = 12345
+         */
+        $order_number = str_pad($this->id, 5, 0, STR_PAD_LEFT);
+
+        /*  Set the unique order number  */
+        $this->update(['number' => $order_number]);
     }
 
     /*  getMetadataInfo()
      *
      *  This method returns the metadata template that contains order
-     *  design and custom information defined by the orders owning
+     *  design and custom information defined by the order's owning
      *  merchant
      */
-    public function getMetadataInfo( $merchant )
+    public function getMetadataInfo($merchant)
     {
         /*  Get the merchants order settings  */
         $orderSettings = $merchant->settings['details']['orderTemplate'] ?? null;
 
         /*  If the merchants order settings were found  */
-        if( $orderSettings ){
-         
+        if ($orderSettings) {
             $template = [
-
-                'heading_title' =>  $orderSettings['heading_title'],
-                'reference_no_title' =>  $orderSettings['reference_no_title'],
-                'created_date_title' =>  $orderSettings['created_date_title'],
-                'sub_total_title' =>  $orderSettings['sub_total_title'],
-                'grand_total_title' =>  $orderSettings['grand_total_title'],
-                'recipient_title' =>  $orderSettings['recipient_title'],
-                'table_columns' =>  $orderSettings['table_columns'],
-                'notes' =>  $orderSettings['notes'],
-                'colors' =>  $orderSettings['colors'],
-                'footer_notes' =>  $orderSettings['footer_notes']
-
+                'heading_title' => $orderSettings['heading_title'],
+                'reference_no_title' => $orderSettings['reference_no_title'],
+                'created_date_title' => $orderSettings['created_date_title'],
+                'sub_total_title' => $orderSettings['sub_total_title'],
+                'grand_total_title' => $orderSettings['grand_total_title'],
+                'recipient_title' => $orderSettings['recipient_title'],
+                'table_columns' => $orderSettings['table_columns'],
+                'notes' => $orderSettings['notes'],
+                'colors' => $orderSettings['colors'],
+                'footer_notes' => $orderSettings['footer_notes'],
             ];
 
             return $template;
-
         }
     }
-    
-    /*  recordActivity()
-     *
-     *  This method saves the activity of the order with a specified status
-     *  as well as activity data and the authenticated user responsible 
-     *  for the activity.
-     */
-    public function recordActivity($status, $data = null)
-    {   
-        return ( new \App\RecentActivity() )->saveActivity($this, $status, $data);
+
+    public function setStatusToPendingPayment()
+    {
+        /*  Set order status to "Pending Payment"  */
+        $this->update([
+            'manual_status' => 'pending_payment',
+        ]);
+
+        /*  Record the activity of the the order status set to "pending payment"  */
+        $this->recordActivity('pending payment');
+    }
+
+    public function setStatusToFailedPayment()
+    {
+        /*  Set order status to "Failed Payment"  */
+        $this->update([
+            'manual_status' => 'failed_payment',
+        ]);
+
+        /*  Record the activity of the the order status set to "paid"  */
+        $this->recordActivity('failed payment');
+    }
+
+    public function setStatusToPaid()
+    {
+        /*  Set order status to "Paid"  */
+        $this->update([
+            'manual_status' => 'paid',
+        ]);
+
+        /*  Record the activity of the the order status set to "paid"  */
+        $this->recordActivity('paid');
     }
 
     public function convertToInvoice($template)
@@ -249,50 +264,80 @@ trait OrderTraits
         $invoice = ( new Invoice() )->initiateCreate($template);
 
         /*  If the invoice was created successfully  */
-        if( $invoice ){
-
+        if ($invoice) {
             /*  Assign the new invoice to the order  */
             $invoice->update([
-                'owner_id' => $this->id, 
-                'owner_type' => $this->resource_type
+                'owner_id' => $this->id,
+                'owner_type' => $this->resource_type,
             ]);
-
         }
 
         //  Return the created invoice
         return $invoice;
     }
 
+    public function smsOrderToMerchant()
+    {
+        /*  Get the merchants default mobile number or the first available mobile number  */
+        $mobile = $this->merchant->default_mobile ?? $this->merchant->mobiles()->first();
 
+        /*  If we have a mobile phone  */
+        if ($mobile) {
+            /*  Send order sms  */
+            Twilio::message('+'.$mobile['calling_code'].$mobile['number'], $this->createOrderSms());
+        }
+    }
 
+    public function createOrderSms()
+    {
+        /*  Set the character limit  */
+        $character_limit = 160;
 
+        /*  Get the order number  */
+        $order_number = $this->number;
 
+        /*  Get the order grand total  */
+        $grand_total = number_format($this->grand_total, 2, '.', ',');
 
+        /*  Get the currency symbol or currency code  */
+        $currency = $this->currency['symbol'] ?? $this->currency['code'];
 
+        /*  Get the reference contact number  */
+        $mobile = $this->reference->default_mobile ?? $this->reference->mobiles()->first();
+        $mobile_number = $mobile['calling_code'].$mobile['number'];
 
+        /*  Get the cart items (inline)  e.g 1x(Product 1), 2x(Product 3)  */
+        $items_inline = ( new \App\MyCart() )->getItemsSummarizedInline($this->item_lines);
 
+        /*  Craft the sms message  */
+        $order_number = 'Order #'.$order_number.', ';
+        $items = 'for '.$items_inline;
+        $amount = 'Amount: '.$currency.$grand_total.'.';
+        $dial = 'Dial '.config('app.MERCHANT_USSD_CODE').' to view order. Customer: '.$mobile_number;
 
+        $characters_left = ($character_limit - strlen($order_number.$amount.$dial));
+        $summarized_items = $this->truncateWithDots($items.(strlen($items) < $characters_left ? '.' : ''), $characters_left);
+        $sms = $order_number.$summarized_items.$amount.$dial;
 
+        /*  Return the sms message  */
+        return $sms;
+    }
 
+    public function truncateWithDots($string, $limit)
+    {
+        return (strlen($string) > $limit) ? substr($string, $limit - 3).'...' : $string;
+    }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    /*  recordActivity()
+     *
+     *  This method saves the activity of the order with a specified status
+     *  as well as activity data and the authenticated user responsible
+     *  for the activity.
+     */
+    public function recordActivity($status, $data = null)
+    {
+        return ( new \App\RecentActivity() )->saveActivity($this, $status, $data);
+    }
 
     /*  initiateGetAll() method:
      *
@@ -623,7 +668,7 @@ trait OrderTraits
 
             /*  Company Info  */
             'company_info' => request('company_info') ?? null,
-            
+
             /*  Allocation Details  */
             'orderable_id' => $store->id ?? null,
             'orderable_type' => 'store',
@@ -665,13 +710,11 @@ trait OrderTraits
 
                 //  If the invoice was created successfully
                 if ($invoiceRequest && $invoiceRequest['success']) {
-
                     //  Get the invoice created
                     $invoice = $invoiceRequest['response'];
 
                     //  Send the order invoice
                     $sentOrderMail = $this->checkAndSendOrderInvoice($invoice, $order, $store);
-
                 }
 
                 //  refetch the updated order
@@ -702,12 +745,10 @@ trait OrderTraits
      */
     public function initiateUpdate($order_id)
     {
-        
     }
 
     public function checkAndCreateLifecycle($order, $store)
     {
-
         /*  $defaultLifecycle:
          *  The default lifecycle represents the lifecycle process followed
          *  by orders of a particular company.
@@ -792,8 +833,6 @@ trait OrderTraits
         return ['success' => false, 'response' => 'Proof of payment was not updated. The current lifecycle is not pending payment'];
     }
 
-
-
     public function checkAndSendOrderInvoice($invoice, $order, $store)
     {
         $auth_user = auth('api')->user();
@@ -805,7 +844,6 @@ trait OrderTraits
 
         //  If specified to send invoice via mail
         if (isset($deliveryMethods) && !empty($deliveryMethods)) {
-
             $mailDetails = request('mail');
 
             //  If specified to send invoice via sms

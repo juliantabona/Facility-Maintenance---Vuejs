@@ -28,12 +28,16 @@ class CreateProductsTable extends Migration
             $table->boolean('auto_track_stock')->default(1);
             $table->json('variants')->nullable();
             $table->json('variant_attributes')->nullable();
+            $table->unsignedInteger('parent_product_id')->nullable();
             $table->boolean('allow_variants')->default(0);
             $table->boolean('allow_downloads')->default(0);
             $table->boolean('show_on_store')->default(1);
             $table->boolean('is_new')->default(1);
             $table->boolean('is_featured')->default(1);
 
+            /*  Access Attributes  */
+            $table->boolean('available_on_ussd')->nullable()->default(false);
+            
             /*  Ownership Information  */
             $table->unsignedInteger('owner_id')->nullable();
             $table->string('owner_type')->nullable();

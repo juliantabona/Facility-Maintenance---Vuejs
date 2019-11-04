@@ -23,8 +23,6 @@ class CreateStoresTable extends Migration
             $table->string('industry')->nullable();
 
             /*  Account Info  */
-            $table->string('email')->nullable();
-            $table->string('additional_email')->nullable();
             $table->boolean('setup')->default(0);
 
             /*  Social Info  */
@@ -38,6 +36,9 @@ class CreateStoresTable extends Migration
             /*  Currency Info  */
             $table->json('currency')->nullable();
             
+            /*  Access Attributes  */
+            $table->boolean('support_ussd')->nullable()->default(false);
+        
             /*  Ownership Information  */
             $table->unsignedInteger('owner_id')->nullable();
             $table->string('owner_type')->nullable();

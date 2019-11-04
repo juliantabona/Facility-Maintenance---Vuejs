@@ -19,6 +19,7 @@ class CreateOrdersTable extends Migration
             $table->string('number')->nullable();
             $table->string('currency')->nullable();
             $table->timestampTz('created_date')->nullable();
+            $table->string('manual_status')->nullable();
 
             /*  Item Info  */
             $table->json('item_lines')->nullable();

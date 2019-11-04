@@ -30,29 +30,25 @@ class LoginController extends Controller
     {
         //  API Request
         if (oq_viaAPI($request)) {
+
             $accessToken = auth()->user()->token();
             $refreshToken = DB::table('oauth_refresh_tokens')
                                 ->where('access_token_id', $accessToken->id)
-                                ->update([
-                                    'revoked' => true,
-                                ]);
+                                ->update(['revoked' => true]);
             $accessToken->revoke();
 
             return response()->json(null, 204);
 
-        //  Non API Request
-        } else {
-            $this->performLogout($request);
-
-            return redirect()->route('login');
         }
     }
 
-    //  Allow for login using email and username
+    /*
+     *  Allow for login using email or mobile number
+     */
     public function username()
     {
         $identity = request()->input('identity');
-        $field = filter_var($identity, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        $field = filter_var($identity, FILTER_VALIDATE_EMAIL) ? 'email' : 'mobile_number';
         request()->merge([$field => $identity]);
 
         return $field;
@@ -65,20 +61,14 @@ class LoginController extends Controller
      */
     protected function authenticated(Request $request, $user)
     {
-        //  Check if the user activated their account
-        if (!$user->verified) {
+        //  Check if the user verified their account
+        if (!$user->account_verified) {
             //  If this is an API Request
             if (oq_viaAPI($request)) {
                 return oq_api_notify([
                     'message' => 'Activate account',
                     'user' => $user,
                 ], 403);
-            } else {
-                //  Notify the user to activate their account
-                oq_notify('Activate account', 'warning');
-
-                //  Go to login page
-                return redirect('login');
             }
         } else {
             if (oq_viaAPI($request)) {
@@ -112,28 +102,28 @@ class LoginController extends Controller
         // the login attempts for this application. We'll key this by the username and
         // the IP address of the client making these requests into this application.
         if ($this->hasTooManyLoginAttempts($request)) {
+
             $this->fireLockoutEvent($request);
 
             return $this->sendLockoutResponse($request);
         }
 
-        if ($this->guard()->validate($this->credentials($request))) {
-            $user = $this->guard()->getLastAttempted();
+        //  Get the users identity information. This identity can be
+        //  the users email or mobile number. We can assume that the
+        //  user provided either the email or the mobile number.
+        $identity = [
+            'email' => request()->input('identity'),
+            'mobile_number' => request()->input('identity')
+        ];
 
-            // Attempt to login
-            if ($this->attemptLogin($request)) {
-                // Send the normal successful login response
-                return $this->sendLoginResponse($request);
-            } else {
-                // Increment the failed login attempts and redirect back to the
-                // login form with an error message.
-                $this->incrementLoginAttempts($request);
+        //  Get the users password information.
+        $password = request()->input('password');
 
-                return redirect()
-                    ->back()
-                    ->withInput($request->only($this->username(), 'remember'))
-                    ->withErrors(['active' => 'You must be active to login.']);
-            }
+        //  Use the users identity and password to login
+        if ( $user = (new \App\User)->initiateUserLogin( $identity, $password ) ) {
+
+            return $this->sendLoginResponse($request);
+
         }
 
         // If the login attempt was unsuccessful we will increment the number of attempts

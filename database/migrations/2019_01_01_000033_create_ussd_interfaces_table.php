@@ -19,10 +19,10 @@ class CreateUssdInterfacesTable extends Migration
             $table->string('name')->nullable();
             $table->string('description')->nullable();
             $table->string('code')->nullable();
-            $table->boolean('live_mode')->default(0);
 
             /*  Ownership Information  */
-            $table->unsignedInteger('store_id');
+            $table->unsignedInteger('owner_id')->nullable();
+            $table->string('owner_type')->nullable();
 
             /*  Timestamps  */
             $table->timestamps();

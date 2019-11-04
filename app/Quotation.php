@@ -115,7 +115,7 @@ class Quotation extends Model
     ];
 
     /*
-     *  Returns the owner of the quotation 
+     *  Returns the owner of the quotation e.g
      *  The quotation can be owned by a particular 
      *  order but have the store as the merchant
      */
@@ -139,16 +139,16 @@ class Quotation extends Model
      */
     public function customer()
     {
-        return $this->morphTo();
+        return $this->belongsTo('App\Contact', 'customer_id');
     }
 
     /*
      *  Returns the reference of the quotation
-     *  This refers to the user who submitted the quotation
+     *  This refers to the user who submitted/placed the quotation
      */
     public function reference()
     {
-        return $this->belongsTo('App\User', 'reference_id');
+        return $this->belongsTo('App\Contact', 'reference_id');
     }
 
     /*  

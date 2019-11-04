@@ -23,7 +23,7 @@ class Contact extends Model
         'is_individual' => 'boolean', //  Return the following 1/0 as true/false
     ];
 
-    protected $with = ['phones'];
+    protected $with = ['phones', 'emails', 'addresses'];
 
     /**
      * The attributes that are mass assignable.
@@ -126,7 +126,30 @@ class Contact extends Model
 
     /*  Attributes */
 
-    protected $appends = ['default_mobile', 'default_email', 'default_address', 'resource_type'];
+    protected $appends = [
+        'phone_list', 'default_mobile', 'default_email', 'default_address', 'resource_type'
+    ];
+
+    /* 
+     *  Returns the contact phones separated with commas
+     */
+    public function getPhoneListAttribute()
+    {
+        $phoneList = '';
+        $phones = $this->phones()->whereIn('type', ['mobile', 'tel'])->get();
+
+        foreach ($phones as $key => $phone) {
+
+            /*  Merge the calling code and phone number  */
+            $phoneList .= ($key != 0 ? ', ' : '').'(+'.$phone['calling_code'].') '.$phone['number'];
+
+            /*  If this is not the last item add "," otherwise nothing  */
+            $phoneList .= (next($phones)) ? ', ' : '';
+
+        }
+
+        return $phoneList;
+    }
 
     /* 
      *  Returns the contacts default mobile phone

@@ -23,8 +23,6 @@ class CreateAccountsTable extends Migration
             $table->string('industry')->nullable();
 
             /*  Account Info  */
-            $table->string('email')->nullable();
-            $table->string('additional_email')->nullable();
             $table->boolean('setup')->default(0);
 
             /*  Social Info  */

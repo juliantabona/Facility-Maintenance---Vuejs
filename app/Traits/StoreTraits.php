@@ -104,6 +104,17 @@ trait StoreTraits
         }
     }
 
+    /*  findContactById()
+     *
+     *  This method returns the first store contact that
+     *  mataches the id specified
+     */
+    public function findContactById($id)
+    {
+        /*  Retrieve the store contact */
+        return $this->contacts()->where('contacts.id', $id )->first();
+    }
+
     /*  getBasicInfo() method:
      *
      *  This method is used to get the general information about the store

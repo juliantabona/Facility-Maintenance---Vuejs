@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use DB;
 use Mail;
+use Auth;
 use App\User;
 use App\Phone;
 use App\Document;
@@ -117,6 +118,56 @@ trait UserTraits
                 return oq_api_notify_no_resource();
             
             }
+
+        } catch (\Exception $e) {
+
+            //  Log the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+        }
+    }
+
+    /*  initiateUserLogin() method:
+     *
+     *  This is used to return the specified or currently authenticated user
+     *
+     *  @param $identity - An array containing an email, mobile number or both
+     *  @param $password - A string containing the users password
+     */
+    public function initiateUserLogin( $identity = [], $password = null )
+    {
+        try {
+            
+            /*
+             *  Search for any existing user account with the given identity
+             *  and password
+             */
+            $user = $this->findMatchingAccount($identity);
+
+            $account_verified = Hash::check($password, $user->getAuthPassword());
+
+            /*
+             *  If a user account was returned
+             */
+            if( $account_verified ){
+
+                /*
+                 *  Since a user account was found, this means the user's credential
+                 *  are correct. We can now allow the user to login
+                 */
+                Auth::guard('web')->login($user);
+
+                /*
+                 *  Return the logged in user
+                 */
+                return Auth::guard()->user();
+
+            }
+            
+            /*
+             *  Return false to indicate that the user credentials are incorrect
+             */
+            return false;
 
         } catch (\Exception $e) {
 
@@ -787,13 +838,16 @@ trait UserTraits
     public function generateToken($request)
     {
         $http = new \GuzzleHttp\Client();
+        $password = $request->input('password');
+        $username = $this->emails()->verified()->first()->email ?? $this->mobiles()->verified()->first()->number;
+
         $response = $http->post(URL::to('/').'/oauth/token', [
             'form_params' => [
                 'grant_type' => 'password',
-                'customer_id' => '2',
-                'customer_secret' => '8BMbdQUBaVMbspLnmUhE0XVjbv4QDlyGJyTsNW4s',
-                'username' => $this->email,
-                'password' => $request->input('password'),
+                'client_id' => '2',
+                'client_secret' => '8BMbdQUBaVMbspLnmUhE0XVjbv4QDlyGJyTsNW4s',
+                'username' => $username,
+                'password' => $password,
                 'scope' => '',
             ],
         ]);

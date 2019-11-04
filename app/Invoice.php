@@ -57,7 +57,7 @@ class Invoice extends Model
     protected $fillable = [
 
         /*  Basic Info  */
-        'number', 'currency', 'created_date', 'expiry_date',  'quotation_id',
+        'number', 'currency', 'created_date', 'expiry_date', 'quotation_id',
 
         /*  Item Info  */
         'item_lines',
@@ -119,7 +119,7 @@ class Invoice extends Model
     ];
 
     /*
-     *  Returns the owner of the invoice 
+     *  Returns the owner of the invoice e.g
      *  The invoice can be owned by a particular 
      *  order but have the store as the merchant
      */
@@ -143,16 +143,16 @@ class Invoice extends Model
      */
     public function customer()
     {
-        return $this->morphTo();
+        return $this->belongsTo('App\Contact', 'customer_id');
     }
 
     /*
      *  Returns the reference of the invoice
-     *  This refers to the user who submitted the invoice
+     *  This refers to the user who submitted/placed the invoice
      */
     public function reference()
     {
-        return $this->belongsTo('App\User', 'reference_id');
+        return $this->belongsTo('App\Contact', 'reference_id');
     }
 
     /*  
@@ -368,12 +368,19 @@ class Invoice extends Model
 
 
     protected $appends = [
-        'transaction_total', 'refund_total', 'outstanding_balance', 'status', 'has_paid', 
-        'has_expired', 'has_cancelled', 'has_sent', 'has_skipped_sending', 'has_sent_receipt', 
+        'resource_type', 'transaction_total', 'refund_total', 'outstanding_balance', 'status', 
+        'has_paid', 'has_expired', 'has_cancelled', 'has_sent', 'has_skipped_sending', 'has_sent_receipt', 
         'has_approved', 'has_set_recurring_schedule_plan', 'has_set_recurring_delivery_plan', 
-        'has_set_recurring_payment_plan', 'has_approved_recurring_settings',
-        
+        'has_set_recurring_payment_plan', 'has_approved_recurring_settings', 
     ];
+
+    /* 
+     *  Returns the resource type
+     */
+    public function getResourceTypeAttribute()
+    {
+        return strtolower(class_basename($this));
+    }
 
     /* 
      *  Returns the total payment made to this invoice

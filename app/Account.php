@@ -24,7 +24,7 @@ class Account extends Model
         'currency' => 'array'
     ];
 
-    protected $with = ['phones'];
+    protected $with = ['phones', 'emails', 'addresses'];
 
     /**
      * The attributes that are mass assignable.
@@ -37,7 +37,7 @@ class Account extends Model
         'name', 'abbreviation', 'description', 'type', 'industry',  
         
         /*  Account Info  */
-        'email', 'additional_email', 'setup', 
+        'setup', 
         
         /*  Social Info  */
         'website_link', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link',
@@ -79,7 +79,6 @@ class Account extends Model
     {
         return $this->morphMany('App\Phone', 'owner')->orderBy('created_at', 'desc');
     }
-
     /* 
      *  Returns phones categorized as mobile phones
      */
@@ -110,6 +109,14 @@ class Account extends Model
     public function addresses()
     {
         return $this->morphMany('App\Address', 'owner')->orderBy('created_at', 'desc');
+    }
+
+    /* 
+     *  Returns emails associated with this account
+     */
+    public function emails()
+    {
+        return $this->morphMany('App\Email', 'owner')->orderBy('created_at', 'desc');
     }
 
     /* 
@@ -461,7 +468,7 @@ class Account extends Model
     /* ATTRIBUTES */
 
     protected $appends = [
-        'logo', 'address', 'resource_type', 'phone_list', 
+        'logo', 'phone_list', 'default_mobile', 'default_email', 'default_address', 'resource_type',  
         'last_approved_activity', 'is_approved', 'current_activity_status',
         'activity_count'
     ];
@@ -475,9 +482,46 @@ class Account extends Model
     }
 
     /* 
-     *  Returns the account default address
+     *  Returns the account phones separated with commas
      */
-    public function getAddressAttribute()
+    public function getPhoneListAttribute()
+    {
+        $phoneList = '';
+        $phones = $this->phones()->whereIn('type', ['mobile', 'tel'])->get();
+
+        foreach ($phones as $key => $phone) {
+
+            /*  Merge the calling code and phone number  */
+            $phoneList .= ($key != 0 ? ', ' : '').'(+'.$phone['calling_code'].') '.$phone['number'];
+
+            /*  If this is not the last item add "," otherwise nothing  */
+            $phoneList .= (next($phones)) ? ', ' : '';
+
+        }
+
+        return $phoneList;
+    }
+
+    /* 
+     *  Returns the store default mobile phone
+     */
+    public function getDefaultMobileAttribute()
+    {
+        return $this->mobiles()->where('default', 1)->first();
+    }
+
+    /* 
+     *  Returns the store default email
+     */
+    public function getDefaultEmailAttribute()
+    {
+        return $this->emails()->where('default', 1)->first();
+    }
+
+    /* 
+     *  Returns the store default address
+     */
+    public function getDefaultAddressAttribute()
     {
         return $this->addresses()->where('default', 1)->first();
     }
@@ -488,21 +532,6 @@ class Account extends Model
     public function getResourceTypeAttribute()
     {
         return strtolower(class_basename($this));
-    }
-
-    /* 
-     *  Returns the account phones separated with commas
-     */
-    public function getPhoneListAttribute()
-    {
-        $phoneList = '';
-        $phones = $this->phones()->get();
-
-        foreach ($phones as $key => $phone) {
-            $phoneList .= ($key != 0 ? ', ' : '').'(+'.$phone['calling_code']['calling_code'].') '.$phone['number'];
-        }
-
-        return $phoneList;
     }
 
     /* 

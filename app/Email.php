@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
+    'user' => 'App\User',
+    'store' => 'App\Store',
+    'account' => 'App\Account',
     'contact' => 'App\Contact',
 ]);
 
@@ -18,7 +21,10 @@ class Email extends Model
     use EmailTraits;
     
     protected $casts = [
+        
         'default' => 'boolean', //  Return the following 1/0 as true/false
+        'verified' => 'boolean', //  Return the following 1/0 as true/false
+        
     ];
 
     /**
@@ -29,7 +35,7 @@ class Email extends Model
     protected $fillable = [
 
         /*  Email Details  */
-        'email', 'default',
+        'email', 'default', 'verified',
 
         /*  Ownership Information  */
         'owner_id', 'owner_type'
@@ -39,6 +45,15 @@ class Email extends Model
     protected $allowedFilters = [];
 
     protected $allowedOrderableColumns = [];
+
+    /* 
+     *  Scope to only return verified records e.g
+     *  Returning only verified emails
+     */
+    public function scopeVerified($query)
+    {
+        return $query->where('verified', 1);
+    }
 
     /* 
      *  Returns the owner of the email
@@ -65,6 +80,11 @@ class Email extends Model
     public function setDefaultAttribute($value)
     {
         $this->attributes['default'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
+    }
+
+    public function setVerifiedAttribute($value)
+    {
+        $this->attributes['verified'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
     }
 
 }

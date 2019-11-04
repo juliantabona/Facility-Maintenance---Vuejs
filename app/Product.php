@@ -31,12 +31,13 @@ class Product extends Model
 
         //  Return the following 1/0 as true/false
         'is_new' => 'boolean',
+        'allow_stock' => 'boolean',
         'is_featured' => 'boolean',
         'show_on_store' => 'boolean',
-        'allow_stock' => 'boolean',
         'allow_variants' => 'boolean',
         'allow_downloads' => 'boolean',
         'auto_track_stock' => 'boolean',
+        'available_on_ussd' => 'boolean',
     ];
 
     protected $with = ['gallery', 'taxes', 'discounts', 'coupons', 'categories', 'tags'];
@@ -47,22 +48,23 @@ class Product extends Model
      * @var array
      */
     protected $fillable = [
-
         /*  Product Details  */
         'name', 'description', 'type', 'cost_per_item', 'unit_regular_price', 'unit_sale_price',
         'sku', 'barcode', 'stock_quantity', 'allow_stock', 'auto_track_stock', 'variants',
         'variant_attributes', 'allow_variants', 'allow_downloads', 'show_on_store',
         'is_new', 'is_featured',
 
+        'available_on_ussd',
+
         /*  Ownership Information  */
-        'owner_id', 'owner_type'
+        'owner_id', 'owner_type',
     ];
 
     protected $allowedFilters = [];
 
     protected $allowedOrderableColumns = [];
 
-    /* 
+    /*
      *  Scope by type
      */
     public function scopeWhereType($query, $type)
@@ -70,9 +72,9 @@ class Product extends Model
         return $query;
     }
 
-    /*  
+    /*
      *  Returns documents associated with this product. These are various files such as images,
-     *  videos, files and so on. Basically any file/image/video the user wants to save to 
+     *  videos, files and so on. Basically any file/image/video the user wants to save to
      *  this product is stored in this relation
      */
 
@@ -81,7 +83,7 @@ class Product extends Model
         return $this->morphMany('App\Document', 'owner');
     }
 
-    /* 
+    /*
      *  Returns documents categorized as gallery
      */
     public function gallery()
@@ -89,7 +91,7 @@ class Product extends Model
         return $this->documents()->whereType('gallery');
     }
 
-    /* 
+    /*
      *  Returns documents categorized as downloads
      */
     public function downloads()
@@ -97,7 +99,7 @@ class Product extends Model
         return $this->documents()->whereType('download');
     }
 
-    /* 
+    /*
      *  Returns the product settings
      */
     public function settings()
@@ -105,7 +107,29 @@ class Product extends Model
         return $this->morphOne('App\Setting', 'owner');
     }
 
-    /* 
+    /*
+     *  Returns the product variations. Variations are different
+     *  versions of this product such as when this product is
+     *  available in different sizes, colors or materials, then
+     *  it will have products with different variables.
+     */
+    public function variations()
+    {
+        return $this->hasMany('App\Product', 'parent_product_id');
+    }
+
+    /*
+     *  Returns the product variables. These are properties that
+     *  make this product a variation e.g size=small, color=blue,
+     *  and material=cotton are all variables that make this
+     *  product different from all other variable products.
+     */
+    public function variables()
+    {
+        return $this->hasMany('App\Variable', 'product_id');
+    }
+
+    /*
      *  Returns the owner of the product
      */
     public function owner()
@@ -113,7 +137,7 @@ class Product extends Model
         return $this->morphTo();
     }
 
-    /* 
+    /*
      *  Returns the product taxes
      */
     public function taxes()
@@ -121,7 +145,7 @@ class Product extends Model
         return $this->morphToMany('App\Tax', 'owner', 'tax_allocations');
     }
 
-    /* 
+    /*
      *  Returns the product discounts
      */
     public function discounts()
@@ -129,7 +153,7 @@ class Product extends Model
         return $this->morphToMany('App\Discount', 'owner', 'discount_allocations');
     }
 
-    /* 
+    /*
      *  Returns the product coupons
      */
     public function coupons()
@@ -137,7 +161,7 @@ class Product extends Model
         return $this->morphToMany('App\Coupon', 'owner', 'coupon_allocations');
     }
 
-    /* 
+    /*
      *  Returns reviews sent to this product
      */
     public function reviews()
@@ -161,7 +185,7 @@ class Product extends Model
         return $this->morphToMany('App\Tag', 'owner', 'tag_allocations');
     }
 
-    /* 
+    /*
      *  Returns recent activities owned by this product
      */
     public function recentActivities()
@@ -172,11 +196,38 @@ class Product extends Model
     /* ATTRIBUTES */
 
     protected $appends = [
-        'primary_image', 'unit_price', 'discount_total', 'tax_total', 'sub_total' , 'grand_total', 
-        'on_sale', 'stock_status', 'currency', 'rating_count', 'average_rating', 'resource_type'
+        'variations', 'variables',
+        'primary_image', 'unit_price', 'discount_total', 'tax_total', 'sub_total', 'grand_total',
+        'on_sale', 'stock_status', 'currency', 'rating_count', 'average_rating', 'resource_type',
     ];
 
-    /* 
+    
+
+    /*
+     *  Returns the product variations
+     */
+    public function getVariationsAttribute()
+    {
+        if($this->allow_variants){
+            
+            return $this->variations()->get();
+
+        }
+    }
+
+    /*
+     *  Returns the product variables
+     */
+    public function getVariablesAttribute()
+    {
+        if($this->parent_product_id){
+            
+            return $this->variables()->get();
+
+        }
+    }
+
+    /*
      *  Returns the product primary image
      */
     public function getPrimaryImageAttribute()
@@ -184,9 +235,9 @@ class Product extends Model
         return $this->documents()->whereType('primary')->first();
     }
 
-    /* 
+    /*
      *  Returns the product price for one unit
-     * 
+     *
      *  This is the total price of the product based on the regular
      *  price and the sale price.
      */
@@ -196,59 +247,49 @@ class Product extends Model
         return $this->unit_sale_price ?? $this->unit_regular_price;
     }
 
-    /* 
+    /*
      *  Returns the product total discount
      */
-     public function getDiscountTotalAttribute()
-     {
-         
+    public function getDiscountTotalAttribute()
+    {
         $discount_total = 0;
 
         //  Foreach discount
         foreach ($this->discounts as $discount) {
-
             //  If its a percentage rate based discount
             if ($discount['type'] == 'rate') {
-
                 //  Calculate the percentage discount amount and add to the total discount
                 $discount_total += $discount['rate'] * $this->unit_price;
 
             //  If its a fixed rate based discount
             } elseif ($discount['type'] == 'fixed') {
-
                 //  Add the fixed discount to the total discount
                 $discount_total += $discount['amount'];
-
             }
-            
         }
 
         return $discount_total;
+    }
 
-     }
-
-    /* 
+    /*
      *  Returns the product total tax
      */
-     public function getTaxTotalAttribute()
-     {
-         
+    public function getTaxTotalAttribute()
+    {
         $tax_total = 0;
 
         //  Foreach tax
         foreach ($this->taxes as $tax) {
-
             //  Calculate the percentage tax amount and add to the total tax
             $tax_total += $tax['rate'] * $this->unit_price;
-
         }
 
         return $tax_total;
-     }
- 
-    /* 
+    }
+
+    /*
      *  Returns the product sub-total price
-     * 
+     *
      *  This is the total price of the product without the tax total and discount
      *  total included. It is the total price of the product based on a quantity
      *  of 1. It is exactly the same as the unit price since its only a quantity
@@ -260,9 +301,9 @@ class Product extends Model
         return $this->unit_price;
     }
 
-    /* 
+    /*
      *  Returns the product grand-total price
-     * 
+     *
      *  This is the total price of the product with the tax total
      *  and discount total included. It shows how much the product
      *  costs after taxing and discounting the product
@@ -279,7 +320,7 @@ class Product extends Model
         return $total;
     }
 
-    /* 
+    /*
      *  Returns true if the product is on sale
      */
     public function getOnSaleAttribute()
@@ -287,24 +328,20 @@ class Product extends Model
         return isset($this->unit_sale_price) ? true : false;
     }
 
-    /* 
+    /*
      *  Returns the product stock status
      */
     public function getStockStatusAttribute()
     {
         //  If we allow stock and the quantity is greater than 0
-        if( $this->allow_stock && $this->stock_quantity > 0 ){
-
+        if ($this->allow_stock && $this->stock_quantity > 0) {
             return 'In stock';
-            
-        }else{
-
+        } else {
             return 'Out of stock';
-
         }
     }
 
-    /* 
+    /*
      *  Returns the product owner's currency
      */
     public function getCurrencyAttribute()
@@ -313,7 +350,7 @@ class Product extends Model
         return $this->owner->currency;
     }
 
-    /* 
+    /*
      *  Returns the product's total number of ratings
      */
     public function getRatingCountAttribute()
@@ -322,7 +359,7 @@ class Product extends Model
         $reviews = $this->reviews()->count();
     }
 
-    /* 
+    /*
      *  Returns the product average rating
      */
     public function getAverageRatingAttribute()
@@ -331,15 +368,13 @@ class Product extends Model
         $reviews = $this->reviews ?? [];
 
         //  If we have any reviews
-        if( $reviews ){
-            
+        if ($reviews) {
             //  Return the average of the ratings combined
-            return collect( $reviews )->avg('rating');
-
+            return collect($reviews)->avg('rating');
         }
     }
 
-    /* 
+    /*
      *  Returns the resource type
      */
     public function getResourceTypeAttribute()
@@ -349,37 +384,41 @@ class Product extends Model
 
     public function setAllowStockAttribute($value)
     {
-        $this->attributes['allow_stock'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
+        $this->attributes['allow_stock'] = (($value == 'true' || $value == '1') ? 1 : 0);
     }
 
     public function setAutoTrackStockAttribute($value)
     {
-        $this->attributes['auto_track_stock'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
+        $this->attributes['auto_track_stock'] = (($value == 'true' || $value == '1') ? 1 : 0);
     }
 
     public function setAllowVariantsAttribute($value)
     {
-        $this->attributes['allow_variants'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
+        $this->attributes['allow_variants'] = (($value == 'true' || $value == '1') ? 1 : 0);
     }
 
     public function setAllowDownloadsAttribute($value)
     {
-        $this->attributes['allow_downloads'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
+        $this->attributes['allow_downloads'] = (($value == 'true' || $value == '1') ? 1 : 0);
     }
 
     public function setShowOnStoreAttribute($value)
     {
-        $this->attributes['show_on_store'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
+        $this->attributes['show_on_store'] = (($value == 'true' || $value == '1') ? 1 : 0);
     }
 
     public function setIsNewAttribute($value)
     {
-        $this->attributes['is_new'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
+        $this->attributes['is_new'] = (($value == 'true' || $value == '1') ? 1 : 0);
     }
 
     public function setIsFeaturedAttribute($value)
     {
-        $this->attributes['is_featured'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
+        $this->attributes['is_featured'] = (($value == 'true' || $value == '1') ? 1 : 0);
     }
 
+    public function setAvailableOnUssdAttribute($value)
+    {
+        $this->attributes['available_on_ussd'] = (($value == 'true' || $value == '1') ? 1 : 0);
+    }
 }

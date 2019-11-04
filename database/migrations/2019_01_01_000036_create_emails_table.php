@@ -18,6 +18,7 @@ class CreateEmailsTable extends Migration
             /*  Email Details  */
             $table->string('email')->nullable();
             $table->boolean('default')->nullable()->default(false);
+            $table->boolean('verified')->nullable()->default(false);
 
             /*  Ownership Information  */
             $table->unsignedInteger('owner_id')->nullable();

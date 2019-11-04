@@ -21,6 +21,7 @@ class CreatePhonesTable extends Migration
             $table->unsignedInteger('number')->nullable();
             $table->string('provider')->nullable();
             $table->boolean('default')->nullable()->default(false);
+            $table->boolean('verified')->nullable()->default(false);
 
             /*  Ownership Information  */
             $table->unsignedInteger('owner_id')->nullable();

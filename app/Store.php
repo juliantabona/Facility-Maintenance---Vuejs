@@ -25,10 +25,11 @@ class Store extends Model
      * @var string
      */
     protected $casts = [
-        'currency' => 'array'
+        'currency' => 'array',
+        'support_ussd' => 'boolean', //  Return the following 1/0 as true/false
     ];
 
-    protected $with = ['phones'];
+    protected $with = ['phones', 'emails', 'addresses'];
 
     /**
      * The attributes that are mass assignable.
@@ -41,13 +42,16 @@ class Store extends Model
         'name', 'abbreviation', 'description', 'type', 'industry',  
         
         /*  Account Info  */
-        'email', 'additional_email', 'setup', 
+        'setup', 
         
         /*  Social Info  */
         'website_link', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link',
 
         /*  Currency Info  */
         'currency',
+
+        /*  Access Attributes  */
+        'support_ussd',
 
         /*  Ownership Info  */
         'owner_id', 'owner_type'
@@ -59,11 +63,21 @@ class Store extends Model
     protected $allowedOrderableColumns = [];
 
     /* 
-     *  Scope by type
+     *  Scope:
+     *  Return stores that support USSD access (Accessible by 2G Devices via USSD)
      */
-    public function scopeWhereType($query, $type)
+    public function scopeSupportUssd($query)
     {
-        return $query;
+        return $this->whereSupportUssd(1);
+    }
+
+    /* 
+     *  Scope:
+     *  Return stores that don't support USSD access (Accessible by 2G Devices via USSD)
+     */
+    public function scopeDontSupportUssd()
+    {
+        return $this->whereSupportUssd(0);
     }
 
     /*  
@@ -95,7 +109,6 @@ class Store extends Model
     {
         return $this->morphMany('App\Phone', 'owner')->orderBy('created_at', 'desc');
     }
-
     /* 
      *  Returns phones categorized as mobile phones
      */
@@ -126,6 +139,14 @@ class Store extends Model
     public function addresses()
     {
         return $this->morphMany('App\Address', 'owner')->orderBy('created_at', 'desc');
+    }
+
+    /* 
+     *  Returns emails associated with this store
+     */
+    public function emails()
+    {
+        return $this->morphMany('App\Email', 'owner')->orderBy('created_at', 'desc');
     }
 
     /* 
@@ -279,6 +300,14 @@ class Store extends Model
     }
 
     /* 
+     *  Returns the USSD Interface owned by this store
+     */
+    public function ussdInterface()
+    {
+        return $this->morphOne('App\UssdInterface', 'owner');
+    }
+
+    /* 
      *  Returns taxes owned by this store
      */
     public function taxes()
@@ -303,11 +332,22 @@ class Store extends Model
     }
 
     /* 
-     *  Returns products owned by this store
+     *  Returns products owned by this store. This includes both
+     *  products available and not available for stores that 
+     *  support USSD accessibility. Basically this will 
+     *  return ALL the products linked to this store
      */
     public function products()
     {
         return $this->morphMany('App\Product', 'owner');
+    }
+
+    /* 
+     *  Return products available for USSD access (Accessible by 2G Devices via USSD)
+     */
+    public function ussdProducts()
+    {
+        return $this->products()->where('available_on_ussd', 1);
     }
 
     /* 
@@ -317,7 +357,7 @@ class Store extends Model
     {
         return $this->morphMany('App\Order', 'merchant');
     }
-
+    
     /* 
      *  Returns messages sent to this store
      */
@@ -420,9 +460,9 @@ class Store extends Model
     /* ATTRIBUTES */
 
     protected $appends = [
-        'logo', 'address', 'average_rating', 'resource_type', 'phone_list', 
-        'last_approved_activity', 'is_approved', 'current_activity_status',
-        'activity_count'
+        'logo', 'phone_list', 'default_mobile', 'default_email', 'default_address', 'average_rating', 
+        'resource_type', 'phone_list', 'last_approved_activity', 'is_approved', 
+        'current_activity_status', 'activity_count'
     ];
 
     /* 
@@ -434,13 +474,50 @@ class Store extends Model
     }
 
     /* 
+     *  Returns the store phones separated with commas
+     */
+    public function getPhoneListAttribute()
+    {
+        $phoneList = '';
+        $phones = $this->phones()->whereIn('type', ['mobile', 'tel'])->get();
+
+        foreach ($phones as $key => $phone) {
+
+            /*  Merge the calling code and phone number  */
+            $phoneList .= ($key != 0 ? ', ' : '').'(+'.$phone['calling_code'].') '.$phone['number'];
+
+            /*  If this is not the last item add "," otherwise nothing  */
+            $phoneList .= (next($phones)) ? ', ' : '';
+
+        }
+
+        return $phoneList;
+    }
+
+    /* 
+     *  Returns the store default mobile phone
+     */
+    public function getDefaultMobileAttribute()
+    {
+        return $this->mobiles()->where('default', 1)->first();
+    }
+
+    /* 
+     *  Returns the store default email
+     */
+    public function getDefaultEmailAttribute()
+    {
+        return $this->emails()->where('default', 1)->first();
+    }
+
+    /* 
      *  Returns the store default address
      */
-    public function getAddressAttribute()
+    public function getDefaultAddressAttribute()
     {
         return $this->addresses()->where('default', 1)->first();
     }
-    
+
     /* 
      *  Returns the store average rating
      */
@@ -464,21 +541,6 @@ class Store extends Model
     public function getResourceTypeAttribute()
     {
         return strtolower(class_basename($this));
-    }
-
-    /* 
-     *  Returns the store phones separated with commas
-     */
-    public function getPhoneListAttribute()
-    {
-        $phoneList = '';
-        $phones = $this->phones()->get();
-
-        foreach ($phones as $key => $phone) {
-            $phoneList .= ($key != 0 ? ', ' : '').'(+'.$phone['calling_code']['calling_code'].') '.$phone['number'];
-        }
-
-        return $phoneList;
     }
 
     /* 
@@ -513,6 +575,11 @@ class Store extends Model
         $count = $this->recentActivities()->select(DB::raw('count(*) as total'))->groupBy('owner_type')->first();
 
         return $count ? $count->only(['total']) : ['total' => 0];
+    }
+
+    public function setSupportUssdAttribute($value)
+    {
+        $this->attributes['support_ussd'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
     }
 
 }
