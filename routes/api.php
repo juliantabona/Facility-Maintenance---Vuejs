@@ -633,6 +633,42 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
     /*********************************
     /*********************************
+     *  PHONE RESOURCE ROUTES     *
+    /*********************************
+    *********************************/
+
+    Route::prefix('phones')->group(function () {
+
+        //  Multiple phones
+        Route::get('/', 'Api\PhoneController@getPhones')->name('phones');
+
+        //  Single phone
+        Route::get('/{phone_id}', 'Api\PhoneController@getPhone')->name('phone')->where('phone_id', '[0-9]+');
+
+        //  Single phone resources
+        Route::prefix('{phone_id}')->name('phone-')->group(function ($group) {
+
+            //  Allow only intergers for phone_id on all group routes
+            foreach ($group->getRoutes() as $route) {
+                $route->where('phone_id', '[0-9]+');
+            }
+
+            //  Owner related resources
+            Route::get('/owner', 'Api\PhoneController@getPhoneOwner')->name('owner');
+
+            //  Wallet related resources
+            Route::get('/wallet', 'Api\PhoneController@getPhoneWallet')->name('wallet');
+
+        });
+
+    });
+
+});
+
+
+
+    /*********************************
+    /*********************************
      *  USSD RESOURCE ROUTES     *
     /*********************************
     *********************************/
@@ -669,40 +705,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
         });
 
     });
-
-    /*********************************
-    /*********************************
-     *  PHONE RESOURCE ROUTES     *
-    /*********************************
-    *********************************/
-
-    Route::prefix('phones')->group(function () {
-
-        //  Multiple phones
-        Route::get('/', 'Api\PhoneController@getPhones')->name('phones');
-
-        //  Single phone
-        Route::get('/{phone_id}', 'Api\PhoneController@getPhone')->name('phone')->where('phone_id', '[0-9]+');
-
-        //  Single phone resources
-        Route::prefix('{phone_id}')->name('phone-')->group(function ($group) {
-
-            //  Allow only intergers for phone_id on all group routes
-            foreach ($group->getRoutes() as $route) {
-                $route->where('phone_id', '[0-9]+');
-            }
-
-            //  Owner related resources
-            Route::get('/owner', 'Api\PhoneController@getPhoneOwner')->name('owner');
-
-            //  Wallet related resources
-            Route::get('/wallet', 'Api\PhoneController@getPhoneWallet')->name('wallet');
-
-        });
-
-    });
-
-});
 
 Route::post('/pusher/auth', function (Request $request) {
     $pusher = new Pusher\Pusher(env('PUSHER_APP_KEY'), env('PUSHER_APP_SECRET'), env('PUSHER_APP_ID'));
