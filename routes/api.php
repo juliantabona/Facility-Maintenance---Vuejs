@@ -675,8 +675,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
     Route::prefix('ussd')->group(function () {
 
-        Route::get('/customer', 'Api\UssdController@home')->name('ussd-customer-home');
-        Route::get('/merchant', 'Api\UssdMerchantController@merchantHome')->name('ussd-merchant-home');
+        Route::post('/customer', 'Api\UssdController@home')->name('ussd-customer-home');
+        Route::post('/merchant', 'Api\UssdMerchantController@merchantHome')->name('ussd-merchant-home');
 
         Route::prefix('stores')->group(function () {
 
