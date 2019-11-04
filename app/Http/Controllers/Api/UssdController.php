@@ -33,7 +33,7 @@ class UssdController extends Controller
          *  Otherwise create a User Instance for Guest Users
          */
         $this->user = auth('api')->user() ?? (new \App\User());
-
+        
         /*  Get the USSD TEXT value (User Response)  */
         $this->text = $request->get('text');
 
@@ -245,7 +245,7 @@ class UssdController extends Controller
         }
 
         /*  Return the response to the user  */
-        return response( request()->all() )->header('Content-Type', 'text/plain');
+        return response($response)->header('Content-Type', 'text/plain');
         //return response($response)->header('Content-Type', 'application/json');
         //  return response($response."\n\n".'characters: '.strlen($response))->header('Content-Type', 'text/plain');
     }
@@ -1801,18 +1801,16 @@ class UssdController extends Controller
          * We need to remove the users last reply and update the url.
          */
 
-        /*  Retrieve the current url without any query strings  */
-        $url = url()->current().'?';
-
         /*  Retrieve all of the current url query string values as an associative array
          *  ['TEXT' => '1*001*2', 'MSISDN' => '26775993221', e.t.c]
          */
-        $request_query_array = request()->query();
+        $request_query_array = request()->all();
 
         /*  Foreach time we should go back. */
         for ($x = 0; $x <= $how_many_times; ++$x) {
+
             /*  Get the original TEXT responses. */
-            $original_text = $request_query_array['TEXT'];
+            $original_text = $request_query_array['text'];
 
             /*  Remove the last value (the last reply) and update the TEXT query.
              *  We are basically removing any last response the user gave us.
@@ -1828,19 +1826,25 @@ class UssdController extends Controller
             $updated_text = implode('*', $original_text_array);
 
             /*  Update the TEXT query string  */
-            $request_query_array['TEXT'] = $updated_text;
+            $request_query_array['text'] = $updated_text;
+
         }
 
-        /*  Re-attach the query strings to the url. This means we rebuild the url as it was, but
-         *  obviously with the new updates with just made.
-         */
-        foreach ($request_query_array as $query_name => $query_value) {
-            /*  Append the key/value query string e.g TEXT=1 or MSISDN=26775993221  */
-            $url .= ($query_name.'='.$query_value);
+        /*  Retrieve the current url without any query strings  */
+        $url = url()->current();
 
-            /*  If this is not the last item add "&" otherwise nothing  */
-            $url .= (next($request_query_array)) ? '&' : '';
-        }
+        /*  Retrieve the HTTP Client  */
+        $http = new \GuzzleHttp\Client();
+
+        /*  Make a POST Request with the updated information  */
+        $response = $http->post( $url, [
+            'form_params' => $request_query_array
+        ]);
+
+        //  Lets get an array instead of a stdObject so that we can return without errors
+        $response = $response->getBody();
+        
+        return $response;
 
         /*  Step 2:
          *  Redirect with the updated URL. e.g
