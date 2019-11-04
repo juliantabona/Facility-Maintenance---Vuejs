@@ -184,60 +184,15 @@ class UssdController extends Controller
      */
     public function home(Request $request)
     {
-        /*  If we could not get the user's phone number  */
-        if (!$this->hasProvidedPhoneDetails()) {
-            return $this->displayCustomErrorPage('Sorry, please provide you mobile number.');
-        }
+        
 
-        /*  If the user has not responded to the landing page  */
-        if (!$this->hasResponded()) {
-            /*  Display the landing page (The first page of the USSD)  */
-            $response = $this->displayLandingPage();
-
-        /*  If the user has already responded to the landing page  */
-        } else {
-            /*  If the user already indicated to provide a ussd code  */
-            if ($this->wantsToEnterUssdCode()) {
-                /*  If the user already provided the ussd code  */
-                if ($this->hasProvidedUssdCode()) {
-                    /*  Check if a store using the ussd code provided exists  */
-                    if ($this->isValidUssdCode()) {
-                        /*  Allow the user to start shopping (At the store specified)  */
-                        $response = $this->visitStore();
-
-                    /*  If no store using the provided ussd code exists  */
-                    } else {
-                        $this->displayStoreDoesNotExistPage();
-                    }
-
-                    /*  If the user hasn't yet provided the ussd code  */
-                } else {
-                    $response = $this->displayEnterUssdCodePage();
-                }
-
-                /*  If the user already indicated to search a store (They don't have a ussd code)  */
-            } elseif ($this->wantsToSearchStore()) {
-                /*  If the user already selected a category  */
-                if ($this->hasSelectedStoreCategory()) {
-                    /*  If the user already selected a specific store from the category list  */
-                    if ($this->hasSelectedStoreFromCategory()) {
-                        /*  Make a redirect to the store specified  */
-                        $this->redirectToStore();
-                    } else {
-                        $response = $this->displayCategoryStores();
-                    }
-                } else {
-                    $response = $this->displayStoreCategoriesPage();
-                }
-
-                /*  Selected an option that does not exist  */
-            } else {
-                return $this->displayCustomErrorPage('You selected an incorrect option. Please try again');
-            }
-        }
+        $sessionId   = $_POST["sessionId"];
+        $serviceCode = $_POST["serviceCode"];
+        $phoneNumber = $_POST["phoneNumber"];
+        $text        = $_POST["text"];
 
         /*  Return the response to the user  */
-        return response($response)->header('Content-Type', 'text/plain');
+        return response($sessionId.' - '.$serviceCode.' - '.$phoneNumber.' - '.$text)->header('Content-Type', 'text/plain');
         //return response($response)->header('Content-Type', 'application/json');
         //  return response($response."\n\n".'characters: '.strlen($response))->header('Content-Type', 'text/plain');
     }
