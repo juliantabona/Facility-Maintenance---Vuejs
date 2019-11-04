@@ -237,7 +237,8 @@ class UssdController extends Controller
         }
 
         /*  Return the response to the user  */
-        return response($response)->header('Content-Type', 'application/json');
+        return response($response)->header('Content-Type', 'text/plain');
+        //return response($response)->header('Content-Type', 'application/json');
         //  return response($response."\n\n".'characters: '.strlen($response))->header('Content-Type', 'text/plain');
     }
 
