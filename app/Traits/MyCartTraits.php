@@ -32,7 +32,7 @@ trait MyCartTraits
 
             //  Get the cart items
             $cart_items = $this->buildItems($items);
-
+            return $cart_items;
             //  Total of only the cart items combined
             $sub_total = 0;
 
