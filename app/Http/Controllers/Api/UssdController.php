@@ -33,10 +33,10 @@ class UssdController extends Controller
         $this->user = auth('api')->user() ?? (new \App\User());
 
         /*  Get the USSD TEXT value (User Response)  */
-        $this->text = $request->get('TEXT');
+        $this->text = $request->get('text');
 
         /*  Get the USSD MSISDN value (User Phone)  */
-        $this->msisdn = $request->get('MSISDN');
+        $this->msisdn = $request->get('phoneNumber');
 
         $this->user['phone'] = [
             'calling_code' => substr($this->msisdn, 0, 3),
