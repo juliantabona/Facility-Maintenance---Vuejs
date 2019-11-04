@@ -1026,7 +1026,7 @@ class UssdController extends Controller
 
                     /*  Get the cart and make sure the cart is always available from here on */
                     $this->cart = $this->getCart();
-
+                    return $this->cart;
                     /*  If the user was on the "Cart Summary Page" but wants to go back
                      *  to the "Select Product Quantity Page"
                      */
