@@ -33,7 +33,7 @@ class UssdController extends Controller
          *  Otherwise create a User Instance for Guest Users
          */
         $this->user = auth('api')->user() ?? (new \App\User());
-        
+
         /*  Get the USSD TEXT value (User Response)  */
         $this->text = $request->get('text');
 
@@ -245,7 +245,7 @@ class UssdController extends Controller
         }
 
         /*  Return the response to the user  */
-        return response($response)->header('Content-Type', 'text/plain');
+        return response( "CON ".$request->all() )->header('Content-Type', 'text/plain');
         //return response($response)->header('Content-Type', 'application/json');
         //  return response($response."\n\n".'characters: '.strlen($response))->header('Content-Type', 'text/plain');
     }
