@@ -84,10 +84,10 @@ class UssdController extends Controller
         }
     }
 
-    public function getStore($ussd_code)
+    public function getStore($store_code)
     {
         //  Get the ussd store
-        $ussd_store = UssdInterface::where('code', $ussd_code)->first() ?? null;
+        $ussd_store = UssdInterface::where('code', $store_code)->first() ?? null;
 
         //  Check if the ussd store exists
         if ($ussd_store) {
@@ -109,10 +109,10 @@ class UssdController extends Controller
      *  OWNERSHIP RELATED RESOURCES  *
     *********************************/
 
-    public function getUssdInterfaceOwner($ussd_code)
+    public function getUssdInterfaceOwner($store_code)
     {
         //  Get the ussd store
-        $ussd_store = UssdInterface::where('code', $ussd_code)->first() ?? null;
+        $ussd_store = UssdInterface::where('code', $store_code)->first() ?? null;
 
         //  Get the ussd store owner
         $owner = $ussd_store->owner ?? null;
@@ -137,10 +137,10 @@ class UssdController extends Controller
      *  PRODUCT RELATED RESOURCES    *
     *********************************/
 
-    public function getUssdInterfaceProducts($ussd_code)
+    public function getUssdInterfaceProducts($store_code)
     {
         //  Get the ussd store
-        $ussd_store = UssdInterface::where('code', $ussd_code)->first() ?? null;
+        $ussd_store = UssdInterface::where('code', $store_code)->first() ?? null;
 
         //  Get the ussd store products
         $products = $ussd_store->products()->paginate() ?? null;
@@ -161,10 +161,10 @@ class UssdController extends Controller
         }
     }
 
-    public function getUssdInterfaceProduct($ussd_code, $product_id)
+    public function getUssdInterfaceProduct($store_code, $product_id)
     {
         //  Get the ussd store
-        $ussd_store = UssdInterface::where('code', $ussd_code)->first() ?? null;
+        $ussd_store = UssdInterface::where('code', $store_code)->first() ?? null;
 
         //  Get the ussd store product
         $product = $ussd_store->products()->where('products.id', $product_id)->first() ?? null;
@@ -198,53 +198,81 @@ class UssdController extends Controller
     {
         /*  If we could not get the user's phone number  */
         if (!$this->hasProvidedPhoneDetails()) {
+
+            
+            /*  Notify the user to provide a mobile number first  */
             return $this->displayCustomErrorPage('Sorry, please provide you mobile number.');
+
         }
 
         /*  If the user has not responded to the landing page  */
-        if (!$this->hasResponded()) {
-            /*  Display the landing page (The first page of the USSD)  */
+        if (!$this->hasRespondedToLandingPage()) {
+
+            /*  Display the landing page (The first page of the USSD Journey)  */
             $response = $this->displayLandingPage();
 
         /*  If the user has already responded to the landing page  */
         } else {
-            /*  If the user already indicated to provide a ussd code  */
-            if ($this->wantsToEnterUssdCode()) {
-                /*  If the user already provided the ussd code  */
-                if ($this->hasProvidedUssdCode()) {
-                    /*  Check if a store using the ussd code provided exists  */
-                    if ($this->isValidUssdCode()) {
-                        /*  Allow the user to start shopping (At the store specified)  */
+
+            /*  If the user already indicated that they want to provide a Store Code  */
+            if ($this->wantsToEnterStoreCode()) {
+
+                /*  If the user already provided the Store Code  */
+                if ($this->hasProvidedStoreCode()) {
+
+                    /*  Check if a USSD Interface using the store code provided exists  */
+                    if ($this->isValidStoreCode()) {
+
+                        /*  Allow the user to start shopping (At the specified store)  */
                         $response = $this->visitStore();
 
-                    /*  If no store using the provided ussd code exists  */
+                    /*  If no store using the provided store code exists  */
                     } else {
-                        $this->displayStoreDoesNotExistPage();
+
+                        /*  Notify the user that the store was not found  */
+                        return $this->displayCustomErrorPage("Store was not found.\nMake sure you are using the correct store code");
+
                     }
 
-                    /*  If the user hasn't yet provided the ussd code  */
+                /*  If the user hasn't yet provided the store code  */
                 } else {
-                    $response = $this->displayEnterUssdCodePage();
+
+                    $response = $this->displayEnterStoreCodePage();
+
                 }
 
-                /*  If the user already indicated to search a store (They don't have a ussd code)  */
+            /*  If the user already indicated that they want to search a store (They don't have a Store Code)  */
             } elseif ($this->wantsToSearchStore()) {
-                /*  If the user already selected a category  */
+
+                /*  If the user already selected a specific category from the "Select Store Category Page"  */
                 if ($this->hasSelectedStoreCategory()) {
-                    /*  If the user already selected a specific store from the category list  */
+
+                    /*  If the user already selected a specific store from the "Select Category Store Page"  */
                     if ($this->hasSelectedStoreFromCategory()) {
-                        /*  Make a redirect to the store specified  */
+                        
+                        /*  Make a redirect to the selected store  */
                         $this->redirectToStore();
+
                     } else {
+
+                        /*  Display the "Select Category Store Page"  */
                         $response = $this->displayCategoryStores();
+
                     }
+
                 } else {
+
+                    /*  Display the "Select Store Category Page"  */
                     $response = $this->displayStoreCategoriesPage();
+
                 }
 
-                /*  Selected an option that does not exist  */
+            /*  Selected an option that does not exist  */
             } else {
+
+                /*  Notify the user of incorrect option selected  */
                 return $this->displayCustomErrorPage('You selected an incorrect option. Please try again');
+
             }
         }
 
@@ -254,49 +282,51 @@ class UssdController extends Controller
         //  return response($response."\n\n".'characters: '.strlen($response))->header('Content-Type', 'text/plain');
     }
 
-    /*  hasResponded()
-     *  Returns true/false of whether the user has responded before
-     *  The user must atleast have responded once for this to be true
+    /*  hasRespondedToLandingPage()
+     *  Returns true/false of whether the user has responded to the 
+     *  landing page before. The user must atleast have responded 
+     *  once for this to be true
      */
-    public function hasResponded()
+    public function hasRespondedToLandingPage()
     {
-        /*  Check if the user has responded. If the text returned
-         *  is not empty then the user has responded
+        /*  Check if the user has responded to the landing page. If the text 
+         *  returned is not empty then the user has responded otherwise the
+         *  user has not responded at all
          */
         return (trim($this->text) != '') ? true : false;
     }
 
+
+    /*  hasProvidedPhoneDetails()
+     *  Returns true/false of whether the user has provided their mobile number
+     */
     public function hasProvidedPhoneDetails()
     {
+        /*  Get the MSISDN/Mobile number and check if it has been provided   
+         *  Return true if it exists and false if it does not exist
+         */
         return !empty($this->msisdn);
     }
 
     /*  displayLandingPage()
      *  This is the first page displayed when accessing the USSD.
      *  In this page we ask the user to either choose to enter
-     *  a valid ussd code or search a store instead
+     *  a valid store code or search a store instead
      */
     public function displayLandingPage()
     {
-        $response = "CON Please enter the store code or search for a store \n";
+        $response = "CON Find stores ka BONAKO,\nSelect (1) to enter the store code or (2) search for a store \n";
         $response .= "1. Enter store code \n";
-        $response .= '2. Search store';
+        $response .= '2. Search popular stores';
 
         return $response;
     }
 
-    /*  displayStoreDoesNotExistPage()
-     *  This is the page displayed when a store is not found.
-     */
-    public function displayStoreDoesNotExistPage()
-    {
-        return $this->displayCustomErrorPage("Store was not found.\nMake sure you are using the correct store code");
-    }
-
     /*  displayIssueConnectingToStorePage()
-     *  This is the page displayed when a store existed during the session but
-     *  we cannot seem to access it again. Maybe the store got deleted while a
-     *  user was shopping or issues where encontered during a query
+     *  This is the page displayed when a store existed during the session at some point 
+     *  but for some reason we cannot seem to access it again. Maybe the store got deleted 
+     *  while a user was shopping or mayb issues where encontered during an SQL Query.
+     *  Whatever the case we show this page
      */
     public function displayIssueConnectingToStorePage()
     {
@@ -307,17 +337,17 @@ class UssdController extends Controller
      *  This is the page displayed when a problem was encountered and we want
      *  to end the session with a custom error message.
      */
-    public function displayCustomErrorPage($error_message)
+    public function displayCustomErrorPage($error_message = '')
     {
         $response = 'END '.$error_message;
 
         return $response;
     }
 
-    /*  displayEnterUssdCodePage()
-     *  This is the page displayed when a user must enter the ussd code.
+    /*  displayEnterStoreCodePage()
+     *  This is the page displayed when a user must enter the Store Code.
      */
-    public function displayEnterUssdCodePage()
+    public function displayEnterStoreCodePage()
     {
         $response = 'CON Enter the store code to visit your local store';
 
@@ -325,7 +355,9 @@ class UssdController extends Controller
     }
 
     /*  displayStoreCategoriesPage()
-     *  This is the page displayed when a user must select a store category
+     *  This is the page displayed when a user must select a store category.
+     *  A store category groups stores that operate in the same industry
+     *  e.g Transport, Accomodation, e.t.c
      */
     public function displayStoreCategoriesPage()
     {
@@ -338,7 +370,9 @@ class UssdController extends Controller
     }
 
     /*  displayCategoryStores()
-     *  This is the page displayed when a user must select a store from a category
+     *  This is the page displayed when a user must select a store from a category.
+     *  Assuming the user selected the "Accomodation" category, they must select
+     *  a store from that category here.
      */
     public function displayCategoryStores()
     {
@@ -673,56 +707,74 @@ class UssdController extends Controller
         return !empty($product['unit_sale_price']) ? true : false;
     }
 
-    /*  wantsToEnterUssdCode()
-     *  Returns true/false of whether the user wants to enter their ussd code.
+    /*  wantsToEnterStoreCode()
+     *  Returns true/false of whether the user wants to enter their Store Code
      */
-    public function wantsToEnterUssdCode()
+    public function wantsToEnterStoreCode()
     {
         /*  If the user responded to the landing page (Level 1) with the option (1)
-         *  then the user wants to enter their ussd code.
+         *  then the user wants to enter their Store Code.
          */
         return  $this->completedLevel(1) && $this->getResponseFromLevel(1) == '1';
     }
 
-    /*  hasProvidedUssdCode()
-     *  Returns true/false of whether the user already provided the ussd code
+    /*  hasProvidedStoreCode()
+     *  Returns true/false of whether the user already provided the Store Code
      */
-    public function hasProvidedUssdCode()
+    public function hasProvidedStoreCode()
     {
         /*  First we must ensure that the user explicitly intended to provide a store
          *  code before checking if they already have provided anything at all
          */
-        if ($this->wantsToEnterUssdCode()) {
-            /*  If the user already responded to the Enter ussd code page (Level 2)
+        if ($this->wantsToEnterStoreCode()) {
+
+            /*  If the user already responded to the "Enter Store Code Page" (Level 2)
              *  then the user wants to search for a store.
              */
             return  $this->completedLevel(2);
+
         }
 
         return false;
     }
 
-    /*  isValidUssdCode()
-     *  Returns true/false of a store with the specified ussd code exists
+    /*  getProvidedStoreCode()
+     *  Returns the provided the Store Code
      */
-    public function isValidUssdCode()
+    public function getProvidedStoreCode()
     {
-        /*  First we must ensure that the user explicitly provided a ussd code
-         *  before checking if a store using that ussd code exists
+        /*  If the user already responded to the "Enter Store Code Page" (Level 2)
+         *  then we can return the Store Code that was provided
          */
-        if ($this->hasProvidedUssdCode()) {
-            /*  If the user already responded to the Enter ussd code page (Level 2)
-             *  then we can access the ussd code
-             */
-            $ussd_code = $this->getResponseFromLevel(2);
+        return  $this->getResponseFromLevel(2);
+    }
 
-            if ($ussd_code) {
-                /*  Get the store using the ussd code  */
-                $store = $this->getUssdInterface($ussd_code);
+    /*  isValidStoreCode()
+     *  Returns true/false if a USSD Interface with the specified Store Code exists
+     */
+    public function isValidStoreCode()
+    {
+        /*  First we must ensure that the user explicitly provided a Store Code
+         *  before checking if a store using that Store Code exists.
+         */
+        if ($this->hasProvidedStoreCode()) {
+
+            /*  If the user already responded to the "Enter Store Code Page" (Level 2)
+             *  then we can access the provided Store Code.
+             */
+            $store_code = $this->getProvidedStoreCode();
+
+            /*  If we have a Store Code  */
+            if ($store_code) {
+
+                /*  Get the USSD Interface using the Store Code  */
+                $store = $this->getUssdInterface($store_code);
 
                 /*  If a store was found */
                 if ($store) {
+
                     return true;
+
                 }
             }
         }
@@ -779,39 +831,42 @@ class UssdController extends Controller
     }
 
     /*  getUssdInterface()
-     *  Returns the store object that matches the ussd code provided
+     *  Returns the store object that matches the store code provided
      */
-    public function getUssdInterface($ussd_code = null)
+    public function getUssdInterface($store_code = null)
     {
-        if ($ussd_code) {
+        if ($store_code) {
             /*  Get the USSD Interface that uses ussd store code  */
-            return UssdInterface::where('code', $ussd_code)->first() ?? null;
+            return UssdInterface::where('code', $store_code)->first() ?? null;
         }
     }
 
     /*  redirectToStore()
-     *  Forces a redirect in order to access a store using a ussd code
+     *  Forces a redirect in order to access a store using a Store Code
      */
     public function redirectToStore()
     {
         /*  MAKE REDIRECT -
-         *  We need to update the TEXT query string with the ussd code of the store selected
-         *  Then we need to make a redirect with the updated url so that we can access the
-         *  wantsToEnterUssdCode() method since we would now have the ussd code. This
-         *  will allow the user to access the visitStore() once to store is verified
-         *  with the isValidUssdCode() method. At that point the user will have
-         *  entered the store and can start shopping.
+         *  We need to update the TEXT Param with the store code of the selected store.
+         *  After this we need to make a POST Request with the updated TEXT so that we can 
+         *  access the wantsToEnterStoreCode() method since we would now have the store code. 
+         *  This will allow the user to access the visitStore() once to store is verified
+         *  with the isValidStoreCode() method. At that point the user will have gained
+         *  access to the store and can start shopping.
          */
 
         /*  Step 1:
          *  First we must get the option number of the store category that was selected.
-         *  We can use that number to indentify the exact category that was selected.
+         *  We can use that option number to indentify the exact category that was selected.
          */
         $category_option = $this->getResponseFromLevel(2);
 
-        //  Get categories from the database. Categories::wherehas(... only return categories linked to stores )
-        //  Get selected category from the database.
-        $category = $categories[$category_option];
+        /*  Get the categories from the database. 
+         *  Categories::wherehas( ... only return categories linked to stores )
+         */
+
+        /*  Get selected category from the database.  */
+        $selected_category = $categories[$category_option];
 
         /*  Step 2:
          *  Next we must get the option number of the store that was selected from the category.
@@ -820,24 +875,72 @@ class UssdController extends Controller
         $store_option = $this->getResponseFromLevel(3);
 
         //  Get selected store from the database.
-        $store = $category->stores[$store_option];
+        $selected_store = $selected_category->stores[$store_option];
 
-        /*  Build the url:
-         *  $text represents the information provided by the user. We want to alter this information
-         *  so that when we redirect we can go exactly to the store that was selected. The "1*" just
-         *  means that the first option (1) should be selected from the landing page. After that the
-         *  ussd code provided will be used to locate and verify the store. The verification helps
-         *  us know if the store still exists and if the store is active.
+        /*  Redirect to store:
+         *  $new_text represents the information provided by the user. We want to alter this information
+         *  by removing any previous responses and replacing it with our custom response. The custom
+         *  response we want to add will indicate that the user wants to provide a Store Code and will
+         *  also indicate that the user have provided a store code. With this $new_text information we 
+         *  can replace the TEXT Param value and make a POST Request to regain access to the USSD home()
+         *  method with the correct information.
+         * 
+         *  An example of the $new_text can be "1*001" where 
+         *  "1" represents that the first option (1) has been selected from the landing page and where
+         *  "001" represents that the Store Code provided.
+         *  
          */
-        $text = '1*'.$this->store->code;
-        $redirectURL = $this->changeUrlText($text);
+        $new_text = '1*'.$selected_store->code;
+        
+        return $this->simulateUserReply($reply = $new_text, $replace_previous_replies = true);
 
-        return redirect($redirectURL);
     }
 
+
+    public function calculateOffset()
+    {
+        $responses = [];
+
+        $first_level_breakdown = explode('***', $this->text);
+
+        foreach ($first_level_breakdown as $breakdown) {
+
+            $second_level_breakdown = explode('**', $breakdown);
+
+            foreach ($second_level_breakdown as $breakdown) {
+
+                $third_level_breakdown = explode('*', $breakdown);
+
+                foreach( $third_level_breakdown as $unit_response ){
+
+                    if( !is_null($unit_response) && $unit_response !== '' ){
+                    
+                        array_push($responses, $unit_response);
+
+                    }
+
+                }
+
+            }
+        }
+            
+        $number_of_responses = count( $responses ) ;
+
+        $offset = $number_of_responses - 3;
+
+        return $offset;
+    }
+
+    /*  visitStore()
+     *  This method allows the user to access the store they specified to view products and services.
+     *  The method allows the user to view store details, contacts and also make a call to action.
+     *  A call to action alloes the user to view and interact with the store and products and 
+     *  services by adding to cart and making payments on checkout. It manages the entire 
+     *  shopping experience.
+     */
     public function visitStore($visit = 1)
     {
-        /*  Allow the visit property to be accessd outside this function */
+        /*  Allow the visit property to be accessd outside this method */
         $this->visit = $visit;
 
         if ($visit != 1) {
@@ -881,7 +984,7 @@ class UssdController extends Controller
              *
              */
 
-            $this->offset = ($visit - 1) * 3;
+            $this->offset = $this->calculateOffset();
 
         } else {
             
@@ -889,50 +992,57 @@ class UssdController extends Controller
 
         }
 
-        /*  Get the ussd code the user provided from the Enter ussd code page (Level 2).
-         *  We can use the ussd code to access the store
+        /*  Get the store code the user provided from the "Enter Store Code Page" (Level 2).
+         *  We can use the store code to get the USSD Interface. The USSD Interface can
+         *  then get us the exact store
          */
-        $ussd_code = $this->getResponseFromLevel(2);
+        $store_code = $this->getProvidedStoreCode();
 
         /*  Get the Ussd Interface
          *
-         *  The interface contains the USSD name, description and its "live_mode" status
-         *  to inform us whether to allow the user to access the USSD landing page. The
-         *  interface also gives us access to the owning merchant such as a store, which
-         *  allows us to access the merchants products, discounts, taxes, e.t.c
+         *  The interface contains the USSD screen name, description and its "live_mode" 
+         *  status to inform us whether to allow the user access the USSD landing page. 
+         *  The interface also gives us access to the owning merchant such as a store, 
+         *  which allows us to access the merchant products, discounts, taxes, e.t.c
          */
-        $this->ussd_interface = $this->getUssdInterface($ussd_code);
+        $this->ussd_interface = $this->getUssdInterface($store_code);
 
-        /*  Get the ussd interface store only if the interface exists */
+        /*  Get the Ussd Interface owning store only if the interface exists */
         $this->store = $this->ussd_interface ? $this->ussd_interface->owner : null;
 
-        /*  Get the ussd interface products only if the interface exists */
+        /*  Get the Ussd Interface products only if the interface exists */
         $this->products = $this->ussd_interface ? $this->ussd_interface->products : null;
         
-        /*  Get the cart currency */
-        $this->currency = $this->store['currency']['symbol'] ?? $this->store['currency']['code'];
+        /*  Get the store currency symbol or currency code if only if the store exists */
+        $this->currency = $this->store ? ($this->store['currency']['symbol'] ?? $this->store['currency']['code']) : null;
 
-        /*  If no store using the provided ussd code was found. Maybe the store
+        /*  If no store using the provided store code was found. Maybe the store
          *  was deleted or we could not gain access to it for some reason
          */
         if (!$this->store) {
+
             /*  Notify the user that we have issues connecting to the store  */
             return $this->displayIssueConnectingToStorePage();
+
         }
-        /*  If the user added more items than is allowed
+
+        /*  If the user added more items than is allowed to their cart,
          *  (has exceeded the maximum items allowed)
          */
         if ($this->hasExceededMaximumItems()) {
-            /*  Notify the user that they have exceeded that maximum item allowed in the cart  */
+
             $allowed_cart_items = $this->maximum_cart_items.($this->maximum_cart_items == 1 ? ' item' : ' items');
 
+            /*  Notify the user that they have exceeded that maximum items allowed in the cart  */
             return $this->displayCustomErrorPage('Sorry, you are only allowed to add a maximum of '.$allowed_cart_items);
+
         }
 
-        /*  If the user was visiting the store again and was on the "Landing Page (Select A Product Page)"
+        /*  If the user was visiting the store again and was on the "Store Landing Page (Select A Product Page)"
          *  but wanted to go back to the "Previous Product Cart Summary Page"
          */
         if ($this->hasVisitedBefore() && $this->wantsToGoToPreviousAddedProductPage()) {
+
             /*  Go back only (1) Level to the "Previous Product Cart Summary Page"  */
             $response = $this->goBack($how_many_times = 1);
 
@@ -942,38 +1052,58 @@ class UssdController extends Controller
             /*  Make sure the selected product is always available from here on  */
             $this->selected_product = $this->getSelectedProduct();
 
-            /*  If the product selected has variables  */
+            /*  If the selected product has variables  */
             if ($this->hasVariables()) {
 
-                /*  Assumming the product has three different variables being "Size", "Color"
-                 *  and "Material". This means that we need to show the user 3 different pages
-                 *  which will show the variable options e.g ['Small', 'Medium', 'Large'] for page 1,
-                 *  ['Blue', 'Red'] for page 2 and ['Cotton', 'Nylon'] for page 3. If $variant_number=1
-                 *  then this is the first variant attribute page where the user selects the product size.
+                /*  Assumming the product has three different variables being "Size", "Color" and "Material". 
+                 *  This means that we need to show the user 3 different pages which will show the variable
+                 *  options e.g ['Small', 'Medium', 'Large'] for variable 1, ['Blue', 'Red'] for variable 2 
+                 *  and ['Cotton', 'Nylon'] for variable 3. If $variant_attribute_offset=1 then this is the 
+                 *  first variant attribute page where the user selects the product size.
                  */
                 $variant_attributes = $this->selected_product->variant_attributes ?? [];
-                $variant_number = 0;
+                $variant_attribute_offset = 1;
 
                 /*  Foreach product variant page number  */
                 foreach( $variant_attributes as $variant_attribute_name => $variant_attribute_options ){
                     
+                    /*  Adjust the offset by including the $variant_attribute_offset since we are now 
+                     *  selecting variable options.
+                     */
+                    $this->offset = $this->offset + 1;
+
                     /*  If the user has not already selected an option for this variable page.  */
-                    if( !$this->hasSelectedProductVariantPageOption( $variant_number ) ){
+                    if( !$this->hasSelectedProductVariantPageOption() ){
                         
-                        $is_last_variant_page = $variant_number == (count($variant_attributes) - 1);
+                        /*  Determine if this is the last variant attribute in the loop */
+                        $is_last_variant_page = ($variant_attribute_offset == count($variant_attributes));
 
                         /*  Display the menu for the user to select a product variable */
                         return $this->displayProductVariablePage( $variant_attribute_name, $variant_attribute_options, $is_last_variant_page);
 
                     }else{
 
-                        /*  Get the selected option for this variable page.  */
-                        $selected_option = $this->getSelectedVariableOption( $variant_attribute_name, $variant_attribute_options, $variant_number );
-                    
-                        array_push($this->selected_variable_options, $selected_option);
+                        /*  If the user was on the "Select Variant Options Page" but wants to go back
+                         *  to the "Select Product Page (Store Landing Page)"
+                         */
+                        if ($this->wantsToGoToPreviousPageFromProductVariantPage()) {
+                            
+                            /*  Go back only (1) Level to the "Select Product Page (Store Landing Page)"  */
+                            return $this->goBack($how_many_times = 1);
+
+                        /*  If the user already selected the product quantity  */
+                        }else{
+
+                            /*  Get the selected option for this variable page.  */
+                            $selected_option = $this->getSelectedVariableOption( $variant_attribute_name, $variant_attribute_options );
+                        
+                            array_push($this->selected_variable_options, $selected_option);
+
+                        }
+
                     }
 
-                    $variant_number = ++$variant_number;
+                    $variant_attribute_offset = ++$variant_attribute_offset;
 
                 }
                 
@@ -981,56 +1111,20 @@ class UssdController extends Controller
                 /*  Make sure the selected product variation is always available from here on  */
                 $this->selected_product = $this->getSelectedProductVariation();
 
-                $this->offset = $this->offset + count( $variant_attributes ) - 1;
-
-                /*  If the product selected does not have variables (Simple Product)  */
-            } else {
-                /*  If the we haven't specified that the selected product does
-                 *  not have variables
-                 */
-                if (!$this->hasSkippedVariableSelection()) {
-
-                    /*  Since this is a simple product, we need to indicate this before we continue.
-                     *  The skipVariableSelection() method will simulate a reply of a user selecting
-                     *  option "0". This "0" will be used as a sign to show that this item has no
-                     *  variables, therefore no variable option was selected hence "0". Other
-                     *  methods below need to know whether the product has variables or not.
-                     */
-                    return $this->skipVariableSelection();
-                }
             }
 
-            /*  If the user was on the "Select Variant Options Page" but wants to go back
-             *  to the "Select Product Page (Store Landing Page)"
-             */
-            if ($this->hasVariables() && $this->wantsToGoToPreviousPageFromVariablePage()) {
-
-                /*  Go back only (1) Level to the "Select Product Page (Store Landing Page)"  */
-                $response = $this->goBack($how_many_times = 1);
-
             /*  If the user already selected the product quantity  */
-            } elseif ($this->hasSelectedProductQuantity()) {
+            if ($this->hasSelectedProductQuantity()) {
 
                 /*  If the user was on the "Select Product Quantity Page" but wants to go back
                  *  to the "Select Variable Page" (if its a variable product) or go back to the
                  *  "Select Product Page (Store Landing Page)" (if its a simple product)
                  */
                 if ($this->wantsToGoToPreviousPageFromQuantityPage()) {
-                    /*  If the product selected has variables  */
-                    if ($this->hasVariables()) {
-                        /*  Go back only (1) Level to the "Select Variant Options Page"  */
-                        $response = $this->goBack($how_many_times = 1);
 
-                    /*  If the product selected has no variables (Simple Product)  */
-                    } else {
-                        /*  Go back only (2) Levels to the "Select Product Page (Store Landing Page)"
-                         *  We have to say two times because we added "0" to say this product does
-                         *  not have variables. Since we don't have any we don't need to be on the
-                         *  "Select Variant Options Page", therefore we must go back one more level
-                         *  to reach the (Store Landing Page).
-                         */
-                        $response = $this->goBack($how_many_times = 2);
-                    }
+                    /*  Go back only (1) Level to the "Select Variant Options Page"  */
+                    $response = $this->goBack($how_many_times = 1);
+                
                 } elseif ($this->isValidProductQuantity()) {
 
                     /*  Update the selected product quantity */
@@ -1046,67 +1140,87 @@ class UssdController extends Controller
                      *  to the "Select Product Quantity Page"
                      */
                     if ($this->hasVariables() && $this->wantsToGoToPreviousPageFromCartSummaryPage()) {
+
                         /*  Go back only (1) Level to the "Select Product Quantity Page"  */
                         $response = $this->goBack($how_many_times = 1);
 
                     /*  If the user already selected that they want to add another product  */
                     } elseif ($this->wantsToAddAnotherProduct()) {
-
+                        
                         /*  Revisit the store to select another product  */
                         $response = $this->revisitStore();
 
                     /*  If the user already selected that they want to checkout and pay  */
                     } elseif ($this->wantsToPay()) {
+
                         /*  If the user was on the "Select Payment Method Page" but wants to go back
                          *  to the "Cart Summary Page"
                          */
                         if ($this->wantsToGoToPreviousPageFromPaymentOptionsPage()) {
+
                             /*  Go back only (1) Level to the "Cart Summary Page"  */
                             $response = $this->goBack($how_many_times = 1);
 
                         /*  If the user already selected the payment method  */
                         } elseif ($this->hasSelectedPaymentMethod()) {
+
                             /*  If the user was on the "Confirm Payment Page" but wants to go back
                              *  to the "Select Payment Method Page"
                              */
                             if ($this->wantsToGoToPreviousPageFromPaymentConfirmationPage()) {
+
                                 /*  Go back only (1) Level to the "Select Payment Method Page"  */
                                 $response = $this->goBack($how_many_times = 1);
 
                             /*  If the user already selected that they want to pay with Airtime  */
                             } elseif ($this->wantsToPayWithAirtime()) {
+
                                 /*  If the user already confirmed that they want to pay with Airtime  */
                                 if ($this->hasConfirmedPaymentWithAirtime()) {
+
                                     /*  Process the order using Airtime  */
                                     $response = $this->procressOrder($payment_method = 'airtime');
 
                                 /*  If the user has not already confirmed that they want to pay with Airtime  */
                                 } else {
+
                                     /*  Show the user the Airtime payment confirmation page  */
                                     $response = $this->displayAirtimePaymentConfirmationPage();
+
                                 }
 
                                 /*  If the user already selected that they want to pay with Orange Money  */
                             } elseif ($this->wantsToPayWithOrangeMoney()) {
+
                                 /*  If the user already confirmed that they want to pay with Orange Money  */
                                 if ($this->hasConfirmedPaymentWithOrangeMoney()) {
+
                                     /*  If the user provided a valid Orange Money pin  */
                                     if ($this->isValidOrangeMoneyPin()) {
+
                                         /*  Process the order using Orange Money  */
                                         $response = $this->procressOrder($payment_method = 'orange_money');
+
                                     } else {
+
                                         /*  Notify the user of incorrect pin  */
                                         $response = $this->displayCustomErrorPage('Incorrect pin provided. Please try again');
+
                                     }
+
                                 } else {
+
                                     /*  Show the user the Orange Money payment confirmation page  */
                                     $response = $this->displayOrangeMoneyPaymentConfirmationPage();
+
                                 }
 
                                 /*  If the user selected an option that does not exist  */
                             } else {
+
                                 /*  Notify the user of incorrect method of payment selected  */
                                 $response = $this->displayCustomErrorPage('You selected an incorrect method of payment. Please try again');
+
                             }
 
                             /*  If the user has not already selected the payment method  */
@@ -1140,12 +1254,30 @@ class UssdController extends Controller
         return $response;
     }
 
+    /*  revisitStore()
+     *
+     *   Allows the user the ability to revisit the store to select another product
+     */
+    public function revisitStore()
+    {
+        return $this->visitStore($this->visit + 1);
+    }
+
     public function hasVisitedBefore()
     {
         /*  Checks if the user has visited the store before. Anymore than one
          *  confirms that the user has visited the store before.
          */
         return  $this->visit > 1;
+    }
+
+    public function wantsToGoToPreviousAddedProductPage()
+    {
+        /*  Get the selected product option from the Store landing page (Level 3)
+         *  If the option equals "0" then the user wants to go to the previous
+         *  added product
+         */
+        return  $this->completedLevel(3 + $this->offset) && $this->getResponseFromLevel(3 + $this->offset) == '0';
     }
 
     public function hasSelectedProduct()
@@ -1158,48 +1290,50 @@ class UssdController extends Controller
 
     public function getSelectedProduct()
     {
-        /*  Get the selected product option from the "Store Landing Page" (Level 3)
-         *  We can use the store selected option to retrieve the product. We also
-         *  make sure to convert the value received to an integer
+        /*  Get the selected product option from the "Store Landing Page (Select A Product Page)"
+         *  (Level 3). We can use the selected option to retrieve the product.
          */
+
+         /*  Get the selected option and convert it to an interger  */
         $selected_product_option = (int) $this->getResponseFromLevel(3 + $this->offset);
 
         /*  If we have a selected product option (e.g 1, 2 or 3)  */
         if ($selected_product_option) {
-            /*  Retrieve the actual product that was selected. Note that the user
-             *  would have replied "1" to select the first product on the list.
-             *  However the first product on "$this->products" variable is of
-             *  index "0", this means we need to always subtract "1" from the
-             *  user reply to access the correct product.
+
+            /*  Retrieve the actual product that was selected. Note that the user would have
+             *  replied "1" to select the first product on the list. However the first
+             *  product on "$this->products" variable is of index "0", this means we need
+             *  to always subtract "1" from the user reply to access the correct product.
              */
             return $this->products[$selected_product_option - 1];
+
         }
     }
 
-    public function hasSelectedProductVariable()
+    public function hasSelectedProductVariantPageOption()
     {
-        /*  If the user already responded to the "Select Product Variable Page" (Level 4)
-         *  by selecting a specific product variant.
-         */
-        return  $this->completedLevel(4 + $this->offset);
-    }
-
-    public function hasSelectedProductVariantPageOption( $variant_number = 0 )
-    {
-        /*  If the user already responded to the "Select Product Variables Page" (Level 4+)
+        /*  If the user already responded to the "Select Product Variable Option Page" (Level 4++)
          *  by selecting a specific product variant option.
          */
-        return  $this->completedLevel(4 + $this->offset + $variant_number);
+        return  $this->completedLevel(3 + $this->offset);
     }
 
-    public function getSelectedVariableOption( $variant_attribute_name, $variant_attribute_options, $variant_number )
+    public function wantsToGoToPreviousPageFromProductVariantPage()
     {
-        /*  If the user already responded to the "Select Product Variables Page" (Level 4+)
+        /*  If the user is currently at the "Select Product Variable Page" (Level 4++)
+         *  but wants to go back
+         */
+        return  $this->completedLevel(3 + $this->offset) && $this->getResponseFromLevel(3 + $this->offset) == '0';
+    }
+
+    public function getSelectedVariableOption( $variant_attribute_name, $variant_attribute_options )
+    {
+        /*  If the user already responded to the "Select Product Variables Page" (Level 4++)
          *  by selecting a specific product variant option. We can return the selected option.
          */
 
         /*  Get the selected number option e.g 1, 2 or 3  */
-        $selected_number_option = $this->getResponseFromLevel(4 + $this->offset + $variant_number);
+        $selected_number_option = $this->getResponseFromLevel(3 + $this->offset);
 
         /*  Get the selected attribute option e.g Small, Medium or Large  */
         $selected_attribute_option = $variant_attribute_options[ $selected_number_option - 1 ];
@@ -1208,33 +1342,17 @@ class UssdController extends Controller
         return [ $variant_attribute_name => $selected_attribute_option ];
     }
 
-    
-
-    public function hasSkippedVariableSelection()
-    {
-        /*  If the we already responded with "0" to the "Select Product Variable Page" (Level 4)
-         *  to indicate that the product does not have any variables.
-         */
-        return  $this->completedLevel(4 + $this->offset) && $this->getResponseFromLevel(4 + $this->offset) == '0';
-    }
-
     public function hasVariables()
     {
         /*  If we have the actual product that was selected  */
         if ($this->selected_product) {
+            
             /*  Determine if the selected product has variants  */
-            return  $this->selected_product['allow_variants'] == true;
+            return  $this->selected_product['allow_variants'] == true && $this->selected_product->variations()->count();
+            
         }
 
         return false;
-    }
-
-    public function wantsToGoToPreviousPageFromVariablePage()
-    {
-        /*  If the user is currently at the "Select Product Variable Page" (Level 4)
-         *  but wants to go back
-         */
-        return  $this->completedLevel(4 + $this->offset) && $this->getResponseFromLevel(4 + $this->offset) == '0';
     }
 
     public function hasSelectedProductQuantity()
@@ -1242,7 +1360,7 @@ class UssdController extends Controller
         /*  If the user already responded to the "Select Product Quantity Page" (Level 5)
          *  by providing a specific product quantity.
          */
-        return  $this->completedLevel(5 + $this->offset);
+        return  $this->completedLevel(4 + $this->offset);
     }
 
     public function getSelectedProductQuantity()
@@ -1250,7 +1368,7 @@ class UssdController extends Controller
         /*  If the user already responded to the "Select Product Quantity Page" (Level 5)
          *  by providing a specific product quantity. We can return this quantity
          */
-        return  $this->getResponseFromLevel(5 + $this->offset);
+        return  $this->getResponseFromLevel(4 + $this->offset);
     }
 
     public function wantsToGoToPreviousPageFromQuantityPage()
@@ -1258,7 +1376,7 @@ class UssdController extends Controller
         /*  If the user is currently at the "Select Product Quantity Page" (Level 5)
          *  but wants to go back
          */
-        return  $this->completedLevel(5 + $this->offset) && $this->getResponseFromLevel(5 + $this->offset) == '0';
+        return  $this->completedLevel(4 + $this->offset) && $this->getResponseFromLevel(4 + $this->offset) == '0';
     }
 
     public function isValidProductQuantity()
@@ -1266,7 +1384,7 @@ class UssdController extends Controller
         /*  If the user already responded to the "Select Product Quantity Page" (Level 5)
          *  by providing a quantity. Get the product quantity provided.
          */
-        $quantity_provided = (int) $this->getResponseFromLevel(5 + $this->offset);
+        $quantity_provided = (int) $this->getResponseFromLevel(4 + $this->offset);
 
         /*  Check if the quantity provided by the user does not exceed the maximum item quantity allowed  */
         $doesNotExceedMaximumQty = ($this->maximum_item_quantity >= $quantity_provided);
@@ -1283,25 +1401,7 @@ class UssdController extends Controller
         /*  If the user is currently at the "Cart Summary Page" (Level 6)
          *  but wants to go back to the "Select Product Quantity Page"
          */
-        return  $this->completedLevel(6 + $this->offset) && $this->getResponseFromLevel(6 + $this->offset) == '0';
-    }
-
-    public function wantsToGoToPreviousAddedProductPage()
-    {
-        /*  Get the selected product option from the Store landing page (Level 3)
-         *  If the option equals "0" then the user wants to go to the previous
-         *  added product
-         */
-        return  $this->completedLevel(3 + $this->offset) && $this->getResponseFromLevel(3 + $this->offset) == '0';
-    }
-
-    /*  revisitStore()
-     *
-     *   Allows the user the ability to revisit the store to select another product
-     */
-    public function revisitStore()
-    {
-        return $this->visitStore($this->visit + 1);
+        return  $this->completedLevel(5 + $this->offset) && $this->getResponseFromLevel(5 + $this->offset) == '0';
     }
 
     public function wantsToPay()
@@ -1309,7 +1409,7 @@ class UssdController extends Controller
         /*  If the user already responded to the Cart summary page (Level 6)
          *  by selecting option (1) for pay now.
          */
-        return  $this->completedLevel(6 + $this->offset) && $this->getResponseFromLevel(6 + $this->offset) == '1';
+        return  $this->completedLevel(5 + $this->offset) && $this->getResponseFromLevel(5 + $this->offset) == '1';
     }
 
     public function wantsToGoToPreviousPageFromPaymentOptionsPage()
@@ -1318,7 +1418,7 @@ class UssdController extends Controller
          *  If the option equals "0" then the user to go back to the "Cart Summary Page",
          *  the previous page.
          */
-        return  $this->completedLevel(7 + $this->offset) && $this->getResponseFromLevel(7 + $this->offset) == '0';
+        return  $this->completedLevel(6 + $this->offset) && $this->getResponseFromLevel(6 + $this->offset) == '0';
     }
 
     public function hasSelectedPaymentMethod()
@@ -1326,7 +1426,7 @@ class UssdController extends Controller
         /*  If the user already responded to the Select payment method page (Level 7)
          *  by selecting a specific payment method option.
          */
-        return  $this->completedLevel(7 + $this->offset);
+        return  $this->completedLevel(6 + $this->offset);
     }
 
     public function wantsToPayWithAirtime()
@@ -1334,7 +1434,7 @@ class UssdController extends Controller
         /*  If the user already responded to the Select payment method page (Level 6)
          *  by selecting option (1) for pay using Airtime.
          */
-        return  $this->completedLevel(7 + $this->offset) && $this->getResponseFromLevel(7 + $this->offset) == '1';
+        return  $this->completedLevel(6 + $this->offset) && $this->getResponseFromLevel(6 + $this->offset) == '1';
     }
 
     public function wantsToPayWithOrangeMoney()
@@ -1342,7 +1442,7 @@ class UssdController extends Controller
         /*  If the user already responded to the Select payment method page (Level 6)
          *  by selecting option (2) for pay using Orange Money.
          */
-        return  $this->completedLevel(7 + $this->offset) && $this->getResponseFromLevel(7 + $this->offset) == '2';
+        return  $this->completedLevel(6 + $this->offset) && $this->getResponseFromLevel(6 + $this->offset) == '2';
     }
 
     public function wantsToGoToPreviousPageFromPaymentConfirmationPage()
@@ -1351,7 +1451,7 @@ class UssdController extends Controller
          *  option equals "0" then the user to go back to the "Select Payment Method Page",
          *  the previous page.
          */
-        return  $this->completedLevel(8 + $this->offset) && $this->getResponseFromLevel(8 + $this->offset) == '0';
+        return  $this->completedLevel(7 + $this->offset) && $this->getResponseFromLevel(7 + $this->offset) == '0';
     }
 
     public function hasConfirmedPaymentWithAirtime()
@@ -1359,7 +1459,7 @@ class UssdController extends Controller
         /*  If the user already responded to the "Confirm Payment Using Airtime Page" (Level 7)
          *  by selecting option (1) to confirm payment.
          */
-        return  $this->completedLevel(8 + $this->offset) && $this->getResponseFromLevel(8 + $this->offset) == '1';
+        return  $this->completedLevel(7 + $this->offset) && $this->getResponseFromLevel(7 + $this->offset) == '1';
     }
 
     public function hasConfirmedPaymentWithOrangeMoney()
@@ -1367,7 +1467,7 @@ class UssdController extends Controller
         /*  If the user already responded to the Confirm payment using Orange Money page (Level 7)
          *  by selecting a specific option.
          */
-        return  $this->completedLevel(8 + $this->offset);
+        return  $this->completedLevel(7 + $this->offset);
     }
 
     public function isValidOrangeMoneyPin()
@@ -1375,7 +1475,7 @@ class UssdController extends Controller
         /*  If the user already responded to the "Confirm payment using Orange Money page" (Level 7)
          *  by selecting a specific option. Then we can capture the Orange Money pin they provided
          */
-        $orange_money_pin = $this->getResponseFromLevel(8 + $this->offset);
+        $orange_money_pin = $this->getResponseFromLevel(7 + $this->offset);
 
         /*  If the Pin provide is 4 digits long  */
         if (strlen($orange_money_pin) == 4) {
@@ -1579,12 +1679,12 @@ class UssdController extends Controller
          *  2nd element shows the second product information
          *  3rd element shows the third product information
          *
-         *  Note that the "1*001" only represents the path to the store and the ussd code
+         *  Note that the "1*001" only represents the path to the store and the store code
          *  used to access the actual store. It does not relate to any product selection
          *  or description.
          *
-         *  1 = Level 1 option (Enter ussd code option)
-         *  001 = Level 2 option (The ussd code provided)
+         *  1 = Level 1 option (Enter store code option)
+         *  001 = Level 2 option (The store code provided)
          */
 
         /*  Split by completed product selections
@@ -1598,7 +1698,7 @@ class UssdController extends Controller
         foreach ($result as $key => $data) {
             /*
              *  Remember that the first element in the $result array will always contain
-             *  non-product related information such as the ussd code. We must remove
+             *  non-product related information such as the store code. We must remove
              *  this information so that we are strickly left with the product related
              *  information
              */
@@ -1619,7 +1719,7 @@ class UssdController extends Controller
                  *  After:  $user_responses = ["1", "0", "3"]
                  */
                 unset($user_responses[0]);  //  Removes the "landing page response"
-                unset($user_responses[1]);  //  Removes the "ussd code response"
+                unset($user_responses[1]);  //  Removes the "store code response"
 
                 /*  Combine the responses into a single string using "*" as a separator
                  *
@@ -1681,16 +1781,11 @@ class UssdController extends Controller
 
         }
 
-        /*  If we have any items */
-        if (count($items)) {
-
-            /*  Retrieve and return the cart details relating to the merchant and items provided  */
-            return ( new \App\MyCart() )->getCartDetails($this->store, $items);
-
-        }
+        /*  Retrieve and return the cart details relating to the merchant and items provided  */
+        return ( new \App\MyCart() )->getCartDetails($this->store, $items);
     }
 
-    public function getUserResponses()
+    public function getUserResponses($text = null)
     {
         /*  The text variable represent the response from the user.
          *  To extract the users information we must explode the text
@@ -1702,7 +1797,7 @@ class UssdController extends Controller
          *  e.t.c
          */
 
-        $responses = explode('*', $this->text);
+        $responses = explode('*', $text ?? $this->text);
 
         /*  Remove empty keys  */
         $responses = array_filter($responses, function ($value) {
@@ -1747,10 +1842,10 @@ class UssdController extends Controller
          *  through different levels without messing up the next sequencial steps. To simulate a user
          *  replying with the option "0" we use the following method:
          */
-        return $this->simulateUserReply($reply = '0');
+        return $this->simulateUserReply($reply = '0', $replace_previous_replies = false);
     }
 
-    public function simulateUserReply($reply = null)
+    public function simulateUserReply($reply = null, $replace_previous_replies = false)
     {
         /*  To simulate a user reply we need to append our reply/information to the
          *  TEXT query string of the current url. After this we must make a redirect.
@@ -1782,8 +1877,6 @@ class UssdController extends Controller
                  */
                 $reply = '*'.implode('*', $reply);
 
-                return $this->proceedWithCustomResponse($replies);
-
             /*  If an array was not provided - meaning we only have only one reply */
             } else {
 
@@ -1794,16 +1887,31 @@ class UssdController extends Controller
             /*  Retrieve the current url without any query strings  */
             $url = url()->current();
 
-            /*  Retrieve all of the current url query string values as an associative array
+            /*  Retrieve all of the current Post Request Form Data as an associative array
              *  ['TEXT' => '1*001*2', 'MSISDN' => '26775993221', e.t.c]
              */
             $url_params = request()->all();
 
-            /*  Add the new value to the TEXT query. This is simulating a user selecting an option
-             *  or replying with specific text. We do not remove any past information they have
-             *  already provided. We only add a new reply.
-             */
-            $url_params[$this->text_field_name] .= $reply;
+            if( $replace_previous_replies ){
+
+                /*  Replace the current value of the TEXT Param with the new value. This is simulating 
+                 *  a user providing new information and wants us to ignore their previous responses
+                 *  In this case we remove all past information they have already provided and 
+                 *  replace it all with the new reply.
+                 */
+
+                $url_params[$this->text_field_name] = $reply;
+
+            }else{
+
+                /*  Append the new value to the current value of the TEXT Param. This is simulating 
+                 *  a user continuing to provide information supporting their previous responses
+                 *  In this case we do not remove any past information they have already provided. 
+                 *  We only add a new reply.
+                 */
+                $url_params[$this->text_field_name] .= $reply;
+
+            }
 
             /*  Make a POST Request with the updated Form Data. e.g
              *  Before TEXT=1*001*1
@@ -1830,7 +1938,10 @@ class UssdController extends Controller
          * We need to remove the users last reply and update the url.
          */
 
-        /*  Retrieve all of the current url query string values as an associative array
+        /*  Retrieve the current url without any query strings  */
+        $url = url()->current();
+
+        /*  Retrieve all of the current Post Request Form Data as an associative array
          *  ['TEXT' => '1*001*2', 'MSISDN' => '26775993221', e.t.c]
          */
         $url_params = request()->all();
@@ -1923,8 +2034,8 @@ class UssdController extends Controller
          *  Therefore we exceed the maximum items when the number of visits are strickly
          *  greater than the maximum cart items
          *
-         *  Therefore if the the items are more than the more than the
-         *  maximum allowed cart items this method returns true.
+         *  Therefore if the the items are more than the maximum cart items allowed this 
+         *  method will return true.
          */
         return $this->visit > $this->maximum_cart_items;
     }
