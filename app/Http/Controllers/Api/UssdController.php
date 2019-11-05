@@ -36,10 +36,10 @@ class UssdController extends Controller
         $this->user = auth('api')->user() ?? (new \App\User());
         
         /*  Get the name of "TEXT" field used to save the user responses  */
-        $this->$text_field_name = 'text';
+        $this->text_field_name = 'text';
 
         /*  Get the USSD TEXT value (User Response)  */
-        $this->text = $request->get( $this->$text_field_name );
+        $this->text = $request->get( $this->text_field_name );
 
         /*  Get the USSD MSISDN value (User Phone)  */
         $this->msisdn = $request->get('phoneNumber');
@@ -1784,7 +1784,7 @@ class UssdController extends Controller
             } else {
 
                 return $this->proceedWithCustomResponse('*'.$reply);
-                
+
             }
         }
     }
