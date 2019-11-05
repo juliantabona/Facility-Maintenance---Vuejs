@@ -989,6 +989,7 @@ class UssdController extends Controller
                  *  not have variables
                  */
                 if (!$this->hasSkippedVariableSelection()) {
+
                     /*  Since this is a simple product, we need to indicate this before we continue.
                      *  The skipVariableSelection() method will simulate a reply of a user selecting
                      *  option "0". This "0" will be used as a sign to show that this item has no
@@ -1009,6 +1010,7 @@ class UssdController extends Controller
 
             /*  If the user already selected the product quantity  */
             } elseif ($this->hasSelectedProductQuantity()) {
+
                 /*  If the user was on the "Select Product Quantity Page" but wants to go back
                  *  to the "Select Variable Page" (if its a variable product) or go back to the
                  *  "Select Product Page (Store Landing Page)" (if its a simple product)
@@ -1039,7 +1041,7 @@ class UssdController extends Controller
 
                     /*  Get the cart and make sure the cart is always available from here on */
                     $this->cart = $this->getCart();
-                    
+
                     /*  If the user was on the "Cart Summary Page" but wants to go back
                      *  to the "Select Product Quantity Page"
                      */
@@ -1115,8 +1117,10 @@ class UssdController extends Controller
 
                         /*  Otherwise they haven't made up their mind yet  */
                     } else {
+
                         /*  Show the user the cart summary page with options to decide what to do next  */
                         $response = $this->displayCartSummaryPage();
+                        
                     }
                 } else {
                     /*  Notify the user of provide a valid quantity  */
@@ -1776,16 +1780,42 @@ class UssdController extends Controller
                  *  After: *john*doe*25
                  *
                  */
-                $replies = '*'.implode('*', $reply);
+                $reply = '*'.implode('*', $reply);
 
                 return $this->proceedWithCustomResponse($replies);
 
             /*  If an array was not provided - meaning we only have only one reply */
             } else {
 
-                return $this->proceedWithCustomResponse('*'.$reply);
+                $reply = '*'.$reply;
 
             }
+
+            /*  Retrieve the current url without any query strings  */
+            $url = url()->current();
+
+            /*  Retrieve all of the current url query string values as an associative array
+             *  ['TEXT' => '1*001*2', 'MSISDN' => '26775993221', e.t.c]
+             */
+            $url_params = request()->all();
+
+            /*  Add the new value to the TEXT query. This is simulating a user selecting an option
+             *  or replying with specific text. We do not remove any past information they have
+             *  already provided. We only add a new reply.
+             */
+            $url_params[$this->text_field_name] .= $reply;
+
+            /*  Make a POST Request with the updated Form Data. e.g
+             *  Before TEXT=1*001*1
+             *  After  TEXT=1*001*1*3
+             *
+             *  Making a POST Request here conviniently allows us to revisit 
+             *  the USSD endpoint with our revised/updated information
+             */
+
+            /*  Return the POST Request response  */
+            return $this->makePostRequest($url, $url_params);
+
         }
     }
 
@@ -1843,36 +1873,7 @@ class UssdController extends Controller
 
     }
 
-    public function proceedWithCustomResponse($value = null)
-    {
-        /*  Retrieve the current url without any query strings  */
-        $url = url()->current();
-
-        /*  Retrieve all of the current url query string values as an associative array
-         *  ['TEXT' => '1*001*2', 'MSISDN' => '26775993221', e.t.c]
-         */
-        $url_params = request()->all();
-
-        /*  Add the new value to the TEXT query. This is simulating a user selecting an option
-         *  or replying with specific text. We do not remove any past information they have
-         *  already provided. We only add a new reply.
-         */
-        $url_params[$this->text_field_name] .= $value;
-
-        /*  Make a POST Request with the updated Form Data. e.g
-         *  Before TEXT=1*001*1
-         *  After  TEXT=1*001*1*3
-         *
-         *  Making a POST Request here conviniently allows us to revisit 
-         *  the USSD endpoint with our revised/updated information
-         */
-
-        /*  Return the POST Request response  */
-        return $this->makePostRequest($url, $url_params);
-
-    }
-
-    public function makePostRequest($url, $url_params)
+    public function makePostRequest($url, $url_params = [])
     {
         /*  Retrieve the HTTP Client  */
         $http = new \GuzzleHttp\Client();
