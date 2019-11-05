@@ -21,6 +21,7 @@ class UssdController extends Controller
     private $session_id;
     private $service_code;
     private $ussd_interface;
+    private $text_field_name;
     private $selected_product;
     private $selected_products;
     private $maximum_cart_items;
@@ -34,8 +35,11 @@ class UssdController extends Controller
          */
         $this->user = auth('api')->user() ?? (new \App\User());
         
+        /*  Get the name of "TEXT" field used to save the user responses  */
+        $this->$text_field_name = 'text';
+
         /*  Get the USSD TEXT value (User Response)  */
-        $this->text = $request->get('text');
+        $this->text = $request->get( $this->$text_field_name );
 
         /*  Get the USSD MSISDN value (User Phone)  */
         $this->msisdn = $request->get('phoneNumber');
@@ -1761,8 +1765,10 @@ class UssdController extends Controller
 
         /*  If the reply information was provided */
         if (isset($reply)) {
+
             /*  If the reply provided is an array - meaning we have multiple replies provided */
             if (is_array($reply)) {
+
                 /*  We need to combine the array data into a single string
                  *  begining and also separated with the "*" symbol:
                  *
@@ -1772,21 +1778,14 @@ class UssdController extends Controller
                  */
                 $replies = '*'.implode('*', $reply);
 
-                $url = $this->addToUrlText($replies);
+                return $this->proceedWithCustomResponse($replies);
 
             /*  If an array was not provided - meaning we only have only one reply */
             } else {
-                $url = $this->addToUrlText('*'.$reply);
-            }
 
-            /*  Step 2:
-             *
-             *  Redirect to the updated URL. Redirecting here simulates the user pressing the "Reply"
-             *  button on their phone after selecting an option or providing information. This
-             *  conviniently allows us to revisit the USSD endpoint with our revised/updated
-             *  information
-             */
-            return redirect($url);
+                return $this->proceedWithCustomResponse('*'.$reply);
+                
+            }
         }
     }
 
@@ -1804,13 +1803,13 @@ class UssdController extends Controller
         /*  Retrieve all of the current url query string values as an associative array
          *  ['TEXT' => '1*001*2', 'MSISDN' => '26775993221', e.t.c]
          */
-        $request_query_array = request()->all();
+        $url_params = request()->all();
 
         /*  Foreach time we should go back. */
         for ($x = 0; $x <= $how_many_times; ++$x) {
 
             /*  Get the original TEXT responses. */
-            $original_text = $request_query_array['text'];
+            $original_text = $url_params[$this->text_field_name];
 
             /*  Remove the last value (the last reply) and update the TEXT query.
              *  We are basically removing any last response the user gave us.
@@ -1826,69 +1825,65 @@ class UssdController extends Controller
             $updated_text = implode('*', $original_text_array);
 
             /*  Update the TEXT query string  */
-            $request_query_array['text'] = $updated_text;
+            $url_params[$this->text_field_name] = $updated_text;
 
         }
 
-        /*  Retrieve the current url without any query strings  */
-        $url = url()->current();
-
-        /*  Retrieve the HTTP Client  */
-        $http = new \GuzzleHttp\Client();
-
-        /*  Make a POST Request with the updated information  */
-        $response = $http->post( $url, [
-            'form_params' => $request_query_array
-        ]);
-
-        //  Lets get an array instead of a stdObject so that we can return without errors
-        $response = $response->getBody();
-        
-        return $response;
-
         /*  Step 2:
-         *  Redirect with the updated URL. e.g
-         *  Before https://www.domain.com/api/ussd?TEXT=1*001*1*3 ...[other query strings]
-         *  After https://www.domain.com/api/ussd?TEXT=1*001*1 ...[other query strings]
+         *  Make a POST Request with the updated Form Data. e.g
+         *  Before TEXT=1*001*1*3
+         *  After  TEXT=1*001*1
          *
-         *  Redirecting here conviniently allows us to revisit the USSD endpoint with
-         *  our revised/updated information
+         *  Making a POST Request here conviniently allows us to revisit 
+         *  the USSD endpoint with our revised/updated information
          */
-        return redirect($url);
+
+        /*  Return the POST Request response  */
+        return $this->makePostRequest($url, $url_params);
+
     }
 
-    public function addToUrlText($value = null)
+    public function proceedWithCustomResponse($value = null)
     {
         /*  Retrieve the current url without any query strings  */
-        $url = url()->current().'?';
+        $url = url()->current();
 
         /*  Retrieve all of the current url query string values as an associative array
          *  ['TEXT' => '1*001*2', 'MSISDN' => '26775993221', e.t.c]
          */
-        $request_query_array = request()->query();
+        $url_params = request()->all();
 
         /*  Add the new value to the TEXT query. This is simulating a user selecting an option
          *  or replying with specific text. We do not remove any past information they have
          *  already provided. We only add a new reply.
          */
-        $request_query_array['TEXT'] .= $value;
+        $url_params[$this->text_field_name] .= $value;
 
-        /*  Re-attach the query strings to the url. This means we rebuild the url as it was, but
-         *  obviously with the updated information we just added.
+        /*  Make a POST Request with the updated Form Data. e.g
+         *  Before TEXT=1*001*1
+         *  After  TEXT=1*001*1*3
+         *
+         *  Making a POST Request here conviniently allows us to revisit 
+         *  the USSD endpoint with our revised/updated information
          */
-        foreach ($request_query_array as $query_name => $query_value) {
-            /*  Append the key/value query string e.g TEXT=1 or MSISDN=26775993221  */
-            $url .= ($query_name.'='.$query_value);
 
-            /*  If this is not the last item add "&" otherwise nothing  */
-            $url .= (next($request_query_array)) ? '&' : '';
-        }
+        /*  Return the POST Request response  */
+        return $this->makePostRequest($url, $url_params);
 
-        /*  Return the updated URL. e.g
-         *  Before https://www.domain.com/api/ussd?TEXT=1*001*1 ...[other query strings]
-         *  After https://www.domain.com/api/ussd?TEXT=1*001*1*3 ...[other query strings]
-         */
-        return $url;
+    }
+
+    public function makePostRequest($url, $url_params)
+    {
+        /*  Retrieve the HTTP Client  */
+        $http = new \GuzzleHttp\Client();
+
+        /*  Make a POST Request with the updated information  */
+        $response = $http->post( $url, [
+            'form_params' => $url_params
+        ]);
+
+        /*  Return the POST Request response  */
+        return $response->getBody();
     }
 
     public function canAddMoreItems()
