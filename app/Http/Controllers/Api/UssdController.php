@@ -617,7 +617,7 @@ class UssdController extends Controller
      */
     public function displayEnterStoreCodePage()
     {
-        $response = 'CON Enter the store code to visit your local store';
+        $response = "CON Enter the store code to visit your local store\n";
         $response .= "0. Go Back\n";
 
         return $response;
