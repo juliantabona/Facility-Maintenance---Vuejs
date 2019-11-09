@@ -695,47 +695,55 @@ class UssdController extends Controller
      */
     public function displayProductVariablePage($variant_attribute_name, $variant_attribute_options, $is_last_variant_page)
     {
-        $response = 'CON '.$this->selected_product->name.": Select an option\n";
+        $response = '';
 
-        foreach ($variant_attribute_options as $key => $option) {
-            $additional_variable_options = [$variant_attribute_name => $option];
-            $product_variation = $this->getSelectedProductVariation($additional_variable_options);
+        if( count($variant_attribute_options) ){
+            
+            $response = 'CON '.$this->selected_product->name.": Select an option\n";
 
-            /*  If we atleast have one variant avaialable  */
-            if ($product_variation) {
-                $option_number = $key + 1;
-                $product_id = $product_variation['id'];
-                $product_price = $product_variation['unit_price'];
-                $product_on_sale = $this->isOnSale($product_variation);
+            foreach ($variant_attribute_options as $key => $option) {
+                $additional_variable_options = [$variant_attribute_name => $option];
+                $product_variation = $this->getSelectedProductVariation($additional_variable_options);
 
-                $response .= $option_number.'. '.$option;
+                /*  If we atleast have one variant avaialable  */
+                if ($product_variation) {
+                    $option_number = $key + 1;
+                    $product_id = $product_variation['id'];
+                    $product_price = $product_variation['unit_price'];
+                    $product_on_sale = $this->isOnSale($product_variation);
 
-                if ($is_last_variant_page) {
-                    //  If this variation product is not out of stock
-                    if ($this->hasStock($product_variation)) {
-                        /*  Check if the product has been added to the cart already  */
-                        if ($this->isProductAddedToCart($product_id)) {
-                            /*  Indicate that the product is in the cart already  */
-                            $response .= ' (added)';
+                    $response .= $option_number.'. '.$option;
 
-                        /*  If the product hasn't been added to the cart already  */
+                    if ($is_last_variant_page) {
+                        //  If this variation product is not out of stock
+                        if ($this->hasStock($product_variation)) {
+                            /*  Check if the product has been added to the cart already  */
+                            if ($this->isProductAddedToCart($product_id)) {
+                                /*  Indicate that the product is in the cart already  */
+                                $response .= ' (added)';
+
+                            /*  If the product hasn't been added to the cart already  */
+                            } else {
+                                /*  Show the product name, currency and price  */
+                                $response .= $product_price ? ' -'.$this->currency.$this->convertToMoney($product_price) : ' (Not Available)';
+
+                                /*  If the product is on sale then make an indication  */
+                                $response .= ($product_on_sale ? ' (on sale)' : '');
+                            }
+
+                            //  Otherwise show this variation product is out of stock
                         } else {
-                            /*  Show the product name, currency and price  */
-                            $response .= $product_price ? ' -'.$this->currency.$this->convertToMoney($product_price) : ' (Not Available)';
-
-                            /*  If the product is on sale then make an indication  */
-                            $response .= ($product_on_sale ? ' (on sale)' : '');
+                            /*  Show the product name, and indicate that this product is out of stock  */
+                            $response .= ' (out of stock)';
                         }
-
-                        //  Otherwise show this variation product is out of stock
-                    } else {
-                        /*  Show the product name, and indicate that this product is out of stock  */
-                        $response .= ' (out of stock)';
                     }
-                }
 
-                $response .= "\n";
+                    $response .= "\n";
+                }
             }
+        } else {
+            /*  If we don't have any products to list  */
+            $response .= "Sorry, no more options :)\n";
         }
 
         $response .= "0. Go Back\n";
@@ -940,7 +948,7 @@ class UssdController extends Controller
 
         } else {
             /*  If we don't have any products to list  */
-            $response .= "\nSorry, no products today :)\n";
+            $response .= "\nSorry, no products :)\n";
         }
 
         return $response;
