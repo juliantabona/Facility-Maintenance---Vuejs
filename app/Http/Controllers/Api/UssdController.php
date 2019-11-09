@@ -70,7 +70,7 @@ class UssdController extends Controller
         $this->products_per_page = 4;
 
         /*  Define the maximum number of variant options to display on screen  */
-        $this->variant_options_per_page = 2;
+        $this->variant_options_per_page = 4;
 
         /*  Define the maximum number of items that can be added to cart  */
         $this->maximum_cart_items = 5;
@@ -78,6 +78,7 @@ class UssdController extends Controller
         /*  Define the maximum quantity per product added  */
         $this->maximum_item_quantity = 5;
 
+        $this->visit = 1;
         $this->selected_products = [];
         $this->selected_variable_options = [];
     }
@@ -436,6 +437,38 @@ class UssdController extends Controller
         $this->text = $updated_text;
     }
 
+    public function manageEncodedRequests()
+    {
+        /*  Get the user's response text value.
+         */
+        $text = $this->text;
+
+        /*  Assuming the $text value is as follows:
+         *
+         *  1*001*3*2*%23
+         * 
+         *  Where "%23" is an encoded value representing "#"
+         *
+         *  We want to convert all encoded values to their 
+         *  decoded counterparts
+         * 
+         *  Before: 1*001*3*2*%23
+         *  After:  1*001*3*2*#
+         *
+         */
+        $responses = explode('*', $this->text);
+
+        for($x=0; $x < count($responses); $x++ ){
+
+            $responses[$x] = urldecode( $responses[$x] );
+
+        }
+        
+        $updated_text = implode('*', $responses);
+
+        $this->text = $updated_text;
+    }
+
     /*  home()
      *  This is the first method we hit where all the USSD processes are
      *  sequencially handled as the user makes requests and receices
@@ -443,6 +476,8 @@ class UssdController extends Controller
      */
     public function home(Request $request)
     {
+        $this->manageEncodedRequests();
+
         /*  Scan and remove any responses the user indicated to omit. This is to help
          *  simulate the ability for the user to go back to previous screens so that
          *  they can choose another option. This will help the appllication to focus
@@ -511,12 +546,7 @@ class UssdController extends Controller
         }
 
         /*  Return the response to the user  */
-        return response(
-            $response
-
-            ."\n".'Offset: '.$this->offset
-            ."\n".'URL: '.request()->all()['text']
-            )->header('Content-Type', 'text/plain');
+        return response( $response )->header('Content-Type', 'text/plain');
         //return response($response)->header('Content-Type', 'application/json');
         //  return response($response."\n\n".'characters: '.strlen($response))->header('Content-Type', 'text/plain');
     }
@@ -603,6 +633,7 @@ class UssdController extends Controller
         $response .= "1. Accomodation Services (12)\n";
         $response .= "2. Transport Services (4)\n";
         $response .= "3. Fast Food Services (18)\n";
+        $response .= "0. Go Back\n";
 
         return $response;
     }
@@ -617,6 +648,7 @@ class UssdController extends Controller
         $response = "CON Category: Transport, Select option to visit\n";
         $response .= "1. Smiley Cabs\n";
         $response .= "2. Deluxe Cabs\n";
+        $response .= "0. Go Back\n";
 
         return $response;
     }
@@ -1137,56 +1169,8 @@ class UssdController extends Controller
      *  services by adding to cart and making payments on checkout. It manages the entire
      *  shopping experience.
      */
-    public function visitStore($visit = 1)
+    public function visitStore()
     {
-        /*  Allow the visit property to be accessd outside this method */
-        $this->visit = $visit;
-
-        if ($visit != 1) {
-            /*
-             *  An offset is only required on every visit except the first. It allows us to target the correct
-             *  product in each visit as we return to the store several times. Once we target the right product
-             *  we can then see how far along the user is with that product e.g have they selected variable?
-             *  Have they added the quantity?, do they want to pay? ... The offset helps us know which
-             *  product we are now focusing on for each visit.
-             */
-
-            /*
-             *  We know that everytime we select a product we need to provide 3 levels of information describing
-             *  that product. We need the (1) "choosen product", (2) "choosen variation" (0 if the product does
-             *  not have variations) and the (3) "choosen quantity". When visiting a store the first time, the
-             *  first product details are immediately accessible (no offset required) however to get the details
-             *  of the next product on the following visitation we need to offset to properly target the next
-             *  product. The offset is calculated by the number of visitations minus 1 multiplied by 3.
-             *
-             *  Visit (1): 1*001 (Access to store) *1*0*2 (Product 1 info)
-             *  Visit (2): 1*001 (Access to store) *1*0*2 (Product 1 info) *2*1*3 (Product 2 info)
-             *
-             *  In visit 1 the product info says we selected product (1) which has no variables (0) and took (3) quantities of it
-             *  In visit 2 the product info says we selected product (2) and chose variation (1) and took (3) quantities of it
-             *
-             *  If we think about it, in visit (1) we don't have any previously added products since we never visited
-             *  the store before (past visitation = products added already). To calculate the past visitations we
-             *  say the [current visit - 1]. On the first visit our past visitation is [1 - 1 = 0] meaning we never
-             *  visited before. In visit (2) our past visitations to the store is [2 - 1 = 1] meaning we previously
-             *  visited the store once. This means so far we have one item that was added to the cart. To access the
-             *  current item we need to skip over all the past items, in visit (2) only one item must be skipped. To
-             *  do this we multiply by three (3) since we know each product only has (3) entities to describe them.
-             *
-             *  visit (1) = (1 - 1) * 3 = 0 (no need to offset)
-             *  visit (2) = (2 - 1) * 3 = 3 (offset by three to target the second item)
-             *  visit (3) = (3 - 1) * 3 = 6 (offset by six to target the third item)
-             *  e.t.c
-             *
-             *  This allows us to visit the store as many times as we want and still access the relevant product details.
-             *
-             */
-
-            $this->offset = $this->calculateOffset();
-        } else {
-            $this->offset = 0;
-        }
-
         /*  Get the store code the user provided from the "Enter Store Code Page" (Level 2).
          *  We can use the store code to get the USSD Interface. The USSD Interface can
          *  then get us the exact store
@@ -1248,10 +1232,6 @@ class UssdController extends Controller
 
             /*  Make sure the selected product is always available from here on  */
             $this->selected_product = $this->getSelectedProduct();
-
-            if ($visit > 1) {
-                return dd(3 + $this->offset);
-            }
 
             /*  If the selected product has variables  */
             if ($this->hasVariables()) {
@@ -1349,6 +1329,7 @@ class UssdController extends Controller
 
                     /*  If the user already selected that they want to add another product  */
                     } elseif ($this->wantsToAddAnotherProduct()) {
+                        
                         /*  Revisit the store to select another product  */
                         $response = $this->revisitStore();
 
@@ -1441,7 +1422,12 @@ class UssdController extends Controller
      */
     public function revisitStore()
     {
-        return $this->visitStore($this->visit + 1);
+
+        $this->offset = $this->offset + 3;
+        
+        $this->visit = ++$this->visit;
+
+        return $this->visitStore($this->visit);
     }
 
     public function hasVisitedBefore()
@@ -1622,6 +1608,14 @@ class UssdController extends Controller
          *  but wants to go back to the "Select Product Quantity Page"
          */
         return  $this->completedLevel(5 + $this->offset) && $this->getResponseFromLevel(5 + $this->offset) == '0';
+    }
+
+    public function wantsToAddAnotherProduct()
+    {
+        /*  If the user already responded to the Cart summary page (Level 6)
+         *  by selecting option (1) for pay now.
+         */
+        return  $this->completedLevel(5 + $this->offset) && $this->getResponseFromLevel( 5 + $this->offset) == '#';
     }
 
     public function wantsToPay()
@@ -1818,163 +1812,6 @@ class UssdController extends Controller
     public function summarize($text, $limit)
     {
         return strlen($text) > $limit ? substr($text, 0, $limit + 3).'...' : $text;
-    }
-
-    public function wantsToAddAnotherProduct()
-    {
-        /*  If the number of products we want to add do not match the number of
-         *  visitations we have made to the store then this means we want to
-         *  add another product.
-         */
-        $number_of_products_to_add = $this->getInformationOfProductsToAddToCart();
-
-        if (count($number_of_products_to_add) != $this->visit) {
-            return true;
-        }
-
-        return false;
-    }
-
-    public function getInformationOfProductsToAddToCart()
-    {
-        /*  We use the "**" symbol to indicate a response by the user to add another product.
-         *  When we explode the data using the "**" we retrieve the data in an array. The
-         *  first part is the access to the store and the first product selected. The next
-         *  datasets are descriptions of the next products selected.
-         *
-         *  Assume: 1*001*1*0*3
-         *
-         *  This means the user has access to a store and has selected product option (1)
-         *  which has no variables (0) and a quantity of (3). If the user replies with "*",
-         *  the USSD will automatically add another "*" to that user response giving us the
-         *  "**" result. Its just the same as a use replying "1" or "2" and the USSD always
-         *  appends the "*" to give us "*1" or "*2", just that we get "**" since the user
-         *  replied with the asterisk symbol instead of a number.
-         *
-         *  Now we have: 1*001*1*0*3**
-         *
-         *  When we explode using "**" = ["1*001*1*0*3", ""]
-         *
-         *  As you can see, we have the shop details and first product info as the first
-         *  value and no information about the second product. If the user selects a
-         *  product, and its variable and quantity, then
-         *
-         *  Now we have: 1*001*1*0*3***3*2*4
-         *
-         *  Notice that now we have "***" and not "**" anymore. This is because when the user
-         *  replied with selecting the product of choice the USSD automatically added another
-         *  "*" as a separator. This is done automatically and is how USSD works to separate
-         *  the user responses.
-         *
-         *  When we explode using "**" = ["1*001*1*0*3", "*3*2*4"]
-         *
-         *  Meaning for the second product we selected product option (3), then variable (2)
-         *  and a quantity of (4).
-         *
-         *  We need to avaid starting each following product with an "*", so what we can do
-         *  is explode using the "***" to kill off the exta "*" added by the USSD when the
-         *  user replies on every new product option selection.
-         *
-         *  When we explode using "***" = ["1*001*1*0*3", "3*2*4"]
-         *
-         *  Since it is possible that both "***" and "**" to exist at the same time e.g
-         *
-         *  When we have: 1*001*1*0*3***3*2*4**
-         *
-         *  As seen above the user has selected product (1) and product (2) but has also
-         *  indicated their interest to add product (3) eventhough they have not made
-         *  any selection of that third product. This leaves us with a scenerio where
-         *  we have the user reply existing with both "***" and "**". To properly
-         *  separate this type of data we need to first explode by "***" and the
-         *  explode by "**" to first separate the completed product selctions and
-         *  then show the users intent to add another product.
-         *
-         *  Given: 1*001*1*0*3***3*2*4**
-         *
-         *  We explode using "***" to get: ["1*001*1*0*3", "3*2*4**"]
-         *
-         *  Foreach result we explode using "**" to get: ["1*001*1*0*3", "3*2*4", ""]
-         *
-         *  1st element shows the first store information and the first product information
-         *  2nd element shows the second product information
-         *  3rd element shows the third product information
-         *
-         *  Note that the "1*001" only represents the path to the store and the store code
-         *  used to access the actual store. It does not relate to any product selection
-         *  or description.
-         *
-         *  1 = Level 1 option (Enter store code option)
-         *  001 = Level 2 option (The store code provided)
-         */
-
-        /*  Split by completed product selections
-         *
-         *  Before: 1*001*1*0*3***3*2*4**
-         *  After:  ["1*001*1*0*3", "3*2*4**"]
-         *
-         */
-        $result = explode('***', $this->text);
-
-        foreach ($result as $key => $data) {
-            /*
-             *  Remember that the first element in the $result array will always contain
-             *  non-product related information such as the store code. We must remove
-             *  this information so that we are strickly left with the product related
-             *  information
-             */
-
-            /*  If this is the first product information  */
-            if ($key == 0) {
-                /*  Split the data into individual responses e.g
-                 *
-                 *  $data = 1*001*1*0*3
-                 *
-                 *  After explode using "*" = ["1", "001","1", "0", "3"]
-                 */
-                $user_responses = explode('*', $data);
-
-                /*  Remove the store related information
-                 *
-                 *  Before: $user_responses = ["1", "001","1", "0", "3"]
-                 *  After:  $user_responses = ["1", "0", "3"]
-                 */
-                unset($user_responses[0]);  //  Removes the "landing page response"
-                unset($user_responses[1]);  //  Removes the "store code response"
-
-                /*  Combine the responses into a single string using "*" as a separator
-                 *
-                 *  Before: ["1", "0", "3"]
-                 *  After:  1*0*3
-                 */
-                $result[$key] = implode('*', $user_responses);
-
-                /*  Update the currnt data variable  */
-                $data = $result[$key];
-            }
-
-            /*  Split by completed product selections
-             *
-             *  $data Before: 3*2*4**
-             *  $data After:  ["3*2*4", ""]
-             */
-            $result[$key] = explode('**', $data);
-        }
-
-        /*  We must flatten the result to break all the inner arrays
-         *
-         *  Before: ["1*0*3", ["3*2*4", ""]]
-         *  After:  ["1*0*3", "3*2*4", ""]
-         *
-         *  The information we now have is the products selected and the relating information.
-         *  In this case we can see that:
-         *
-         *  item 1: 1st product selected, no variable, and quantity of 3
-         *  item 2: 3rd product selected, 2nd variable selected, and quantity of 4
-         *  item 3: (Empty) The user has not made their 3rd product of choice yet
-         */
-        $products_to_add_to_cart = array_flatten($result);
-
-        return $products_to_add_to_cart;
     }
 
     public function getCart()
