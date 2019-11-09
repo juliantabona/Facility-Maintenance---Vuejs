@@ -936,6 +936,9 @@ class UssdController extends Controller
                     $response .= $option_number.'. '.$product_name." (out of stock)\n";
                 }
             }
+
+            $response .= "99. Show More\n";
+
         } else {
             /*  If we don't have any products to list  */
             $response .= "\nSorry, no products today :)\n";
