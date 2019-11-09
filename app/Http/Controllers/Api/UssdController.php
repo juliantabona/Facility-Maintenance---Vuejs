@@ -813,7 +813,7 @@ class UssdController extends Controller
          *  Therefore only allow addition of items if the visits are strickly less than the
          *  maximum cart items
          */
-        $response .= $this->canAddMoreItems() ? "Enter * to add another item\n" : '';
+        $response .= $this->canAddMoreItems() ? "Enter # to add another item\n" : '';
 
         return $response;
     }
