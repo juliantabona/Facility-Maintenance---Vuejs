@@ -663,7 +663,7 @@ class UssdController extends Controller
         /*  If this is the first visit to the store  */
         if ($this->visit == 1) {
             /*  Get the store details to show the the store name and description  */
-            $response = 'CON '.$this->ussd_interface['name'].': '.$this->ussd_interface['description']."\n";
+            $response = 'CON '.$this->ussd_interface['name'].":\n";
 
         /*  If this is not the first visit  */
         } else {
@@ -679,14 +679,13 @@ class UssdController extends Controller
             /*  Get total price of items already added to cart */
             $items_added_total = $this->currency.$this->convertToMoney($this->cart['grand_total']);
 
-            $response = 'CON '.$this->ussd_interface['name'].': Add another item. ';
-            $response .= 'You already added ('.($items_added_count).') '.($items_added_count == 1 ? 'item. ' : 'items. ')."\n";
+            $response = 'CON '.'Added ('.($items_added_count).') '.($items_added_count == 1 ? 'item. ' : 'items. ')."\n";
             $response .= 'Cart Total: '.$items_added_total."\n";
         }
 
         /*  List the store products  */
         $response .= $this->getStoreLandingPageProducts();
-        $response .= ($this->visit > 1) ? "0. Go Back (Previous Item)\n" : '';
+        $response .= "0. Go Back\n";
 
         return $response;
     }
