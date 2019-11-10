@@ -56,28 +56,36 @@ trait OrderTraits
 
         /*  If we have the merchant id  */
         if ($order['merchant_id']) {
+
             /*  Retrieve the merchant details using the merchant id  */
             $merchant = Store::find($order['merchant_id']);
+
         }
 
         /*  If we have the customer contact id  */
         if (isset($order['customer_id']) && !empty($order['customer_id'])) {
+
             /*  Retrieve the customer contact details from the existing merchant contacts  */
             $customer = $merchant->findContactById($order['customer_id']);
 
+
         /*  If we have the customer contact information  */
         } elseif (isset($order['customer_info']) && !empty($order['customer_info'])) {
+
             /*  Create a new customer contact  */
             $customer = $merchant->createContact($order['customer_info']);
+
         }
 
         /*  If we have the reference contact id  */
         if (isset($order['reference_id']) && !empty($order['reference_id'])) {
+
             /*  Retrieve the reference contact details from the existing merchant contacts  */
             $reference = $merchant->findContactById($order['reference_id']);
 
         /*  If we have the reference contact information  */
         } elseif (isset($order['reference_info']) && !empty($order['reference_info'])) {
+            
             /*  Create a new reference contact  */
             $reference = $merchant->createContact($order['reference_info']);
 
@@ -283,8 +291,10 @@ trait OrderTraits
 
         /*  If we have a mobile phone  */
         if ($mobile) {
+            
             /*  Send order sms  */
-            Twilio::message('+'.$mobile['calling_code'].$mobile['number'], $this->createOrderSms());
+            return Twilio::message('+'.$mobile['calling_code'].$mobile['number'], $this->createOrderSms());
+
         }
     }
 

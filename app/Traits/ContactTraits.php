@@ -42,13 +42,13 @@ trait ContactTraits
      *
      *  This method is used to create a new contact.
      */
-    public function initiateCreate( $contact = null )
+    public function initiateCreate( $contactInfo = null )
     {
         /*
          *  The $contact variable represents the contact dataset
          *  provided through the request received.
          */
-        $contact = $contact ?? request('contact');
+        $contactInfo = $contactInfo ?? request('contact');
 
         /*
          *  The $template variable represents structure of the contact.
@@ -56,10 +56,10 @@ trait ContactTraits
          *  request data.
          */
         $template = $template ?? [
-            'name' => $contact['name'] ?? null,
-            'is_vendor' => $contact['is_vendor'] ?? null,
-            'is_customer' => $contact['is_customer'] ?? null,
-            'is_individual' => $contact['is_individual'] ?? null
+            'name' => $contactInfo['name'] ?? null,
+            'is_vendor' => $contactInfo['is_vendor'] ?? null,
+            'is_customer' => $contactInfo['is_customer'] ?? null,
+            'is_individual' => $contactInfo['is_individual'] ?? null
         ];
 
         try {
@@ -73,16 +73,16 @@ trait ContactTraits
             if( $contact ){
 
                 /*  If we have only one address  */
-                if( isset($template['address']) ){
+                if( isset($contactInfo['address']) ){
 
                     /*  Create a new address  */
-                    $contact->createAddress( $template['address'] );
+                    $contact->createAddress( $contactInfo['address'] );
 
                 /*  If we have many addresses  */
-                }elseif( isset($template['addresses']) ){
+                }elseif( isset($contactInfo['addresses']) ){
 
                     /*  Foreach address  */
-                    foreach( $template['addresses'] as $address){
+                    foreach( $contactInfo['addresses'] as $address){
 
                         /*  Create a new address  */
                         $contact->createAddress( $address );
@@ -92,16 +92,16 @@ trait ContactTraits
                 }      
                 
                 /*  If we have only one phone  */
-                if( isset($template['phone']) ){
+                if( isset($contactInfo['phone']) ){
                     
                     /*  Create a new phone  */
-                    $contact->createPhone( $template['phone'] );
+                    $contact->createPhone( $contactInfo['phone'] );
 
                 /*  If we have many phones  */
-                }elseif( isset($template['phones']) ){
+                }elseif( isset($contactInfo['phones']) ){
                     
                     /*  Foreach phone  */
-                    foreach( $template['phones'] as $phone){
+                    foreach( $contactInfo['phones'] as $phone){
 
                         /*  Create a new phone  */
                         $contact->createPhone( $phone );
@@ -111,16 +111,16 @@ trait ContactTraits
                 }   
 
                 /*  If we have only one email  */
-                if( isset($template['email']) ){
+                if( isset($contactInfo['email']) ){
 
                     /*  Create a new email  */
-                    $contact->createEmail( $template['email'] );
+                    $contact->createEmail( $contactInfo['email'] );
 
                 /*  If we have many emails  */
-                }elseif( isset($template['emails']) ){
+                }elseif( isset($contactInfo['emails']) ){
 
                     /*  Foreach email  */
-                    foreach( $template['emails'] as $email){
+                    foreach( $contactInfo['emails'] as $email){
 
                         /*  Create a new email  */
                         $contact->createEmail( $email );

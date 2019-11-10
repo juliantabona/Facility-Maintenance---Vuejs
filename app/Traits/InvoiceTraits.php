@@ -282,7 +282,7 @@ trait InvoiceTraits
             $phone_number = '+'.$mobile['calling_code'].$mobile['number'];
 
             /*  Send invoice sms  */
-            Twilio::message($phone_number, $this->createInvoiceSms());
+            return Twilio::message($phone_number, $this->createInvoiceSms());
 
         }
     }
@@ -338,7 +338,7 @@ trait InvoiceTraits
             $phone_number = '+'.$mobile['calling_code'].$mobile['number'];
 
             /*  Send invoice sms  */
-            Twilio::message($phone_number, $this->createInvoiceReceiptSms());
+            return Twilio::message($phone_number, $this->createInvoiceReceiptSms());
 
         }
     }
