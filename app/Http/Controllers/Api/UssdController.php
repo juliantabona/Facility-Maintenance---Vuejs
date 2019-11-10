@@ -1049,7 +1049,7 @@ class UssdController extends Controller
 
         $order_number = $this->order->number;
         $order_total = $this->currency.$this->convertToMoney($this->order->grand_total);
-        $order_date = (new \Carbon\Carbon($this->order['created_date']))->format('M d Y, H:i');
+        $order_date = (new \Carbon\Carbon($this->order['created_date']))->format('M d Y, h:iA');
         $number_of_items = count($this->order->item_lines) ?? 0;
 
         $response = "Order #".$order_number."\n";
