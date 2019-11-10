@@ -70,4 +70,13 @@ class RecentActivity extends Model
     {
         return $this->morphTo();
     }
+
+    /*
+     *  Returns the user responsible for the activity
+     */
+    public function user()
+    {
+        return $this->belongsTo('App\User');
+    }
+
 }

@@ -49,6 +49,15 @@ class Contact extends Model
         return $this->morphedByMany('App\Store', 'owner', 'contact_allocations');
     }
 
+    /*
+     *  Returns all the orders where this contact is listed
+     *  as a customer or reference
+     */
+    public function orders()
+    {
+        return $this->hasMany('App\Order', 'customer_id');
+    }
+
     /* 
      *  Returns phones associated with this contact. This includes all
      *  types of phones such as telephones, mobiles and fax numbers.

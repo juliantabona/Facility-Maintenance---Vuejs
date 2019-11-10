@@ -17,7 +17,9 @@ class CreateUssdInterfacesTable extends Migration
 
             /*  Basic Info  */
             $table->string('name')->nullable();
-            $table->string('description')->nullable();
+            $table->string('about_us')->nullable();
+            $table->string('contact_us')->nullable();
+            $table->string('call_to_action')->nullable();
             $table->string('code')->nullable();
 
             /*  Ownership Information  */

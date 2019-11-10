@@ -26,7 +26,7 @@ class UssdInterface extends Model
     protected $fillable = [
 
         /*  Basic Info  */
-        'name', 'description', 'code',
+        'name', 'about_us', 'contact_us', 'call_to_action', 'code',
 
         /*  Ownership Info  */
         'owner_id', 'owner_type'
