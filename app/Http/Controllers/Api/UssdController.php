@@ -1010,7 +1010,7 @@ class UssdController extends Controller
                 $number = (++$key);
                 
                 $order_number = $order['number'];
-                $order_date = (new \Carbon\Carbon($order['created_date']))->format('M d Y, H:i');
+                $order_date = (new \Carbon\Carbon($order['created_date']))->format('d/m/Y');
 
                 $response .= $number.". Order #". $order_number ." (".$order_date.")"."\n";
     
