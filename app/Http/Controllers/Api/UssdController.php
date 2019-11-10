@@ -1016,7 +1016,7 @@ class UssdController extends Controller
     
             }
 
-            $response .= "99. Show More (Page 1/1)";
+            $response .= "99. Show More";
 
             $response = $this->displayCustomGoBackPage($response);
 
