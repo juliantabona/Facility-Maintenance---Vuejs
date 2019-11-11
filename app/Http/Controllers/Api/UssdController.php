@@ -17,22 +17,33 @@ class UssdController extends Controller
     private $visit;
     private $orders;
     private $offset;
+    private $contact;
     private $products;
     private $currency;
     private $session_id;
     private $service_code;
     private $phone_number;
     private $ussd_interface;
+    private $order_per_page;
     private $text_field_name;
+    private $favourite_stores;
+    private $variable_options;
     private $selected_product;
     private $selected_products;
+    private $orders_on_display;
     private $products_per_page;
     private $maximum_cart_items;
+    private $products_on_display;
     private $ussd_character_limit;
     private $maximum_item_quantity;
-    private $variant_options_per_page;
+    private $variant_attribute_name;
+    private $variable_options_per_page;
     private $selected_variable_options;
+    private $stores_per_page;
+    private $stores_on_display;
+
     
+
     public function __construct(Request $request)
     {
         /*  Get the name of "TEXT" field used to save the user responses  */
@@ -44,7 +55,7 @@ class UssdController extends Controller
         /*  Get the USSD Phone Number value. We use the "preg_replace" method
          *  to remove "+" symbol that comes with the phone number. This way
          *  we only keep the numbers.
-         *  
+         *
          *  Before: +26775993221
          *  After:  26775993221
          */
@@ -65,11 +76,17 @@ class UssdController extends Controller
         /*  Define the maximum character limit for every USSD response  */
         $this->ussd_character_limit = 160;
 
+        /*  Define the maximum number of stores to display on screen  */
+        $this->stores_per_page = 4;
+
         /*  Define the maximum number of products to display on screen  */
         $this->products_per_page = 4;
 
         /*  Define the maximum number of variant options to display on screen  */
-        $this->variant_options_per_page = 4;
+        $this->variable_options_per_page = 4;
+
+        /*  Define the maximum number of orders to display on screen  */
+        $this->order_per_page = 4;
 
         /*  Define the maximum number of items that can be added to cart  */
         $this->maximum_cart_items = 5;
@@ -79,6 +96,7 @@ class UssdController extends Controller
 
         $this->visit = 1;
         $this->selected_products = [];
+        $this->variable_options = [];
         $this->selected_variable_options = [];
     }
 
@@ -91,7 +109,7 @@ class UssdController extends Controller
      *  sequencially handled as the user makes requests and receices
      *  responses.
      */
-    public function home(Request $request)
+    public function home()
     {
         $this->verifyUssdDetails();
 
@@ -103,139 +121,259 @@ class UssdController extends Controller
 
         /*  If the user has not responded to the landing page  */
         if (!$this->hasRespondedToLandingPage()) {
-
             /*  Display the landing page (The first page of the USSD Journey)  */
             $response = $this->displayLandingPage();
 
         /*  If the user has already responded to the landing page  */
         } else {
-
             /*  If the user already indicated that they want to provide a Store Code  */
             if ($this->wantsToEnterStoreCode()) {
-
                 /*  If the user already provided the Store Code  */
                 if ($this->hasProvidedStoreCode()) {
-
                     /*  Check if a USSD Interface using the store code provided exists  */
                     if ($this->isValidStoreCode()) {
-
+                        
                         /*  Allow the user to start shopping (At the specified store)  */
                         $response = $this->visitStore();
 
                     /*  If no store using the provided store code exists  */
                     } else {
-
                         /*  Notify the user that the store was not found  */
-                        return $this->displayCustomErrorPage("Store was not found.\nMake sure you are using the correct store code");
-
+                        return $this->displayCustomGoBackPage("Store was not found. Make sure you are using the correct store code\n");
                     }
 
-                /*  If the user hasn't yet provided the store code  */
+                    /*  If the user hasn't yet provided the store code  */
                 } else {
-
                     $response = $this->displayEnterStoreCodePage();
-
                 }
 
-            /*  If the user already indicated that they want to search a store (They don't have a Store Code)  */
+                /*  If the user already indicated that they want to search a store (They don't have a Store Code)  */
             } elseif ($this->wantsToSearchStore()) {
 
-                /*  If the user already selected a specific category from the "Select Store Category Page"  */
-                if($this->hasSelectedStoreCategory()) {
+                /*  If the user already selected a specific option from the "Find Stores Page"  */
+                if( $this->hasSelectedHowToSearchStore() ){
 
-                    /*  If the user already selected a specific store from the "Select Category Store Page"  */
-                    if ($this->hasSelectedStoreFromCategory()) {
+                    /*  If the user wants to search stores from their favourite store list  */
+                    if ($this->wantsToSearchMyFavouriteStores()) {
+                    
+                        /*  Make sure the users favourite stores are accessible from here on  */
+                        $this->stores = $this->getMyStores();
 
-                        /*  Make a redirect to the selected store  */
-                        $this->redirectToStore();
+                        /*  Manage pagination requests  */
+                        $this->handleStorePagination();
+                        
+                        /*  If the user already selected a specific store from the "Stores Page"  */
+                        if ($this->hasSelectedStore()) {
+
+                            /*  Visit the selected store  */
+                            return $this->visitSelectedStore();
+
+                        } else {
+
+                            /*  Display the "Select Category Store Page"  */
+                            $response = $this->displayStoresPage();
+
+                        }
+
+                    /*  If the user wants to search popular stores  */
+                    }elseif ($this->wantsToSearchPopularStores()) {
+                    
+                        /*  Make sure the popular stores are accessible from here on  */
+                        $this->stores = $this->getPopularStores();
+
+                        /*  Manage pagination requests  */
+                        $this->handleStorePagination();
+
+                        /*  If the user already selected a specific store from the "Stores Page"  */
+                        if ($this->hasSelectedStore()) {
+                            
+                            /*  Visit the selected store  */
+                            return $this->visitSelectedStore();
+
+                        } else {
+
+                            /*  Display the "Select Popular Store Page"  */
+                            $response = $this->displayStoresPage();
+
+                        }
+
+
+                    /*  If the user already selected a specific category from the "Select Store Category Page"  */
+                    }elseif ($this->hasSelectedStoreCategory()) {
+                    
+                        /*  If the user already selected a specific store from the "Select Category Store Page"  */
+                        if ($this->hasSelectedStoreFromCategory()) {
+
+                            /*  Make a redirect to the selected store  */
+                            $this->redirectToStore();
+
+                        } else {
+
+                            /*  Display the "Select Category Store Page"  */
+                            $response = $this->displayCategoryStores();
+
+                        }
 
                     } else {
 
-                        /*  Display the "Select Category Store Page"  */
-                        $response = $this->displayCategoryStores();
+                        /*  Display the "Select Store Category Page"  */
+                        $response = $this->displayStoreCategoriesPage();
 
                     }
 
-                } else {
 
-                    /*  Display the "Select Store Category Page"  */
-                    $response = $this->displayStoreCategoriesPage();
+                }else {
+
+                    /*  Display the "Find Stores Page"  */
+                    $response = $this->displayFindStoresPage();
 
                 }
 
-            /*  Selected an option that does not exist  */
+                /*  Selected an option that does not exist  */
             } else {
-
                 /*  Notify the user of incorrect option selected  */
                 return $this->displayIncorrectOptionPage();
-
             }
         }
 
         /*  Return the response to the user  */
-        return response( $response )->header('Content-Type', 'text/plain');
+        return response($response)->header('Content-Type', 'text/plain');
         //return response($response)->header('Content-Type', 'application/json');
         //  return response($response."\n\n".'characters: '.strlen($response))->header('Content-Type', 'text/plain');
     }
-
-    public function visitStore()
+    
+    public function handleStorePagination()
     {
-        $this->getStoreDetails();
-     
-        /*  If no store using the provided store code was found, or maybe the store
-         *  was deleted or we could not gain access to it for some reason
-         */
+        /*  If the user indicated to paginate the "Stores Page"  */
+        if ($this->wantsToPaginateStoresPage()) {
+
+            /*  Paginate the "Stores Page"  */
+            $this->stores_on_display = $this->getPaginatedStoresToList();
+
+            $this->offset = $this->offset + 1;
+
+        } else {
+
+            $this->stores_on_display = $this->getFirstStoresToList();
+
+        }
+    }
+
+    public function visitSelectedStore()
+    {
+        /*  Get the selected store  */
+        $this->store = $this->getSelectedStore();
+
+        /*  Selected a store that does not exist  */
         if (!$this->store) {
+
+            /*  Notify the user of incorrect option selected  */
+            return $this->displayIncorrectOptionPage();
+
+        }
+
+        /*  Get the store code  */
+        $store_code = $this->store->ussdInterface->code ?? null;
+
+        /*  First we need to remove the first three options we provided. The first option was
+         *  when we indicated that we wanted to search for a store. The second option was when
+         *  we indicated that we wanted to search favourite stores or popular stores, e.t.c. 
+         *  The third option was when
+         *  we indicated the store we wanted to visit. We need to remove all three responses
+         *  and add new information as their replacement. We will replace them with two responses. 
+         *  The first response will be of value equal to (1) to indicate that the user wants to 
+         *  provide a store code so that we can utilise the wantsToEnterStoreCode(). The second
+         *  response will be the store code itself so that we can gain access to the visitStore()
+         *  after we satisfy the hasProvidedStoreCode() and isValidStoreCode(). After replacing
+         *  the information we will re-run the home() method to access the selected store.
+         */
+
+        /*  If we have the store and the store code */
+        if($store_code){
+
+            /*  Get all the responses as an array  */
+            $responses = explode('*', $this->text);
+
+            /*  Remove the first three (3) responses of the array  */
+            $responses = array_slice($responses, 3);
+
+            /*  Add the two (2) new responses to the array  */
+            array_unshift($responses, "1", $store_code);
+
+            /*  Join the remaining responses */
+            $this->text = implode('*', $responses);
+
+            /*  Run home() again to access the store */
+            return $this->home();
+            
+        }else{
 
             /*  Notify the user that we have issues connecting to the store  */
             return $this->displayIssueConnectingToStorePage();
 
         }
 
+    }
+
+    public function getSelectedStore()
+    {
+        /*  Get the selected option from the "Select Store Page" (Level 3).
+         *  We can use the selected option to retrieve the order.
+         */
+
+        /*  Get the selected option and convert it to an interger  */
+        $selected_option = (int) $this->getResponseFromLevel(3 + $this->offset);
+
+        /*  If we have a selected option (e.g 1, 2 or 3)  */
+        if ($selected_option) {
+
+            /*  Retrieve the actual store that was selected. Note that the user would have
+             *  replied "1" to select the first store on the list. However the first store
+             *  on "$this->stores" variable is of index "0", this means we need to always
+             *  subtract "1" from the user reply to access the correct store.
+             */
+
+            return $this->stores[$selected_option - 1] ?? null;
+        }
+    }
+
+    public function visitStore()
+    {
+        $this->getStoreDetails();
+
         /*  If the user already selected an option from the "Store Landing Page"  */
         if ($this->hasSelectedStoreLandingPageOption()) {
-            
             /*  If the user already indicated that they want to start shopping  */
-            if( $this->wantsToStartShopping() ){
-
+            if ($this->wantsToStartShopping()) {
                 /*  Allow the user to start shopping  (At the specified store)  */
                 $response = $this->startShopping();
 
             /*  If the user already indicated that they want to view past orders  */
-            }elseif( $this->wantsToViewMyOrders() ){
-
+            } elseif ($this->wantsToViewMyOrders()) {
                 /*  Allow the user to view their past orders  */
                 $response = $this->viewMyOrders();
 
             /*  If the user already indicated that they want to view the contact us information  */
-            }elseif( $this->wantsToViewContactUs() ){
-
+            } elseif ($this->wantsToViewContactUs()) {
                 /*  Allow the user to view the store's contact information  */
                 $response = $this->viewContactUs();
 
             /*  If the user already indicated that they want to view the about us information  */
-            }elseif( $this->wantsToViewAboutUs() ){
-
+            } elseif ($this->wantsToViewAboutUs()) {
                 /*  Allow the user to view information about the store  */
                 $response = $this->viewAboutUs();
 
             /*  Selected an option that does not exist  */
             } else {
-
                 /*  Notify the user of incorrect option selected  */
                 return $this->displayIncorrectOptionPage();
-
             }
-
-        }else{
-
+        } else {
             /*  Show the user the "Store Landing Page"  */
             $response = $this->displayStoreLandingPage();
-
         }
 
         return $response;
-
     }
 
     public function getStoreDetails()
@@ -248,8 +386,8 @@ class UssdController extends Controller
 
         /*  Get the Ussd Interface
          *
-         *  The interface contains the USSD screen name, description and its "live_mode" 
-         *  status to inform us whether to allow the user access the store landing page. 
+         *  The interface contains the USSD screen name, description and its "live_mode"
+         *  status to inform us whether to allow the user access the store landing page.
          *  The interface also gives us access to the owning store, which allows us to
          *  access the store products, discounts, taxes, e.t.c
          */
@@ -260,9 +398,27 @@ class UssdController extends Controller
 
         /*  Get the Ussd Interface products only if the interface exists */
         $this->products = $this->ussd_interface ? $this->ussd_interface->products : null;
-        
+
         /*  Get the store currency symbol or currency code if only if the store exists */
         $this->currency = $this->store ? ($this->store['currency']['symbol'] ?? $this->store['currency']['code']) : null;
+
+        /*  If no store using the provided store code was found, or maybe the store
+         *  was deleted or we could not gain access to it for some reason
+         */
+        if (!$this->store) {
+
+            /*  Notify the user that we have issues connecting to the store  */
+            return $this->displayIssueConnectingToStorePage();
+
+        }
+
+        /*  If the store is not supporting USSD at this time  */
+        if( !$this->store->support_ussd){
+
+            /*  Notify the user that the store is not available  */
+            return $this->displayCustomGoBackPage("Sorry, the store is currently offline.\n");
+            
+        }
 
     }
 
@@ -272,12 +428,10 @@ class UssdController extends Controller
          *  (has exceeded the maximum items allowed)
          */
         if ($this->hasExceededMaximumItems()) {
-
             $allowed_cart_items = $this->maximum_cart_items.($this->maximum_cart_items == 1 ? ' item' : ' items');
 
             /*  Notify the user that they have exceeded that maximum items allowed in the cart  */
-            return $this->displayCustomGoBackPage('Sorry, you are only allowed to add a maximum of '.$allowed_cart_items);
-
+            return $this->displayCustomGoBackPage('Sorry, you are only allowed to add a maximum of '.$allowed_cart_items."\n");
         }
 
         return $this->showProductCatalog();
@@ -285,36 +439,27 @@ class UssdController extends Controller
 
     public function showProductCatalog()
     {
-
         /*  If the user indicated to paginate the "Store Products Page"  */
         if ($this->wantsToPaginateProductsPage()) {
-
             /*  Paginate the products page "Previous Product Cart Summary Page"  */
-            $this->products = $this->getPaginatedProductsToList();
+            $this->products_on_display = $this->getPaginatedProductsToList();
 
             $this->offset = $this->offset + 1;
-        
         } else {
-            
-            $this->products = $this->getFirstProductsToList();
-
+            $this->products_on_display = $this->getFirstProductsToList();
         }
 
         /*  If the user already selected a product  */
         if ($this->hasSelectedProduct()) {
-
             $response = $this->handleSelectedProduct();
 
-            /*  If the user has not selected any product  */
+        /*  If the user has not selected any product  */
         } else {
-
             /*  Show the user the "Product Catalog Page"  */
             $response = $this->displayProductCatalogPage();
-
         }
 
         return $response;
-
     }
 
     public function handleSelectedProduct()
@@ -322,27 +467,25 @@ class UssdController extends Controller
         /*  Make sure the selected product is always available from here on  */
         $this->selected_product = $this->getSelectedProduct();
 
+        /*  Selected a product that does not exist  */
+        if (!$this->selected_product) {
+            /*  Notify the user of incorrect option selected  */
+            return $this->displayIncorrectOptionPage();
+        }
+
         /*  If the selected product has variables  */
         if ($this->hasVariables()) {
-
-            if( $response = $this->handleProductVariables() ){
-
+            if ($response = $this->handleProductVariables()) {
                 return $response;
-
             }
-
         }
 
         /*  If the user already selected the product quantity  */
         if ($this->hasSelectedProductQuantity()) {
-            
             $response = $this->handleProductQuantity();
-
         } else {
-
             /*  Show the user the product quantity selection page  */
             $response = $this->displayProductQuantityPage();
-
         }
 
         return $response;
@@ -360,43 +503,43 @@ class UssdController extends Controller
         $variant_attribute_offset = 1;
 
         /*  Foreach product variant page number  */
-        foreach ($variant_attributes as $variant_attribute_name => $variant_attribute_options) {
-
+        foreach ($variant_attributes as $variant_attribute_name => $variable_options) {
             /*  Adjust the offset by including the $variant_attribute_offset since we are now
                 *  selecting variable options.
                 */
             $this->offset = $this->offset + 1;
 
+            $this->variant_attribute_name = $variant_attribute_name;
+            $this->variable_options = $variable_options;
+
             /*  If the user indicated to paginate the "Store Products Page"  */
             if ($this->wantsToPaginateVariantOptionsPage()) {
-
                 /*  Paginate the products page "Previous Product Cart Summary Page"  */
-                $variant_attribute_options = $this->getPaginatedVariantOptionsToList( $variant_attribute_options );
+                $variable_options_to_display = $this->getPaginatedVariantOptionsToList();
 
                 $this->offset = $this->offset + 1;
-            
             } else {
-                
-                $variant_attribute_options = $this->getFirstVariantOptionsToList( $variant_attribute_options );
-
+                $variable_options_to_display = $this->getFirstVariantOptionsToList();
             }
 
             /*  If the user has not already selected an option for this variable page.  */
             if (!$this->hasSelectedProductVariantPageOption()) {
-
                 /*  Determine if this is the last variant attribute in the loop */
                 $is_last_variant_page = ($variant_attribute_offset == count($variant_attributes));
 
                 /*  Display the menu for the user to select a product variable */
-                return $this->displayProductVariablePage($variant_attribute_name, $variant_attribute_options, $is_last_variant_page);
-            
+                return $this->displayProductVariablePage($variant_attribute_name, $variable_options_to_display, $is_last_variant_page);
             } else {
-
                 /*  Get the selected option for this variable page.  */
-                $selected_option = $this->getSelectedVariableOption($variant_attribute_name, $variant_attribute_options);
+                $selected_option = $this->getSelectedVariableOption();
+
+                /*  If selected variable does not exist  */
+                if (!$selected_option) {
+                    /*  Notify the user of incorrect option selected  */
+                    return $this->displayIncorrectOptionPage();
+                }
 
                 array_push($this->selected_variable_options, $selected_option);
-                
             }
 
             $variant_attribute_offset = ++$variant_attribute_offset;
@@ -409,7 +552,6 @@ class UssdController extends Controller
     public function handleProductQuantity()
     {
         if ($this->isValidProductQuantity()) {
-                    
             /*  Update the selected product quantity */
             $this->selected_product['quantity'] = $this->getSelectedProductQuantity();
 
@@ -419,29 +561,29 @@ class UssdController extends Controller
             /*  Get the cart and make sure the cart is always available from here on */
             $this->cart = $this->getCart();
 
-            /*  If the user already selected that they want to add another product  */
-            if ($this->wantsToAddAnotherProduct()) {
-                
-                /*  Revisit the store to select another product  */
-                $response = $this->revisitStore();
+            /*  If the user already selected the payment method  */
+            if ($this->hasSelectedOrderSummaryOption()) {
+                /*  If the user already selected that they want to add another product  */
+                if ($this->wantsToAddAnotherProduct()) {
+                    /*  Revisit the store to select another product  */
+                    $response = $this->revisitStore();
 
-            /*  If the user already selected that they want to checkout and pay  */
-            } elseif ($this->wantsToPay()) {
+                /*  If the user already selected that they want to checkout and pay  */
+                } elseif ($this->wantsToPay()) {
+                    $response = $this->handleCartCheckout();
 
-                $response = $this->handleCartCheckout();
-
-                /*  Otherwise they haven't made up their mind yet  */
+                /*  Selected an option that does not exist  */
+                } else {
+                    /*  Notify the user of incorrect option selected  */
+                    return $this->displayIncorrectOptionPage();
+                }
             } else {
-
                 /*  Show the user the cart summary page with options to decide what to do next  */
                 $response = $this->displayCartSummaryPage();
-
             }
         } else {
-
-            /*  Notify the user of provide a valid quantity  */
-            $response = $this->displayCustomErrorPage('The product quantity you provided is not available');
-
+            /*  Notify the user to provide a valid quantity  */
+            return $this->displayCustomGoBackPage("The product quantity you provided is not available.\n");
         }
 
         return $response;
@@ -451,64 +593,55 @@ class UssdController extends Controller
     {
         /*  If the user already selected the payment method  */
         if ($this->hasSelectedPaymentMethod()) {
-            
             /*  If the user already selected that they want to pay with Airtime  */
             if ($this->wantsToPayWithAirtime()) {
+                /*  If the user already selected an option from the "Pay With Airtime Confirmation Page"  */
+                if ($this->hasSelectedAirtimeConfirmationOption()) {
+                    /*  If the user already confirmed that they want to pay with Airtime  */
+                    if ($this->hasConfirmedPaymentWithAirtime()) {
+                        /*  Process the order using Airtime  */
+                        $response = $this->procressOrder($payment_method = 'airtime');
 
-                /*  If the user already confirmed that they want to pay with Airtime  */
-                if ($this->hasConfirmedPaymentWithAirtime()) {
+                    /*  Selected an option that does not exist  */
+                    } else {
+                        /*  Notify the user of incorrect option selected  */
+                        return $this->displayIncorrectOptionPage();
+                    }
 
-                    /*  Process the order using Airtime  */
-                    $response = $this->procressOrder($payment_method = 'airtime');
-
-                /*  If the user has not already confirmed that they want to pay with Airtime  */
+                    /*  If the user has not already confirmed that they want to pay with Airtime  */
                 } else {
-
                     /*  Show the user the Airtime payment confirmation page  */
                     $response = $this->displayAirtimePaymentConfirmationPage();
-
                 }
 
                 /*  If the user already selected that they want to pay with Orange Money  */
             } elseif ($this->wantsToPayWithOrangeMoney()) {
-
                 /*  If the user already confirmed that they want to pay with Orange Money  */
                 if ($this->hasConfirmedPaymentWithOrangeMoney()) {
-
                     /*  If the user provided a valid Orange Money pin  */
                     if ($this->isValidOrangeMoneyPin()) {
-
                         /*  Process the order using Orange Money  */
                         $response = $this->procressOrder($payment_method = 'orange_money');
 
+                    /*  If the user's Orange Money pin was not valid  */
                     } else {
-
                         /*  Notify the user of incorrect pin  */
-                        $response = $this->displayCustomErrorPage('Incorrect pin provided. Please try again');
-
+                        $response = $this->displayCustomGoBackPage("Incorrect pin provided. Please try again.\n");
                     }
-
                 } else {
-
                     /*  Show the user the Orange Money payment confirmation page  */
                     $response = $this->displayOrangeMoneyPaymentConfirmationPage();
-
                 }
 
                 /*  If the user selected an option that does not exist  */
             } else {
-
-                /*  Notify the user of incorrect method of payment selected  */
-                $response = $this->displayCustomErrorPage('You selected an incorrect method of payment. Please try again');
-
+                $response = $this->displayCustomGoBackPage("You selected an incorrect method of payment. Please try again.\n");
             }
 
             /*  If the user has not already selected the payment method  */
         } else {
-
             /*  Show the user the payment options page  */
             $response = $this->displayPaymentOptionsPage();
-
         }
 
         return $response;
@@ -532,87 +665,83 @@ class UssdController extends Controller
         /*  Make sure the orders are accessible from here on  */
         $this->orders = $this->getMyOrders();
 
-        if( $this->wantsToViewAllOrders() ){
+        if ($this->hasSelectedOrderHomePageOption()) {
+            if ($this->wantsToViewAllOrders()) {
+                /*  If the user indicated to paginate the "Orders Page"  */
+                if ($this->wantsToPaginateOrdersPage()) {
+                    /*  Paginate the "Orders Page"  */
+                    $this->orders_on_display = $this->getPaginatedOrdersToList();
 
-            if( $this->hasSelectedOrder() ){
+                    $this->offset = $this->offset + 1;
+                } else {
+                    $this->orders_on_display = $this->getFirstOrdersToList();
+                }
 
-                /*  Make sure the selected order is accessible from here on  */
-                $this->order = $this->getSelectedOrder();
+                if ($this->hasSelectedOrder()) {
+                    /*  Make sure the selected order is accessible from here on  */
+                    $this->order = $this->getSelectedOrder();
+
+                    /*  Selected an option that does not exist  */
+                    if (!$this->order) {
+                        /*  Notify the user of incorrect option selected  */
+                        return $this->displayIncorrectOptionPage();
+                    }
+                } else {
+                    /*  Show the user the "Orders Page"  */
+                    return $this->displayOrderListPage();
+                }
+            } elseif ($this->wantsToSearchOrders()) {
+                if ($this->hasProvidedOrderNumberToSearch()) {
+                    if ($this->searchedOrderExists()) {
+                        /*  Make sure the serched order is accessible from here on  */
+                        $this->order = $this->getSearchedOrder();
+                    } else {
+                        /*  Notify the user that the searched order was not found  */
+                        return $this->displayCustomGoBackPage('Sorry, Order #'.$this->getOrderNumber()." was not found.\n");
+                    }
+                } else {
+                    /*  Show the user the "Enter Order Number Page"  */
+                    return $this->displayCustomGoBackPage("Enter the order number:\n");
+                }
 
                 /*  Selected an option that does not exist  */
-                if( !$this->order ){
-
-                    /*  Notify the user of incorrect option selected  */
-                    return $this->displayIncorrectOptionPage();
-
-                }
-
-            }else{
-
-                /*  Show the user the "Orders Page"  */
-                return $this->displayOrderListPage();
-
+            } else {
+                /*  Notify the user of incorrect option selected  */
+                return $this->displayIncorrectOptionPage();
             }
-
-        }elseif( $this->wantsToSearchOrders() ){
-
-            if( $this->hasProvidedOrderNumberToSearch() ){
-
-                if( $this->searchedOrderExists() ){
-
-                    /*  Make sure the serched order is accessible from here on  */
-                    $this->order = $this->getSearchedOrder();
-                    
-                }else{
-
-                    /*  Notify the user that the searched order was not found  */
-                    return $this->displayCustomGoBackPage("Sorry, order was not found.\n");
-
-                }
-
-            }else{
-
-                /*  Show the user the "Enter Order Number Page"  */
-                return $this->displayEnterOrderNumberPage();
-
-            }
-
-        }else{
-
+        } else {
             /*  Show the user the "View All Orders Or Search Order Page"  */
             return $this->displayViewAllOrdersOrSearchOrderPage();
-
         }
 
-        if( $this->hasSelectedViewOrderItems() ){
+        if ($this->hasSelectedMyOrderSummaryOption()) {
+            if ($this->hasSelectedViewOrderItems()) {
+                /*  Show the user the "Order Items Page"  */
+                return $this->displayOrderItemsPage();
+            } elseif ($this->hasSelectedViewOrderCostBreakdown()) {
+                /*  Show the user the "Order Cost Breakdown Page"  */
+                return $this->displayOrderCostBreakdownPage();
 
-            /*  Show the user the "Order Items Page"  */
-            return $this->displayOrderItemsPage();
-
-        }elseif( $this->hasSelectedViewOrderCostBreakdown() ){
-
-            /*  Show the user the "Order Cost Breakdown Page"  */
-            return $this->displayOrderCostBreakdownPage();
-
-        }else{
-
+            /*  Selected an option that does not exist  */
+            } else {
+                /*  Notify the user of incorrect option selected  */
+                return $this->displayIncorrectOptionPage();
+            }
+        } else {
             /*  Show the user the "Order Summary Page"  */
             return $this->displayOrderSummaryPage();
-
         }
-
     }
 
     public function viewContactUs()
     {
-        return $this->displayContactUsPage();    
+        return $this->displayContactUsPage();
     }
 
     public function viewAboutUs()
     {
         return $this->displayAboutUsPage();
     }
-
 
     /********************************
      *  DISPLAY SCREENS             *
@@ -627,8 +756,7 @@ class UssdController extends Controller
     {
         $response = "CON Find stores ka BONAKO,\nSelect (1) to enter the store code or (2) to search for a store \n";
         $response .= "1. Enter store code\n";
-        $response .= "2. Search popular stores\n";
-        $response .= "3. My Favourite stores (3)\n";
+        $response .= "2. Find stores\n";
 
         return $response;
     }
@@ -646,13 +774,13 @@ class UssdController extends Controller
 
     /*  displayCustomGoBackPage()
      *  This is the page displayed when a problem was encountered and but we want
-     *  to still continue the session. We therefore display the custom error 
+     *  to still continue the session. We therefore display the custom error
      *  message but also display the option to go back.
      */
     public function displayCustomGoBackPage($message = '', $include_line_breaker = true)
     {
-        $response = 'CON '.$message . ($include_line_breaker ? "\n" : "");
-        $response .= "0. Go Back";
+        $response = 'CON '.$message.($include_line_breaker ? "\n" : '');
+        $response .= '0. Go Back';
 
         return $response;
     }
@@ -665,6 +793,50 @@ class UssdController extends Controller
         return $this->displayCustomGoBackPage("Enter the store code to visit your local store:\n");
     }
 
+    /*  displayFindStoresPage()
+     *  This is the page displayed when a user must select a method to search
+     *  for stores e.g by listing favourite stores, popular stores or 
+     *  categorised stores
+     */
+    public function displayFindStoresPage()
+    {
+        $response = "Find Stores:\n";
+        $response .= "1. My favourites (".count($this->getMyStores()).")\n";
+        $response .= "2. Popular stores\n";
+        $response .= "3. Stores by category";
+
+        return $this->displayCustomGoBackPage($response);
+    }
+
+    /*  displayStoresPage()
+     *  This is the page displayed when a user must select a store to visit
+     */
+    public function displayStoresPage()
+    {
+
+        $response = "Select store:\n";
+
+        if( count($this->stores_on_display) ){
+
+            foreach ($this->stores_on_display as $key => $store) {
+                
+                $number = ++$key;
+                $ussd_interface = $store->ussdInterface;
+                $response .= $number.". ".$ussd_interface['name']."\n";
+
+            }
+            
+            $response .= "99. Show more";
+
+        }else{
+            
+            $response .= count($this->stores) ? "\nNo more stores to show.\n" : "\nNo stores found.\n";
+            
+        }
+
+        return $this->displayCustomGoBackPage($response);
+    }
+
     /*  displayStoreCategoriesPage()
      *  This is the page displayed when a user must select a store category.
      *  A store category groups stores that operate in the same industry
@@ -675,7 +847,7 @@ class UssdController extends Controller
         $response = "Search by category\n";
         $response .= "1. Accomodation Services (12)\n";
         $response .= "2. Transport Services (4)\n";
-        $response .= "3. Fast Food Services (18)";
+        $response .= '3. Fast Food Services (18)';
 
         return $this->displayCustomGoBackPage($response);
     }
@@ -689,7 +861,7 @@ class UssdController extends Controller
     {
         $response = "Category: Transport, Select option to visit\n";
         $response .= "1. Smiley Cabs\n";
-        $response .= "2. Deluxe Cabs";
+        $response .= '2. Deluxe Cabs';
 
         return $this->displayCustomGoBackPage($response);
     }
@@ -725,13 +897,13 @@ class UssdController extends Controller
         /*  Show the store name  */
         $response = $this->ussd_interface['name'].":\n";
         $call_to_action = $this->ussd_interface['call_to_action'] ?? 'View Products';
-        $number_of_orders = $this->getMyOrders( $count = true );
+        $number_of_orders = count($this->getMyOrders());
 
         /*  Show available store options  */
-        $response .= "1. ".$call_to_action."\n";
-        $response .= "2. My Orders(".$number_of_orders.")\n";
+        $response .= '1. '.$call_to_action."\n";
+        $response .= '2. My Orders('.$number_of_orders.")\n";
         $response .= "3. Contact Us\n";
-        $response .= "4. About Us";
+        $response .= '4. About Us';
 
         return $this->displayCustomGoBackPage($response);
     }
@@ -769,15 +941,18 @@ class UssdController extends Controller
         $response = '';
 
         /*  If we have any products  */
-        if (count($this->products)) {
+        if (count($this->products_on_display)) {
             /*  List the products available  */
-            foreach ($this->products as $key => $product) {
+            foreach ($this->products_on_display as $key => $product) {
                 $option_number = $key + 1;
 
                 /*  Get the product name, currency symbol and price  */
                 $product_id = trim($product['id']);
                 $product_name = trim($product['name']);
                 $product_price = $product['unit_price'];
+                
+                /*  Check if the product has variables  */
+                $product_has_variables = $this->hasVariables($product);
 
                 /*  Check if the product is on sale  */
                 $product_on_sale = $this->isOnSale($product);
@@ -789,16 +964,27 @@ class UssdController extends Controller
                 if ($this->hasStock($product)) {
                     /*  Check if the product has been added to the cart already  */
                     if ($this->isProductAddedToCart($product_id)) {
+
                         /*  Show the product name, and indicate that the product is in the cart already  */
                         $response .= $option_number.'. '.$product_name." (added)\n";
 
                     /*  If the product hasn't been added to the cart already  */
                     } else {
-                        /*  Show the product name, currency and price  */
-                        $response .= $option_number.'. '.$product_name.' -'.$this->currency.$product_price;
 
-                        /*  If the product is on sale then make an indication  */
-                        $response .= ($product_on_sale ? ' (on sale)' : '')."\n";
+                        if( $product_has_variables ){
+                            
+                            /*  Show the product name only  */
+                            $response .= $option_number.'. '.$product_name."\n";
+
+                        }else{
+
+                            /*  Show the product name, currency and price  */
+                            $response .= $option_number.'. '.$product_name.' -'.$this->currency.$product_price;
+
+                            /*  If the product is on sale then make an indication  */
+                            $response .= ($product_on_sale ? ' (on sale)' : '')."\n";
+                            
+                        }
                     }
 
                     //  Otherwise show this product as out of stock
@@ -808,11 +994,10 @@ class UssdController extends Controller
                 }
             }
 
-            $response .= "99. Show More";
-
+            $response .= '99. Show More';
         } else {
             /*  If we don't have any products to list  */
-            $response .= "\nSorry, no products :)\n";
+            $response = count($this->products) ? "\nNo more items to show.\n" : "\nNo items found :(\n";
         }
 
         return $response;
@@ -821,15 +1006,12 @@ class UssdController extends Controller
     /*  displayProductVariablePage()
      *  This is the page displayed when a user must select a product variable
      */
-    public function displayProductVariablePage($variant_attribute_name, $variant_attribute_options, $is_last_variant_page)
+    public function displayProductVariablePage($variant_attribute_name, $variable_options, $is_last_variant_page)
     {
-        $response = '';
+        $response = $this->selected_product->name.": Select an option\n";
 
-        if( count($variant_attribute_options) ){
-            
-            $response = $this->selected_product->name.": Select an option\n";
-
-            foreach ($variant_attribute_options as $key => $option) {
+        if (count($variable_options)) {
+            foreach ($variable_options as $key => $option) {
                 $additional_variable_options = [$variant_attribute_name => $option];
                 $product_variation = $this->getSelectedProductVariation($additional_variable_options);
 
@@ -859,24 +1041,22 @@ class UssdController extends Controller
                                 $response .= ($product_on_sale ? ' (on sale)' : '');
                             }
 
-                        //  Otherwise show this variation product is out of stock
+                            //  Otherwise show this variation product is out of stock
                         } else {
                             /*  Show the product name, and indicate that this product is out of stock  */
                             $response .= ' (out of stock)';
                         }
                     }
-
                 }
 
                 $response .= "\n";
             }
         } else {
             /*  If we don't have anymore options to list  */
-            $response .= "Sorry, no more options :)\n\n";
+            $response .= count($this->variable_options) ? "\nNo more options to show.\n\n" : "\nNo options found :(\n\n";
         }
 
         return $this->displayCustomGoBackPage($response, $include_line_breaker = false);
-
     }
 
     /*  displayProductQuantityPage()
@@ -884,8 +1064,8 @@ class UssdController extends Controller
      */
     public function displayProductQuantityPage()
     {
-        $response = 'Select your quantity (how many you want) for this item "'.$this->selected_product['name']."\"\n";
-        $response .= 'Enter between 1 and '.$this->maximum_item_quantity."\n";
+        $response = 'How many do you want (Quantity) of "'.$this->selected_product['name']."\"\n\n";
+        $response .= 'Select between 1 and '.$this->maximum_item_quantity."\n";
 
         return $this->displayCustomGoBackPage($response);
     }
@@ -901,7 +1081,7 @@ class UssdController extends Controller
 
         $summary_text = $this->summarize($cart_total.' '.$cart_items, 100);
         $response = $summary_text."\n";
-        $response .= "1. Pay Now";
+        $response .= '1. Pay Now';
 
         $response = $this->displayCustomGoBackPage($response);
 
@@ -921,7 +1101,7 @@ class UssdController extends Controller
         $summary_text = $this->summarize('You are paying '.$cart_total.' for '.$cart_items, 100);
         $response = $summary_text.". Select payment method\n";
         $response .= "1. Airtime\n";
-        $response .= "2. Orange Money";
+        $response .= '2. Orange Money';
 
         return $this->displayCustomGoBackPage($response);
     }
@@ -937,7 +1117,7 @@ class UssdController extends Controller
 
         $summary_text = $this->summarize('You are paying '.$cart_total.' for '.$cart_items, 100);
         $response = $summary_text.' using Airtime. You will be charged ('.$service_fee.") as a service fee. Please confirm\n";
-        $response .= "1. Confirm";
+        $response .= '1. Confirm';
 
         return $this->displayCustomGoBackPage($response);
     }
@@ -953,7 +1133,7 @@ class UssdController extends Controller
 
         $summary_text = $this->summarize('You are paying '.$cart_total.' for '.$cart_items, 100);
         $response = $summary_text.' using Orange Money. You will be charged ('.$service_fee.") as a service fee. Please confirm\n";
-        $response .= "1. Enter pin to confirm";
+        $response .= '1. Enter pin to confirm';
 
         return $this->displayCustomGoBackPage($response);
     }
@@ -980,7 +1160,6 @@ class UssdController extends Controller
         return $this->displayCustomErrorPage('Sorry, payment failed. '.$error_message.' Try again.');
     }
 
-
     /*  displayViewAllOrdersOrSearchOrderPage()
      *  This is the page where the user must select whether they want
      *  view all orders or search for a specific order
@@ -989,11 +1168,10 @@ class UssdController extends Controller
     {
         $response = "Select option:\n";
         $response .= "1. Recent Orders\n";
-        $response .= "2. Search Order";
+        $response .= '2. Search Order';
 
         return $this->displayCustomGoBackPage($response);
     }
-
 
     /*  displayOrderListPage()
      *  This is the page where the user must select a specific order
@@ -1001,43 +1179,28 @@ class UssdController extends Controller
      */
     public function displayOrderListPage()
     {
-        if( count( $this->orders ) ){
-
+        if (count($this->orders_on_display)) {
             $response = "Select Order:\n";
 
-            foreach( $this->orders as $key => $order ){
-                
+            foreach ($this->orders_on_display as $key => $order) {
                 $number = (++$key);
-                
+
                 $order_number = $order['number'];
                 $order_date = (new \Carbon\Carbon($order['created_date']))->format('d/m/Y');
 
-                $response .= $number.". Order #". $order_number ." (".$order_date.")"."\n";
-    
+                $response .= $number.'. Order #'.$order_number.' ('.$order_date.')'."\n";
             }
 
-            $response .= "99. Show More";
+            $response .= '99. Show More';
 
             $response = $this->displayCustomGoBackPage($response);
-
-        }else{
-
-            $response = "No orders found.\n";
+        } else {
+            $response = count($this->orders) ? "No more orders to show.\n" : "No orders found.\n";
 
             $response = $this->displayCustomGoBackPage($response);
-
         }
 
         return $response;
-    }
-
-    /*  displayEnterOrderNumberPage()
-     *  This is the page where the user must enter the order number of
-     *  the order they want to search
-     */
-    public function displayEnterOrderNumberPage()
-    {
-        return $this->displayCustomGoBackPage("Enter the order number:\n");
     }
 
     /*  displayOrderSummaryPage()
@@ -1046,18 +1209,17 @@ class UssdController extends Controller
      */
     public function displayOrderSummaryPage()
     {
-
         $order_number = $this->order->number;
         $order_total = $this->currency.$this->convertToMoney($this->order->grand_total);
         $order_date = (new \Carbon\Carbon($this->order['created_date']))->format('M d Y, h:iA');
         $number_of_items = count($this->order->item_lines) ?? 0;
 
-        $response = "Order #".$order_number."\n";
-        $response .= "Amount: ".$order_total."\n";
-        $response .= "Date: ".$order_date."\n";
+        $response = 'Order #'.$order_number."\n";
+        $response .= 'Amount: '.$order_total."\n";
+        $response .= 'Date: '.$order_date."\n";
         $response .= "---\n";
-        $response .= "1. View Items(".$number_of_items.")\n";
-        $response .= "2. View Cost Breakdown";
+        $response .= '1. View Items('.$number_of_items.")\n";
+        $response .= '2. View Cost Breakdown';
 
         return $this->displayCustomGoBackPage($response);
     }
@@ -1071,12 +1233,10 @@ class UssdController extends Controller
         /*  Get the cart items (Array) e.g ["1x(Product 1)", "2x(Product 3)"]  */
         $order_items_array = $this->getOrderItemsInArray();
 
-        $response = "Order #".$this->order->number." Items:\n\n";
+        $response = 'Order #'.$this->order->number." Items:\n\n";
 
-        foreach( $order_items_array as $item ){
-
+        foreach ($order_items_array as $item) {
             $response .= $item."\n";
-
         }
 
         return $this->displayCustomGoBackPage($response);
@@ -1089,11 +1249,11 @@ class UssdController extends Controller
      */
     public function displayOrderCostBreakdownPage()
     {
-        $response = "Order #".$this->order->number." Breakdown:\n\n";
-        $response .= "Sub Total (".$this->convertToMoney($this->order->sub_total).")\n";
-        $response .= "Tax Total (".$this->convertToMoney($this->order->grand_tax_total).")\n";
-        $response .= "Discount Total (".$this->convertToMoney($this->order->grand_discount_total).")\n";
-        $response .= "Grand Total (".$this->convertToMoney($this->order->grand_total).")\n";
+        $response = 'Order #'.$this->order->number." Breakdown:\n\n";
+        $response .= 'Sub Total ('.$this->convertToMoney($this->order->sub_total).")\n";
+        $response .= 'Tax Total ('.$this->convertToMoney($this->order->grand_tax_total).")\n";
+        $response .= 'Discount Total ('.$this->convertToMoney($this->order->grand_discount_total).")\n";
+        $response .= 'Grand Total ('.$this->convertToMoney($this->order->grand_total).")\n";
 
         return $this->displayCustomGoBackPage($response);
     }
@@ -1105,7 +1265,7 @@ class UssdController extends Controller
     public function displayContactUsPage()
     {
         /*  Show the store contact us information  */
-        $response = $this->ussd_interface['contact_us'];
+        $response = $this->ussd_interface['contact_us']."\n";
 
         return $this->displayCustomGoBackPage($response);
     }
@@ -1117,7 +1277,7 @@ class UssdController extends Controller
     public function displayAboutUsPage()
     {
         /*  Show the store about us information  */
-        $response = $this->ussd_interface['about_us'];
+        $response = $this->ussd_interface['about_us']."\n";
 
         return $this->displayCustomGoBackPage($response);
     }
@@ -1128,21 +1288,15 @@ class UssdController extends Controller
 
     public function verifyUssdDetails()
     {
-        if( empty($this->phone_number) ){
-
+        if (empty($this->phone_number)) {
             /*  Notify the user to provide a mobile number first  */
             return $this->displayCustomErrorPage('Mobile number was not found.');
-
-        }elseif( empty($this->session_id) ){
-            
+        } elseif (empty($this->session_id)) {
             /*  Notify the user to provide a mobile number first  */
             return $this->displayCustomErrorPage('Session Id was not found.');
-
-        }elseif( empty($this->service_code) ){
-            
+        } elseif (empty($this->service_code)) {
             /*  Notify the user to provide a mobile number first  */
             return $this->displayCustomErrorPage('Service code was not found.');
-
         }
     }
 
@@ -1155,24 +1309,22 @@ class UssdController extends Controller
         /*  Assuming the $text value is as follows:
          *
          *  1*001*3*2*%23
-         * 
+         *
          *  Where "%23" is an encoded value representing "#"
          *
-         *  We want to convert all encoded values to their 
+         *  We want to convert all encoded values to their
          *  decoded counterparts
-         * 
+         *
          *  Before: 1*001*3*2*%23
          *  After:  1*001*3*2*#
          *
          */
         $responses = explode('*', $this->text);
 
-        for($x=0; $x < count($responses); $x++ ){
-
-            $responses[$x] = urldecode( $responses[$x] );
-
+        for ($x = 0; $x < count($responses); ++$x) {
+            $responses[$x] = urldecode($responses[$x]);
         }
-        
+
         $updated_text = implode('*', $responses);
 
         $this->text = $updated_text;
@@ -1413,8 +1565,8 @@ class UssdController extends Controller
     }
 
     /*  hasRespondedToLandingPage()
-     *  Returns true/false of whether the user has responded to the 
-     *  landing page before. The user must atleast have responded 
+     *  Returns true/false of whether the user has responded to the
+     *  landing page before. The user must atleast have responded
      *  once for this to be true
      */
     public function hasRespondedToLandingPage()
@@ -1431,7 +1583,7 @@ class UssdController extends Controller
      */
     public function wantsToEnterStoreCode()
     {
-        /*  If the user responded to the "Main landing page" (Level 1) with 
+        /*  If the user responded to the "Main landing page" (Level 1) with
          *  the option (1) then the user wants to enter their Store Code.
          */
         return  $this->completedLevel(1) && $this->getResponseFromLevel(1) == '1';
@@ -1460,15 +1612,12 @@ class UssdController extends Controller
 
         /*  If we have a Store Code  */
         if ($store_code) {
-
             /*  Get the USSD Interface using the Store Code  */
             $store = $this->getUssdInterface($store_code);
 
             /*  If a store was found */
             if ($store) {
-
                 return true;
-
             }
         }
 
@@ -1492,10 +1641,8 @@ class UssdController extends Controller
     public function getUssdInterface($store_code = null)
     {
         if ($store_code) {
-
             /*  Get the USSD Interface that uses ussd store code  */
             return UssdInterface::where('code', $store_code)->first() ?? null;
-
         }
     }
 
@@ -1504,18 +1651,112 @@ class UssdController extends Controller
      */
     public function wantsToSearchStore()
     {
-        /*  If the user responded to the "Main landing page" (Level 1) with 
+        /*  If the user responded to the "Main landing page" (Level 1) with
          *  the option (2) then the user wants to search for a store.
          */
         return  $this->completedLevel(1) && $this->getResponseFromLevel(1) == '2';
     }
+
+    public function getMyStores()
+    {
+        $this->contact = ( new \App\Contact)->findByPhone($this->user['phone']);
+
+        if( $this->contact ){
+
+            return $this->contact->stores()->get();
+
+        }
+
+        return [];
+
+    }
+
+    public function getPopularStores()
+    {
+        return (new \App\Store)->supportUssd()->popular()->get();
+    }
+
+    /*  hasSelectedHowToSearchStore()
+     *  Returns true/false of whether the user has already selected an option
+     *  of how they want to search for stores
+     */
+    public function hasSelectedHowToSearchStore()
+    {
+        /*  If the user responded to the "Find Store Page" (Level 2)
+         *  with any option.
+         */
+        return  $this->completedLevel(2);
+    }
+
+    /*  wantsToSearchMyFavouriteStores()
+     *  Returns true/false of whether the user wants to search for 
+     *  favourite stores
+     */
+    public function wantsToSearchMyFavouriteStores()
+    {
+        /*  If the user responded to the "Find Stores Page" (Level 2) with the
+         *  option (1) then the user wants to search for a favourite store.
+         */
+        return  $this->completedLevel(2) && $this->getResponseFromLevel(2) == '1';
+    }
+    
+    /*  wantsToSearchPopularStores()
+     *  Returns true/false of whether the user wants to search for 
+     *  popular stores
+     */
+    public function wantsToSearchPopularStores()
+    {
+        /*  If the user responded to the "Find Stores Page" (Level 2) with the
+         *  option (2) then the user wants to search for a popular store.
+         */
+        return  $this->completedLevel(2) && $this->getResponseFromLevel(2) == '2';
+    }
+
+    public function wantsToPaginateStoresPage()
+    {
+        /*  Get the selected store option from the "Stores Page" (Level 3)
+         *  If the option contains the value "99_" then the user wants to
+         *  paginate the stores page
+         */
+        return  $this->completedLevel(3) && substr($this->getResponseFromLevel(3), 0, 3) == '99_';
+    }
+
+    public function getFirstStoresToList()
+    {
+        $start_position = 0;
+
+        return collect($this->stores)->slice($start_position, $this->stores_per_page);
+    }
+
+    public function getPaginatedStoresToList()
+    {
+        $response = $this->getResponseFromLevel(3);
+        $number_of_times_to_paginate = substr($response, 3, 5);
+
+        $start_position = ($number_of_times_to_paginate * $this->stores_per_page);
+
+        return collect($this->stores)->slice($start_position, $this->stores_per_page);
+    }
+
+    /*  hasSelectedStore()
+     *  Returns true/false of whether the user has already selected an option
+     *  representing a store to visit
+     */
+    public function hasSelectedStore()
+    {
+        /*  If the user responded to the "Stores Page" (Level 3)
+         *  with any option.
+         */
+        return  $this->completedLevel(3 + $this->offset);
+    }
+    
 
     /*  hasSelectedStoreCategory()
      *  Returns true/false of whether the user has already selected a store category
      */
     public function hasSelectedStoreCategory()
     {
-        /*  If the user responded to the "Select Store Category Page" (Level 2) 
+        /*  If the user responded to the "Select Store Category Page" (Level 2)
          *  with a specific category of choice.
          */
         return  $this->completedLevel(2);
@@ -1527,7 +1768,7 @@ class UssdController extends Controller
      */
     public function hasSelectedStoreFromCategory()
     {
-        /*  If the user responded to the "Select Category Store Page" (Level 3) 
+        /*  If the user responded to the "Select Category Store Page" (Level 3)
          *  with a specific store of choice.
          */
         return  $this->completedLevel(3);
@@ -1541,32 +1782,32 @@ class UssdController extends Controller
      */
     public function hasSelectedStoreLandingPageOption()
     {
-        /*  If the user responded to the "Select Category Store Page" (Level 3) 
+        /*  If the user responded to the "Select Category Store Page" (Level 3)
          *  with a specific store of choice.
          */
         return  $this->completedLevel(3);
     }
 
     /*  wantsToStartShopping()
-     *  Returns true/false of whether the user wants to start shopping. 
+     *  Returns true/false of whether the user wants to start shopping.
      *  This means the user selected the store Call To Action option
-     *  
+     *
      */
     public function wantsToStartShopping()
     {
-        /*  If the user responded to the "Store landing page" (Level 3) with 
+        /*  If the user responded to the "Store landing page" (Level 3) with
          *  the option (1) then the user wants to start shopping.
          */
         return  $this->completedLevel(3) && $this->getResponseFromLevel(3) == '1';
     }
-    
+
     /*  wantsToViewMyOrders()
      *  Returns true/false of whether the user wants to view their
      *  past orders
      */
     public function wantsToViewMyOrders()
     {
-        /*  If the user responded to the "Store landing page" (Level 3) with 
+        /*  If the user responded to the "Store landing page" (Level 3) with
          *  the option (2) then the user wants to view their past orders.
          */
         return  $this->completedLevel(3) && $this->getResponseFromLevel(3) == '2';
@@ -1578,7 +1819,7 @@ class UssdController extends Controller
      */
     public function wantsToViewContactUs()
     {
-        /*  If the user responded to the "Store landing page" (Level 3) with 
+        /*  If the user responded to the "Store landing page" (Level 3) with
          *  the option (3) then the user wants to view the stores Contact Us
          *  information.
          */
@@ -1591,11 +1832,23 @@ class UssdController extends Controller
      */
     public function wantsToViewAboutUs()
     {
-        /*  If the user responded to the "Store landing page" (Level 3) with 
+        /*  If the user responded to the "Store landing page" (Level 3) with
          *  the option (4) then the user wants to view the stores About Us
          *  information.
          */
         return  $this->completedLevel(3) && $this->getResponseFromLevel(3) == '4';
+    }
+
+    /*  hasSelectedOrderHomePageOption()
+     *  Returns true/false of whether the user has already selected
+     *  an order option
+     */
+    public function hasSelectedOrderHomePageOption()
+    {
+        /*  If the user responded to the "My Orders Page" (Level 4)
+         *  with any available option
+         */
+        return  $this->completedLevel(4);
     }
 
     /*  wantsToViewAllOrders()
@@ -1604,11 +1857,37 @@ class UssdController extends Controller
      */
     public function wantsToViewAllOrders()
     {
-        /*  If the user responded to the "My Orders Page" (Level 4) with 
+        /*  If the user responded to the "My Orders Page" (Level 4) with
          *  the option (1) then the user wants to view all their past
          *  orders
          */
         return  $this->completedLevel(4) && $this->getResponseFromLevel(4) == '1';
+    }
+
+    public function wantsToPaginateOrdersPage()
+    {
+        /*  Get the selected order option from the Order Page (Level 3)
+         *  If the option contains the value "99_" then the user wants to
+         *  paginate the order page
+         */
+        return  $this->completedLevel(5) && substr($this->getResponseFromLevel(5), 0, 3) == '99_';
+    }
+
+    public function getFirstOrdersToList()
+    {
+        $start_position = 0;
+
+        return collect($this->orders)->slice($start_position, $this->order_per_page);
+    }
+
+    public function getPaginatedOrdersToList()
+    {
+        $response = $this->getResponseFromLevel(5);
+        $number_of_times_to_paginate = substr($response, 3, 5);
+
+        $start_position = ($number_of_times_to_paginate * $this->order_per_page);
+
+        return collect($this->orders)->slice($start_position, $this->order_per_page);
     }
 
     /*  hasSelectedOrder()
@@ -1617,10 +1896,10 @@ class UssdController extends Controller
      */
     public function hasSelectedOrder()
     {
-        /*  If the user responded to the "Select Order Page" (Level 5) 
+        /*  If the user responded to the "Select Order Page" (Level 5)
          *  by selecting a specific order.
          */
-        return  $this->completedLevel(5);
+        return  $this->completedLevel(5 + $this->offset);
     }
 
     /*  wantsToSearchOrders()
@@ -1629,42 +1908,27 @@ class UssdController extends Controller
      */
     public function wantsToSearchOrders()
     {
-        /*  If the user responded to the "My Orders Page" (Level 4) with 
+        /*  If the user responded to the "My Orders Page" (Level 4) with
          *  the option (2) then the user wants to search for a past
          *  order
          */
         return  $this->completedLevel(4) && $this->getResponseFromLevel(4) == '2';
     }
 
-    public function getMyOrders( $count = false )
+    public function getMyOrders()
     {
         /*  Check if a contact using the same mobile number exists for the store  */
-        $existingStoreContact = $this->store->contactsWithMobilePhone( $this->user['phone'] )->first();
-        
+        $storeContact = $this->store->contactsWithMobilePhone($this->user['phone'])->first();
+
         /*  If a contact was found  */
-        if( $existingStoreContact ){
+        if ($storeContact) {
 
-            if( $count == true ){
-
-                return $existingStoreContact->orders()->count() ?? 0;
-
-            }
-
-            /*  Return the orders that belong to that contact  */
-            return $existingStoreContact->orders()->orderBy('created_date', 'desc')->get() ?? [];
+            /*  Return the store orders where this contact is recognised as the order customer or reference  */
+            return $this->store->contactOrders($storeContact->id)->get() ?? [];
 
         }
 
-        if( $count == true ){
-
-            return 0;
-
-        }else{
-
-            return [];
-
-        }
-
+        return [];
     }
 
     public function getSelectedOrder()
@@ -1674,19 +1938,17 @@ class UssdController extends Controller
          */
 
         /*  Get the selected option and convert it to an interger  */
-        $selected_order_option = (int) $this->getResponseFromLevel(5);
+        $selected_order_option = (int) $this->getResponseFromLevel(5 + $this->offset);
 
         /*  If we have a selected order option (e.g 1, 2 or 3)  */
         if ($selected_order_option) {
-
             /*  Retrieve the actual order that was selected. Note that the user would have
              *  replied "1" to select the first order on the list. However the first order
              *  on "$this->orders" variable is of index "0", this means we need to always
              *  subtract "1" from the user reply to access the correct order.
              */
-            return $this->orders[$selected_order_option - 1];
+            return $this->orders[$selected_order_option - 1] ?? null;
         }
-        
     }
 
     /*  hasProvidedOrderNumberToSearch()
@@ -1695,10 +1957,19 @@ class UssdController extends Controller
      */
     public function hasProvidedOrderNumberToSearch()
     {
-        /*  If the user responded to the "Enter Order Number Page" (Level 5) 
+        /*  If the user responded to the "Enter Order Number Page" (Level 5)
          *  by providing the order number.
          */
         return  $this->completedLevel(5);
+    }
+
+    public function getOrderNumber()
+    {
+        /*  If the user already responded to the "Enter Order Number Page"
+         *  (Level 5) by providing the order number, we can get the
+         *  provided order number
+         */
+        return  $this->getResponseFromLevel(5);
     }
 
     public function getSearchedOrder()
@@ -1709,18 +1980,26 @@ class UssdController extends Controller
          */
 
         /*  Get the order number provided by the user  */
-        $orderNumber = $this->getResponseFromLevel(5);
+        $order_number = $this->getOrderNumber();
 
-        return collect($this->orders)->where('number', $orderNumber)->first() ?? null;
+        return collect($this->orders)->where('number', $order_number)->first() ?? null;
     }
 
     public function searchedOrderExists()
     {
         /*  If the user already responded to the "Enter Order Number Page"
-         *  (Level 6) by providing the order number, we can check if the 
+         *  (Level 6) by providing the order number, we can check if the
          *  order actually exists
          */
-        return  !empty( $this->getSearchedOrder() ) ? true : false;
+        return  !empty($this->getSearchedOrder()) ? true : false;
+    }
+
+    public function hasSelectedMyOrderSummaryOption()
+    {
+        /*  If the user already responded to the "Order Summary Page" (Level 6)
+         *  by selecting any available option.
+         */
+        return  $this->completedLevel(6 + $this->offset);
     }
 
     public function hasSelectedViewOrderItems()
@@ -1728,7 +2007,7 @@ class UssdController extends Controller
         /*  If the user already responded to the "Order Summary Page" (Level 6)
          *  by selecting option "1" being the "View Order Items" option.
          */
-        return  $this->completedLevel(6) && $this->getResponseFromLevel(6) == '1';
+        return  $this->completedLevel(6 + $this->offset) && $this->getResponseFromLevel(6 + $this->offset) == '1';
     }
 
     public function hasSelectedViewOrderCostBreakdown()
@@ -1736,13 +2015,13 @@ class UssdController extends Controller
         /*  If the user already responded to the "Order Summary Page" (Level 7)
          *  by selecting option "3" being the "View Order Cost Breakdown" option.
          */
-        return  $this->completedLevel(6) && $this->getResponseFromLevel(6) == '2';
+        return  $this->completedLevel(6 + $this->offset) && $this->getResponseFromLevel(6 + $this->offset) == '2';
     }
 
     public function wantsToPaginateProductsPage()
     {
         /*  Get the selected product option from the Product Page (Level 3)
-         *  If the option contains the value "99_" then the user wants to 
+         *  If the option contains the value "99_" then the user wants to
          *  paginate the products page
          */
         return  $this->completedLevel(4 + $this->offset) && substr($this->getResponseFromLevel(4 + $this->offset), 0, 3) == '99_';
@@ -1765,7 +2044,6 @@ class UssdController extends Controller
         return collect($this->products)->slice($start_position, $this->products_per_page);
     }
 
-
     public function hasSelectedProduct()
     {
         /*  If the user already responded to the "Store Landing Page" (Level 3)
@@ -1785,24 +2063,25 @@ class UssdController extends Controller
 
         /*  If we have a selected product option (e.g 1, 2 or 3)  */
         if ($selected_product_option) {
-
             /*  Retrieve the actual product that was selected. Note that the user would have
              *  replied "1" to select the first product on the list. However the first
              *  product on "$this->products" variable is of index "0", this means we need
              *  to always subtract "1" from the user reply to access the correct product.
              */
-            return $this->products[$selected_product_option - 1];
+            return $this->products[$selected_product_option - 1] ?? null;
         }
     }
 
-    public function hasVariables()
+    public function hasVariables($product = null)
     {
+        /*  Get the provided product otherwise get the selected product */
+        $product = $product ?? $this->selected_product;
+
         /*  If we have the actual product that was selected  */
-        if ($this->selected_product) {
+        if ($product) {
 
             /*  Determine if the selected product has variants  */
-            return  $this->selected_product['allow_variants'] == true && $this->selected_product->variations()->count();
-
+            return  $product['allow_variants'] == true && $product->variations()->count();
         }
 
         return false;
@@ -1817,21 +2096,21 @@ class UssdController extends Controller
         return  $this->completedLevel(4 + $this->offset) && substr($this->getResponseFromLevel(4 + $this->offset), 0, 3) == '99_';
     }
 
-    public function getFirstVariantOptionsToList( $variant_attribute_options )
+    public function getFirstVariantOptionsToList()
     {
         $start_position = 0;
 
-        return collect($variant_attribute_options)->slice($start_position, $this->variant_options_per_page);
+        return collect($this->variable_options)->slice($start_position, $this->variable_options_per_page);
     }
 
-    public function getPaginatedVariantOptionsToList( $variant_attribute_options )
+    public function getPaginatedVariantOptionsToList()
     {
         $response = $this->getResponseFromLevel(4 + $this->offset);
         $number_of_times_to_paginate = substr($response, 3, 5);
 
-        $start_position = ($number_of_times_to_paginate * $this->variant_options_per_page);
+        $start_position = ($number_of_times_to_paginate * $this->variable_options_per_page);
 
-        return collect($variant_attribute_options)->slice($start_position, $this->variant_options_per_page);
+        return collect($this->variable_options)->slice($start_position, $this->variable_options_per_page);
     }
 
     public function hasSelectedProductVariantPageOption()
@@ -1842,7 +2121,7 @@ class UssdController extends Controller
         return  $this->completedLevel(4 + $this->offset);
     }
 
-    public function getSelectedVariableOption($variant_attribute_name, $variant_attribute_options)
+    public function getSelectedVariableOption()
     {
         /*  If the user already responded to the "Select Product Variables Page" (Level 4++)
          *  by selecting a specific product variant option. We can return the selected option.
@@ -1852,10 +2131,12 @@ class UssdController extends Controller
         $selected_number_option = $this->getResponseFromLevel(4 + $this->offset);
 
         /*  Get the selected attribute option e.g Small, Medium or Large  */
-        $selected_attribute_option = $variant_attribute_options[$selected_number_option - 1];
+        $selected_attribute_option = $this->variable_options[$selected_number_option - 1] ?? null;
 
-        /*  Get the selected attribute name and option e.g ['size' => 'Small'] or ['color' => 'Blue']  */
-        return [$variant_attribute_name => $selected_attribute_option];
+        if ($selected_attribute_option) {
+            /*  Get the selected attribute name and option e.g ['size' => 'Small'] or ['color' => 'Blue']  */
+            return [$this->variant_attribute_name => $selected_attribute_option];
+        }
     }
 
     public function getSelectedProductVariation($additional_variable_options = [])
@@ -1892,7 +2173,7 @@ class UssdController extends Controller
         }
 
         return $product_variations->first();
-    }  
+    }
 
     public function hasSelectedProductQuantity()
     {
@@ -1925,6 +2206,14 @@ class UssdController extends Controller
          *  by providing a specific product quantity. We can return this quantity
          */
         return  $this->getResponseFromLevel(5 + $this->offset);
+    }
+
+    public function hasSelectedOrderSummaryOption()
+    {
+        /*  If the user already responded to the "Cart Summary Page" (Level 6)
+         *  by selecting any available option.
+         */
+        return  $this->completedLevel(6 + $this->offset);
     }
 
     public function wantsToAddAnotherProduct()
@@ -1965,6 +2254,14 @@ class UssdController extends Controller
          *  by selecting option (2) for pay using Orange Money.
          */
         return  $this->completedLevel(7 + $this->offset) && $this->getResponseFromLevel(7 + $this->offset) == '2';
+    }
+
+    public function hasSelectedAirtimeConfirmationOption()
+    {
+        /*  If the user already responded to the "Confirm Payment Using Airtime Page" (Level 7)
+         *  by selecting any option.
+         */
+        return  $this->completedLevel(8 + $this->offset);
     }
 
     public function hasConfirmedPaymentWithAirtime()
@@ -2010,25 +2307,19 @@ class UssdController extends Controller
 
         /* If the user specified to pay using Airtime  */
         if ($payment_method == 'airtime') {
-
             /*  Attempt to process the payment using Airtime  */
             $payment_response = $this->processPaymentWithAirtime();
 
         /* If the user specified to pay using Orange Money  */
         } elseif ($payment_method == 'orange_money') {
-
             /*  Attempt to process the payment using Orange Money  */
             $payment_response = $this->processPaymentWithOrangeMoney();
-
         } else {
-
             $payment_response = ['status' => false, 'error' => 'No payment method was specified'];
-
         }
 
         /*  If the payment status was successful  */
         if ($payment_response['status']) {
-
             /******************************************************************
              *  Find/Create a contact
              *  Create a new order for contact
@@ -2079,15 +2370,12 @@ class UssdController extends Controller
 
             /*  Notify the user of the payment success  */
             $response = $this->displayPaymentSuccessPage();
-
         } else {
-
             /*  Fetch the error (Reason why the payment failed)  */
             $error = $payment_response['error'];
 
             /*  Notify the user of the payment failure  */
             $response = $this->displayPaymentFailedPage($error);
-
         }
 
         return $response;
@@ -2150,28 +2438,6 @@ class UssdController extends Controller
 
         return $order_items_array;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public function getServiceFee()
     {

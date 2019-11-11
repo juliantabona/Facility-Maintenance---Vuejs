@@ -57,6 +57,24 @@ class Contact extends Model
     {
         return $this->hasMany('App\Order', 'customer_id');
     }
+    
+    /*  findByPhone()
+     *
+     *  This method returns the first contact that
+     *  mataches the phone specified
+     */
+    public function findByPhone($phone)
+    {
+        /*  If we have a phone specified  */
+        if($phone){
+            
+            /*  Return any contact using the provided phone number  */
+            return $this->whereHas('phones', function (Builder $query) use( $phone ){
+                        $query->where('calling_code', $phone['calling_code'])
+                                ->where('number', $phone['number']);
+                    })->first();
+        }
+    }
 
     /* 
      *  Returns phones associated with this contact. This includes all

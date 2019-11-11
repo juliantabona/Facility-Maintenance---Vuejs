@@ -68,16 +68,25 @@ class Store extends Model
      */
     public function scopeSupportUssd($query)
     {
-        return $this->whereSupportUssd(1);
+        return $query->whereSupportUssd(1);
     }
 
     /* 
      *  Scope:
      *  Return stores that don't support USSD access (Accessible by 2G Devices via USSD)
      */
-    public function scopeDontSupportUssd()
+    public function scopeDontSupportUssd($query)
     {
-        return $this->whereSupportUssd(0);
+        return $query->whereSupportUssd(0);
+    }
+
+    /* 
+     *  Scope:
+     *  Return stores that don't support USSD access (Accessible by 2G Devices via USSD)
+     */
+    public function scopePopular($query)
+    {
+        return $query->withCount('orders')->orderByDesc('orders_count');
     }
 
     /*  
@@ -358,6 +367,20 @@ class Store extends Model
         return $this->morphMany('App\Order', 'merchant');
     }
     
+    /* 
+     *  Returns orders owned by this store that belong 
+     *  to a specific contact id
+     */
+    public function contactOrders($contact_id = null)
+    {
+        
+        return $this->orders()->where(function ($query) use ($contact_id) {
+            $query->orWhere('customer_id', $contact_id)
+                  ->orWhere('reference_id', $contact_id);
+        });
+
+    }
+
     /* 
      *  Returns messages sent to this store
      */
