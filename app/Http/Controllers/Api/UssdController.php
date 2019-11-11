@@ -754,7 +754,7 @@ class UssdController extends Controller
      */
     public function displayLandingPage()
     {
-        $response = "CON Find stores ka BONAKO,\nSelect (1) to enter the store code or (2) to search for a store \n";
+        $response = "CON Find stores ka BONAKO,\nSelect (1) to enter the store code or (2) to find stores \n";
         $response .= "1. Enter store code\n";
         $response .= "2. Find stores\n";
 
