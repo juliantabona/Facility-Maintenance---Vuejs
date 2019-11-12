@@ -25,10 +25,13 @@ class UssdController extends Controller
     private $phone_number;
     private $ussd_interface;
     private $order_per_page;
+    private $stores_per_page;
     private $text_field_name;
     private $favourite_stores;
     private $variable_options;
     private $selected_product;
+    private $store_categories;
+    private $stores_on_display;
     private $selected_products;
     private $orders_on_display;
     private $products_per_page;
@@ -39,8 +42,9 @@ class UssdController extends Controller
     private $variant_attribute_name;
     private $variable_options_per_page;
     private $selected_variable_options;
-    private $stores_per_page;
-    private $stores_on_display;
+    private $store_categories_per_page;
+    private $store_categories_on_display;
+    private $variable_options_to_display;
 
     
 
@@ -76,8 +80,11 @@ class UssdController extends Controller
         /*  Define the maximum character limit for every USSD response  */
         $this->ussd_character_limit = 160;
 
+        /*  Define the maximum number of store categories to display on screen  */
+        $this->store_categories_per_page = 4;
+
         /*  Define the maximum number of stores to display on screen  */
-        $this->stores_per_page = 4;
+        $this->stores_per_page = 1;
 
         /*  Define the maximum number of products to display on screen  */
         $this->products_per_page = 4;
@@ -98,6 +105,11 @@ class UssdController extends Controller
         $this->selected_products = [];
         $this->variable_options = [];
         $this->selected_variable_options = [];
+    }
+
+    public function storeQrCodes()
+    {
+        return QrCode::size(300)->generate('A basic example of QR code!');
     }
 
     /*********************************
@@ -132,7 +144,6 @@ class UssdController extends Controller
                 if ($this->hasProvidedStoreCode()) {
                     /*  Check if a USSD Interface using the store code provided exists  */
                     if ($this->isValidStoreCode()) {
-                        
                         /*  Allow the user to start shopping (At the specified store)  */
                         $response = $this->visitStore();
 
@@ -149,35 +160,28 @@ class UssdController extends Controller
 
                 /*  If the user already indicated that they want to search a store (They don't have a Store Code)  */
             } elseif ($this->wantsToSearchStore()) {
-
                 /*  If the user already selected a specific option from the "Find Stores Page"  */
-                if( $this->hasSelectedHowToSearchStore() ){
-
+                if ($this->hasSelectedHowToSearchStore()) {
                     /*  If the user wants to search stores from their favourite store list  */
                     if ($this->wantsToSearchMyFavouriteStores()) {
-                    
                         /*  Make sure the users favourite stores are accessible from here on  */
                         $this->stores = $this->getMyStores();
 
                         /*  Manage pagination requests  */
                         $this->handleStorePagination();
-                        
+
                         /*  If the user already selected a specific store from the "Stores Page"  */
                         if ($this->hasSelectedStore()) {
-
                             /*  Visit the selected store  */
                             return $this->visitSelectedStore();
-
                         } else {
-
                             /*  Display the "Select Category Store Page"  */
                             $response = $this->displayStoresPage();
-
                         }
 
                     /*  If the user wants to search popular stores  */
-                    }elseif ($this->wantsToSearchPopularStores()) {
-                    
+                    } elseif ($this->wantsToSearchPopularStores()) {
+
                         /*  Make sure the popular stores are accessible from here on  */
                         $this->stores = $this->getPopularStores();
 
@@ -186,47 +190,64 @@ class UssdController extends Controller
 
                         /*  If the user already selected a specific store from the "Stores Page"  */
                         if ($this->hasSelectedStore()) {
-                            
                             /*  Visit the selected store  */
                             return $this->visitSelectedStore();
-
                         } else {
-
                             /*  Display the "Select Popular Store Page"  */
                             $response = $this->displayStoresPage();
-
                         }
 
+                    /*  If the user wants to search by store categories  */
+                    } elseif ($this->wantsToSearchByStoreCategory()) {
 
-                    /*  If the user already selected a specific category from the "Select Store Category Page"  */
-                    }elseif ($this->hasSelectedStoreCategory()) {
-                    
+                        /*  Make sure the store categories are accessible from here on  */
+                        $this->store_categories = $this->getStoreCategories();
+
+                        /*  Manage pagination requests  */
+                        $this->handleStoreCategoryPagination();
+
                         /*  If the user already selected a specific store from the "Select Category Store Page"  */
-                        if ($this->hasSelectedStoreFromCategory()) {
+                        if ($this->hasSelectedStoreCategory()) {
 
-                            /*  Make a redirect to the selected store  */
-                            $this->redirectToStore();
+                            /*  Make sure the category stores are accessible from here on  */
+                            $this->stores = $this->getCategoryStores();
+
+                            $this->offset = ++$this->offset;
+
+                            /*  Manage pagination requests  */
+                            $this->handleStorePagination();
+
+                            /*  If the user already selected a specific store from the "Stores Page"  */
+                            if ($this->hasSelectedStore()) {
+
+                                /*  Visit the selected store  */
+                                return $this->visitSelectedStore($responses_to_remove = 4);
+
+                            } else {
+
+                                /*  Display the "Select Popular Store Page"  */
+                                $response = $this->displayStoresPage();
+
+                            }
 
                         } else {
-
-                            /*  Display the "Select Category Store Page"  */
-                            $response = $this->displayCategoryStores();
+                            
+                            /*  Display the "Select Store Category Page"  */
+                            $response = $this->displayStoreCategoriesPage();
 
                         }
 
+                    /*  Selected an option that does not exist  */
                     } else {
 
-                        /*  Display the "Select Store Category Page"  */
-                        $response = $this->displayStoreCategoriesPage();
+                        /*  Notify the user of incorrect option selected  */
+                        return $this->displayIncorrectOptionPage();
 
                     }
 
-
-                }else {
-
+                } else {
                     /*  Display the "Find Stores Page"  */
                     $response = $this->displayFindStoresPage();
-
                 }
 
                 /*  Selected an option that does not exist  */
@@ -241,35 +262,48 @@ class UssdController extends Controller
         //return response($response)->header('Content-Type', 'application/json');
         //  return response($response."\n\n".'characters: '.strlen($response))->header('Content-Type', 'text/plain');
     }
-    
+
     public function handleStorePagination()
     {
         /*  If the user indicated to paginate the "Stores Page"  */
         if ($this->wantsToPaginateStoresPage()) {
-
+        
             /*  Paginate the "Stores Page"  */
-            $this->stores_on_display = $this->getPaginatedStoresToList();
-
-            $this->offset = $this->offset + 1;
-
+            $this->stores_on_display = $this->paginate($this->stores, $this->stores_per_page, 3);
+        
         } else {
-
-            $this->stores_on_display = $this->getFirstStoresToList();
+            
+            /*  Show the first page of the "Stores Page"  */
+            $this->stores_on_display = $this->paginate($this->stores, $this->stores_per_page);
 
         }
     }
 
-    public function visitSelectedStore()
+    public function handleStoreCategoryPagination()
+    {
+        /*  If the user indicated to paginate the "Store Categories Page"  */
+        if ($this->wantsToPaginateStoreCategoriesPage()) {
+
+            /*  Paginate the "Store Categories Page"  */
+            $this->store_categories_on_display = $this->paginate($this->store_categories, $this->store_categories_per_page, 3);
+
+        } else {
+            
+            /*  Show the first page of the "Store Categories Page"  */
+            $this->store_categories_on_display = $this->paginate($this->store_categories, $this->store_categories_per_page);
+        
+        }
+    }
+
+    public function visitSelectedStore($responses_to_remove = 3)
     {
         /*  Get the selected store  */
         $this->store = $this->getSelectedStore();
 
         /*  Selected a store that does not exist  */
         if (!$this->store) {
-
             /*  Notify the user of incorrect option selected  */
             return $this->displayIncorrectOptionPage();
-
         }
 
         /*  Get the store code  */
@@ -277,11 +311,11 @@ class UssdController extends Controller
 
         /*  First we need to remove the first three options we provided. The first option was
          *  when we indicated that we wanted to search for a store. The second option was when
-         *  we indicated that we wanted to search favourite stores or popular stores, e.t.c. 
+         *  we indicated that we wanted to search favourite stores or popular stores, e.t.c.
          *  The third option was when
          *  we indicated the store we wanted to visit. We need to remove all three responses
-         *  and add new information as their replacement. We will replace them with two responses. 
-         *  The first response will be of value equal to (1) to indicate that the user wants to 
+         *  and add new information as their replacement. We will replace them with two responses.
+         *  The first response will be of value equal to (1) to indicate that the user wants to
          *  provide a store code so that we can utilise the wantsToEnterStoreCode(). The second
          *  response will be the store code itself so that we can gain access to the visitStore()
          *  after we satisfy the hasProvidedStoreCode() and isValidStoreCode(). After replacing
@@ -289,30 +323,28 @@ class UssdController extends Controller
          */
 
         /*  If we have the store and the store code */
-        if($store_code){
-
+        if ($store_code) {
             /*  Get all the responses as an array  */
             $responses = explode('*', $this->text);
 
             /*  Remove the first three (3) responses of the array  */
-            $responses = array_slice($responses, 3);
+            $responses = array_slice($responses, $responses_to_remove);
 
             /*  Add the two (2) new responses to the array  */
-            array_unshift($responses, "1", $store_code);
+            array_unshift($responses, '1', $store_code);
 
             /*  Join the remaining responses */
             $this->text = implode('*', $responses);
 
+            /*  Reset the offset value  */
+            $this->offset = 0;
+
             /*  Run home() again to access the store */
             return $this->home();
-            
-        }else{
-
+        } else {
             /*  Notify the user that we have issues connecting to the store  */
             return $this->displayIssueConnectingToStorePage();
-
         }
-
     }
 
     public function getSelectedStore()
@@ -326,7 +358,6 @@ class UssdController extends Controller
 
         /*  If we have a selected option (e.g 1, 2 or 3)  */
         if ($selected_option) {
-
             /*  Retrieve the actual store that was selected. Note that the user would have
              *  replied "1" to select the first store on the list. However the first store
              *  on "$this->stores" variable is of index "0", this means we need to always
@@ -406,20 +437,15 @@ class UssdController extends Controller
          *  was deleted or we could not gain access to it for some reason
          */
         if (!$this->store) {
-
             /*  Notify the user that we have issues connecting to the store  */
             return $this->displayIssueConnectingToStorePage();
-
         }
 
         /*  If the store is not supporting USSD at this time  */
-        if( !$this->store->support_ussd){
-
+        if (!$this->store->support_ussd) {
             /*  Notify the user that the store is not available  */
             return $this->displayCustomGoBackPage("Sorry, the store is currently offline.\n");
-            
         }
-
     }
 
     public function startShopping()
@@ -494,32 +520,45 @@ class UssdController extends Controller
     public function handleProductVariables()
     {
         /*  Assumming the product has three different variables being "Size", "Color" and "Material".
-         *  This means that we need to show the user 3 different pages which will show the variable
+         *  This means that we need to show the user 3 different screens which will show the variable
          *  options e.g ['Small', 'Medium', 'Large'] for variable 1, ['Blue', 'Red'] for variable 2
          *  and ['Cotton', 'Nylon'] for variable 3. If $variant_attribute_offset=1 then this is the
-         *  first variant attribute page where the user selects the product size.
+         *  first variant attribute page where the user selects the Product Size.
          */
         $variant_attributes = $this->selected_product->variant_attributes ?? [];
         $variant_attribute_offset = 1;
 
-        /*  Foreach product variant page number  */
+        /*  Foreach product variant attribute e.g "Size=>[options]", "Color=>[options]", 
+         *  "Material=>[options]", e.t.c 
+         */
         foreach ($variant_attributes as $variant_attribute_name => $variable_options) {
-            /*  Adjust the offset by including the $variant_attribute_offset since we are now
-                *  selecting variable options.
-                */
+            
+            /*  Increment the offset value since we want to add a new screen to
+             *  display the current attribute options e.g if the attribute is
+             *  "Size" we increment the offset so that we can add a screen to
+             *  display the options e.g "Small", "Medium", "Large", e.t.c
+             */
             $this->offset = $this->offset + 1;
 
+            /*  Get the attribute name e.g "Size", "Color", "Material", e.t.c */
             $this->variant_attribute_name = $variant_attribute_name;
+
+            /*  Get the attribute name e.g "Small", "Medium", "Large", e.t.c */
             $this->variable_options = $variable_options;
 
-            /*  If the user indicated to paginate the "Store Products Page"  */
+            /*  If the user indicated to paginate the "Store Attribute Options Page"  */
             if ($this->wantsToPaginateVariantOptionsPage()) {
-                /*  Paginate the products page "Previous Product Cart Summary Page"  */
-                $variable_options_to_display = $this->getPaginatedVariantOptionsToList();
 
+                /*  Paginate the variable options page  */
+                $this->variable_options_to_display = $this->getPaginatedVariantOptionsToList();
+
+                /*  Paginate the variable options page  */
                 $this->offset = $this->offset + 1;
+
             } else {
-                $variable_options_to_display = $this->getFirstVariantOptionsToList();
+                
+                $this->variable_options_to_display = $this->getFirstVariantOptionsToList();
+
             }
 
             /*  If the user has not already selected an option for this variable page.  */
@@ -528,7 +567,7 @@ class UssdController extends Controller
                 $is_last_variant_page = ($variant_attribute_offset == count($variant_attributes));
 
                 /*  Display the menu for the user to select a product variable */
-                return $this->displayProductVariablePage($variant_attribute_name, $variable_options_to_display, $is_last_variant_page);
+                return $this->displayProductVariablePage($is_last_variant_page);
             } else {
                 /*  Get the selected option for this variable page.  */
                 $selected_option = $this->getSelectedVariableOption();
@@ -655,7 +694,78 @@ class UssdController extends Controller
     {
         $this->visit = ++$this->visit;
 
+        /*  Since we want to add a new product to the cart we need to increment the offset.
+         *  If we think about it each product added lines up in perfect order but is offset
+         *  by one unit. In the simplest case possible lets assume the first selected product
+         *  was in Level (1) and the second selected product was in Level (2) and so on... As
+         *  long as we ignore the in-between data that accounts for pagination, variable option
+         *  selection, quantity selection and the "#" response to indicate that we want to add
+         *  another product.
+         * 
+         *  Therefore in the simplest order possible, products appear exactly one level after or
+         *  immediately after the previous product e.g
+         * 
+         *  Lv1          lv2          lv3          lv4          lv5           ...so on
+         *  Product 1    Product 2    Product 3    Product 4    Product 4     ...so on
+         * 
+         *  This means that Product 2 Level is exactly (1) plus Product 1 Level. This rule applies 
+         *  for each and every other product e.g
+         * 
+         *  Product 2 Level = Product 1 Level + Offset    ; Where Offset=1
+         *  Product 3 Level = Product 2 Level + Offset    ; Where Offset=1
+         *  e.t.c
+         * 
+         *  Now once we start adding additional data we change the offset value. For example if we
+         *  include quantity as follows:
+         * 
+         *  Lv1          lv2          lv3          lv4          lv5           ...so on
+         *  Product 1    Product 1    Product 2    Product 2    Product 3     ...so on
+         *               Quantity                  Quantity
+         * 
+         *  Now:
+         * 
+         *  Product 2 Level = Product 1 Level + Offset    ; Where Offset=2
+         *  Product 3 Level = Product 2 Level + Offset    ; Where Offset=2
+         *  e.t.c
+         * 
+         *  If we continue adding additional data such as variable options we still change the offset
+         *  value for example.
+         * 
+         *  Lv1          lv2          lv3          lv4          lv5           ...so on
+         *  Product 1    Product 1    Product 1    Product 2    Product 3     ...so on
+         *               Variable     Quantity                  Variable     
+         *               Option                                 Option
+         * 
+         *  Now:
+         * 
+         *  Product 2 Level = Product 1 Level + Offset    ; Where Offset=3
+         *  Product 3 Level = Product 2 Level + Offset    ; Where Offset=3
+         *  e.t.c
+         * 
+         *  This keeps happening as long as we keep having to add more information about each product.
+         *  We basically use the offset to let us know when to start expecting the next product.
+         * 
+         *  When we want to visit the store again we need to figure out where to start expecting the
+         *  next product. Lets assume that Product 1 was selected in Level 3, then in the simplest
+         *  scenerio we would expect that Product 2 was selected in Level 4. To indicate that we
+         *  want to target Product 2 we need to offset by (1). However since we need to select the
+         *  quantity we need to offset again by (1). But since we also had to use the "#" symbol
+         *  to indicate that we wanted to add another product we need to offset again. This means
+         *  if we selected Product 1 in Level 3 we need to offset by 3 to target product 2 in 
+         *  Level 6.
+         * 
+         *  1      *    2      *      #       *     4
+         * 
+         *  Lv3          lv4          lv5           lv6          ...so on
+         *  Product 1    Product 1    Wants To      Product 2    ...so on
+         *  Selected     Quantity     Add Another   Selected     
+         *                 
+         */
+
         $this->offset = $this->offset + 3;
+
+        /*  Empty the previously selected variable options of the current product selected */
+        $this->selected_variable_options = [];
 
         return $this->visitStore();
     }
@@ -795,15 +905,16 @@ class UssdController extends Controller
 
     /*  displayFindStoresPage()
      *  This is the page displayed when a user must select a method to search
-     *  for stores e.g by listing favourite stores, popular stores or 
+     *  for stores e.g by listing favourite stores, popular stores or
      *  categorised stores
      */
     public function displayFindStoresPage()
     {
         $response = "Find Stores:\n";
-        $response .= "1. My favourites (".count($this->getMyStores()).")\n";
+        $response .= '1. My favourites ('.count($this->getMyStores()).")\n";
         $response .= "2. Popular stores\n";
-        $response .= "3. Stores by category";
+        $response .= "3. Search by category\n";
+        $response .= '4. Search by name';
 
         return $this->displayCustomGoBackPage($response);
     }
@@ -813,25 +924,18 @@ class UssdController extends Controller
      */
     public function displayStoresPage()
     {
-
         $response = "Select store:\n";
 
-        if( count($this->stores_on_display) ){
-
+        if (count($this->stores_on_display)) {
             foreach ($this->stores_on_display as $key => $store) {
-                
                 $number = ++$key;
                 $ussd_interface = $store->ussdInterface;
-                $response .= $number.". ".$ussd_interface['name']."\n";
-
+                $response .= $number.'. '.$ussd_interface['name']."\n";
             }
-            
-            $response .= "99. Show more";
 
-        }else{
-            
+            $response .= '99. Show more';
+        } else {
             $response .= count($this->stores) ? "\nNo more stores to show.\n" : "\nNo stores found.\n";
-            
         }
 
         return $this->displayCustomGoBackPage($response);
@@ -844,10 +948,18 @@ class UssdController extends Controller
      */
     public function displayStoreCategoriesPage()
     {
-        $response = "Search by category\n";
-        $response .= "1. Accomodation Services (12)\n";
-        $response .= "2. Transport Services (4)\n";
-        $response .= '3. Fast Food Services (18)';
+        $response = "Select category:\n";
+
+        if (count($this->store_categories_on_display)) {
+            foreach ($this->store_categories_on_display as $key => $category) {
+                $number = ++$key;
+                $response .= $number.'. '.$category['name']."(".$category['stores_count'].")"."\n";
+            }
+
+            $response .= '99. Show more';
+        } else {
+            $response .= count($this->stores) ? "\nNo more categories to show.\n" : "\nNo categories found.\n";
+        }
 
         return $this->displayCustomGoBackPage($response);
     }
@@ -950,7 +1062,7 @@ class UssdController extends Controller
                 $product_id = trim($product['id']);
                 $product_name = trim($product['name']);
                 $product_price = $product['unit_price'];
-                
+
                 /*  Check if the product has variables  */
                 $product_has_variables = $this->hasVariables($product);
 
@@ -964,26 +1076,20 @@ class UssdController extends Controller
                 if ($this->hasStock($product)) {
                     /*  Check if the product has been added to the cart already  */
                     if ($this->isProductAddedToCart($product_id)) {
-
                         /*  Show the product name, and indicate that the product is in the cart already  */
                         $response .= $option_number.'. '.$product_name." (added)\n";
 
                     /*  If the product hasn't been added to the cart already  */
                     } else {
-
-                        if( $product_has_variables ){
-                            
+                        if ($product_has_variables) {
                             /*  Show the product name only  */
                             $response .= $option_number.'. '.$product_name."\n";
-
-                        }else{
-
+                        } else {
                             /*  Show the product name, currency and price  */
                             $response .= $option_number.'. '.$product_name.' -'.$this->currency.$product_price;
 
                             /*  If the product is on sale then make an indication  */
                             $response .= ($product_on_sale ? ' (on sale)' : '')."\n";
-                            
                         }
                     }
 
@@ -1006,13 +1112,26 @@ class UssdController extends Controller
     /*  displayProductVariablePage()
      *  This is the page displayed when a user must select a product variable
      */
-    public function displayProductVariablePage($variant_attribute_name, $variable_options, $is_last_variant_page)
+    public function displayProductVariablePage($is_last_variant_page)
     {
         $response = $this->selected_product->name.": Select an option\n";
 
-        if (count($variable_options)) {
-            foreach ($variable_options as $key => $option) {
-                $additional_variable_options = [$variant_attribute_name => $option];
+        /*  If we have any variables options to display */
+        if (count($this->variable_options_to_display)) {
+
+            /*  Foreach variable option */
+            foreach ($this->variable_options_to_display as $key => $option) {
+
+                /*  Get the attribute name and variable option in the form:
+                 *  ["attribute"=>"option"] e.g ["size"=>"small"] or ["color"=>"blue"]
+                 */
+                $additional_variable_options = [$this->variant_attribute_name => $option];
+
+                /*  Now we need to get the variable product that matches the current variable option
+                 *  If we have previous selected other variable options they will be automatically
+                 *  included as part of the search query by the getSelectedProductVariation()
+                 *  method.
+                 */
                 $product_variation = $this->getSelectedProductVariation($additional_variable_options);
 
                 /*  If we atleast have one variant avaialable  */
@@ -1051,6 +1170,7 @@ class UssdController extends Controller
 
                 $response .= "\n";
             }
+
         } else {
             /*  If we don't have anymore options to list  */
             $response .= count($this->variable_options) ? "\nNo more options to show.\n\n" : "\nNo options found :(\n\n";
@@ -1659,21 +1779,64 @@ class UssdController extends Controller
 
     public function getMyStores()
     {
-        $this->contact = ( new \App\Contact)->findByPhone($this->user['phone']);
+        $this->contact = ( new \App\Contact())->findByPhone($this->user['phone']);
 
-        if( $this->contact ){
-
+        if ($this->contact) {
             return $this->contact->stores()->get();
-
         }
 
         return [];
-
     }
 
     public function getPopularStores()
     {
-        return (new \App\Store)->supportUssd()->popular()->get();
+        return (new \App\Store())->supportUssd()->popular()->get();
+    }
+
+    public function getStoreCategories()
+    {   
+        /*  Get only categories with stores that support USSD  */
+        $categories = (new \App\Category())->defaultForStores()->whereHas('stores', function (Builder $query) {
+                        /*  Make sure the categories has stores that support USSD  */ 
+                        $query->supportUssd();
+                    })->withCount('stores')->get();
+
+        return $categories;
+    }
+
+    public function getSelectedCategory()
+    {
+        /*  Get the selected category option from the "Select Category Page" (Level 3).
+         *  We can use the selected option to retrieve the category.
+         */
+
+        /*  Get the selected option and convert it to an interger  */
+        $selected_category_option = (int) $this->getResponseFromLevel(3);
+
+        /*  If we have a selected category option (e.g 1, 2 or 3)  */
+        if ($selected_category_option) {
+            
+            /*  Retrieve the actual category that was selected. Note that the user would have
+             *  replied "1" to select the first category on the list. However the first category
+             *  on "$this->store_categories" variable is of index "0", this means we need to 
+             *  always subtract "1" from the user reply to access the correct category.
+             */
+            return $this->store_categories[$selected_category_option - 1] ?? null;
+
+        }
+
+    }
+
+    public function getCategoryStores()
+    {
+        /*  Get the selected category  */
+        $category = $this->getSelectedCategory();
+
+        /*  Get the stores that belong to this category and also support USSD  */
+        $stores = $category->stores()->supportUssd()->get();
+        
+        /*  Return the stores  */
+        return $stores;
     }
 
     /*  hasSelectedHowToSearchStore()
@@ -1689,7 +1852,7 @@ class UssdController extends Controller
     }
 
     /*  wantsToSearchMyFavouriteStores()
-     *  Returns true/false of whether the user wants to search for 
+     *  Returns true/false of whether the user wants to search for
      *  favourite stores
      */
     public function wantsToSearchMyFavouriteStores()
@@ -1699,9 +1862,9 @@ class UssdController extends Controller
          */
         return  $this->completedLevel(2) && $this->getResponseFromLevel(2) == '1';
     }
-    
+
     /*  wantsToSearchPopularStores()
-     *  Returns true/false of whether the user wants to search for 
+     *  Returns true/false of whether the user wants to search for
      *  popular stores
      */
     public function wantsToSearchPopularStores()
@@ -1710,6 +1873,18 @@ class UssdController extends Controller
          *  option (2) then the user wants to search for a popular store.
          */
         return  $this->completedLevel(2) && $this->getResponseFromLevel(2) == '2';
+    }
+
+    /*  wantsToSearchByStoreCategory()
+     *  Returns true/false of whether the user wants to search by
+     *  category stores
+     */
+    public function wantsToSearchByStoreCategory()
+    {
+        /*  If the user responded to the "Find Stores Page" (Level 2) with the
+         *  option (3) then the user wants to search by category stores.
+         */
+        return  $this->completedLevel(2) && $this->getResponseFromLevel(2) == '3';
     }
 
     public function wantsToPaginateStoresPage()
@@ -1721,21 +1896,46 @@ class UssdController extends Controller
         return  $this->completedLevel(3) && substr($this->getResponseFromLevel(3), 0, 3) == '99_';
     }
 
-    public function getFirstStoresToList()
+    public function wantsToPaginateStoreCategoriesPage()
     {
-        $start_position = 0;
-
-        return collect($this->stores)->slice($start_position, $this->stores_per_page);
+        /*  Get the selected store option from the "Store Categories Page" (Level 3)
+         *  If the option contains the value "99_" then the user wants to
+         *  paginate the store categories page
+         */
+        return  $this->completedLevel(3) && substr($this->getResponseFromLevel(3), 0, 3) == '99_';
     }
 
-    public function getPaginatedStoresToList()
+    public function paginate($data, $per_page, $level=null)
     {
-        $response = $this->getResponseFromLevel(3);
-        $number_of_times_to_paginate = substr($response, 3, 5);
+        if( !is_null($level) ){
+        
+            $response = $this->getResponseFromLevel($level);
+            $number_of_times_to_paginate = substr($response, 3, 5);
 
-        $start_position = ($number_of_times_to_paginate * $this->stores_per_page);
+            $this->offset = $this->offset + 1;
 
-        return collect($this->stores)->slice($start_position, $this->stores_per_page);
+        }else{
+
+            $number_of_times_to_paginate = 0;
+
+        }
+
+        $start_position = ($number_of_times_to_paginate * $per_page);
+
+        return collect($data)->slice($start_position, $per_page);
+    }
+
+
+    /*  hasSelectedStoreCategory()
+     *  Returns true/false of whether the user has already selected a store
+     *  after selecting a store category
+     */
+    public function hasSelectedStoreCategory()
+    {
+        /*  If the user responded to the "Select Store Category Page" (Level 3)
+         *  with any option.
+         */
+        return  $this->completedLevel(3 + $this->offset);
     }
 
     /*  hasSelectedStore()
@@ -1748,30 +1948,6 @@ class UssdController extends Controller
          *  with any option.
          */
         return  $this->completedLevel(3 + $this->offset);
-    }
-    
-
-    /*  hasSelectedStoreCategory()
-     *  Returns true/false of whether the user has already selected a store category
-     */
-    public function hasSelectedStoreCategory()
-    {
-        /*  If the user responded to the "Select Store Category Page" (Level 2)
-         *  with a specific category of choice.
-         */
-        return  $this->completedLevel(2);
-    }
-
-    /*  hasSelectedStoreFromCategory()
-     *  Returns true/false of whether the user has already selected a store
-     *  after selecting a store category
-     */
-    public function hasSelectedStoreFromCategory()
-    {
-        /*  If the user responded to the "Select Category Store Page" (Level 3)
-         *  with a specific store of choice.
-         */
-        return  $this->completedLevel(3);
     }
 
     /*  hasSelectedStoreLandingPageOption()
@@ -1922,10 +2098,8 @@ class UssdController extends Controller
 
         /*  If a contact was found  */
         if ($storeContact) {
-
             /*  Return the store orders where this contact is recognised as the order customer or reference  */
             return $this->store->contactOrders($storeContact->id)->get() ?? [];
-
         }
 
         return [];
@@ -2079,7 +2253,6 @@ class UssdController extends Controller
 
         /*  If we have the actual product that was selected  */
         if ($product) {
-
             /*  Determine if the selected product has variants  */
             return  $product['allow_variants'] == true && $product->variations()->count();
         }
@@ -2141,13 +2314,23 @@ class UssdController extends Controller
 
     public function getSelectedProductVariation($additional_variable_options = [])
     {
+        /*  Get all the possible product variations available */
         $product_variations = $this->selected_product->variations();
 
+        /*  If we have passed additional variable options to filter with */
         if (count($additional_variable_options)) {
+            /*  Foreach option */
             foreach ($additional_variable_options as $option_name => $option_value) {
+                /*  Filter the product variations and return only varitions matching the specified variable
+                 *  option name and option. For example:
+                 *
+                 *  $option_name = size and $option_value = small
+                 *  $option_name = color and $option_value = blue
+                 *  $option_name = material and $option_value = cotton
+                 */
                 $product_variations = $product_variations->whereHas('variables', function (Builder $query) use ($option_name, $option_value) {
-                    $query->where('name', $option_name)
-                                ->where('value', $option_value);
+                        $query->where('name', $option_name)
+                              ->where('value', $option_value);
                 });
             }
         }

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
+    'store' => 'App\Store',
     'product' => 'App\Product',
     'jobcard' => 'App\Jobcard',
     'appointment' => 'App\Appointment',
@@ -40,6 +41,18 @@ class Category extends Model
     protected $allowedOrderableColumns = [];
 
     /* 
+     *  Scope:
+     *  Returns categories that are allocatable to stores by default.
+     *  This means that they were created for every store to use in 
+     *  order to categorise themselves. Basically we return any 
+     *  category of type "store" that is not owned by any store
+     */
+    public function scopeDefaultForStores($query)
+    {
+        return $query->whereType('store')->whereNull('owner_id');
+    }
+
+    /* 
      *  Returns the sub-categories
      */
     public function sub_categories()
@@ -53,6 +66,14 @@ class Category extends Model
     public function owner()
     {
         return $this->morphTo();
+    }
+
+    /*
+     *  Returns all products that this category has been allocated to 
+     */
+    public function stores()
+    {
+        return $this->morphedByMany('App\Store', 'owner', 'category_allocations');
     }
 
     /*
