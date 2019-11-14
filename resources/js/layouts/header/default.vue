@@ -191,7 +191,7 @@
                 <el-dropdown class="float-right mr-5" @command="handleProfileCommand">
                   <div class="profile-image">
                     <img v-if="user.avatar" :src="user.avatar" alt="Profile Image" class="roundedShape">
-                    <h1 v-else  class="roundedShape">{{ user.full_name.charAt(0) ? user.full_name.charAt(0) : '?' }}</h1>
+                    <h1 v-else  class="roundedShape">{{ userInitial ? userInitial : '?' }}</h1>
                   </div>
 
                   <!-- Profile Options -->
@@ -300,6 +300,7 @@
       return {
 
         user:auth.user,
+        userInitial: (((auth.user || {})._embedded.attributes|| {}).full_name || {}).charAt(0),
         createVal: '',
         
         searchQuery:'',

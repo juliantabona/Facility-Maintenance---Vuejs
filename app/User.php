@@ -33,7 +33,7 @@ class User extends Authenticatable
         /*  Basic Info  */
         'first_name', 'last_name', 'gender', 'date_of_birth', 'bio',
 
-        /*  Address Info  */
+        /*  Account Info  */
         'password', 'verified', 'setup', 'account_type',
 
         /*  Social Info  */

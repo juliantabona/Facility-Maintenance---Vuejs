@@ -6,7 +6,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use App\Http\Resources\Store as StoreResource;
 use App\Http\Resources\Company as CompanyResource;
 
-class Coupon extends JsonResource
+class Email extends JsonResource
 {
     /**
      * Transform the resource into an array.

@@ -14,11 +14,18 @@ class Auth {
     
         //  If the token exists 
         if (this.token) {
+
+            console.log('Auth.js - Token Found');
+
             //  Set the token to axios header for authentication use in future Api calls
             axios.defaults.headers.common['Authorization'] = 'Bearer ' + this.token;
             
             //  Verfiy and updated the authenticated user
             this.getUser();
+        }else{
+
+            console.log('Auth.js - Token Not Found');
+
         }
     }
 
@@ -26,28 +33,33 @@ class Auth {
 
         console.log('Auth.js - Verfiy and update the authenticated user');
 
-        //  Make an Api call to get the authenticated user with the assigned auth token
-        return api.call('get', '/api/me')
+        //  Make an Api call to get the API Home Resource
+        return api.call('get', '/api')
             .then(({data}) => {
 
-                //  Update the user details
-                this.user = data;
-                window.localStorage.setItem('user', JSON.stringify(data));
-                
+                //  Get the users details from the API Home Resource
+                this.user = ((data || {})._embedded || {}).me;
+
+                //  Update the local storage
+                window.localStorage.setItem('user', JSON.stringify(this.user));
+
             });
     }
 
-    login (token, user) {   
+    login (token) {   
 
         console.log('Auth.js - save token and user');   
 
-        window.localStorage.setItem('token', token);
-        window.localStorage.setItem('user', JSON.stringify(user));
-    
-        axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
-    
+        //  Save the token on the local storage
         this.token = token;
-        this.user = user;
+        window.localStorage.setItem('token', token);
+
+        //  Update the Axios headers to authorize future requests 
+        //  using the token we have received
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+        
+        //  Get the auth user and save them on the local storage
+        this.getUser();
     
         Event.$emit('userLoggedIn');
     }

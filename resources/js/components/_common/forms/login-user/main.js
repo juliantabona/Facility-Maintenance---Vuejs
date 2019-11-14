@@ -120,13 +120,12 @@ export default {
                     //  Stop loader
                     self.isLoggingIn = false;
                     
-                    //  Get the token and authenticated user
+                    //  Get the token
                     let token = data.auth.access_token;
-                    let user = data.user;
 
-                    //  Save token and user
-                    //  Include token in all further axios api calls
-                    auth.login(token, user);
+                    //  Save the token for inclusion in all further Axios API Calls
+                    auth.login(token);
+                    
                 })         
                 .catch(response => { 
                     

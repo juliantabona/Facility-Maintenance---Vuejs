@@ -3,8 +3,13 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\Emails as EmailResources;
+use App\Http\Resources\Phones as PhonesResource;
 use App\Http\Resources\Setting as SettingResource;
 use App\Http\Resources\Document as DocumentResource;
+use App\Http\Resources\Addresses as AddressResources;
+
+
 
 class user extends JsonResource
 {
@@ -18,26 +23,32 @@ class user extends JsonResource
     public function toArray($request)
     {
         return [
+            
+            /*  Identifier  */
             'id' => $this->id,
+            
+            /*  Basic Info  */
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
-            'full_name' => $this->full_name,
-            'address' => [
-                'address_1' => $this->address_1,
-                'address_2' => $this->address_2,
-                'country' => $this->country,
-                'province' => $this->province,
-                'city' => $this->city,
-                'postal_or_zipcode' => $this->postal_or_zipcode,
-            ],
+            'gender' => $this->gender,
+            'date_of_birth' => $this->date_of_birth,
+            'bio' => $this->bio,
+
+            /*  Basic Info  */
+            'verified' => $this->verified,
+            'setup' => $this->setup,
+            'account_type' => $this->account_type,
+            
+            /*  Social Info  */
             'social_links' => [
-                'website_link' => $this->website_link,
                 'facebook_link' => $this->facebook_link,
                 'twitter_link' => $this->twitter_link,
                 'linkedin_link' => $this->linkedin_link,
                 'instagram_link' => $this->instagram_link,
                 'youtube_link' => $this->youtube_link,
             ],
+
+            /*  Timestamp Info  */
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 
@@ -61,12 +72,50 @@ class user extends JsonResource
                     'title' => 'The user\'s profile picture',
                 ],
 
+                /*
+                //  Link to the users emails
+                'oq:emails' => [
+                    'href' => ($this->id == auth('api')->user()->id)
+                                ? route('my-emails')
+                                    : route('user-emails', ['user_id' => $this->id]),
+                    'title' => 'The user\'s emails',
+                    'total' => $this->emails()->count(),
+                ],
+
+                //  Link to the users mobile phones
+                'oq:mobiles' => [
+                    'href' => ($this->id == auth('api')->user()->id)
+                                ? route('my-mobiles')
+                                    : route('user-mobiles', ['user_id' => $this->id]),
+                    'title' => 'The user\'s mobiles',
+                    'total' => $this->mobiles()->count(),
+                ],
+
+                //  Link to the users phones
+                'oq:phones' => [
+                    'href' => ($this->id == auth('api')->user()->id)
+                                ? route('my-phones')
+                                    : route('user-phones', ['user_id' => $this->id]),
+                    'title' => 'The user\'s phones',
+                    'total' => $this->phones()->count(),
+                ],
+
+                //  Link to the users emails
+                'oq:addresses' => [
+                    'href' => ($this->id == auth('api')->user()->id)
+                                ? route('my-addresses')
+                                    : route('user-addresses', ['user_id' => $this->id]),
+                    'title' => 'The user\'s addresses',
+                    'total' => $this->addresses()->count(),
+                ],
+                */
+
                 //  Link to the users accounts
                 'oq:accounts' => [
                     'href' => ($this->id == auth('api')->user()->id)
                                 ? route('my-accounts')
                                     : route('user-accounts', ['user_id' => $this->id]),
-                    'title' => 'Accounts that this user has created or been added to as admin, staff, customer, vendor, e.t.c',
+                    'title' => 'Accounts that this user has created or been added to as admin, staff, e.t.c',
                     'total' => $this->accounts()->count(),
                 ],
 
@@ -98,6 +147,15 @@ class user extends JsonResource
                     'total' => $this->accountsWhereUserIsVendor()->count(),
                 ],
 
+                //  Link to the users accounts
+                'oq:stores' => [
+                    'href' => ($this->id == auth('api')->user()->id)
+                                ? route('my-stores')
+                                    : route('user-stores', ['user_id' => $this->id]),
+                    'title' => 'Stores that this user has created or been added to as admin, staff, e.t.c',
+                    'total' => $this->stores()->count(),
+                ],
+                
                 //  Link to the users recent activities
                 'oq:activities' => [
                     'href' => '/users/'.$this->id.'/activities',
@@ -115,6 +173,19 @@ class user extends JsonResource
 
             /*  Embedded Resources */
             '_embedded' => [
+
+                'attributes' => [
+                    'full_name' => $this->full_name,
+                    'phone_list' => $this->phone_list, 
+                    'default_email' => $this->default_email, 
+                    'default_mobile' => $this->default_mobile, 
+                    'default_address' => $this->default_address, 
+                    'account_verified' => $this->account_verified, 
+                    'mobile_verified' => $this->mobile_verified, 
+                    'email_verified' => $this->email_verified, 
+                    'resource_type' => $this->resource_type
+                ],
+                
                 //  The users profile picture
                 'profile_image' => $this->when(!empty($this->profile_image),
                     (new DocumentResource($this->profile_image))

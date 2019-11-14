@@ -47,6 +47,15 @@ use Illuminate\Http\Request;
  * to control and limit excessive traffic requests.
  */
 Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
+
+    /*********************************
+    /*********************************
+     *  API HOME ROUTES              *
+    /*********************************
+    *********************************/
+    
+    Route::get('/', 'Api\HomeController@home')->name('home');
+
     /*********************************
     /*********************************
      *  MY ACCOUNT ROUTES            *
@@ -55,7 +64,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
     Route::prefix('me')->name('my-')->group(function () {
 
-        Route::get('/', 'Api\UserController@getUser')->name('account');
+        Route::get('/', 'Api\UserController@getUser')->name('profile');
 
         //  Settings related resources
         Route::get('/settings', 'Api\UserController@getUserSettings')->name('settings');

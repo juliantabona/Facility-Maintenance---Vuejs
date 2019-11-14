@@ -102,7 +102,7 @@
                 var connections = '';
 
                 //  Use the api call() function located in resources/js/api.js
-                api.call('get', '/api/stores'+connections)
+                api.call('get', this.user._links['oq:stores'].href)
                     .then(({data}) => {
                         
                         //  Console log the data returned
