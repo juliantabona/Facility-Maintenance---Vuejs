@@ -34,9 +34,6 @@ class CreateUsersTable extends Migration
             $table->string('linkedin_link')->nullable();
             $table->string('instagram_link')->nullable();
             $table->string('youtube_link')->nullable();
-
-            /*  Company Info  */
-            $table->unsignedInteger('company_id')->nullable();
             
             $table->rememberToken();
             $table->softDeletes();

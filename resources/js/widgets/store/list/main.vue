@@ -82,6 +82,7 @@
         data(){
             return {
                 stores: null,
+                user: auth.user,
                 isLoadingStores: false,
             }
         },
@@ -111,7 +112,7 @@
                         self.isLoadingStores = false;
 
                         //  Store the stores data
-                        self.stores = (data || {}).data || [];
+                        self.stores = ((data || {})._embedded || {}).stores || [];
 
                     })         
                     .catch(response => { 

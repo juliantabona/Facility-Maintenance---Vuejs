@@ -289,7 +289,15 @@ class Order extends Model
      */
     public function getTransactionTotalAttribute()
     {
-        //return $this->invoice()->transaction_total;
+        $total = 0;
+
+        foreach($this->invoices as $invoice){
+            
+            $total += $invoice->transaction_total;
+
+        }
+
+        return $total;
     }
 
     /* 
@@ -297,7 +305,15 @@ class Order extends Model
      */
     public function getRefundTotalAttribute()
     {
-        //return $this->invoice()->refund_total;
+        $total = 0;
+
+        foreach($this->invoices as $invoice){
+            
+            $total += $invoice->refund_total;
+
+        }
+        
+        return $total;
     }
 
     /* 
@@ -305,7 +321,15 @@ class Order extends Model
      */
     public function getOutstandingBalanceAttribute()
     {
-        //return $this->invoice()->outstanding_balance;
+        $total = 0;
+
+        foreach($this->invoices as $invoice){
+            
+            $total += $invoice->outstanding_balance;
+
+        }
+        
+        return $total;
     }
 
     /* 

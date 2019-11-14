@@ -119,7 +119,7 @@
         $primaryColor = $orderSettings['colors'][0];
         $secondaryColor = $orderSettings['colors'][1]; 
         $currencySymbol = $storeSettings['general']['currency_type']['currency']['symbol'] ?? '';
-        $items = $order['line_items'];
+        $items = $order['item_lines'];
 
         //  Company Details
         $company = $order['customized_company_details'];
@@ -308,7 +308,7 @@
                       <span style="font-weight:bold">Phone: </span>
                         
                         @foreach($billing_phones as $key => $phone)
-                          {{ ($key != 0 ? ', ' : '') . '(+' . $phone['calling_code']['calling_code'] . ') ' . $phone['number'] }} 
+                          {{ ($key != 0 ? ', ' : '') . '(+' . $phone['calling_code'] . ') ' . $phone['number'] }} 
                         @endforeach
 
                         <br>

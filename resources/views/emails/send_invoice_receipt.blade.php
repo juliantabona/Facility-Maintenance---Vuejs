@@ -208,7 +208,7 @@
                                                               </p>
                                                               <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">
                                                                 @if(COUNT($clientPhones))
-                                                                    @foreach($clientPhones as $key => $phone){{($key != 0 ? ', ': '') . '(+' . $phone['calling_code']['calling_code'] . ') ' . $phone['number']}} @endforeach
+                                                                    @foreach($clientPhones as $key => $phone){{($key != 0 ? ', ': '') . '(+' . $phone['calling_code'] . ') ' . $phone['number']}} @endforeach
                                                                 @endif
                                                               </p>
                                                               <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">
@@ -244,7 +244,7 @@
                                                                 </p>
                                                                 <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">
                                                                   @if(COUNT($companyPhones))
-                                                                      @foreach($companyPhones as $key => $phone){{($key != 0 ? ', ': '') . '(+' . $phone['calling_code']['calling_code'] . ') ' . $phone['number']}} @endforeach
+                                                                      @foreach($companyPhones as $key => $phone){{($key != 0 ? ', ': '') . '(+' . $phone['calling_code'] . ') ' . $phone['number']}} @endforeach
                                                                   @endif
                                                                 </p>
                                                                 <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#1B1B1B;">

@@ -209,7 +209,7 @@
                             phoneList = phoneList + ', ';
                         }
 
-                        phoneList = phoneList + '(+' + phones[x]['calling_code']['calling_code'] + ') ' + phones[x]['number'];
+                        phoneList = phoneList + '(+' + phones[x]['calling_code'] + ') ' + phones[x]['number'];
                         
                     }
                         
@@ -219,7 +219,7 @@
 
             },
             numberOfItemsPurchased(){
-                return (this.localOrder.line_items).length
+                return (this.localOrder.item_lines).length
             }
         },
         methods: {

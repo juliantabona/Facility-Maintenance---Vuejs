@@ -89,6 +89,15 @@ class Store extends Model
         return $query->withCount('orders')->orderByDesc('orders_count');
     }
 
+    /* 
+     *  Scope:
+     *  Return stores that match a given name or contain similar tags
+     */
+    public function scopeSearch($query, $name)
+    {
+        return $query->orWhere('name', $name)->orWhere('abbreviation', $name);
+    }
+
     /*  
      *  Returns documents associated with this store. These are various files such as images,
      *  videos, files and so on. Basically any file/image/video the user wants to save to 
@@ -448,11 +457,6 @@ class Store extends Model
     public function productCategories()
     {
         return $this->availableCategories()->where('type', 'product');
-    }
-
-    public function interests()
-    {
-        return $this->hasMany('App\StoreInterests');
     }
 
     /* 

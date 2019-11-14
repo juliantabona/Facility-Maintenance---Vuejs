@@ -1326,7 +1326,7 @@ trait InvoiceTraits
                 //  We only send messages to phone numbers set to active
                 if (!isset($phone['show']) || $phone['show'] == true) {
                     //  Get the calling code
-                    $callingCode = '+'.$phone['calling_code']['calling_code'];
+                    $callingCode = '+'.$phone['calling_code'];
 
                     //  Get the phone number
                     $phoneNumber = $phone['number'];
@@ -1475,7 +1475,7 @@ trait InvoiceTraits
         //  Foreach phone number provided
         foreach ($phones as $phone) {
             //  Get the calling code
-            $callingCode = '+'.$phone['calling_code']['calling_code'];
+            $callingCode = '+'.$phone['calling_code'];
 
             //  Get the phone number
             $phoneNumber = $phone['number'];

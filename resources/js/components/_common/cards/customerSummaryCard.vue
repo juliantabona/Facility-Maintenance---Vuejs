@@ -26,17 +26,17 @@
         
         <span class="d-flex pt-2 mt-2 border-top">
             <Icon type="ios-pin-outline" :size="20" class="mr-1" />
-            <span>{{ customerAddress ||  '___' }}</span> 
+            <span>{{ ( (customerAddress.address_1 || customerAddress.address_2) ) ||  '___' }}</span> 
         </span>
         <span class="d-block pt-2 mt-2 border-top">
             <span class="d-block">
-                <span class="font-weight-bold">Country: </span>{{ (localCustomer || {}).country ||  '___' }}
+                <span class="font-weight-bold">Country: </span>{{ (customerAddress || {}).country ||  '___' }}
             </span> 
             <span class="d-block">
-                <span class="font-weight-bold">Province: </span>{{ (localCustomer || {}).province ||  '___' }}
+                <span class="font-weight-bold">Province: </span>{{ (customerAddress || {}).province ||  '___' }}
             </span> 
             <span class="d-block">
-                <span class="font-weight-bold">City: </span>{{ (localCustomer || {}).city ||  '___' }}
+                <span class="font-weight-bold">City: </span>{{ (customerAddress || {}).city ||  '___' }}
             </span> 
         </span>
     </Card>
@@ -58,11 +58,11 @@
         },
         computed: {
             customerName(){
-                return ( (this.localCustomer || {}).first_name || (this.localCustomer || {} ).name )
-                        +' '+ (this.localCustomer || {}).last_name;
+                return (this.localCustomer || {}).name;
             },
             customerAddress(){
-                return ( (this.localCustomer || {}).address_1 || (this.localCustomer || {}).address_2 );
+
+                return ((this.localCustomer || {}).default_address || {});
             },
             customerPhoneNumbers(){
                 var phoneList = '';
@@ -70,13 +70,13 @@
                 
                 for( var x=0; x < phones.length; x++ ){
                     
-                    if( phones[x].type != 'fax' ){
+                    if( phones[x].type == 'mobile' || phones[x].type == 'tel' ){
 
                         if(x != 0){
                             phoneList = phoneList + ', ';
                         }
 
-                        phoneList = phoneList + '(+' + phones[x]['calling_code']['calling_code'] + ') ' + phones[x]['number'];
+                        phoneList = phoneList + '(+' + phones[x]['calling_code'] + ') ' + phones[x]['number'];
                         
                     }
                         

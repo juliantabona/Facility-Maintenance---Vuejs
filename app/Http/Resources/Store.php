@@ -20,28 +20,18 @@ class Store extends JsonResource
 
             /*  Basic Info  */
             'id' => $this->id,
+            'logo' => $this->logo,
             'name' => $this->name,
             'abbreviation' => $this->abbreviation,
             'description' => $this->description,
+            'phone_list' => $this->phone_list, 
+            'default_mobile' => $this->default_mobile, 
+            'default_email' => $this->default_email, 
+            'default_address' => $this->default_address, 
             'type' => $this->type,
             'industry' => $this->industry,
-
-            /*  Account Info  */
-            'email' => $this->email,
-            'additional_email' => $this->additional_email,
-            'setup' => $this->setup,
-
-            /*  Address Info  */
-            'address' => [
-                
-                'address_1' => $this->address->address_1,
-                'address_2' => $this->address->address_2,
-                'country' => $this->address->country,
-                'province' => $this->address->province,
-                'city' => $this->address->city,
-                'postal_or_zipcode' => $this->address->postal_or_zipcode,
-
-            ],
+            'currency' => $this->currency,
+            'support_ussd' => $this->support_ussd,
 
             /*  Social Info  */
             'social_links' => [
@@ -55,6 +45,12 @@ class Store extends JsonResource
 
             ],
             
+            'average_rating' => $this->average_rating,
+            'is_approved' => $this->is_approved,
+            'last_approved_activity' => $this->last_approved_activity,
+            'current_activity_status' => $this->current_activity_status,
+            'activity_count' => $this->activity_count,
+
             'resource_type' => $this->resource_type,
 
             /*  Timestamps  */

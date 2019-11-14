@@ -30,19 +30,14 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-
         /*  Basic Info  */
-        'first_name', 'last_name', 'gender', 'date_of_birth', 'bio', 
-        
+        'first_name', 'last_name', 'gender', 'date_of_birth', 'bio',
+
         /*  Address Info  */
         'password', 'verified', 'setup', 'account_type',
-        
+
         /*  Social Info  */
-        'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link',
-
-        /*  Company Info  */
-        'company_id'
-
+        'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link'
     ];
 
     protected $allowedFilters = [];
@@ -62,9 +57,10 @@ class User extends Authenticatable
      *  Find the user instance for the given username.
      *  This is used by Passport to get the user by
      *  allowing our own custom logic to find the
-     *  user then return the result
+     *  user then return the result.
      *
      *  @param  string  $username
+     *
      *  @return \App\User
      */
     public function findForPassport($identity)
@@ -74,14 +70,14 @@ class User extends Authenticatable
         //  user provided either the email or the mobile number.
         $identity = [
             'email' => $identity,
-            'mobile_number' => $identity
+            'mobile_number' => $identity,
         ];
 
         /*
          *  Search for any existing user account with the given identity
          *  email or mobile number
          */
-        $user = (new \App\User)->findMatchingAccount($identity);
+        $user = (new \App\User())->findMatchingAccount($identity);
 
         //  Return the user found
         return $user;
@@ -104,51 +100,42 @@ class User extends Authenticatable
     public function findMatchingAccount($identity = ['email' => null, 'mobile_number' => null])
     {
         /*  If we have an email or mobile number provided  */
-        if( !empty( $identity['email'] ) || !empty( $identity['mobile_number'] )){
-
+        if (!empty($identity['email']) || !empty($identity['mobile_number'])) {
             $user = $this;
 
             /*  If we have an email provided  */
-            if( !empty( $identity['email'] ) ){
-
+            if (!empty($identity['email'])) {
                 /*  Get the provided email  */
                 $email = $identity['email'];
 
                 /*  Get the user that matches the given email  */
                 $user = $user->whereHas('emails', function (Builder $query) use ($email) {
-
                     /*  Match the provided mobile number with verified emails of the users account  */
                     $query->where('email', $email)->verified();
-
                 });
             }
-            
-            /*  If we have an mobile number provided  */
-            if( !empty( $identity['mobile_number'] ) ){
 
+            /*  If we have an mobile number provided  */
+            if (!empty($identity['mobile_number'])) {
                 /*  Get the provided mobile number  */
                 $mobile_number = $identity['mobile_number'];
-                
+
                 /*  Get the user that matches the given mobile number  */
                 $user = $user->orWhereHas('mobiles', function (Builder $query) use ($mobile_number) {
-
                     /*  Match the provided mobile number with verified mobile numbers of the users account  */
                     $query->where('number', $mobile_number)->verified();
-
                 });
-
             }
 
             return $user->first() ?? null;
-
         }
 
         return null;
     }
 
-    /*  
+    /*
      *  Returns documents associated with this user. These are various files such as images,
-     *  videos, files and so on. Basically any file/image/video the user wants to save to 
+     *  videos, files and so on. Basically any file/image/video the user wants to save to
      *  this user is stored in this relation
      */
 
@@ -157,7 +144,7 @@ class User extends Authenticatable
         return $this->morphMany('App\Document', 'owner');
     }
 
-    /* 
+    /*
      *  Scope the documents by type
      */
     public function scopeWhereDocumentType($query, $type)
@@ -165,7 +152,7 @@ class User extends Authenticatable
         return $query->where('type', '=', $type);
     }
 
-    /* 
+    /*
      *  Returns documents categorized as files
      */
     public function files()
@@ -173,17 +160,18 @@ class User extends Authenticatable
         return $this->documents()->whereDocumentType('file');
     }
 
-    /* 
+    /*
      *  Returns phones associated with this user. This includes all
      *  types of phones such as telephones, mobiles and fax numbers.
-     *  We can then filter our results to be more specific (using a scope) 
+     *  We can then filter our results to be more specific (using a scope)
      *  e.g) Get only mobile phones
      */
     public function phones()
     {
         return $this->morphMany('App\Phone', 'owner')->orderBy('created_at', 'desc');
     }
-    /* 
+
+    /*
      *  Returns phones categorized as mobile phones
      */
     public function mobiles()
@@ -191,7 +179,7 @@ class User extends Authenticatable
         return $this->phones()->whereType('mobile');
     }
 
-    /* 
+    /*
      *  Returns phones categorized as telephones
      */
     public function telephones()
@@ -199,7 +187,7 @@ class User extends Authenticatable
         return $this->phones()->whereType('tel');
     }
 
-    /* 
+    /*
      *  Returns phones categorized as fax numbers
      */
     public function fax()
@@ -207,7 +195,7 @@ class User extends Authenticatable
         return $this->phones()->whereType('fax');
     }
 
-    /* 
+    /*
      *  Returns addresses associated with this user
      */
     public function addresses()
@@ -215,7 +203,7 @@ class User extends Authenticatable
         return $this->morphMany('App\Address', 'owner')->orderBy('created_at', 'desc');
     }
 
-    /* 
+    /*
      *  Returns emails associated with this user
      */
     public function emails()
@@ -223,7 +211,7 @@ class User extends Authenticatable
         return $this->morphMany('App\Email', 'owner')->orderBy('created_at', 'desc');
     }
 
-    /* 
+    /*
      *  Returns the users settings
      */
     public function settings()
@@ -232,29 +220,27 @@ class User extends Authenticatable
     }
 
     /*
-     *  Returns all the companies the user has been allocated to. This includes allocations
-     *  of the user as admin, staff, customer, vendor e.t.c. Any allocation will pass as a 
-     *  valid company to retrieve on this instance. We can then filter our results to be
-     *  more specific (using a scope) e.g) Get all companies where the user is an admin. 
+     *  Returns all the accounts the user has been allocated to. This includes allocations
+     *  of the user as admin, staff, customer, vendor e.t.c. Any allocation will pass as a
+     *  valid account to retrieve on this instance. We can then filter our results to be
+     *  more specific (using a scope) e.g) Get all accounts where the user is an admin.
      */
-    public function companies()
+    public function accounts()
     {
-        return $this->morphedByMany('App\Company', 'owner', 'user_allocations');
+        return $this->morphedByMany('App\Account', 'owner', 'user_allocations');
     }
 
-    /* 
+    /*
      *  Scope the users by type
      */
     public function scopeWhereUserType($query, $type)
     {
         //  If multiple type provided
-        if( is_array($type) ){
-
+        if (is_array($type)) {
             return $query->whereIn('user_allocations.type', $type);
 
         //  If single type provided
-        }else{
-
+        } else {
             return $query->where('user_allocations.type', $type);
         }
 
@@ -262,43 +248,43 @@ class User extends Authenticatable
         return $query;
     }
 
-    /* 
-     *  Returns companies where the user is an admin
+    /*
+     *  Returns accounts where the user is an admin
      */
-    public function companiesWhereUserIsAdmin()
+    public function accountsWhereUserIsAdmin()
     {
-        return $this->companies()->whereUserType('admin');
+        return $this->accounts()->whereUserType('admin');
     }
 
-    /* 
-     *  Returns companies where the user is a staff member
+    /*
+     *  Returns accounts where the user is a staff member
      */
-    public function companiesWhereUserIsStaff()
+    public function accountsWhereUserIsStaff()
     {
-        return $this->companies()->whereUserType('staff');
+        return $this->accounts()->whereUserType('staff');
     }
 
-    /* 
-     *  Returns companies where the user is a customer
+    /*
+     *  Returns accounts where the user is a customer
      */
-    public function companiesWhereUserIsCustomer()
+    public function accountsWhereUserIsCustomer()
     {
-        return $this->companies()->whereUserType('customer');
+        return $this->accounts()->whereUserType('customer');
     }
 
-    /* 
-     *  Returns companies where the user is a vendor
+    /*
+     *  Returns accounts where the user is a vendor
      */
-    public function companiesWhereUserIsVendor()
+    public function accountsWhereUserIsVendor()
     {
-        return $this->companies()->whereUserType('vendor');
+        return $this->accounts()->whereUserType('vendor');
     }
 
     /*
      *  Returns all the stores the user has been allocated to. This includes allocations
-     *  of the user as admin, staff, customer, vendor e.t.c. Any allocation will pass as a 
+     *  of the user as admin, staff, customer, vendor e.t.c. Any allocation will pass as a
      *  valid store to retrieve on this instance. We can then filter our results to be
-     *  more specific (using a scope) e.g) Get all stores where the user is an admin. 
+     *  more specific (using a scope) e.g) Get all stores where the user is an admin.
      */
     public function stores()
     {
@@ -320,9 +306,8 @@ class User extends Authenticatable
     {
         return $this->stores()->dontSupportUssd();
     }
-    
 
-    /* 
+    /*
      *  Returns stores where the user is an admin
      */
     public function storesWhereUserIsAdmin()
@@ -330,7 +315,7 @@ class User extends Authenticatable
         return $this->stores()->whereUserType('admin');
     }
 
-    /* 
+    /*
      *  Returns stores where the user is a staff member
      */
     public function storesWhereUserIsStaff()
@@ -338,7 +323,7 @@ class User extends Authenticatable
         return $this->stores()->whereUserType('staff');
     }
 
-    /* 
+    /*
      *  Returns stores where the user is a customer
      */
     public function storesWhereUserIsCustomer()
@@ -346,7 +331,7 @@ class User extends Authenticatable
         return $this->stores()->whereUserType('customer');
     }
 
-    /* 
+    /*
      *  Returns stores where the user is a vendor
      */
     public function storesWhereUserIsVendor()
@@ -354,7 +339,7 @@ class User extends Authenticatable
         return $this->stores()->whereUserType('vendor');
     }
 
-    /* 
+    /*
      *  Checks if a given user id matches the current user model id. This check
      *  confirms if that user id provided owns the user model resource.
      */
@@ -363,15 +348,15 @@ class User extends Authenticatable
         return ($this->id == $user_id) ? true : false;
     }
 
-    /* 
+    /*
      *  Checks if a given user is a Super Admin
      */
     public function isSuperAdmin()
     {
-        return ($this->account_type == 'superadmin');
+        return $this->account_type == 'superadmin';
     }
 
-    /* 
+    /*
      *  Returns recent activities owned by this user
      */
     public function recentActivities()
@@ -382,11 +367,11 @@ class User extends Authenticatable
     /*  Attributes */
 
     protected $appends = [
-        'account_verified', 'email_verified', 'mobile_verified', 'profile_image', 'full_name', 
-        'phone_list', 'default_mobile', 'default_email', 'default_address', 'resource_type'
+        'account_verified', 'email_verified', 'mobile_verified', 'profile_image', 'full_name',
+        'phone_list', 'default_mobile', 'default_email', 'default_address', 'resource_type',
     ];
 
-    /* 
+    /*
      *  Returns true/false whether the account has a verified
      *  mobile number
      */
@@ -397,7 +382,7 @@ class User extends Authenticatable
         return ($verified_emails_count) ? true : false;
     }
 
-    /* 
+    /*
      *  Returns true/false whether the account has a verified
      *  mobile number
      */
@@ -408,18 +393,17 @@ class User extends Authenticatable
         return ($verified_mobiles_count) ? true : false;
     }
 
-    /* 
+    /*
      *  Returns true/false whether the account is verified.
      *  A verified account must contain atleast one verified
-     *  email or mobile number 
+     *  email or mobile number
      */
     public function getAccountVerifiedAttribute()
     {
-
         return ($this->email_verified || $this->mobile_verified) ? true : false;
-    }    
+    }
 
-    /* 
+    /*
      *  Returns the users profile picture
      */
     public function getProfileImageAttribute()
@@ -427,7 +411,7 @@ class User extends Authenticatable
         return $this->documents()->where('type', 'profile_image')->first();
     }
 
-    /* 
+    /*
      *  Returns the users first and last name combined
      */
     public function getFullNameAttribute()
@@ -435,7 +419,7 @@ class User extends Authenticatable
         return trim($this->first_name.' '.$this->last_name);
     }
 
-    /* 
+    /*
      *  Returns the user phones separated with commas
      */
     public function getPhoneListAttribute()
@@ -444,19 +428,17 @@ class User extends Authenticatable
         $phones = $this->phones()->whereIn('type', ['mobile', 'tel'])->get();
 
         foreach ($phones as $key => $phone) {
-
             /*  Merge the calling code and phone number  */
             $phoneList .= ($key != 0 ? ', ' : '').'(+'.$phone['calling_code'].') '.$phone['number'];
 
             /*  If this is not the last item add "," otherwise nothing  */
             $phoneList .= (next($phones)) ? ', ' : '';
-
         }
 
         return $phoneList;
     }
 
-    /* 
+    /*
      *  Returns the users default mobile phone
      */
     public function getDefaultMobileAttribute()
@@ -464,7 +446,7 @@ class User extends Authenticatable
         return $this->mobiles()->where('default', 1)->first();
     }
 
-    /* 
+    /*
      *  Returns the users default email
      */
     public function getDefaultEmailAttribute()
@@ -472,7 +454,7 @@ class User extends Authenticatable
         return $this->emails()->where('default', 1)->first();
     }
 
-    /* 
+    /*
      *  Returns the users default address
      */
     public function getDefaultAddressAttribute()
@@ -480,7 +462,7 @@ class User extends Authenticatable
         return $this->addresses()->where('default', 1)->first();
     }
 
-    /* 
+    /*
      *  Returns the resource type
      */
     public function getResourceTypeAttribute()

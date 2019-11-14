@@ -265,7 +265,7 @@
                     <p class="ft2 p2">{{ $company['email'] }}</p>
                     <p class="ft2 p2">
                         @if(COUNT($companyPhones))
-                            @foreach($companyPhones as $key => $phone){{($key != 0 ? ', ': '') . '(+' . $phone['calling_code']['calling_code'] . ') ' . $phone['number']}} @endforeach
+                            @foreach($companyPhones as $key => $phone){{($key != 0 ? ', ': '') . '(+' . $phone['calling_code'] . ') ' . $phone['number']}} @endforeach
                         @endif
                     </p>
                     <br />
@@ -293,7 +293,7 @@
                                 <p class="p4 ft2">{{ $client['email'] }}</p>
                                 <p class="p4 ft2">
                                     @if(COUNT($clientPhones))
-                                        @foreach($clientPhones as $key => $phone){{($key != 0 ? ', ': '') . '(+' . $phone['calling_code']['calling_code'] . ') ' . $phone['number']}} @endforeach
+                                        @foreach($clientPhones as $key => $phone){{($key != 0 ? ', ': '') . '(+' . $phone['calling_code'] . ') ' . $phone['number']}} @endforeach
                                     @endif
                                 </p>
 

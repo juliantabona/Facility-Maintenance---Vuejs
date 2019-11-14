@@ -655,7 +655,7 @@ trait QuotationTraits
                 //  We only send messages to phone numbers set to active
                 if ($phone['show']) {
                     //  Get the calling code
-                    $callingCode = '+'.$phone['calling_code']['calling_code'];
+                    $callingCode = '+'.$phone['calling_code'];
 
                     //  Get the phone number
                     $phoneNumber = $phone['number'];
@@ -835,7 +835,7 @@ trait QuotationTraits
         //  Foreach phone number provided
         foreach ($phones as $phone) {
             //  Get the calling code
-            $callingCode = '+'.$phone['calling_code']['calling_code'];
+            $callingCode = '+'.$phone['calling_code'];
 
             //  Get the phone number
             $phoneNumber = $phone['number'];

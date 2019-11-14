@@ -70,12 +70,16 @@
                     <span class="d-block"><span class="font-weight-bold">Total Cost: </span> {{ localOrder.grand_total | currency(currencySymbol) }}</span>
                     <span class="d-block"><span class="font-weight-bold">Purchased: </span>{{ numberOfItemsPurchased + (numberOfItemsPurchased == 1 ? ' Item' : ' Items') }}</span>
                     <span class="d-block">
-                        <span class="font-weight-bold mr-2">Customer Note: </span>
-                                            
-                        <Poptip title="Customer says" trigger="hover" 
-                                :content="localOrder.customer_note" placement="top" width="300">
-                            <Icon type="ios-chatbubbles-outline" :size="20" />
-                        </Poptip>
+                        <span class="font-weight-bold">Customer Note: </span>
+
+                        <span v-if="localOrder.customer_note" class="ml-2">                  
+                            <Poptip title="Customer says" trigger="hover" 
+                                    :content="localOrder.customer_note" placement="top" width="300">
+                                <Icon type="ios-chatbubbles-outline" :size="20" />
+                            </Poptip>
+                        </span>
+
+                        <span v-else>N/A</span>
 
                     </span>
                     <span class="d-block pt-2 mt-2 border-top"><span class="font-weight-bold">Amount Paid: </span>{{ localOrder.transaction_total | currency(currencySymbol) }}</span>
@@ -133,7 +137,7 @@
                         </div>
                         <scrollBox class="border">
 
-                            <Steps v-if="(localOrder.lifecycle_history).length" 
+                            <Steps v-if="(localOrder.lifecycle_history || {}).length" 
                                 direction="vertical" class="pt-2 pl-2 pr-3 pb-2" style="max-height: 190px;"
                                 :current="((localOrder.lifecycle_history).length || 0) - 1">
                                 
@@ -196,42 +200,14 @@
         data(){
             return {
                 localOrder: this.order,
-                currencySymbol: ((this.order.currency_type || {}).currency || {}).symbol,
+                currencySymbol: ((this.order || {}).currency || {}).symbol,
                 isOpenViewProofOfPaymentModal: false,
                 currentStatus: {}
             }
         },
         computed: {
-            customerName(){
-                return ( (this.localOrder.billing_info || {}).first_name || (this.localOrder.billing_info || {} ).name )
-                        +' '+ (this.localOrder.billing_info || {}).last_name;
-            },
-            customerAddress(){
-                return ( (this.localOrder.billing_info || {}).address_1 || (this.localOrder.billing_info || {}).address_2 );
-            },
-            customerPhoneNumbers(){
-                var phoneList = '';
-                var phones = (this.localOrder.billing_info || {}).phones || [];
-                
-                for( var x=0; x < phones.length; x++ ){
-                    
-                    if( phones[x].type != 'fax' ){
-
-                        if(x != 0){
-                            phoneList = phoneList + ', ';
-                        }
-
-                        phoneList = phoneList + '(+' + phones[x]['calling_code']['calling_code'] + ') ' + phones[x]['number'];
-                        
-                    }
-                        
-                }
-
-                return phoneList;
-
-            },
             numberOfItemsPurchased(){
-                return (this.localOrder.line_items).length
+                return (this.localOrder.item_lines || {}).length || 0;
             }
         },
         methods: {

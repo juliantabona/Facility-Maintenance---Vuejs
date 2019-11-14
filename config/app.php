@@ -174,13 +174,14 @@ return [
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
         Swap\Laravel\SwapServiceProvider::class,
-        Gloudemans\Shoppingcart\ShoppingcartServiceProvider::class,
 
         /*
          * Package Service Providers...
          */
 
         Barryvdh\DomPDF\ServiceProvider::class,
+        SimpleSoftwareIO\QrCode\QrCodeServiceProvider::class,
+        Gloudemans\Shoppingcart\ShoppingcartServiceProvider::class,
 
         /*
          * Application Service Providers...
@@ -240,5 +241,6 @@ return [
         'PDF' => Barryvdh\DomPDF\Facade::class,
         'Swap' => Swap\Laravel\Facades\Swap::class,
         'Cart' => Gloudemans\Shoppingcart\Facades\Cart::class,
+        'QrCode' => SimpleSoftwareIO\QrCode\Facades\QrCode::class
     ],
 ];

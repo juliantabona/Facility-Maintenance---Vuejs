@@ -27,11 +27,13 @@ class Auth {
         console.log('Auth.js - Verfiy and update the authenticated user');
 
         //  Make an Api call to get the authenticated user with the assigned auth token
-        return api.call('get', '/api/user')
+        return api.call('get', '/api/me')
             .then(({data}) => {
+
                 //  Update the user details
                 this.user = data;
                 window.localStorage.setItem('user', JSON.stringify(data));
+                
             });
     }
 

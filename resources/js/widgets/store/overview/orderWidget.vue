@@ -239,8 +239,7 @@
                         title: 'Customer',
                         render: (h, params) => {
                             return h('span', (
-                                ( (params.row.billing_info || {}).first_name || (params.row.billing_info || {} ).name )
-                                +' '+ (params.row.billing_info || {}).last_name
+                                (params.row.billing_info || {}).name
                             ));
                         }
                     });
@@ -253,7 +252,7 @@
                         width: 200,
                         title: 'Email',
                         render: (h, params) => {
-                            return h('span', ((params.row.billing_info || {}).email));
+                            return h('span', ((params.row.billing_info || {}).email) || '...');
                         }
                     });
                 }
@@ -265,7 +264,9 @@
                         width: 130,
                         title: 'Phone',
                         render: (h, params) => {
-                            return h('span', (params.row.phone_list));
+                            return h('span', ( 
+                                ((params.row.billing_info || {}).default_mobile || {}).full_number 
+                            ));
                         }
                     });
                 }
@@ -274,11 +275,11 @@
                 if(this.tableColumnsToShow.includes('Date')){
                     allowedColumns.push(
                     {
-                        width: 100,
+                        width: 120,
                         title: 'Date',
                         sortable: true,
                         render: (h, params) => {
-                            return h('span', this.formatDate(params.row.created_at));
+                            return h('span', this.formatDate(params.row.created_at.date));
                         }
                     });
                 }
@@ -293,7 +294,7 @@
                         sortable: true,
                         render: (h, params) => {
                             var grandTotal = (params.row.grand_total || 0) 
-                            var symbol = ((params.row.currency_type || {}).currency || {}).symbol || '';
+                            var symbol = (params.row.currency || {}).symbol || '';
                             return h('span', this.formatPrice(grandTotal, symbol) );
                         }
                     });
@@ -378,7 +379,7 @@
                             self.isLoadingOrders = false;
 
                             //  Order the order data
-                            self.localOrders = data.data;
+                            self.localOrders = ((data || {})._embedded || {}).orders || [];
 
                         })         
                         .catch(response => { 

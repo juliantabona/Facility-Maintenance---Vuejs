@@ -75,8 +75,13 @@ class Phone extends Model
     /* ATTRIBUTES */
 
     protected $appends = [
-        'resource_type'
+        'full_number', 'resource_type'
     ];
+
+    public function getFullNumberAttribute()
+    {
+        return "{$this->calling_code} {$this->number}";
+    }
 
     /* 
      *  Returns the resource type
