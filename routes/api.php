@@ -225,8 +225,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
                 $route->where('store_id', '[0-9]+');
             }
 
-            //  Settings related resources
-            Route::get('/settings', 'Api\StoreController@getStoreSettings')->name('settings');
+            //  Account related resources
+            Route::get('/account', 'Api\StoreController@getStoreAccount')->name('account');
 
             //  Document related resources
             Route::get('/logo', 'Api\StoreController@getStoreLogo')->name('logo');
@@ -235,18 +235,36 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
             //  Phone related resources
             Route::get('/phones', 'Api\StoreController@getStorePhones')->name('phones');
+            Route::get('/phones?type=mobile', 'Api\StoreController@getStorePhones')->name('mobiles');
+            Route::get('/phones?type=tel', 'Api\StoreController@getStorePhones')->name('telephones');
+            Route::get('/phones?type=fax', 'Api\StoreController@getStorePhones')->name('fax');
             Route::get('/phones/{phone_id}', 'Api\StoreController@getStorePhone')->name('phone')->where('phone_id', '[0-9]+');
+
+            //  Address related resources
+            Route::get('/addresses', 'Api\StoreController@getStoreAddresses')->name('addresses');
+            Route::get('/addresses/{address_id}', 'Api\StoreController@getStoreAddress')->name('phone')->where('address_id', '[0-9]+');
+
+            //  Address related resources
+            Route::get('/emails', 'Api\StoreController@getStoreEmails')->name('emails');
+            Route::get('/emails/{email_id}', 'Api\StoreController@getStoreEmail')->name('phone')->where('email_id', '[0-9]+');
+
+            //  Contact related resources
+            Route::get('/contacts', 'Api\StoreController@getStoreContacts')->name('contacts');
+            Route::get('/contacts?withMobile=true', 'Api\StoreController@getStoreContacts')->name('contacts-with-mobiles');
+            Route::get('/contacts?type=customer', 'Api\StoreController@getStoreContacts')->name('customer-contacts');
+            Route::get('/contacts?type=customer&withMobile=true', 'Api\StoreController@getStoreContacts')->name('customer-contacts-with-mobiles');
+            Route::get('/contacts?type=vendor', 'Api\StoreController@getStoreContacts')->name('vendor-contacts');
+            Route::get('/contacts?type=vendor&withMobile=true', 'Api\StoreController@getStoreContacts')->name('vendor-contacts-with-mobiles');
+            Route::get('/contacts/{contact_id}', 'Api\StoreController@getStoreContact')->name('contact')->where('contact_id', '[0-9]+');
 
             //  User related resources
             Route::get('/users', 'Api\StoreController@getStoreUsers')->name('users');
             Route::get('/users/admins', 'Api\StoreController@getStoreAdmins')->name('admins');
             Route::get('/users/staff', 'Api\StoreController@getStoreStaff')->name('staff');
-            Route::get('/users/customers', 'Api\StoreController@getStoreUserCustomers')->name('user-customers');
-            Route::get('/users/vendors', 'Api\StoreController@getStoreUserVendors')->name('user-vendors');
             Route::get('/users/{user_id}', 'Api\StoreController@getStoreUser')->name('user')->where('user_id', '[0-9]+');
 
-            //  Account related resources
-            Route::get('/owner', 'Api\StoreController@getStoreOwner')->name('owner');
+            //  USSD Interface related resources
+            Route::get('/ussd-interface', 'Api\StoreController@getStoreUssdInterface')->name('ussd-interface');
 
             //  Product related resources
             Route::get('/products', 'Api\StoreController@getStoreProducts')->name('products');
@@ -275,6 +293,9 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             //  Review related resources
             Route::get('/reviews', 'Api\StoreController@getStoreReviews')->name('reviews');
             Route::get('/reviews/{review_id}', 'Api\StoreController@getStoreReview')->name('review')->where('review_id', '[0-9]+');
+
+            //  Settings related resources
+            Route::get('/settings', 'Api\StoreController@getStoreSettings')->name('settings');
 
         });
     }); 

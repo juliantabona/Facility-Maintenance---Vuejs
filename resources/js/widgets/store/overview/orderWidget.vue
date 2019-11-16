@@ -53,6 +53,7 @@
         <!-- No orders message -->
         <Alert v-if="!isLoadingOrders && !localOrders" type="info" :style="{ maxWidth: '250px' }" show-icon>No orders found</Alert>
         
+        <!-- Order Filter & Create Button -->
         <Card v-if="!isLoadingOrders && localOrders" class="mb-3">
             <Row :gutter="20">
                 <Col :span="6">
@@ -101,9 +102,10 @@
             </Row>
         </Card>
 
+        <!-- Table Column Checkboxes -->
         <CheckboxGroup  
             v-if="!isLoadingOrders && localOrders" 
-            v-model="tableColumnsToShow" class="mb-3">
+            v-model="tableColumnsToShowByDefault" class="mb-3">
             <Checkbox label="Order #"></Checkbox>
             <Checkbox label="Customer"></Checkbox>
             <Checkbox label="Email"></Checkbox>
@@ -137,8 +139,8 @@
 
     export default {
         props: {
-            storeId: {
-                type: Number,
+            ordersUrl: {
+                type: String,
                 default: null
             }
         }, 
@@ -149,21 +151,20 @@
             return {
                 moment: moment,
 
-                localStoreId: this.storeId || this.$route.params.storeId,
-                isLoadingStore: false,
-
                 //  Orders
                 localOrders: null,
                 isLoadingOrders: false,
+                localOrdersUrl: this.ordersUrl || this.$route.params.ordersUrl,
+                tableColumnsToShowByDefault:['Order #', 'Customer', 'Email', 'Phone', 'Date', 'Grand Total'],
 
+                //  Filters
                 selectedOrderStatuses:[],
-
-                tableColumnsToShow:['Order #', 'Customer', 'Email', 'Phone', 'Date', 'Grand Total']
  
             }
         },
         computed:{
             dynamicColumns(status){ 
+                
                 var allowedColumns = [];
                 
                 //  Expand Arrow
@@ -220,7 +221,7 @@
                 });
                 
                 //  Order #
-                if(this.tableColumnsToShow.includes('Order #')){
+                if(this.tableColumnsToShowByDefault.includes('Order #')){
                     allowedColumns.push(
                     {
                         width: 80,
@@ -232,7 +233,7 @@
                 }
                 
                 //  Customer Details
-                if(this.tableColumnsToShow.includes('Customer')){
+                if(this.tableColumnsToShowByDefault.includes('Customer')){
                     allowedColumns.push(
                     {
                         width: 150,
@@ -246,7 +247,7 @@
                 }
                 
                 //  Customer Email
-                if(this.tableColumnsToShow.includes('Email')){
+                if(this.tableColumnsToShowByDefault.includes('Email')){
                     allowedColumns.push(
                     {
                         width: 200,
@@ -258,7 +259,7 @@
                 }
                 
                 //  Customer Phones
-                if(this.tableColumnsToShow.includes('Phone')){
+                if(this.tableColumnsToShowByDefault.includes('Phone')){
                     allowedColumns.push(
                     {
                         width: 130,
@@ -272,7 +273,7 @@
                 }
                 
                 //  Date
-                if(this.tableColumnsToShow.includes('Date')){
+                if(this.tableColumnsToShowByDefault.includes('Date')){
                     allowedColumns.push(
                     {
                         width: 120,
@@ -285,7 +286,7 @@
                 }
                 
                 //  Grand Total
-                if(this.tableColumnsToShow.includes('Grand Total')){
+                if(this.tableColumnsToShowByDefault.includes('Grand Total')){
                     allowedColumns.push(
                     {
                         width: 130,
@@ -357,7 +358,7 @@
             },
             fetchOrders() {
 
-                if( this.localStoreId ){
+                if( this.localOrdersUrl ){
 
                     //  Hold constant reference to the vue instance
                     const self = this;
@@ -369,7 +370,7 @@
                     console.log('Start getting orders...');
 
                     //  Use the api call() function located in resources/js/api.js
-                    api.call('get', '/api/orders?storeId='+this.localStoreId)
+                    api.call('get', this.localOrdersUrl)
                         .then(({data}) => {
                             
                             //  Console log the data returned

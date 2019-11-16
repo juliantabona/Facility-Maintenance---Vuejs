@@ -1775,7 +1775,7 @@ class UssdController extends Controller
 
     public function getMyStores()
     {
-        $this->contact = ( new \App\Contact())->findByPhone($this->user['phone']);
+        $this->contact = ( new \App\Contact())->withMobilePhone($this->user['phone'])->first();
 
         if ($this->contact) {
             return $this->contact->stores()->get();

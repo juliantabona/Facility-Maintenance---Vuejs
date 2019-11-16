@@ -2,7 +2,14 @@
 
     <Row :gutter="20">
 
-        <Col :span="20" :offset="2">
+        <Col v-if="activeStoreUrl">
+            
+            <storeOverview :storeUrl="activeStoreUrl" @goBack="fetchStores()"></storeOverview>
+
+        </Col>
+
+        <Col v-else :span="20" :offset="2">
+
             <div class="pb-3 border-bottom">
                 <h2>Stores</h2>
             </div>
@@ -22,8 +29,9 @@
                 
                     <div class="mt-5 mb-3 pb-3 clearfix border-bottom">
                         <div class="mb-3">
+                            
                             <Card v-for="(store, key) in stores" :key="key"
-                                  @click.native="$router.push({ name:'store-overview', params:{ storeId: store.id } })"
+                                  @click.native="activeStoreUrl = ((store._links || {}).self || {}).href"
                                   class="mb-2">
                                 <span>{{ store.name }}</span>
                                 <Icon type="md-arrow-forward" :size="15" class="float-right mt-1"/>
@@ -58,6 +66,7 @@
                     <img style="width:100%;" class="mt-4" src="/images/backgrounds/mobile-ecommerce.png">
                 </Col>
             </Row>
+
         </Col>
 
     </Row>
@@ -66,6 +75,8 @@
 
 <script>
     
+    import storeOverview from './../overview/main.vue';
+
     /*  Buttons  */
     import basicButton from './../../../components/_common/buttons/basicButton.vue';
 
@@ -77,23 +88,27 @@
 
     export default {
         components: { 
-            basicButton, Loader
+            storeOverview, basicButton, Loader
         },
         data(){
             return {
                 stores: null,
                 user: auth.user,
+                activeStoreUrl: null,
                 isLoadingStores: false,
             }
         },
         methods: {
-            fetchStore() {
+            fetchStores() {
 
                 //  Hold constant reference to the vue instance
                 const self = this;
 
                 //  Start loader
                 self.isLoadingStores = true;
+
+                //  Make sure we are not displaying a store
+                self.activeStoreUrl = null;
 
                 //  Console log to acknowledge the start of api process
                 console.log('Start getting stores...');
@@ -130,7 +145,7 @@
         },
         created(){
             //  Fetch the store
-            this.fetchStore();
+            this.fetchStores();
         }
     };
   

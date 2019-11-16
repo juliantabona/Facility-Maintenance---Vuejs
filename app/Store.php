@@ -98,6 +98,15 @@ class Store extends Model
         return $query->orWhere('name', $name)->orWhere('abbreviation', $name);
     }
 
+    /* 
+     *  Returns the owner of the store. In this case it returns the
+     *  Account that owns this store
+     */
+    public function owner()
+    {
+        return $this->morphTo();
+    }
+
     /*  
      *  Returns documents associated with this store. These are various files such as images,
      *  videos, files and so on. Basically any file/image/video the user wants to save to 
@@ -168,14 +177,6 @@ class Store extends Model
     }
 
     /* 
-     *  Returns the store settings
-     */
-    public function settings()
-    {
-        return $this->morphOne('App\Setting', 'owner');
-    }
-
-    /* 
      *  Returns all the contacts that are associated with this store. We can filter our 
      *  results to be more specific (using a scope) e.g) Get all contacts that are 
      *  customers, vendors or that use a particular number or email.
@@ -185,9 +186,19 @@ class Store extends Model
         return $this->morphToMany('App\Contact', 'owner', 'contact_allocations');
     }
 
+    public function contactsWithMobilePhone($mobile = null)
+    {
+        return $this->contacts()->withMobilePhone($mobile);
+    }
+
     public function customerContacts()
     {
         return $this->contacts()->where('is_customer', 1);
+    }
+
+    public function customerContactsWithMobilePhone($mobile = null)
+    {
+        return $this->customerContacts()->withMobilePhone($mobile);
     }
 
     public function vendorContacts()
@@ -195,22 +206,9 @@ class Store extends Model
         return $this->contacts()->where('is_vendor', 1);
     }
 
-    public function contactsWithMobilePhone($mobile = null)
+    public function vendorContactsWithMobilePhone($mobile = null)
     {
-        /*  If we have a mobile phone specified  */
-        if($mobile){
-            
-            /*  Return any contact using the provided mobile number  */
-            return $this->contacts()->whereHas('mobiles', function (Builder $query) use( $mobile ){
-                        $query->where('calling_code', $mobile['calling_code'])
-                                ->where('number', $mobile['number']);
-                    });
-
-        /*  If no mobile phone was specified  */
-        }else{
-            /*  Otherwise only return contacts using mobile phones  */
-            return $this->contacts()->whereHas('mobiles');
-        }
+        return $this->vendorContacts()->withMobilePhone($mobile);
     }
 
     /* 
@@ -270,22 +268,6 @@ class Store extends Model
     }
 
     /* 
-     *  Returns users where the user is a customer
-     */
-    public function userCustomers()
-    {
-        return $this->users()->whereUserType('customer');
-    }
-
-    /* 
-     *  Returns users where the user is a vendor
-     */
-    public function userVendors()
-    {
-        return $this->users()->whereUserType('vendor');
-    }
-
-    /* 
      *  Checks if a given user is an admin to the store
      */
     public function isAdmin($user_id)
@@ -310,43 +292,11 @@ class Store extends Model
     }
 
     /* 
-     *  Returns the owner of the store
-     */
-    public function owner()
-    {
-        return $this->morphTo();
-    }
-
-    /* 
      *  Returns the USSD Interface owned by this store
      */
     public function ussdInterface()
     {
         return $this->morphOne('App\UssdInterface', 'owner');
-    }
-
-    /* 
-     *  Returns taxes owned by this store
-     */
-    public function taxes()
-    {
-        return $this->morphMany('App\Tax', 'owner');
-    }
-
-    /* 
-     *  Returns discounts owned by this store
-     */
-    public function discounts()
-    {
-        return $this->morphMany('App\Discount', 'owner');
-    }
-
-    /* 
-     *  Returns coupons owned by this store
-     */
-    public function coupons()
-    {
-        return $this->morphMany('App\Coupon', 'owner');
     }
 
     /* 
@@ -382,12 +332,34 @@ class Store extends Model
      */
     public function contactOrders($contact_id = null)
     {
-        
         return $this->orders()->where(function ($query) use ($contact_id) {
             $query->orWhere('customer_id', $contact_id)
                   ->orWhere('reference_id', $contact_id);
         });
+    }
 
+    /* 
+     *  Returns taxes owned by this store
+     */
+    public function taxes()
+    {
+        return $this->morphMany('App\Tax', 'owner');
+    }
+
+    /* 
+     *  Returns discounts owned by this store
+     */
+    public function discounts()
+    {
+        return $this->morphMany('App\Discount', 'owner');
+    }
+
+    /* 
+     *  Returns coupons owned by this store
+     */
+    public function coupons()
+    {
+        return $this->morphMany('App\Coupon', 'owner');
     }
 
     /* 
@@ -406,6 +378,13 @@ class Store extends Model
         return $this->morphMany('App\Review', 'owner')->latest();
     }
 
+    /* 
+     *  Returns the store settings
+     */
+    public function settings()
+    {
+        return $this->morphOne('App\Setting', 'owner');
+    }
 
     /*************************************/
     /*  BILLING RELATED RELATIONSHIPS    */

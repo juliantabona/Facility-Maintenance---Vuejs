@@ -72,22 +72,27 @@ class StoreController extends Controller
         }
     }
 
-    public function getStoreSettings($store_id)
+
+    /*********************************
+     *  OWNERSHIP RELATED RESOURCES  *
+    *********************************/
+
+    public function getStoreAccount($store_id)
     {
         //  Get the store
         $store = Store::findOrFail($store_id);
 
-        //  Get the store settings
-        $settings = $store->settings ?? null;
+        //  Get the store account
+        $owner = $store->owner ?? null;
 
-        //  Check if the settings exist
-        if ($settings) {
+        //  Check if the owner exists
+        if ($owner) {
 
-            //  Check if the user is authourized to view the store settings
+            //  Check if the user is authourized to view the store owner
             if ($this->user->can('view', $store)) {
 
-                //  Return an API Readable Format of the Setting Instance
-                return $settings->convertToApiFormat();
+                //  Return an API Readable Format of the Owning Model Instance
+                return $owner->convertToApiFormat();
 
             } else {
 
@@ -209,8 +214,21 @@ class StoreController extends Controller
         //  Get the store
         $store = Store::findOrFail($store_id);
 
-        //  Get the store phones
-        $phones = $store->phones()->paginate() ?? null;
+        //  Get the type if set
+        $type = request()->input('type');
+
+        if( $type = request()->input('type') ){
+
+            //  Get the filtered store phones
+            $phones = $store->phones()->whereType($type)->paginate() ?? null;
+            
+        }else{
+
+            //  Get the store phones
+            $phones = $store->phones()->paginate() ?? null;
+
+        }
+
 
         //  Check if the phones exist
         if ($phones) {
@@ -251,6 +269,238 @@ class StoreController extends Controller
 
                 //  Return an API Readable Format of the Phone Instance
                 return $phone->convertToApiFormat();
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+
+            }
+        } else {
+
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
+    /*********************************
+     *  ADDRESS RELATED RESOURCES    *
+    *********************************/
+
+    public function getStoreAddresses($store_id)
+    {
+        //  Get the store
+        $store = Store::findOrFail($store_id);
+
+        //  Get the store addresses
+        $addresses = $store->addresses()->paginate() ?? null;
+
+
+        //  Check if the addresses exist
+        if ($addresses) {
+
+            //  Check if the user is authourized to view the store addresses
+            if ($this->user->can('view', $store)) {
+
+                //  Return an API Readable Format of the Address Instance
+                return ( new \App\Address() )->convertToApiFormat($addresses);
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+                
+            }
+        } else {
+
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
+    public function getStoreAddress($store_id, $address_id)
+    {
+        //  Get the store
+        $store = Store::findOrFail($store_id);
+
+        //  Get the store address
+        $address = $store->addresses()->where('id', $address_id)->first() ?? null;
+
+        //  Check if the address exists
+        if ($address) {
+
+            //  Check if the user is authourized to view the store address
+            if ($this->user->can('view', $store)) {
+
+                //  Return an API Readable Format of the Address Instance
+                return $address->convertToApiFormat();
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+
+            }
+        } else {
+
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
+    /*********************************
+     *  EMAIL RELATED RESOURCES    *
+    *********************************/
+
+    public function getStoreEmails($store_id)
+    {
+        //  Get the store
+        $store = Store::findOrFail($store_id);
+
+        //  Get the store emails
+        $emails = $store->emails()->paginate() ?? null;
+
+
+        //  Check if the emails exist
+        if ($emails) {
+
+            //  Check if the user is authourized to view the store emails
+            if ($this->user->can('view', $store)) {
+
+                //  Return an API Readable Format of the Email Instance
+                return ( new \App\Email() )->convertToApiFormat($emails);
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+                
+            }
+        } else {
+
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
+    public function getStoreEmail($store_id, $email_id)
+    {
+        //  Get the store
+        $store = Store::findOrFail($store_id);
+
+        //  Get the store email
+        $email = $store->emails()->where('id', $email_id)->first() ?? null;
+
+        //  Check if the email exists
+        if ($email) {
+
+            //  Check if the user is authourized to view the store email
+            if ($this->user->can('view', $store)) {
+
+                //  Return an API Readable Format of the Email Instance
+                return $email->convertToApiFormat();
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+
+            }
+        } else {
+
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
+    /*********************************
+     *  CONTACT RELATED RESOURCES    *
+    *********************************/
+
+    public function getStoreContacts($store_id)
+    {
+        //  Get the store
+        $store = Store::findOrFail($store_id);
+
+        //  Get the type if set
+        $type = request()->input('type');
+
+        //  Get the with mobile if set
+        $withMobile = request()->input('withMobile');
+
+        //  Filter by type e.g customer/vendor
+        if( $type == 'customer' ){
+
+            //  Filter to get only customer contacts
+            $contacts = $store->customerContacts();
+            
+        }elseif( $type == 'vendor' ){
+
+            //  Filter to get only vendor contacts
+            $contacts = $store->vendorContacts();
+
+        }else{
+
+            //  Get the contacts unfiltered
+            $contacts = $store->contacts();
+            
+        }
+
+        //  Filter by mobile (Whether or not the contact has a mobile number)
+        if( $withMobile == 'true' ){
+
+            //  Filter to get only customer contacts
+            $contacts = $contacts->withMobilePhone();
+            
+        }
+
+        //  Paginate the results 
+        $contacts = $contacts->paginate();
+
+        //  Check if the contacts exist
+        if ($contacts) {
+
+            //  Check if the user is authourized to view the store contacts
+            if ($this->user->can('view', $store)) {
+
+                //  Return an API Readable Format of the Contact Instance
+                return ( new \App\Contact() )->convertToApiFormat($contacts);
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+                
+            }
+        } else {
+
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
+    public function getStoreContact($store_id, $contact_id)
+    {
+        //  Get the store
+        $store = Store::findOrFail($store_id);
+
+        //  Get the store contact
+        $contact = $store->contacts()->where('id', $contact_id)->first() ?? null;
+
+        //  Check if the contact exists
+        if ($contact) {
+
+            //  Check if the user is authourized to view the store contact
+            if ($this->user->can('view', $store)) {
+
+                //  Return an API Readable Format of the Contact Instance
+                return $contact->convertToApiFormat();
 
             } else {
 
@@ -363,68 +613,6 @@ class StoreController extends Controller
         }
     }
 
-    public function getStoreUserCustomers($store_id)
-    {
-        //  Get the store
-        $store = Store::findOrFail($store_id);
-
-        //  Get the store user customers
-        $userCustomers = $store->userCustomers()->paginate() ?? null;
-
-        //  Check if the user customers exist
-        if ($userCustomers) {
-
-            //  Check if the user is authourized to view the store user customers
-            if ($this->user->can('view', $store)) {
-
-                //  Return an API Readable Format of the User Instance
-                return ( new \App\User() )->convertToApiFormat($userCustomers);
-
-            } else {
-
-                //  Not Authourized
-                return oq_api_not_authorized();
-
-            }
-        } else {
-
-            //  Not Found
-            return oq_api_notify_no_resource();
-
-        }
-    }
-
-    public function getStoreUserVendors($store_id)
-    {
-        //  Get the store
-        $store = Store::findOrFail($store_id);
-
-        //  Get the store user vendors
-        $userVendors = $store->userVendors()->paginate() ?? null;
-
-        //  Check if the user vendors exist
-        if ($userVendors) {
-
-            //  Check if the user is authourized to view the store user vendors
-            if ($this->user->can('view', $store)) {
-
-                //  Return an API Readable Format of the User Instance
-                return ( new \App\User() )->convertToApiFormat($userVendors);
-
-            } else {
-
-                //  Not Authourized
-                return oq_api_not_authorized();
-
-            }
-        } else {
-
-            //  Not Found
-            return oq_api_notify_no_resource();
-
-        }
-    }
-
     public function getStoreUser($store_id, $user_id)
     {
         //  Get the store
@@ -456,26 +644,26 @@ class StoreController extends Controller
         }
     }
 
-    /*********************************
-     *  OWNERSHIP RELATED RESOURCES  *
-    *********************************/
+    /****************************************
+     *  USSD INTERFACE RELATED RESOURCES    *
+    ****************************************/
 
-    public function getStoreOwner($store_id)
+    public function getStoreUssdInterface($store_id)
     {
         //  Get the store
         $store = Store::findOrFail($store_id);
 
-        //  Get the store owner
-        $owner = $store->owner ?? null;
+        //  Get the store Ussd Interface
+        $ussdInterface = $store->ussdInterface ?? null;
 
-        //  Check if the owner exists
-        if ($owner) {
+        //  Check if the Ussd Interface exists
+        if ($ussdInterface) {
 
-            //  Check if the user is authourized to view the store owner
+            //  Check if the user is authourized to view the store ussdInterface
             if ($this->user->can('view', $store)) {
 
-                //  Return an API Readable Format of the Owning Model Instance
-                return $owner->convertToApiFormat();
+                //  Return an API Readable Format of the Contact Instance
+                return $ussdInterface->convertToApiFormat();
 
             } else {
 
@@ -938,6 +1126,37 @@ class StoreController extends Controller
 
                 //  Return an API Readable Format of the Reviews Instance
                 return $review->convertToApiFormat();
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+
+            }
+        } else {
+
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
+    public function getStoreSettings($store_id)
+    {
+        //  Get the store
+        $store = Store::findOrFail($store_id);
+
+        //  Get the store settings
+        $settings = $store->settings ?? null;
+
+        //  Check if the settings exist
+        if ($settings) {
+
+            //  Check if the user is authourized to view the store settings
+            if ($this->user->can('view', $store)) {
+
+                //  Return an API Readable Format of the Setting Instance
+                return $settings->convertToApiFormat();
 
             } else {
 

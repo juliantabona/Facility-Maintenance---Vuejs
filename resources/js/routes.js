@@ -267,13 +267,6 @@ let routes = [
     },
    
     {
-        //  Store Dashboard
-        path: '/stores/:storeId/overview', name: 'store-overview',
-        meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/store/overview/main.vue')
-    },
-   
-    {
         //  Store
         path: '/stores/:storeId/catalog', name: 'store',
         meta: { layout: 'Store', middlewareAuth: false },

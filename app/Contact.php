@@ -57,23 +57,40 @@ class Contact extends Model
     {
         return $this->hasMany('App\Order', 'customer_id');
     }
-    
-    /*  findByPhone()
-     *
-     *  This method returns the first contact that
-     *  mataches the phone specified
+
+    /* 
+     *  Scope:
+     *  Return contacts that have phones
      */
-    public function findByPhone($phone)
+    public function scopeWithPhone($query, $phone = null)
     {
-        /*  If we have a phone specified  */
-        if($phone){
+         /*  If we have a phone specified  */
+         if($phone){
             
             /*  Return any contact using the provided phone number  */
-            return $this->whereHas('phones', function (Builder $query) use( $phone ){
+            return $query->whereHas('phones', function (Builder $query) use( $phone ){
                         $query->where('calling_code', $phone['calling_code'])
                                 ->where('number', $phone['number']);
-                    })->first();
+                    });
+
+        /*  If no phone was specified  */
+        }else{
+            
+            /*  Otherwise only return contacts using phones  */
+            return $query->whereHas('phones');
+
         }
+    }
+
+    /* 
+     *  Scope:
+     *  Return contacts that have mobile phones
+     */
+    public function scopeWithMobilePhone($query, $phone = null)
+    {
+        return $query->withPhone($phone)->whereHas('phones', function (Builder $query) use( $phone ){
+                    $query->where('type', 'mobile');
+                });
     }
 
     /* 
@@ -154,8 +171,16 @@ class Contact extends Model
     /*  Attributes */
 
     protected $appends = [
-        'phone_list', 'default_mobile', 'default_email', 'default_address', 'resource_type'
+        'type', 'phone_list', 'default_mobile', 'default_email', 'default_address', 'resource_type'
     ];
+
+    /* 
+     *  Returns the contact type
+     */
+    public function getTypeAttribute()
+    {
+        return $this->is_individual ? 'Individual' : 'Company/Organization';
+    }
 
     /* 
      *  Returns the contact phones separated with commas

@@ -19,10 +19,15 @@ class UssdInterface extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'description' => $this->description,
+            'about_us' => $this->about_us,
+            'contact_us' => $this->contact_us,
+            'call_to_action' => $this->call_to_action,
             'code' => $this->code,
-            'live_mode' => $this->live_mode,
+
+            /*  Attributes */
             'resource_type' => $this->resource_type,
+
+            /*  Timestamps */
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 

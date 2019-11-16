@@ -24,6 +24,15 @@ class Contact extends JsonResource
             'is_customer' => $this->is_customer,
             'is_individual' => $this->is_individual,
             'account_id' => $this->account_id,
+
+            /*  Attributes */
+            'type' => $this->type,
+            'phone_list' => $this->phone_list, 
+            'default_email' => $this->default_email, 
+            'default_mobile' => $this->default_mobile, 
+            'default_address' => $this->default_address,
+            'resource_type' => $this->resource_type,
+
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 

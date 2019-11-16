@@ -25,9 +25,11 @@
         <!-- Show when we have store -->
         <Col v-if="store && !isLoadingStore" :span="22" :offset="1">
         
-            <pageToolbar :fallbackRoute="{ name: 'stores' }"
-                            :onlyBackBtn="true" class="d-inline-block mr-2">
-            </pageToolbar>
+            <!-- Button to go back to store list -->
+            <Button  type="primary" @click.native="$emit('goBack')">
+                <Icon type="md-arrow-back" :size="16"></Icon>
+                <span>Back</span>
+            </Button>
 
             <div class="mt-3">
                 <Card class="p-2">
@@ -36,53 +38,28 @@
                         <img v-if="store.logo" :src="(store.logo || {}).url" alt="Store Logo" class="roundedShape">
                         <h3 class="d-inline-block">{{ store.name }}</h3>
                     </div>
-
+                    
                     <!-- Store Tabs -->
                     <Tabs type="card" :animated="false" class="pb-5">
 
                         <!-- Orders Tab -->
                         <TabPane label="Orders" class="p-1">
                             
-                            <orderWidget :storeId="store.id"></orderWidget>
+                            <orderWidget :ordersUrl="(store._links['oq:orders'] || {}).href"></orderWidget>
                         
-                        </TabPane>
-
-                        <!-- Products Tab -->
-                        <TabPane label="Products" class="p-1">
-
-                            <productWidget :storeId="store.id"></productWidget>
-
-                        </TabPane>
-
-                        <!-- Messages Tab -->
-                        <TabPane label="Messages" class="p-1">
-
-                            <messageWidget :storeId="store.id"></messageWidget>
-
-                        </TabPane>
-
-                        <!-- Reviews Tab -->
-                        <TabPane label="Reviews" class="p-1">
-
-                            <reviewWidget :storeId="store.id"></reviewWidget>
-
                         </TabPane>
 
                         <!-- Customers Tab -->
                         <TabPane label="Customers" class="p-1">
-                            
-                            <Card class="pt-3 pb-3">
-                                <Alert type="info" :style="{ maxWidth: '250px' }" show-icon>No customers</Alert>
-                            </Card>
+
+                            <customerWidget :customersUrl="(store._links['oq:customer_contacts'] || {}).href"></customerWidget>
 
                         </TabPane>
 
-                        <!-- Transactions Tab -->
-                        <TabPane label="Transactions" class="p-1">
-                            
-                            <Card class="pt-3 pb-3">
-                                <Alert type="info" :style="{ maxWidth: '250px' }" show-icon>No transactions</Alert>
-                            </Card>
+                        <!-- USSD Interface Tab -->
+                        <TabPane label="My Mobile Store" class="p-1">
+
+                            <ussdInterfaceWidget :ussdInterfaceUrl="(store._links['oq:ussd_interface'] || {}).href"></ussdInterfaceWidget>
 
                         </TabPane>
 
@@ -139,19 +116,28 @@
 
     /*  Widgets  */
     import orderWidget from './orderWidget.vue';
+    import customerWidget from './customerWidget.vue'
+    import ussdInterfaceWidget from './ussdInterfaceWidget.vue'
     import productWidget from './productWidget.vue';
     import messageWidget from './messageWidget.vue';
     import reviewWidget from './reviewWidget.vue';
 
     export default {
+        props:{
+            storeUrl: {
+                type: String,
+                default: null
+            }
+        },
         components: { 
-            pageToolbar, basicButton, Loader, orderWidget, productWidget, messageWidget, reviewWidget
+            pageToolbar, basicButton, Loader, orderWidget, customerWidget, ussdInterfaceWidget, 
+            productWidget, messageWidget, reviewWidget
         },
         data(){
             return {
 
                 store: null,
-                storeId: this.$route.params.storeId,
+                localStoreUrl: this.storeUrl,
                 isLoadingStore: false
  
             }
@@ -159,7 +145,7 @@
         methods: {
             fetchStore() {
 
-                if(this.storeId){
+                if(this.localStoreUrl){
 
                     //  Hold constant reference to the vue instance
                     const self = this;
@@ -171,7 +157,7 @@
                     console.log('Start getting store...');
                     
                     //  Use the api call() function located in resources/js/api.js
-                    return api.call('get', '/api/stores/'+this.storeId)
+                    return api.call('get', this.localStoreUrl)
                         .then(({data}) => {
                             
                             //  Console log the data returned
