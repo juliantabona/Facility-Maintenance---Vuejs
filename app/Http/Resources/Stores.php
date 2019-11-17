@@ -28,7 +28,7 @@ class Stores extends ResourceCollection
                 
                 //  Link to current resource
                 'self' => [
-                    'href' => url()->full(),
+                    'href' => route('stores'),
                     'title' => 'These stores',
                 ],
 
@@ -54,7 +54,7 @@ class Stores extends ResourceCollection
 
                 //  Link to search stores
                 'search' => [
-                    'href' => url()->current().'?search={searchTerms}',
+                    'href' => route('stores').'?search={searchTerms}',
                     'templated' => true,
                 ],
                 

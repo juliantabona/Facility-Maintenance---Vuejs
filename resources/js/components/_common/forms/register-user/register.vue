@@ -230,21 +230,6 @@
                 deep: true
             }
         },
-        computed: {
-            registrationProgress(){
-                var progress = 0;
-                var fields = ['first_name', 'last_name', 'email', 'phone', 
-                              'address', 'country', 'province', 'city', 'password', 'confirm_password'];
-                
-                for(var x=0; x < fields.length; x++){
-                    if(this.formData[fields[x]] != null && this.formData[fields[x]] != '' ){
-                        progress = progress + ( 1/fields.length * 100 )
-                    }
-                }
-
-                return progress;
-            }
-        },
         methods: {
             handleRegistration(){
                 /*  Start the register process by calling the function initiateRegister() from

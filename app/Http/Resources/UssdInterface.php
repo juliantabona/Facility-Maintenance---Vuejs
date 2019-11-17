@@ -40,7 +40,7 @@ class UssdInterface extends JsonResource
 
                 //  Link to current resource
                 'self' => [ 
-                    'href' => url()->full(),
+                    'href' => route('ussd-interface', ['ussd_interface_id' => $this->id]),
                     'title' => 'This ussd interface'
                 ],
 

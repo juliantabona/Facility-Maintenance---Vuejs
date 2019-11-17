@@ -48,6 +48,188 @@ trait StoreTraits
         }
     }
 
+
+    /*  initiateCreate() method:
+     *
+     *  This method is used to create a new store.
+     */
+    public function initiateCreate( $storeInfo = null )
+    {
+        /*
+         *  The $store variable represents the store dataset
+         *  provided through the request received.
+         */
+        $storeInfo = $storeInfo ?? request('store');
+
+        /*
+         *  The $template variable represents structure of the store.
+         *  If no template is provided, we create one using the 
+         *  request data.
+         */
+        $template = $template ?? [
+            'name' => $storeInfo['name'] ?? null
+        ];
+
+        try {
+
+            /*
+             *  Create a new store, then retrieve a fresh instance
+             */
+            $store = $this->create($template)->fresh();
+
+            /*  If the store was created successfully  */
+            if( $store ){
+
+                /*  If we have only one address  */
+                if( isset($storeInfo['address']) ){
+
+                    /*  Create a new address  */
+                    $store->createAddress( $storeInfo['address'] );
+
+                /*  If we have many addresses  */
+                }elseif( isset($storeInfo['addresses']) ){
+
+                    /*  Foreach address  */
+                    foreach( $storeInfo['addresses'] as $address){
+
+                        /*  Create a new address  */
+                        $store->createAddress( $address );
+
+                    }
+
+                }      
+                
+                /*  If we have only one phone  */
+                if( isset($storeInfo['phone']) ){
+                    
+                    /*  Create a new phone  */
+                    $store->createPhone( $storeInfo['phone'] );
+
+                /*  If we have many phones  */
+                }elseif( isset($storeInfo['phones']) ){
+                    
+                    /*  Foreach phone  */
+                    foreach( $storeInfo['phones'] as $phone){
+
+                        /*  Create a new phone  */
+                        $store->createPhone( $phone );
+
+                    }
+
+                }   
+
+                /*  If we have only one email  */
+                if( isset($storeInfo['email']) ){
+
+                    /*  Create a new email  */
+                    $store->createEmail( $storeInfo['email'] );
+
+                /*  If we have many emails  */
+                }elseif( isset($storeInfo['emails']) ){
+
+                    /*  Foreach email  */
+                    foreach( $storeInfo['emails'] as $email){
+
+                        /*  Create a new email  */
+                        $store->createEmail( $email );
+
+                    }
+
+                }   
+
+                /*  Return a fresh instance of the store  */
+                return $store->fresh();
+
+            }
+
+        } catch (\Exception $e) {
+
+            //  Return the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+        }
+
+    }
+
+
+    /*  createAddress() method:
+     *
+     *  This method is used to create a new address 
+     *  and assign it to the store.
+     */
+    public function createAddress($address)
+    {
+        /*  Create a new address using the initiateCreate() method from the AddressTraits  */
+        $newAddress = ( new \App\Address() )->initiateCreate($address);
+        
+        /*  If the address was created successfully  */
+        if( $newAddress ){
+
+            /*  Assign the new address to the store  */
+            $newAddress->update([
+                'owner_id' => $this->id, 
+                'owner_type' => $this->resource_type,
+
+                /*  Make this the default address if its the first address */
+                'default' => ($this->addresses()->count() == 1) ? 1 : 0
+            ]);
+
+        }
+
+    }
+
+    /*  createPhone() method:
+     *
+     *  This method is used to create a new phone 
+     *  and assign it to the store.
+     */
+    public function createPhone($phone)
+    {
+        /*  Create a new phone using the initiateCreate() method from the PhoneTraits  */
+        $newPhone = ( new \App\Phone() )->initiateCreate($phone);
+        
+        /*  If the phone was created successfully  */
+        if( $newPhone ){
+
+            /*  Assign the new phone to the store  */
+            $newPhone->update([
+                'owner_id' => $this->id, 
+                'owner_type' => $this->resource_type,
+
+                /*  Make this the default phone if its the first mobile phone */
+                'default' => ($this->mobiles()->count() == 1) ? 1 : 0
+            ]);
+
+        }
+    }
+
+    /*  createEmail() method:
+     *
+     *  This method is used to create a new email 
+     *  and assign it to the store.
+     */
+    public function createEmail($email)
+    {
+        /*  Create a new email using the initiateCreate() method from the EmailTraits  */
+        $newEmail = ( new \App\Email() )->initiateCreate($email);
+        
+        /*  If the email was created successfully  */
+        if( $newEmail ){
+
+            /*  Assign the new email to the store  */
+            $newEmail->update([
+                'owner_id' => $this->id, 
+                'owner_type' => $this->resource_type,
+
+                /*  Make this the default email if its the first email */
+                'default' => ($this->emails()->count() == 1) ? 1 : 0
+            ]);
+            
+        }
+
+    }
+
+
     /*  createContact() method:
      *
      *  This method is used to create and assign a new contact to 
@@ -543,20 +725,12 @@ trait StoreTraits
      *  the store.
      *
      */
+    /*
     public function initiateCreate($template = null)
     {
         //  Current authenticated user
         $auth_user = auth('api')->user();
 
-        /*******************************************************
-         *   CHECK IF USER HAS PERMISSION TO CREATE STORE    *
-         ******************************************************/
-
-        /*********************************************
-         *   VALIDATE STORE INFORMATION            *
-         ********************************************/
-        
-        //  Create a template to hold the store details
         $template = $template ?? [
             //  General details
             'title' => request('title'),
@@ -610,15 +784,7 @@ trait StoreTraits
                 //  refetch the updated store
                 $store = $store->fresh();
 
-                /*****************************
-                 *   SEND NOTIFICATIONS      *
-                 *****************************/
-
                 // $auth_user->notify(new StoreCreated($store));
-
-                /*****************************
-                 *   RECORD ACTIVITY         *
-                 *****************************/
 
                 //  Record activity of store created
                 $status = 'created';
@@ -638,6 +804,7 @@ trait StoreTraits
             return ['success' => false, 'response' => $response];
         }
     }
+    */
 
     public function checkAndCreateCategories($store)
     {

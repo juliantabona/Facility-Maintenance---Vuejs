@@ -213,6 +213,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
         //  Multiple stores
         Route::get('/', 'Api\StoreController@getStores')->name('stores');
+        Route::post('/', 'Api\StoreController@createStore')->name('create-store');
 
         //  Single store
         Route::get('/{store_id}', 'Api\StoreController@getStore')->name('store')->where('store_id', '[0-9]+');
@@ -299,6 +300,31 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
         });
     }); 
+
+    /*************************************
+    /*************************************
+     *  USSD INTERFACE RESOURCE ROUTES   *
+    /*************************************
+    *************************************/
+
+    Route::prefix('ussd-interfaces')->group(function () {
+
+        //  Single interface
+        Route::get('/{ussd_interface_id}', 'Api\UssdInterfaceController@getUssdInterface')->name('ussd-interface')->where('ussd_interface_id', '[0-9]+');
+        Route::post('/{ussd_interface_id}', 'Api\UssdInterfaceController@updateUssdInterface')->name('update-ussd-interface')->where('ussd_interface_id', '[0-9]+');
+
+        //  Single interface resources
+        Route::prefix('{ussd_interface_id}')->name('ussd-interface')->group(function ($group) {
+
+            //  Allow only intergers for ussd_interface_id on all group routes
+            foreach ($group->getRoutes() as $route) {
+                $route->where('ussd_interface_id', '[0-9]+');
+            }
+
+            //  Relationship Routes Here
+
+        });
+    });
 
     /*********************************
     /*********************************

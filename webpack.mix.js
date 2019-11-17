@@ -16,5 +16,6 @@ mix.js('resources/js/app.js', 'public/js')
    .scripts([
       'resources/js/_extras/js/jquery-plugins/jquery.elevateZoom-3.0.8.min.js'
    ], 'public/js/extra.js').version()
+   .copy('resources/js/_extras/css/devices.min.css', 'public/css/devices.min.css')
    .copy('resources/js/_extras/css/themes/wookie-theme.css', 'public/css/wookie-store-theme.css')
    .sass('resources/sass/app.scss', 'public/css');

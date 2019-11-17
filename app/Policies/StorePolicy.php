@@ -54,6 +54,7 @@ class StorePolicy
     public function create(User $user)
     {
         //  Any Authenticated user can create a store
+        return true;
     }
 
     /**

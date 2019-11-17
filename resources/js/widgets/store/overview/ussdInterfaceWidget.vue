@@ -34,44 +34,20 @@
                 
                     <Divider orientation="left">My Mobile Store</Divider>
 
-                    <!-- Login Form-->
-                    <el-form ref="loginForm">
-                        
-                        <!-- identity -->
-                        <el-form-item label="Store Name" prop="name" class="mb-2">
-                            <el-input type="text" v-model="ussdInterface.name" size="small" style="width:100%" placeholder="Mobile store name"></el-input>
-                        </el-form-item>
-                        
-                        <!-- identity -->
-                        <el-form-item label="Call To Action" prop="call_to_action" class="mb-2">
-                            <el-input type="text" v-model="ussdInterface.call_to_action" size="small" style="width:100%" placeholder="Mobile store call to action"></el-input>
-                        </el-form-item>
-                        
-                        <!-- identity -->
-                        <el-form-item label="About Us" prop="about_us" class="mb-2">
-                            <el-input type="textarea" v-model="ussdInterface.about_us" size="small" style="width:100%" placeholder="Mobile store about us" :rows="3"></el-input>
-                        </el-form-item>
-                        
-                        <!-- identity -->
-                        <el-form-item label="Contact Us" prop="contact_us">
-                            <el-input type="textarea" v-model="ussdInterface.contact_us" size="small" style="width:100%" placeholder="Mobile store contact us" :rows="3"></el-input>
-                        </el-form-item>
-
-                        <!-- Login Button -->
-                        <basicButton
-                            class="float-right mt-2 mb-2 ml-3 pl-3 pr-3" 
-                            type="success" size="large" 
-                            :ripple="true"
-                            @click.native="handleLogin()">
-                            <span>Save</span>
-                        </basicButton>
-
-                    </el-form>
+                    <!-- Ussd Interface Update Form -->
+                    <ussdInterfaceUpdateForm
+                        :ussdInterface="ussdInterface"
+                        nameLabel="Store Name"
+                        namePlaceholder="Enter store name"
+                        @updateSuccess="handleUpdateSuccess($event)">
+                    </ussdInterfaceUpdateForm>
 
                 </Col>
 
                 <!-- Mobile Store Access Info -->
                 <Col :span="12">
+                    
+                    <ussdSimulator :ussdInterface="ussdInterface"></ussdSimulator>
 
                     <!-- Password Reset Success Alert -->
                     <Alert type="success" @click.native="showMobileStoreInfo = !showMobileStoreInfo" style="cursor:pointer;">
@@ -148,13 +124,17 @@
 
 <script>
     
+    /*  Ussd Interface Update Form  */
+    import ussdInterfaceUpdateForm from './../../../components/_common/forms/ussd-interface/ussdInterface.vue';
+
+    /*  Ussd Simulator  */
+    import ussdSimulator from './../../../components/_common/simulators/ussdSimulator.vue';
+
     /*  Buttons  */
     import basicButton from './../../../components/_common/buttons/basicButton.vue';
 
     /*  Loaders  */
     import Loader from './../../../components/_common/loaders/Loader.vue'; 
-
-    import moment from 'moment';
 
     export default {
         props: {
@@ -164,14 +144,14 @@
             }
         }, 
         components: { 
-            basicButton, Loader
+            ussdInterfaceUpdateForm, ussdSimulator, basicButton, Loader
         },
         data(){
             return {
                 //  Customers
                 ussdInterface: null,
                 isLoadingUssdInterface: false,
-                ussdInterfaceUrl: this.ussdInterfaceUrl || this.$route.params.ussdInterfaceUrl,
+                localUssdInterfaceUrl: this.ussdInterfaceUrl || this.$route.params.ussdInterfaceUrl,
 
                 showCustomerAccessInstructions: false,
                 showStaffAccessInstructions: false,
@@ -180,9 +160,24 @@
             }
         },
         methods: {
+            handleUpdateSuccess(ussdInterface){
+                
+                console.log('Old interface');
+                console.log(this.ussdInterface);
+
+                this.ussdInterface = ussdInterface;
+
+                console.log('New interface');
+                console.log(this.ussdInterface);
+
+                this.$Notice.success({
+                    title: 'Updated successfully'
+                });
+
+            },
             fetchUssdInterface() {
 
-                if( this.ussdInterfaceUrl ){
+                if( this.localUssdInterfaceUrl ){
 
                     //  Hold constant reference to the vue instance
                     const self = this;
@@ -194,7 +189,7 @@
                     console.log('Start getting ussd interface...');
 
                     //  Use the api call() function located in resources/js/api.js
-                    api.call('get', this.ussdInterfaceUrl)
+                    api.call('get', this.localUssdInterfaceUrl)
                         .then(({data}) => {
                             
                             //  Console log the data returned

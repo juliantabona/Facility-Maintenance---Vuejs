@@ -44,6 +44,35 @@ class StoreController extends Controller
         }
     }
 
+    public function createStore(Request $request)
+    {
+        //  Check if the user is authourized to create the store
+        if ($this->user->can('create', Store::class)) {
+
+            //  Create store
+            $store = ( new Store )->initiateCreate( $storeInfo = $request->all() );
+
+            //  Check if the store was created
+            if ($store) {
+                    
+                //  Return an API Readable Format of the Store Instance
+                return $store->convertToApiFormat();
+
+            } else {
+
+                //  Not Found
+                return oq_api_notify_no_resource();
+
+            }
+
+        } else {
+
+            //  Not Authourized
+            return oq_api_not_authorized();
+
+        }
+    }
+
     public function getStore($store_id)
     {
         //  Get the store
