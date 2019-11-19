@@ -92,6 +92,30 @@ class PhonePolicy
     }
 
     /**
+     * Determine whether the user can verify the phone.
+     *
+     * @param  \App\User  $user
+     * @param  \App\Phone  $phone
+     * @return mixed
+     */
+    public function verify(User $user, Phone $phone)
+    {
+        //  If the owner is a user
+        if( $phone->owner->resource_type === 'user' ){
+            
+            //  Then only the user that owns the phone can delete this phone
+            return $phone->owner->isAccountOwner($user->id);
+
+        //  Otherwise if the owner is a company/store
+        }else{
+
+            //  Only an Admin or Staff member of the phone owner can delete this phone
+            return $phone->owner->isAdmin($user->id);
+
+        }
+    }
+
+    /**
      * Determine whether the user can delete the phone.
      *
      * @param  \App\User  $user

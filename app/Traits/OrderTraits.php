@@ -21,6 +21,9 @@ use App\Http\Resources\Orders as OrdersResource;
 
 trait OrderTraits
 {
+    private $order;
+    private $merchant;
+
     /*  convertToApiFormat() method:
      *
      *  Converts to the appropriate Api Response Format
@@ -42,52 +45,54 @@ trait OrderTraits
         }
     }
 
+
     /*  initiateCreate() method:
      *
-     *  This method is used to create a new order.
+     *  This method is used to create a new interface.
+     *  The $orderInfo variable represents the  
+     *  order dataset provided
      */
-    public function initiateCreate($template_overide = [])
+    public function initiateCreate( $orderInfo = null )
     {
         /*
-         *  The $order variable represents the order dataset
-         *  provided through the request received.
+         *  The $orderInfoInfo variable represents accepted structure of the USSD 
+         *  Interface data required to create a new resource.
          */
-        $order = $template_overide ?? request('order');
 
         /*  If we have the merchant id  */
-        if ($order['merchant_id']) {
+        if ($orderInfo['merchant_id']) {
 
             /*  Retrieve the merchant details using the merchant id  */
-            $merchant = Store::find($order['merchant_id']);
+            $this->merchant = Store::find($orderInfo['merchant_id']);
 
         }
 
         /*  If we have the customer contact id  */
-        if (isset($order['customer_id']) && !empty($order['customer_id'])) {
+        if (isset($orderInfo['customer_id']) && !empty($orderInfo['customer_id'])) {
 
             /*  Retrieve the customer contact details from the existing merchant contacts  */
-            $customer = $merchant->findContactById($order['customer_id']);
+            $customer = $this->merchant->findContactById($orderInfo['customer_id']);
 
 
         /*  If we have the customer contact information  */
-        } elseif (isset($order['customer_info']) && !empty($order['customer_info'])) {
+        } elseif (isset($orderInfo['customer_info']) && !empty($orderInfo['customer_info'])) {
 
             /*  Create a new customer contact  */
-            $customer = $merchant->createContact($order['customer_info']);
+            $customer = $this->merchant->createContact($orderInfo['customer_info']);
 
         }
 
         /*  If we have the reference contact id  */
-        if (isset($order['reference_id']) && !empty($order['reference_id'])) {
+        if (isset($orderInfo['reference_id']) && !empty($orderInfo['reference_id'])) {
 
             /*  Retrieve the reference contact details from the existing merchant contacts  */
-            $reference = $merchant->findContactById($order['reference_id']);
+            $reference = $this->merchant->findContactById($orderInfo['reference_id']);
 
         /*  If we have the reference contact information  */
-        } elseif (isset($order['reference_info']) && !empty($order['reference_info'])) {
+        } elseif (isset($orderInfo['reference_info']) && !empty($orderInfo['reference_info'])) {
             
             /*  Create a new reference contact  */
-            $reference = $merchant->createContact($order['reference_info']);
+            $reference = $this->merchant->createContact($orderInfo['reference_info']);
 
         /*  If we do not have any reference related information  */
         } else {
@@ -96,9 +101,9 @@ trait OrderTraits
         }
 
         /*  If we have the cart items  */
-        if (isset($order['items']) && !empty($order['items'])) {
+        if (isset($orderInfo['items']) && !empty($orderInfo['items'])) {
             /*  Retrieve the cart details from the items provided  */
-            $cart = ( new \App\MyCart() )->getCartDetails($merchant, $order['items']);
+            $cart = ( new \App\MyCart() )->getCartDetails($this->merchant, $orderInfo['items']);
         }
 
         /*
@@ -109,16 +114,16 @@ trait OrderTraits
         $template = [
             /*  Basic Info  */
             'number' => null,
-            'currency' => $merchant->currency,
+            'currency' => $this->merchant->currency,
             'created_date' => Carbon::now()->format('Y-m-d H:i:s'),
 
             /*  Item Info  */
             'item_lines' => $cart['items'] ?? null,
 
             /*  Taxes, Discounts & Coupons Info  */
-            'tax_lines' => $merchant->taxes ?? null,
-            'discount_lines' => $merchant->discounts ?? null,
-            'coupon_lines' => $merchant->coupons ?? null,
+            'tax_lines' => $this->merchant->taxes ?? null,
+            'discount_lines' => $this->merchant->discounts ?? null,
+            'coupon_lines' => $this->merchant->coupons ?? null,
 
             /*  Grand Total, Sub Total, Tax Total, Discount Total, Shipping Total  */
             'sub_total' => $cart['sub_total'] ?? 0,
@@ -140,44 +145,45 @@ trait OrderTraits
             'customer_id' => $customer->id ?? null,
             'billing_info' => $customer->getBillingInfo() ?? null,
             'shipping_info' => $customer->getShippingInfo() ?? null,
-            'customer_note' => $order['customer_note'] ?? null,
+            'customer_note' => $orderInfo['customer_note'] ?? null,
 
             /*  Merchant Info  */
-            'merchant_id' => $merchant->id ?? null,
-            'merchant_type' => $merchant->resource_type ?? null,
-            'merchant_info' => $merchant->getBasicInfo() ?? null,
+            'merchant_id' => $this->merchant->id ?? null,
+            'merchant_type' => $this->merchant->resource_type ?? null,
+            'merchant_info' => $this->merchant->getBasicInfo() ?? null,
 
             /*  Meta Data  */
-            'metadata' => isset($merchant) ? $this->getMetadataInfo($merchant) : null,
+            'metadata' => isset($this->merchant) ? $this->getMetadataInfo() : null,
         ];
 
         /*
-         *  Replace the default template with any custom data
+         *  Replace the default template with any custom data provided 
+         *  by the orderInfo
          */
-        $template = array_merge($template, $template_overide);
+        $template = array_merge($template, $orderInfoInfo);
 
         try {
             /*
              *  Create new a order, then retrieve a fresh instance
              */
-            $order = $this->create($template)->fresh();
+            $this->order = $this->create($template)->fresh();
 
             /*  If the order was created successfully  */
-            if ($order) {
+            if ($this->order) {
                 /*  Set the order number  */
-                $order->setOrderNumber();
+                $this->order->setOrderNumber();
 
                 /*  Record the activity of the the order creation  */
-                $activity = $order->recordActivity('created');
+                $activity = $this->order->recordActivity('created');
 
                 /*  Convert the order into a payable invoice  */
-                $invoice = $order->convertToInvoice($template);
+                $invoice = $this->order->convertToInvoice();
 
                 /*  Convert the order into a payable invoice  */
-                $status = $order->setStatusToPendingPayment();
+                $status = $this->order->setStatusToPendingPayment();
 
                 /*  Return a fresh instance of the order  */
-                return $order->fresh();
+                return $this->order->fresh();
             }
         } catch (\Exception $e) {
             //  Return the error
@@ -209,10 +215,10 @@ trait OrderTraits
      *  design and custom information defined by the order's owning
      *  merchant
      */
-    public function getMetadataInfo($merchant)
+    public function getMetadataInfo()
     {
         /*  Get the merchants order settings  */
-        $orderSettings = $merchant->settings['details']['orderTemplate'] ?? null;
+        $orderSettings = $this->merchant->settings['details']['orderTemplate'] ?? null;
 
         /*  If the merchants order settings were found  */
         if ($orderSettings) {
@@ -268,8 +274,8 @@ trait OrderTraits
 
     public function convertToInvoice($template)
     {
-        //  Create a new invoice
-        $invoice = ( new Invoice() )->initiateCreate($template);
+        //  Create a new invoice using this order details
+        $invoice = ( new Invoice() )->initiateCreate($invoiceInfo = $this);
 
         /*  If the invoice was created successfully  */
         if ($invoice) {
@@ -323,7 +329,7 @@ trait OrderTraits
         $order_number = 'Order #'.$order_number.', ';
         $items = 'for '.$items_inline;
         $amount = 'Amount: '.$currency.$grand_total.'.';
-        $dial = 'Dial '.config('app.MERCHANT_USSD_CODE').' to view order. Customer: '.$mobile_number;
+        $dial = 'Dial '.$this->merchant->team_access_code.' to view order. Customer: '.$mobile_number;
 
         $characters_left = ($character_limit - strlen($order_number.$amount.$dial));
         $summarized_items = $this->truncateWithDots($items.(strlen($items) < $characters_left ? '.' : ''), $characters_left);

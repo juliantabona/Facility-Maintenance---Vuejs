@@ -34,7 +34,7 @@ class User extends Authenticatable
         'first_name', 'last_name', 'gender', 'date_of_birth', 'bio',
 
         /*  Account Info  */
-        'password', 'verified', 'setup', 'account_type',
+        'password', 'setup', 'account_type',
 
         /*  Social Info  */
         'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link'
@@ -227,7 +227,7 @@ class User extends Authenticatable
      */
     public function accounts()
     {
-        return $this->morphedByMany('App\Account', 'owner', 'user_allocations');
+        return $this->morphedByMany('App\Account', 'owner', 'user_allocations')->withTimestamps();
     }
 
     /*
@@ -288,7 +288,7 @@ class User extends Authenticatable
      */
     public function stores()
     {
-        return $this->morphedByMany('App\Store', 'owner', 'user_allocations');
+        return $this->morphedByMany('App\Store', 'owner', 'user_allocations')->withTimestamps();
     }
 
     /*
@@ -367,15 +367,14 @@ class User extends Authenticatable
     /*  Attributes */
 
     protected $appends = [
-        'account_verified', 'email_verified', 'mobile_verified', 'profile_image', 'full_name',
+        'is_verified', 'is_email_verified', 'is_mobile_verified', 'profile_image', 'full_name',
         'phone_list', 'default_mobile', 'default_email', 'default_address', 'resource_type',
     ];
 
     /*
-     *  Returns true/false whether the account has a verified
-     *  mobile number
+     *  Returns true/false whether the user has a verified email
      */
-    public function getEmailVerifiedAttribute()
+    public function getIsEmailVerifiedAttribute()
     {
         $verified_emails_count = $this->emails()->verified()->count();
 
@@ -383,10 +382,9 @@ class User extends Authenticatable
     }
 
     /*
-     *  Returns true/false whether the account has a verified
-     *  mobile number
+     *  Returns true/false whether the user has a verified mobile number
      */
-    public function getMobileVerifiedAttribute()
+    public function getIsMobileVerifiedAttribute()
     {
         $verified_mobiles_count = $this->mobiles()->verified()->count();
 
@@ -394,13 +392,13 @@ class User extends Authenticatable
     }
 
     /*
-     *  Returns true/false whether the account is verified.
-     *  A verified account must contain atleast one verified
+     *  Returns true/false whether the user is verified.
+     *  A verified user must contain atleast one verified
      *  email or mobile number
      */
-    public function getAccountVerifiedAttribute()
+    public function getIsVerifiedAttribute()
     {
-        return ($this->email_verified || $this->mobile_verified) ? true : false;
+        return ($this->is_email_verified || $this->is_mobile_verified) ? true : false;
     }
 
     /*

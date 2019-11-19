@@ -46,7 +46,7 @@ class Contact extends Model
      */
     public function stores()
     {
-        return $this->morphedByMany('App\Store', 'owner', 'contact_allocations');
+        return $this->morphedByMany('App\Store', 'owner', 'contact_allocations')->withTimestamps();
     }
 
     /*

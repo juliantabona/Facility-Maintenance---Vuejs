@@ -70,10 +70,10 @@
                                 size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                     </td>
                     <td colspan="1" class="p-2">
-                        <span v-if="!editMode">{{ item.unit_price | currency(currencySymbol) || '___' }}</span>
+                        <span v-if="!editMode">{{ item.unit_regular_price | currency(currencySymbol) || '___' }}</span>
                         <el-input v-if="editMode" placeholder="e.g) 2,500.00" 
                                 type="text"  @keypress.native="isNumber($event)" :maxlength="10"
-                                v-model="localQuotation.items[i].unit_price" 
+                                v-model="localQuotation.items[i].unit_regular_price" 
                                 @input.native="updateSubAndGrandTotal()"
                                 size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                     </td>
@@ -306,7 +306,7 @@
                 this.localQuotation.calculated_taxes = this.runCalculateTaxes();
             },
             runGetTotal: function(){
-                var itemAmounts = (this.localQuotation.items || []).map(item => item.quantity * item.unit_price);
+                var itemAmounts = (this.localQuotation.items || []).map(item => item.quantity * item.unit_regular_price);
                 var total = itemAmounts.length ? itemAmounts.reduce(this.getSum): 0;
 
                 return total;
@@ -318,7 +318,7 @@
                 return  this.runGetTotal() + sumOfTaxAmounts;
             },
             getItemTotal: function(item){
-                return item.unit_price * item.quantity
+                return item.unit_regular_price * item.quantity
             },
             getSum(total, num) {
                 return total + num;
@@ -405,7 +405,7 @@
                         taxes: item.taxes,
                         purchasePrice: item.cost_per_item,
                         unit_sale_price: item.unit_sale_price,
-                        unit_price: item.unit_price,
+                        unit_regular_price: item.unit_regular_price,
                         quantity: 1
                     }
             },

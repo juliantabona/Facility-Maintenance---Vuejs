@@ -52,7 +52,7 @@ class Tax extends Model
      */
     public function products()
     {
-        return $this->morphedByMany('App\Product', 'owner', 'tax_allocations');
+        return $this->morphedByMany('App\Product', 'owner', 'tax_allocations')->withTimestamps();
     }
 
     /* 

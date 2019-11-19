@@ -38,7 +38,7 @@ class Cart {
         console.log(item);
 
         //  If we have a sale price then use the sale price otherwise use the regular price
-        var price = (item['unit_sale_price']) ? item['unit_sale_price'] : item['unit_price'];
+        var price = (item['unit_sale_price']) ? item['unit_sale_price'] : item['unit_regular_price'];
         var quantity = (item['quantity'] || 1);
         var sub_total = price * quantity;
         var tax_total = 0;
@@ -74,7 +74,7 @@ class Cart {
                 primary_image: item.primary_image || null,
                 name: item.name || '',
                 store_currency_symbol: item.store_currency_symbol || '',
-                unit_price: item.unit_price || 0,
+                unit_regular_price: item.unit_regular_price || 0,
                 unit_sale_price: item.unit_sale_price || 0,
                 quantity: quantity,
                 sub_total: sub_total || 0,
@@ -200,7 +200,7 @@ class Cart {
             for( var x=0; x < (this.cart.items || {}).length; x++){
                 
                 //  If we have a sale price then use the sale price otherwise use the regular price
-                var price = (this.cart.items[x]['unit_sale_price']) ? this.cart.items[x]['unit_sale_price'] : this.cart.items[x]['unit_price'];
+                var price = (this.cart.items[x]['unit_sale_price']) ? this.cart.items[x]['unit_sale_price'] : this.cart.items[x]['unit_regular_price'];
                 var quantity = (this.cart.items[x]['quantity'] || 1);
                 var item_total_price = (price * quantity);
 

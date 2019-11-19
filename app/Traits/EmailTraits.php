@@ -7,6 +7,7 @@ use App\Http\Resources\Emails as EmailsResource;
 
 trait EmailTraits
 {
+    private $email;
 
     /*  convertToApiFormat() method:
      *
@@ -41,22 +42,17 @@ trait EmailTraits
     /*  initiateCreate() method:
      *
      *  This method is used to create a new email.
+     *  The $emailInfo variable represents the  
+     *  email dataset provided
      */
-    public function initiateCreate( $template = null )
+    public function initiateCreate( $emailInfo = null )
     {
         /*
-         *  The $email variable represents the email dataset
-         *  provided through the request received.
+         *  The $template variable represents accepted structure of the
+         *  email data required to create a new resource.
          */
-        $email = request('email');
-
-        /*
-         *  The $template variable represents structure of the email.
-         *  If no template is provided, we create one using the 
-         *  request data.
-         */
-        $template = $template ?? [
-            'email' => $email['email'] ?? null
+        $template = [
+            'email' => $emailInfo['email'] ?? null
         ];
 
         try {
@@ -64,13 +60,13 @@ trait EmailTraits
             /*
              *  Create a new email, then retrieve a fresh instance
              */
-            $email = $this->create($template)->fresh();
+            $this->email = $this->create($template)->fresh();
 
             /*  If the email was created successfully  */
-            if( $email ){   
+            if( $this->email ){   
 
                 /*  Return a fresh instance of the email  */
-                return $email->fresh();
+                return $this->email->fresh();
 
             }
 

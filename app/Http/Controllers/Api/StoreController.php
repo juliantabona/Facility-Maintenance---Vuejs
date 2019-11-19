@@ -54,7 +54,7 @@ class StoreController extends Controller
 
             //  Check if the store was created
             if ($store) {
-                    
+                
                 //  Return an API Readable Format of the Store Instance
                 return $store->convertToApiFormat();
 
@@ -273,6 +273,37 @@ class StoreController extends Controller
                 //  Not Authourized
                 return oq_api_not_authorized();
                 
+            }
+        } else {
+
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
+    public function getStoreDefaultPhone($store_id)
+    {
+        //  Get the store
+        $store = Store::findOrFail($store_id);
+
+        //  Get the store default mobile
+        $phone = $store->default_mobile ?? null;
+
+        //  Check if the phone exists
+        if ($phone) {
+
+            //  Check if the user is authourized to view the store phone
+            if ($this->user->can('view', $store)) {
+
+                //  Return an API Readable Format of the Phone Instance
+                return $phone->convertToApiFormat();
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+
             }
         } else {
 

@@ -183,7 +183,7 @@ class Quotation extends Model
      */
     public function taxes()
     {
-        return $this->morphToMany('App\Tax', 'owner', 'tax_allocations');
+        return $this->morphToMany('App\Tax', 'owner', 'tax_allocations')->withTimestamps();
     }
 
     /* 
@@ -191,7 +191,7 @@ class Quotation extends Model
      */
     public function discounts()
     {
-        return $this->morphToMany('App\Discount', 'owner', 'discount_allocations');
+        return $this->morphToMany('App\Discount', 'owner', 'discount_allocations')->withTimestamps();
     }
 
     /* 
@@ -199,7 +199,7 @@ class Quotation extends Model
      */
     public function coupons()
     {
-        return $this->morphToMany('App\Coupon', 'owner', 'coupon_allocations');
+        return $this->morphToMany('App\Coupon', 'owner', 'coupon_allocations')->withTimestamps();
     }
 
     /* 

@@ -25,6 +25,12 @@ class Phone extends JsonResource
             'number' => $this->number,
             'provider' => $this->provider,
             'default' => $this->default,
+            'verified' => $this->verified,
+
+            /*  Attributes  */
+            'full_number' => $this->full_number,
+            'resource_type' => $this->resource_type,
+
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 
@@ -65,6 +71,14 @@ class Phone extends JsonResource
                                 default: null;
                             }
                         }
+                ,
+
+                //  Link to verify phone
+                'oq:verify' => [
+                    'href' => route('phone-verification', ['phone_id' => $this->id]),
+                    'title' => 'Verify this phone',
+                    'method' => 'POST',
+                ]
                 
             ],
 

@@ -240,9 +240,9 @@
                         title: 'Price',
                         sortable: true,
                         render: (h, params) => {
-                            var unit_price = (params.row.unit_price || 0) 
+                            var unit_regular_price = (params.row.unit_regular_price || 0) 
                             var symbol = ((params.row.currency_type || {}).currency || {}).symbol || '';
-                            return h('span', this.formatPrice(unit_price, symbol) );
+                            return h('span', this.formatPrice(unit_regular_price, symbol) );
                         }
                     });
                 }
@@ -270,7 +270,7 @@
                         title: 'Stock',
                         render: (h, params) => {
                             return h('span', 
-                                (params.row.has_inventory) ?
+                                (params.row.allow_stock_management) ?
                                     (params.row.stock_quantity) :
                                         'N/A'
                             );

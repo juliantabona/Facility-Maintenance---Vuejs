@@ -24,6 +24,23 @@
         top: 0;
     }
 
+    .ussd-content-container >>> .ussd-heading{
+        top: 2px;
+        z-index: 2;
+        color: #fff;
+        padding: 4px 10px;
+        position: relative;
+        border-radius: 5px 5px 0 0;
+    }
+
+    .ussd-content-container >>> .online{
+        background: #19be6b;
+    }
+
+    .ussd-content-container >>> .offline{
+        background: #ed4014;
+    }
+
     .ussd-content-container >>> .ussd-content{
         z-index:2;
     }
@@ -76,7 +93,7 @@
 
                         <Card>
 
-                            <span class="font-weight-bold d-block">Access My Store</span>
+                            <span class="font-weight-bold d-block">Access My Mobile Store</span>
 
                         </Card>
 
@@ -89,13 +106,24 @@
                             <span class="font-weight-bold d-block">Customer Simulator</span>
 
                             <p class="mt-2">
-                                <span class="d-block"><span class="font-weight-bold text-dark">1: </span>Dial <span class="font-weight-bold text-primary">*175*{{ ussdInterface.code }}#</span> to access your store</span>
-                                <span class="d-block"><span class="font-weight-bold text-dark">2: </span>Select Option (1) to start shopping</span>
+                                <span class="d-block">
+                                    Inform your customers to Dial 
+                                    <span class="font-weight-bold text-primary">{{ ussdInterface.customer_access_code}}</span> 
+                                     to visit your store on their mobile phones. Click <span class="font-weight-bold text-primary">Launch Simulator</span> 
+                                     to see how your customers view your store.
+                                </span>
                             </p>
 
                             <!-- Launch Simulator button -->
                             <div class="clearfix mt-2">
-                                <Button type="success" size="small" class="float-right" @click.native="launchCustomerSimulator()">Launch Simulator</Button>
+
+                                <Poptip trigger="hover" 
+                                        class="float-right"
+                                        placement="top-end"
+                                        word-wrap width="250" 
+                                        content="Launch Simulator to have a glimpse of what your customers see when visiting your store">
+                                    <Button type="success" size="small" @click.native="launchCustomerUssdSimulator()">Launch Simulator</Button>
+                                </Poptip>
                             </div>
 
                         </Card>
@@ -109,13 +137,23 @@
                             <span class="font-weight-bold d-block">Staff Simulator</span>
                             
                             <p class="mt-2">
-                                <span class="d-block"><span class="font-weight-bold text-dark">1: </span>Dial <span class="font-weight-bold text-primary">*185*{{ ussdInterface.code }}#</span> to access your store</span>
-                                <span class="d-block"><span class="font-weight-bold text-dark">2: </span>Login using Email/Mobile number and Password</span>
+                                <span class="d-block">
+                                    Inform your team to Dial 
+                                    <span class="font-weight-bold text-primary">{{ ussdInterface.team_access_code }}</span> 
+                                     to manage your store on their mobile phones. Click <span class="font-weight-bold text-primary">Launch Simulator</span> 
+                                     to see how your team view your store.
+                                </span>
                             </p>
 
                             <!-- Launch Simulator button -->
                             <div class="clearfix mt-2">
-                                <Button type="success" size="small" class="float-right" @click.native="launchStaffSimulator()">Launch Simulator</Button>
+                                <Poptip trigger="hover" 
+                                        class="float-right"
+                                        placement="top-end"
+                                        word-wrap width="250"
+                                        content="Launch Simulator to have a glimpse of what your team members see when visiting your store">
+                                    <Button type="success" size="small" @click.native="launchStaffUssdSimulator()">Launch Simulator</Button>
+                                </Poptip>
                             </div>
 
                         </Card>
@@ -127,10 +165,19 @@
             </div>
 
             <!-- Ussd info goes here -->
-            <div v-if="showUssdContentModal" class="ussd-content-container">
+            <div v-show="showUssdContentModal" class="ussd-content-container">
+                    
+                <Poptip trigger="hover" :content="liveModeStatusMsg" word-wrap width="300">
+                        
+                    <span :class="'ussd-heading' + (ussdInterface.live_mode ? ' online' : ' offline')">
+                        <span>Your store is {{ (ussdInterface.live_mode ? 'Online' : 'Offline') }}</span>
+                    </span>
+
+                </Poptip>
 
                 <Card :bordered="false" class="ussd-content">
-                    <template v-if="!isSendingUssdResponse">
+
+                    <div v-show="!isSendingUssdResponse">
 
                         <!-- Ussd response goes here -->
                         <div>
@@ -138,18 +185,30 @@
                         </div>
 
                         <!-- Ussd reply button -->
-                        <el-input type="text" v-model="ussd_reply" size="small" class="w-100 mt-2" placeholder="Reply..."></el-input>
+                        <el-input 
+                            ref="reply_input"
+                            type="text" v-model="ussd_reply" size="small" 
+                            class="w-100 mt-2" placeholder="Reply..."
+                            @keyup.enter.native="handleUssdReply()"
+                            @keyup.escape.native="closeUssdSimulator()">
+                        </el-input>
 
                         <!-- Send/Cancel buttons -->
                         <div class="clearfix mt-2">
-                            <Button type="error" size="large" class="float-right" @click="handleUssdReply()">Send</Button>
-                            <Button type="default" size="large" @click="showUssdContentModal = false" class="float-right mr-2">Cancel</Button>
+                                        
+                            <Poptip trigger="hover" content="Press ENTER on keyboard" class="float-right" placement="bottom-end" word-wrap width="220">
+                                <Button type="success" size="large" @click="handleUssdReply()">Send</Button>
+                            </Poptip>
+                                        
+                            <Poptip trigger="hover" content="Press ESC on keyboard" class="float-right mr-2" placement="bottom" word-wrap width="200">
+                                <Button type="default" size="large" @click="closeUssdSimulator()">Cancel</Button>
+                            </Poptip>
                         </div>
 
-                    </template>
+                    </div>
 
                     <!-- Loader -->
-                    <Loader v-if="isSendingUssdResponse" :loading="true" type="text" class="text-left mt-2">{{ ussdLoaderText }}</Loader>
+                    <Loader v-show="isSendingUssdResponse" :loading="true" type="text" class="text-left mt-2">{{ ussdLoaderText }}</Loader>
 
                 </Card>
 
@@ -195,44 +254,59 @@
                 ussd_reply: '',
                 ussdResponse: '',
                 phoneNumber: '+26700000000',
-                showUssdContentModal: true,
-                isSendingUssdResponse: false,
-
-                showMobileStoreInfo: false,
-                showStaffAccessInstructions: false,
-                showCustomerAccessInstructions: false
+                showUssdContentModal: false,
+                isSendingUssdResponse: false
             }
         },
-
+        computed: {
+            liveModeStatusMsg(){
+                if( this.ussdInterface.live_mode == true ){
+                    return 'This means that your Mobile Store is Online and can be accessed by your customers using their mobile phones.';
+                }else{
+                    return 'This means that your Mobile Store is Offline and can\'t be accessed by your customers. Turn on Live Mode to allow '+
+                           'your customers to start paying for your goods/services';
+                }
+            }  
+        },
         methods: {
             showUssdPopup(){
                 this.showUssdContentModal = true;
+                this.focusOnReplyInput();
             },
             hideUssdPopup(){
                 this.showUssdContentModal = false;
             },
-            launchCustomerSimulator(){
+            launchCustomerUssdSimulator(){
                 this.resetUssdSimulator();
                 this.ussd_reply = '1*'+this.ussdInterface.code;
                 this.handleUssdReply();
                 this.showUssdPopup();
             },
-            launchStaffSimulator(){
+            launchStaffUssdSimulator(){
                 this.resetUssdSimulator();
                 this.ussd_reply = '1*'+this.ussdInterface.code;
                 this.handleUssdReply();
                 this.showUssdPopup();
+            },
+            closeUssdSimulator(){
+                this.resetUssdSimulator();
+                this.hideUssdPopup();
+            },
+            focusOnReplyInput(){
+
+                this.$refs.reply_input.$refs.input.focus();
+
             },
             resetUssdSimulator(){
                 this.ussd_reply = '';
                 this.ussd_text = '';
             },
-            handleUssdReply() {
+            handleUssdReply(reply=null) {
 
                 if( this.ussd_text == '' ){
-                    this.ussd_text += this.ussd_reply;
+                    this.ussd_text += (reply || this.ussd_reply);
                 }else{
-                    this.ussd_text += '*'+this.ussd_reply;
+                    this.ussd_text += '*'+(reply || this.ussd_reply);;
                 }
 
                 this.ussd_reply = '';
@@ -250,26 +324,22 @@
                 };
 
                 self.isSendingUssdResponse = true;
-                
-                console.log( self.postURL );
-                console.log( ussdData );
 
                 //  Use the api call() function located in resources/js/api.js
                 return api.call('post', self.postURL, ussdData)
                     .then(({data}) => {
-
-                        console.log(data);
 
                         self.ussdResponse = data.substr(4);
 
                         /*  If the first 3 characters equal the text "END"  */
                         if( data.substr(3) == 'END' ){
 
-                            /*  Reset the simulator  */ 
-                            this.resetUssdSimulator();
+                            /*  Close the simulator  */ 
+                            self.closeUssdSimulator()
 
-                            /*  Hide the Ussd Popup  */
-                            this.hideUssdPopup();
+                        }else{ 
+
+                            self.focusOnReplyInput();
 
                         }
 
@@ -288,10 +358,6 @@
 
             }
 
-        },
-
-        created(){
-            this.callUssdEndpoint();
         }
 
     }

@@ -143,7 +143,53 @@ class PhoneController extends Controller
         }
     }
 
+    /*********************************
+     *  VERIFICATION ACTION          *
+    *********************************/
 
+    public function verifyPhone( Request $request, $phone_id )
+    {
+        //  Get the specified verification token
+        $token = $request->input('token');
+
+        //  Get the verification 
+        $phone = Phone::findOrFail($phone_id);
+
+        //  Get the matching verification token
+        $verification = $phone->verification ?? null;
+        
+        //  Check if the user is authourized to verify the phone
+        if ($this->user->can('verify', $phone)) {
+
+            //  Check if the wallet exists
+            if ($verification->token == $token) {
+
+                $verified = $phone->update([
+
+                    'verified' => true
+                    
+                ]);
+
+                /*  Delete the verification  */
+                $verification->delete();
+
+                //  Return true for verified
+                return oq_api_notify(['verification_status' => true], $status = 200);
+
+            }else{
+            
+                //  Return false for not verified
+                return oq_api_notify(['verification_status' => false], $status = 200);
+    
+            }
+
+        } else {
+
+            //  Not Authourized
+            return oq_api_not_authorized();
+
+        }
+    }
 
     /*
     public function index(Request $request)

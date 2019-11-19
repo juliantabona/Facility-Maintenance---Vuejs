@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Tax;
 use App\User;
 use App\Order;
+use App\Phone;
 use App\Store;                                                                                                        
 use App\Coupon;   
 use App\Account;
@@ -16,6 +17,7 @@ use App\UssdInterface;
 use App\Policies\TaxPolicy;
 use App\Policies\UserPolicy;
 use App\Policies\OrderPolicy;
+use App\Policies\PhonePolicy;
 use App\Policies\StorePolicy;
 use App\Policies\CouponPolicy;
 use Laravel\Passport\Passport;
@@ -38,6 +40,7 @@ class AuthServiceProvider extends ServiceProvider
         Tax::class => TaxPolicy::class,
         User::class => UserPolicy::class,
         Order::class => OrderPolicy::class,
+        Phone::class => PhonePolicy::class,
         Store::class => StorePolicy::class,
         Coupon::class => CouponPolicy::class,
         Account::class => AccountPolicy::class,

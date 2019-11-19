@@ -4,7 +4,8 @@ function getFormFields() {
         name: null,
         call_to_action: null,
         contact_us: null,
-        about_us: null
+        about_us: null,
+        live_mode: null
     }
 }
 
@@ -69,7 +70,8 @@ export default {
                 name: self.formData.name,
                 call_to_action: self.formData.call_to_action,
                 contact_us: self.formData.contact_us,
-                about_us: self.formData.about_us
+                about_us: self.formData.about_us,
+                live_mode: self.formData.live_mode
             };
 
             console.log(updateData);
@@ -96,6 +98,8 @@ export default {
 
                             //  Store the current form data as the original form
                             self.storeOriginalFormData();
+
+                            self.formHasChanged = self.checkIfFormHasChanged();
 
 
                         },10);

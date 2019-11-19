@@ -35,7 +35,6 @@ class user extends JsonResource
             'bio' => $this->bio,
 
             /*  Basic Info  */
-            'verified' => $this->verified,
             'setup' => $this->setup,
             'account_type' => $this->account_type,
             
@@ -47,6 +46,17 @@ class user extends JsonResource
                 'instagram_link' => $this->instagram_link,
                 'youtube_link' => $this->youtube_link,
             ],
+
+            /*  Attributes  */
+            'full_name' => $this->full_name,
+            'phone_list' => $this->phone_list, 
+            'default_email' => $this->default_email, 
+            'default_mobile' => $this->default_mobile, 
+            'default_address' => $this->default_address, 
+            'is_verified' => $this->is_verified,
+            'is_email_verified' => $this->is_email_verified,
+            'is_mobile_verified' => $this->is_mobile_verified,
+            'resource_type' => $this->resource_type,
 
             /*  Timestamp Info  */
             'created_at' => $this->created_at,
@@ -174,18 +184,6 @@ class user extends JsonResource
             /*  Embedded Resources */
             '_embedded' => [
 
-                'attributes' => [
-                    'full_name' => $this->full_name,
-                    'phone_list' => $this->phone_list, 
-                    'default_email' => $this->default_email, 
-                    'default_mobile' => $this->default_mobile, 
-                    'default_address' => $this->default_address, 
-                    'account_verified' => $this->account_verified, 
-                    'mobile_verified' => $this->mobile_verified, 
-                    'email_verified' => $this->email_verified, 
-                    'resource_type' => $this->resource_type
-                ],
-                
                 //  The users profile picture
                 'profile_image' => $this->when(!empty($this->profile_image),
                     (new DocumentResource($this->profile_image))

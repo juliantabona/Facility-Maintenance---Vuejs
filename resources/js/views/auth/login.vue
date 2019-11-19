@@ -308,7 +308,7 @@ export default {
 
                             //  Save token and user
                             //  Include token in all further axios api calls
-                            auth.login(token, user);
+                            auth.login(token);
 
                             console.log('Go to overview...');
 

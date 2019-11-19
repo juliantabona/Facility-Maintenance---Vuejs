@@ -48,6 +48,23 @@ class Phone extends Model
         return $query->where('verified', 1);
     }
 
+    /*  
+     *  Returns a verification token associated with this phone
+     */
+
+    public function verification()
+    {
+        return $this->morphOne('App\Verification', 'owner');
+    }
+
+    /* 
+     *  Checks if a given user is an admin to the store
+     */
+    public function isMobileNumber()
+    {
+        return ( $this->type == 'mobile' ) ? true : false;
+    }
+
     /* 
      *  Returns the owner of the phone
      */

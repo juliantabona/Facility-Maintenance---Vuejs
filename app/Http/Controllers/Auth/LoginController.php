@@ -61,8 +61,8 @@ class LoginController extends Controller
      */
     protected function authenticated(Request $request, $user)
     {
-        //  Check if the user verified their account
-        if (!$user->account_verified) {
+        //  Check if the user is verified
+        if (!$user->is_verified) {
             //  If this is an API Request
             if (oq_viaAPI($request)) {
                 return oq_api_notify([

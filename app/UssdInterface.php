@@ -19,6 +19,15 @@ class UssdInterface extends Model
     use UssdInterfaceTraits;
 
     /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $casts = [
+        'live_mode' => 'boolean', //  Return the following 1/0 as true/false
+    ];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array
@@ -26,7 +35,7 @@ class UssdInterface extends Model
     protected $fillable = [
 
         /*  Basic Info  */
-        'name', 'about_us', 'contact_us', 'call_to_action', 'code',
+        'name', 'about_us', 'contact_us', 'call_to_action', 'code', 'live_mode',
 
         /*  Ownership Info  */
         'owner_id', 'owner_type'
@@ -50,7 +59,7 @@ class UssdInterface extends Model
      */
      public function products()
      {
-        return $this->morphToMany('App\Product', 'owner', 'product_allocations');
+        return $this->morphToMany('App\Product', 'owner', 'product_allocations')->withTimestamps()->orderBy('product_allocations.arrangement');
      }
  
      /* 
@@ -64,8 +73,24 @@ class UssdInterface extends Model
      /* ATTRIBUTES */
  
      protected $appends = [
-         'resource_type'
+        'customer_access_code', 'team_access_code', 'resource_type'
      ];
+ 
+     /* 
+      *  Returns the resource type
+      */
+     public function getCustomerAccessCodeAttribute()
+     {
+        return '*'.config('app.CUSTOMER_USSD_CODE').'*'.$this->code.'#';
+     }
+ 
+     /* 
+      *  Returns the resource type
+      */
+     public function getTeamAccessCodeAttribute()
+     {
+        return '*'.config('app.MERCHANT_USSD_CODE').'*'.$this->code.'#';
+     }
  
      /* 
       *  Returns the resource type
@@ -74,6 +99,10 @@ class UssdInterface extends Model
      {
          return strtolower(class_basename($this));
      }
- 
+
+     public function setLiveModeAttribute($value)
+     {
+         $this->attributes['live_mode'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
+     }
  }
  

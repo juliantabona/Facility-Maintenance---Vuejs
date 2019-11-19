@@ -38,6 +38,8 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 trait InvoiceTraits
 {
+    private $merchant;
+
     /*  convertToApiFormat() method:
      *
      *  Converts to the appropriate Api Response Format
@@ -70,48 +72,49 @@ trait InvoiceTraits
 
     /*  initiateCreate() method:
      *
-     *  This method is used to create a new invoice.
+     *  This method is used to create a new interface.
+     *  The $invoiceInfo variable represents the  
+     *  invoice dataset provided
      */
-    public function initiateCreate( $template_overide = [] )
+    public function initiateCreate( $invoiceInfo = null )
     {
         /*
-         *  The $invoice variable represents the invoice dataset
-         *  provided through the request received.
+         *  The $invoiceInfo variable represents accepted structure of the USSD 
+         *  Interface data required to create a new resource.
          */
-        $invoice = $template_overide ?? request('invoice');
 
         /*  If we have the merchant id  */
-        if( $invoice['merchant_id'] ){
+        if ($invoiceInfo['merchant_id']) {
 
             /*  Retrieve the merchant details using the merchant id  */
-            $merchant = Store::find( $invoice['merchant_id'] );
+            $this->merchant = Store::find($invoiceInfo['merchant_id']);
 
         }
 
         /*  If we have the customer contact id  */
-        if( isset($invoice['customer_id']) && !empty($invoice['customer_id']) ){
+        if( isset($invoiceInfo['customer_id']) && !empty($invoiceInfo['customer_id']) ){
 
             /*  Retrieve the customer contact details from the existing merchant contacts  */
-            $customer = $merchant->findContactById( $invoice['customer_id'] );
+            $customer = $this->merchant->findContactById( $invoiceInfo['customer_id'] );
 
         /*  If we have the customer contact information  */
-        }elseif( isset($invoice['customer_info']) && !empty($invoice['customer_info']) ){
+        }elseif( isset($invoiceInfo['customer_info']) && !empty($invoiceInfo['customer_info']) ){
 
             /*  Create a new customer contact  */
-            $customer = $merchant->createContact( $invoice['customer_info'] );
+            $customer = $this->merchant->createContact( $invoiceInfo['customer_info'] );
         }
 
         /*  If we have the reference contact id  */
-        if( isset($invoice['reference_id']) && !empty($invoice['reference_id']) ){
+        if( isset($invoiceInfo['reference_id']) && !empty($invoiceInfo['reference_id']) ){
 
             /*  Retrieve the reference contact details from the existing merchant contacts  */
-            $reference = $merchant->findContactById( $invoice['reference_id'] );
+            $reference = $this->merchant->findContactById( $invoiceInfo['reference_id'] );
 
         /*  If we have the reference contact information  */
-        }elseif( isset($invoice['reference_info']) && !empty($invoice['reference_info']) ){
+        }elseif( isset($invoiceInfo['reference_info']) && !empty($invoiceInfo['reference_info']) ){
 
             /*  Create a new reference contact  */
-            $reference = $merchant->createContact( $invoice['reference_info'] );
+            $reference = $this->merchant->createContact( $invoiceInfo['reference_info'] );
 
         /*  If we do not have any reference related information  */
         }else{
@@ -122,10 +125,10 @@ trait InvoiceTraits
         }
 
         /*  If we have the cart items  */
-        if( isset($invoice['items']) && !empty($invoice['items']) ){
+        if( isset($invoiceInfo['items']) && !empty($invoiceInfo['items']) ){
 
             /*  Retrieve the cart details from the items provided  */
-            $cart = ( new \App\MyCart() )->getCartDetails( $merchant, $invoice['items'] );
+            $cart = ( new \App\MyCart() )->getCartDetails( $this->merchant, $invoiceInfo['items'] );
 
         }
 
@@ -138,7 +141,7 @@ trait InvoiceTraits
 
             /*  Basic Info  */
             'number' => null,
-            'currency' => $merchant->currency ?? null,
+            'currency' => $this->merchant->currency ?? null,
             'created_date' => Carbon::now()->format('Y-m-d H:i:s'),
             'expiry_date' =>  Carbon::now()->format('Y-m-d H:i:s'),
 
@@ -146,9 +149,9 @@ trait InvoiceTraits
             'item_lines' => $cart['items'] ?? null,
 
             /*  Taxes, Discounts & Coupons Info  */
-            'tax_lines' => $merchant->taxes ?? null,
-            'discount_lines' => $merchant->discounts ?? null,
-            'coupon_lines' => $merchant->coupons ?? null,
+            'tax_lines' => $this->merchant->taxes ?? null,
+            'discount_lines' => $this->merchant->discounts ?? null,
+            'coupon_lines' => $this->merchant->coupons ?? null,
 
             /*  Grand Total, Sub Total, Tax Total, Discount Total, Shipping Total  */
             'sub_total' => $cart['sub_total'] ?? 0,
@@ -170,41 +173,41 @@ trait InvoiceTraits
             'customer_id' => $customer->id ?? null,
             'billing_info' => $customer->getBillingInfo() ?? null,
             'shipping_info' => $customer->getShippingInfo() ?? null,
-            'customer_note' => $invoice['customer_note'] ?? null,
+            'customer_note' => $invoiceInfo['customer_note'] ?? null,
 
             /*  Merchant Info  */
-            'merchant_id' => $merchant->id ?? null,
-            'merchant_type' => $merchant->resource_type ?? null,
-            'merchant_info' => $merchant->getBasicInfo() ?? null,
+            'merchant_id' => $this->merchant->id ?? null,
+            'merchant_type' => $this->merchant->resource_type ?? null,
+            'merchant_info' => $this->merchant->getBasicInfo() ?? null,
 
             /*  Meta Data  */
-            'metadata' => isset($merchant) ? $this->getMetadataInfo($merchant) : null
+            'metadata' => isset($this->merchant) ? $this->getMetadataInfo() : null
 
         ];
 
         /*
          *  Replace the default template with any custom data
          */
-        $template = array_merge($template, $template_overide);
+        $template = array_merge($template, $invoiceInfo);
 
         try {
 
             /*
              *  Create new a invoice, then retrieve a fresh instance
              */
-            $invoice = $this->create($template)->fresh();
+            $this->invoice = $this->create($template)->fresh();
 
             /*  If the invoice was created successfully  */
-            if( $invoice ){
+            if( $this->invoice ){
 
                 /*  Set the invoice number  */
-                $invoice->setInvoiceNumber();
+                $this->invoice->setInvoiceNumber();
 
                 /*  Record the activity of the the invoice creation  */
-                $activity = $invoice->recordActivity('created');
+                $activity = $this->invoice->recordActivity('created');
   
                 /*  Return a fresh instance of the invoice  */
-                return $invoice->fresh();
+                return $this->invoice->fresh();
 
             }
 
@@ -219,16 +222,16 @@ trait InvoiceTraits
 
     /*  getMetadataInfo()
      *
-     *  This method returns the metadata template that contains order
-     *  design and custom information defined by the orders owning
+     *  This method returns the metadata template that contains invoice
+     *  design and custom information defined by the invoices owning
      *  merchant
      */
-    public function getMetadataInfo( $merchant )
+    public function getMetadataInfo()
     {
-        /*  Get the merchants order settings  */
-        $invoiceSettings = $merchant->settings['details']['invoiceTemplate'] ?? null;
+        /*  Get the merchants invoice settings  */
+        $invoiceSettings = $this->merchant->settings['details']['invoiceTemplate'] ?? null;
 
-        /*  If the merchants order settings were found  */
+        /*  If the merchants invoice settings were found  */
         if( $invoiceSettings ){
          
             $template = [
@@ -316,7 +319,7 @@ trait InvoiceTraits
         $items = 'for '.$items_inline;
         $amount = 'Amount: '.$currency.$grand_total.' ';
         $due_date = 'due '.$expiry_date.'.';
-        $dial = 'Dial '.config('app.CUSTOMER_USSD_CODE').' to pay';
+        $dial = 'Dial '.$this->merchant->customer_access_code.' to pay';
 
         $characters_left = ($character_limit - strlen($invoice_number.$amount.$due_date.$dial));
         $summarized_items = $this->truncateWithDots($items.(strlen($items) < $characters_left ? '.' : ''), $characters_left);
@@ -372,7 +375,7 @@ trait InvoiceTraits
         $order_number = ($order_number) ? ', Order #'.$order_number.' ' : ' ';
         $items = 'for '.$items_inline;
         $amount = 'Amount: '.$currency.$grand_total.'.';
-        $dial = 'Dial '.config('app.CUSTOMER_USSD_CODE').' to view orders, invoices & reciepts';
+        $dial = 'Dial '.$this->merchant->customer_access_code.' to view order';
 
         $characters_left = ($character_limit - strlen($invoice_number.$order_number.$amount.$dial));
         $summarized_items = $this->truncateWithDots($items.(strlen($items) < $characters_left ? '.' : ''), $characters_left);

@@ -51,7 +51,7 @@ class Discount extends Model
      */
     public function products()
     {
-        return $this->morphedByMany('App\Product', 'owner', 'discount_allocations');
+        return $this->morphedByMany('App\Product', 'owner', 'discount_allocations')->withTimestamps();
     }
 
     /* 

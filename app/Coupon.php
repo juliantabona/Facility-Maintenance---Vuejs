@@ -60,7 +60,7 @@ class Coupon extends Model
      */
     public function products()
     {
-        return $this->morphedByMany('App\Product', 'owner', 'coupon_allocations');
+        return $this->morphedByMany('App\Product', 'owner', 'coupon_allocations')->withTimestamps();
     }
 
     /* 

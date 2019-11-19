@@ -2,11 +2,14 @@
 
 namespace App\Traits;
 
+use Twilio as Twilio;
 use App\Http\Resources\Phone as PhoneResource;
 use App\Http\Resources\Phones as PhonesResource;
 
 trait PhoneTraits
 {
+    private $phone;
+    private $verification;
 
     /*  convertToApiFormat() method:
      *
@@ -41,25 +44,20 @@ trait PhoneTraits
     /*  initiateCreate() method:
      *
      *  This method is used to create a new phone.
+     *  The $phoneInfo variable represents the  
+     *  phone dataset provided
      */
-    public function initiateCreate( $template = null )
+    public function initiateCreate( $phoneInfo = null )
     {
         /*
-         *  The $phone variable represents the phone dataset
-         *  provided through the request received.
+         *  The $template variable represents accepted structure of the
+         *  phone data required to create a new resource.
          */
-        $phone = request('phone');
-
-        /*
-         *  The $template variable represents structure of the phone.
-         *  If no template is provided, we create one using the 
-         *  request data.
-         */
-        $template = $template ?? [
-            'type' => $phone['type'] ?? null,
-            'calling_code' => $phone['calling_code'] ?? null,
-            'number' => $phone['number'] ?? null,
-            'provider' => $phone['provider'] ?? null
+        $template = [
+            'type' => $phoneInfo['type'] ?? null,
+            'calling_code' => $phoneInfo['calling_code'] ?? null,
+            'number' => $phoneInfo['number'] ?? null,
+            'provider' => $phoneInfo['provider'] ?? null
         ];
 
         try {
@@ -67,13 +65,27 @@ trait PhoneTraits
             /*
              *  Create a new phone, then retrieve a fresh instance
              */
-            $phone = $this->create($template)->fresh();
+            $this->phone = $this->create($template)->fresh();
 
             /*  If the phone was created successfully  */
-            if( $phone ){   
+            if( $this->phone ){   
+
+                
+                /*  If we have the verify property has been set on this phone */
+                if( isset($phoneInfo['verify_number']) && ($phoneInfo['verify_number'] == 'true' || $phoneInfo['verify_number'] == '1') ){
+                    
+                    /*  If the phone number is a mobile number */
+                    if( $this->phone->isMobileNumber() ){
+
+                        /*  Send a verification SMS  */
+                        $this->phone->createAndSendVerificationSMS();
+
+                    }
+                    
+                }
 
                 /*  Return a fresh instance of the phone  */
-                return $phone->fresh();
+                return $this->phone->fresh();
 
             }
 
@@ -85,6 +97,88 @@ trait PhoneTraits
         }
 
     }
+
+    /*  createAndSendVerificationSMS() method:
+     *
+     *  This method is used to create and send a verification
+     *  token to the current phone number in order to verify
+     *  the ownership of the phone number
+     */
+    public function createAndSendVerificationSMS()
+    {
+        /*  Create a new verification code using the initiateCreate() method from the PhoneTraits  */
+        $this->verification = ( new \App\Verification() )->initiateCreate();
+        
+        /*  If the verifiation token was created successfully  */
+        if( $this->verification ){
+
+            /*  Assign the new verification to the phone  */
+            $this->verification->update([
+                'owner_id' => $this->id, 
+                'owner_type' => $this->resource_type
+            ]);
+
+            /*  Send the verify phone SMS */   
+            $this->sendVerificationSMS();
+
+        }
+    }
+
+    /*  sendVerificationSMS() method:
+     *
+     *  This method is used to send the current phone number 
+     *  a verification token to verify the ownership of this
+     *  phone number
+     */
+    public function sendVerificationSMS()
+    {
+        /*  Send verification sms to current phone number  */
+        return Twilio::message('+'.$this->calling_code.$this->number, $this->createVerificationSms());
+    }
+
+    public function createVerificationSms()
+    {
+        /*  Set the character limit  */
+        $character_limit = 160;
+
+        /*  Get the verification token  */
+        $verification_token = $this->verification->token;
+
+        /*  Craft the sms message  */
+        $verification_msg = 'Your 6 digit verification code is '.$verification_token.'. Use this code to verify that you own this mobile number. Thank you';
+
+        /*  Return the sms message  */
+        return $verification_msg;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

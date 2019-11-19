@@ -73,7 +73,7 @@ class Category extends Model
      */
     public function stores()
     {
-        return $this->morphedByMany('App\Store', 'owner', 'category_allocations');
+        return $this->morphedByMany('App\Store', 'owner', 'category_allocations')->withTimestamps();
     }
 
     /*
@@ -81,7 +81,7 @@ class Category extends Model
      */
     public function products()
     {
-        return $this->morphedByMany('App\Product', 'owner', 'category_allocations');
+        return $this->morphedByMany('App\Product', 'owner', 'category_allocations')->withTimestamps();
     }
 
     /*
@@ -89,7 +89,7 @@ class Category extends Model
      */
     public function jobcards()
     {
-        return $this->morphedByMany('App\Jobcard', 'owner', 'category_allocations');
+        return $this->morphedByMany('App\Jobcard', 'owner', 'category_allocations')->withTimestamps();
     }
 
     /*
@@ -97,7 +97,7 @@ class Category extends Model
      */
     public function appointments()
     {
-        return $this->morphedByMany('App\Appointment', 'owner', 'category_allocations');
+        return $this->morphedByMany('App\Appointment', 'owner', 'category_allocations')->withTimestamps();
     }
 
     /* 

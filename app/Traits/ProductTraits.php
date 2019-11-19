@@ -333,15 +333,15 @@ trait ProductTraits
             
             //  Pricing details
             'cost_per_item' => request('cost_per_item') ?? 0,
-            'unit_price' => request('unit_price') ?? 0,
+            'unit_regular_price' => request('unit_regular_price') ?? 0,
             'unit_sale_price' => request('unit_sale_price') ?? 0,
 
             //  Inventory & Tracking details
             'sku' => request('sku') ?? null,
             'barcode' => request('barcode') ?? null,
             'stock_quantity' => request('stock_quantity') ?? null,
-            'has_inventory' => request('has_inventory'),
-            'auto_track_inventory' => request('auto_track_inventory'),
+            'allow_stock_management' => request('allow_stock_management'),
+            'auto_manage_stock' => request('auto_manage_stock'),
             
             //  Variant details
             'variants' => request('variants') ?? null,
@@ -538,15 +538,15 @@ trait ProductTraits
             
             //  Pricing details
             'cost_per_item' => request('cost_per_item') ?? 0,
-            'unit_price' => request('unit_price') ?? 0,
+            'unit_regular_price' => request('unit_regular_price') ?? 0,
             'unit_sale_price' => request('unit_sale_price') ?? 0,
 
             //  Inventory & Tracking details
             'sku' => request('sku') ?? null,
             'barcode' => request('barcode') ?? null,
             'stock_quantity' => request('stock_quantity') ?? null,
-            'has_inventory' => request('has_inventory'),
-            'auto_track_inventory' => request('auto_track_inventory'),
+            'allow_stock_management' => request('allow_stock_management'),
+            'auto_manage_stock' => request('auto_manage_stock'),
             
             //  Variant details
             'variants' => request('variants') ?? null,

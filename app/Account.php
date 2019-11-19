@@ -134,7 +134,7 @@ class Account extends Model
      */
     public function contacts()
     {
-        return $this->morphToMany('App\Contact', 'owner', 'contact_allocations');
+        return $this->morphToMany('App\Contact', 'owner', 'contact_allocations')->withTimestamps();
     }
 
     public function customerContacts()
@@ -176,7 +176,7 @@ class Account extends Model
      */
     public function users()
     {
-        return $this->morphToMany('App\User', 'owner', 'user_allocations');
+        return $this->morphToMany('App\User', 'owner', 'user_allocations')->withTimestamps();
     }
 
     /* 

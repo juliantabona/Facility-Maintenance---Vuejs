@@ -17,6 +17,7 @@ use App\Http\Resources\Stores as StoresResource;
 
 trait StoreTraits
 {
+    private $store;
 
     /*  convertToApiFormat() method:
      *
@@ -56,17 +57,10 @@ trait StoreTraits
     public function initiateCreate( $storeInfo = null )
     {
         /*
-         *  The $store variable represents the store dataset
-         *  provided through the request received.
+         *  The $template variable represents accepted structure of the store 
+         *  data required to create a new resource.
          */
-        $storeInfo = $storeInfo ?? request('store');
-
-        /*
-         *  The $template variable represents structure of the store.
-         *  If no template is provided, we create one using the 
-         *  request data.
-         */
-        $template = $template ?? [
+        $template = [
             'name' => $storeInfo['name'] ?? null
         ];
 
@@ -75,16 +69,22 @@ trait StoreTraits
             /*
              *  Create a new store, then retrieve a fresh instance
              */
-            $store = $this->create($template)->fresh();
+            $this->store = $this->create($template)->fresh();
 
             /*  If the store was created successfully  */
-            if( $store ){
+            if( $this->store ){
+
+                /*  Create a new Ussd Interface  */
+                $this->store->createUssdInterface();
+
+                /*  Add the user to the store as an admin  */
+                $this->store->addAdmin( $user = auth('api')->user() );
 
                 /*  If we have only one address  */
                 if( isset($storeInfo['address']) ){
 
                     /*  Create a new address  */
-                    $store->createAddress( $storeInfo['address'] );
+                    $this->store->createAddress( $storeInfo['address'] );
 
                 /*  If we have many addresses  */
                 }elseif( isset($storeInfo['addresses']) ){
@@ -93,7 +93,7 @@ trait StoreTraits
                     foreach( $storeInfo['addresses'] as $address){
 
                         /*  Create a new address  */
-                        $store->createAddress( $address );
+                        $this->store->createAddress( $address );
 
                     }
 
@@ -103,7 +103,7 @@ trait StoreTraits
                 if( isset($storeInfo['phone']) ){
                     
                     /*  Create a new phone  */
-                    $store->createPhone( $storeInfo['phone'] );
+                    $this->store->createPhone( $storeInfo['phone'], $requires_verification = true );
 
                 /*  If we have many phones  */
                 }elseif( isset($storeInfo['phones']) ){
@@ -112,7 +112,7 @@ trait StoreTraits
                     foreach( $storeInfo['phones'] as $phone){
 
                         /*  Create a new phone  */
-                        $store->createPhone( $phone );
+                        $this->store->createPhone( $phone, $requires_verification = true );
 
                     }
 
@@ -122,7 +122,7 @@ trait StoreTraits
                 if( isset($storeInfo['email']) ){
 
                     /*  Create a new email  */
-                    $store->createEmail( $storeInfo['email'] );
+                    $this->store->createEmail( $storeInfo['email'] );
 
                 /*  If we have many emails  */
                 }elseif( isset($storeInfo['emails']) ){
@@ -131,14 +131,14 @@ trait StoreTraits
                     foreach( $storeInfo['emails'] as $email){
 
                         /*  Create a new email  */
-                        $store->createEmail( $email );
+                        $this->store->createEmail( $email );
 
                     }
 
                 }   
 
                 /*  Return a fresh instance of the store  */
-                return $store->fresh();
+                return $this->store->fresh();
 
             }
 
@@ -151,6 +151,45 @@ trait StoreTraits
 
     }
 
+    public function addAdmin($user=null)
+    {   
+        /*  If we have a user provided */
+        if($user){
+            
+            $isAdmin = $this->isAdmin($user);
+
+            /*  If the user is not an admin to the store */
+            if( !$isAdmin ){
+
+                /*  Add the user to the store as admin  */
+                $this->users()->save( $user, ['type' => 'admin']);
+            
+            }
+        }
+
+    }
+
+    /*  createUssdInterface() method:
+     *
+     *  This method is used to create a new USSD Interface
+     */
+    public function createUssdInterface()
+    {
+        /*  Create a new Ussd Interface using the initiateCreate() method from the UssdInterfaceTraits  */
+        $ussdInterface = ( new \App\UssdInterface() )->initiateCreate( $ussdInterfaceInfo = $this);
+
+       /*  If the USSD Interface was created successfully  */
+       if( $ussdInterface ){
+
+            /*  Assign the new USSD Interface to the store  */
+            $ussdInterface->update([
+                'owner_id' => $this->id, 
+                'owner_type' => $this->resource_type
+            ]);
+
+        }
+
+    }
 
     /*  createAddress() method:
      *
@@ -160,7 +199,7 @@ trait StoreTraits
     public function createAddress($address)
     {
         /*  Create a new address using the initiateCreate() method from the AddressTraits  */
-        $newAddress = ( new \App\Address() )->initiateCreate($address);
+        $newAddress = ( new \App\Address() )->initiateCreate($addressInfo = $address);
         
         /*  If the address was created successfully  */
         if( $newAddress ){
@@ -183,10 +222,18 @@ trait StoreTraits
      *  This method is used to create a new phone 
      *  and assign it to the store.
      */
-    public function createPhone($phone)
+    public function createPhone($phone, $requires_verification = false)
     {
+        /*  If this phone number requires verification to ensure that the user own the number */
+        if( $requires_verification ){
+
+            /*  Indicate this by setting the property "verify_number" */ 
+            $phone['verify_number'] = true;
+
+        }
+
         /*  Create a new phone using the initiateCreate() method from the PhoneTraits  */
-        $newPhone = ( new \App\Phone() )->initiateCreate($phone);
+        $newPhone = ( new \App\Phone() )->initiateCreate($phoneInfo = $phone);
         
         /*  If the phone was created successfully  */
         if( $newPhone ){
@@ -208,10 +255,18 @@ trait StoreTraits
      *  This method is used to create a new email 
      *  and assign it to the store.
      */
-    public function createEmail($email)
+    public function createEmail($email, $requires_verification = false)
     {
+        /*  If this phone number requires verification to ensure that the user own the number */
+        if( $requires_verification ){
+
+            /*  Indicate this by setting the property "verify_number" */ 
+            $phoneInfo['verify_number'] = true;
+
+        }
+
         /*  Create a new email using the initiateCreate() method from the EmailTraits  */
-        $newEmail = ( new \App\Email() )->initiateCreate($email);
+        $newEmail = ( new \App\Email() )->initiateCreate($emailInfo = $email);
         
         /*  If the email was created successfully  */
         if( $newEmail ){
@@ -739,15 +794,15 @@ trait StoreTraits
             
             //  Pricing details
             'cost_per_item' => request('cost_per_item') ?? 0,
-            'unit_price' => request('unit_price') ?? 0,
+            'unit_regular_price' => request('unit_regular_price') ?? 0,
             'unit_sale_price' => request('unit_sale_price') ?? 0,
 
             //  Inventory & Tracking details
             'sku' => request('sku') ?? null,
             'barcode' => request('barcode') ?? null,
             'quantity' => request('quantity') ?? null,
-            'has_inventory' => request('has_inventory'),
-            'auto_track_inventory' => request('auto_track_inventory'),
+            'allow_stock_management' => request('allow_stock_management'),
+            'auto_manage_stock' => request('auto_manage_stock'),
             
             //  Variant details
             'variants' => request('variants') ?? null,
@@ -933,15 +988,15 @@ trait StoreTraits
             
             //  Pricing details
             'cost_per_item' => request('cost_per_item') ?? 0,
-            'unit_price' => request('unit_price') ?? 0,
+            'unit_regular_price' => request('unit_regular_price') ?? 0,
             'unit_sale_price' => request('unit_sale_price') ?? 0,
 
             //  Inventory & Tracking details
             'sku' => request('sku') ?? null,
             'barcode' => request('barcode') ?? null,
             'quantity' => request('quantity') ?? null,
-            'has_inventory' => request('has_inventory'),
-            'auto_track_inventory' => request('auto_track_inventory'),
+            'allow_stock_management' => request('allow_stock_management'),
+            'auto_manage_stock' => request('auto_manage_stock'),
             
             //  Variant details
             'variants' => request('variants') ?? null,

@@ -53,7 +53,7 @@ class Lifecycle extends Model
      */
     public function jobcards()
     {
-        return $this->morphedByMany('App\Jobcard', 'owner', 'lifecycle_allocations');
+        return $this->morphedByMany('App\Jobcard', 'owner', 'lifecycle_allocations')->withTimestamps();
     }
 
     /*
@@ -61,7 +61,7 @@ class Lifecycle extends Model
      */
     public function orders()
     {
-        return $this->morphedByMany('App\Order', 'owner', 'lifecycle_allocations');
+        return $this->morphedByMany('App\Order', 'owner', 'lifecycle_allocations')->withTimestamps();
     }
 
     /* 

@@ -12,7 +12,6 @@ class CreateUssdInterfacesTable extends Migration
     public function up()
     {
         Schema::create('ussd_interfaces', function (Blueprint $table) {
-            
             $table->increments('id');
 
             /*  Basic Info  */
@@ -21,6 +20,7 @@ class CreateUssdInterfacesTable extends Migration
             $table->string('contact_us')->nullable();
             $table->string('call_to_action')->nullable();
             $table->string('code')->nullable();
+            $table->boolean('live_mode')->nullable()->default(false);
 
             /*  Ownership Information  */
             $table->unsignedInteger('owner_id')->nullable();
@@ -28,7 +28,6 @@ class CreateUssdInterfacesTable extends Migration
 
             /*  Timestamps  */
             $table->timestamps();
-            
         });
     }
 

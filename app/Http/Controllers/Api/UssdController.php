@@ -442,7 +442,7 @@ class UssdController extends Controller
     public function startShopping()
     {
         /*  If the store is not supporting USSD at this time  */
-        if (!$this->store->support_ussd) {
+        if (!$this->store->ussdInterface->live_mode) {
             /*  Notify the user that the store is not available  */
             return $this->displayCustomGoBackPage("Sorry, the store is currently offline.\n");
         }
@@ -1060,7 +1060,7 @@ class UssdController extends Controller
                 /*  Get the product name, currency symbol and price  */
                 $product_id = trim($product['id']);
                 $product_name = trim($product['name']);
-                $product_price = $product['unit_price'];
+                $product_price = $product['unit_regular_price'];
 
                 /*  Check if the product has variables  */
                 $product_has_variables = $this->hasVariables($product);
@@ -1135,7 +1135,7 @@ class UssdController extends Controller
                 if ($product_variation) {
                     $option_number = $key + 1;
                     $product_id = $product_variation['id'];
-                    $product_price = $product_variation['unit_price'];
+                    $product_price = $product_variation['unit_regular_price'];
                     $product_on_sale = $this->isOnSale($product_variation);
 
                     $response .= $option_number.'. '.$option;
@@ -2661,7 +2661,7 @@ class UssdController extends Controller
 
     public function hasStock($product)
     {
-        return ($product['stock_quantity'] > 0 && $product['has_inventory']) || !$product['has_inventory'];
+        return ($product['stock_quantity'] > 0 && $product['allow_stock_management']) || !$product['allow_stock_management'];
     }
 
     public function isOnSale($product)

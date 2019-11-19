@@ -236,9 +236,12 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
             //  Phone related resources
             Route::get('/phones', 'Api\StoreController@getStorePhones')->name('phones');
+
+            
             Route::get('/phones?type=mobile', 'Api\StoreController@getStorePhones')->name('mobiles');
             Route::get('/phones?type=tel', 'Api\StoreController@getStorePhones')->name('telephones');
             Route::get('/phones?type=fax', 'Api\StoreController@getStorePhones')->name('fax');
+            Route::get('/phones/default-mobile', 'Api\StoreController@getStoreDefaultPhone')->name('default-mobile');
             Route::get('/phones/{phone_id}', 'Api\StoreController@getStorePhone')->name('phone')->where('phone_id', '[0-9]+');
 
             //  Address related resources
@@ -311,17 +314,20 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
         //  Single interface
         Route::get('/{ussd_interface_id}', 'Api\UssdInterfaceController@getUssdInterface')->name('ussd-interface')->where('ussd_interface_id', '[0-9]+');
-        Route::post('/{ussd_interface_id}', 'Api\UssdInterfaceController@updateUssdInterface')->name('update-ussd-interface')->where('ussd_interface_id', '[0-9]+');
+        Route::post('/{ussd_interface_id}', 'Api\UssdInterfaceController@updateUssdInterface')->name('ussd-interface-update')->where('ussd_interface_id', '[0-9]+');
 
         //  Single interface resources
-        Route::prefix('{ussd_interface_id}')->name('ussd-interface')->group(function ($group) {
+        Route::prefix('{ussd_interface_id}')->name('ussd-interface-')->group(function ($group) {
 
             //  Allow only intergers for ussd_interface_id on all group routes
             foreach ($group->getRoutes() as $route) {
                 $route->where('ussd_interface_id', '[0-9]+');
             }
 
-            //  Relationship Routes Here
+            //  Product related resources
+            Route::get('/products', 'Api\UssdInterfaceController@getUssdInterfaceProducts')->name('products');
+            Route::post('/products', 'Api\UssdInterfaceController@updateUssdInterfaceProducts')->name('products-update');
+            Route::get('/products/{product_id}', 'Api\UssdInterfaceController@getUssdInterfaceProduct')->name('product')->where('product_id', '[0-9]+');
 
         });
     });
@@ -701,7 +707,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
         //  Single phone
         Route::get('/{phone_id}', 'Api\PhoneController@getPhone')->name('phone')->where('phone_id', '[0-9]+');
 
-        //  Single phone resources
+        //  Single phone resources and actions
         Route::prefix('{phone_id}')->name('phone-')->group(function ($group) {
 
             //  Allow only intergers for phone_id on all group routes
@@ -714,6 +720,9 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
             //  Wallet related resources
             Route::get('/wallet', 'Api\PhoneController@getPhoneWallet')->name('wallet');
+
+            //  Verify phone
+            Route::post('/verify', 'Api\PhoneController@verifyPhone')->name('verification');
 
         });
 

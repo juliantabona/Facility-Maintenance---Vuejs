@@ -30,7 +30,6 @@ class Store extends JsonResource
             'type' => $this->type,
             'industry' => $this->industry,
             'currency' => $this->currency,
-            'support_ussd' => $this->support_ussd,
 
             /*  Social Info  */
             'social_links' => [
@@ -48,6 +47,12 @@ class Store extends JsonResource
             'current_activity_status' => $this->current_activity_status,
             'activity_count' => $this->activity_count,
 
+            /*  Attributes  */
+            'is_verified' => $this->is_verified,
+            'is_email_verified' => $this->is_email_verified,
+            'is_mobile_verified' => $this->is_mobile_verified,
+            'customer_access_code' => $this->customer_access_code,
+            'team_access_code' => $this->team_access_code,
             'resource_type' => $this->resource_type,
 
             /*  Timestamps  */
@@ -91,6 +96,12 @@ class Store extends JsonResource
                     'href' => route('store-phones', ['store_id' => $this->id]),
                     'title' => 'The store telephones, mobile phones and fax phones',
                     'total' => $this->phones()->count(),
+                ],
+
+                //  Link to store default mobile phone
+                'oq:default_mobile' => [
+                    'href' => route('store-default-mobile', ['store_id' => $this->id]),
+                    'title' => 'The store default mobile phone'
                 ],
 
                 //  Link to store mobiles

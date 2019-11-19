@@ -48,7 +48,7 @@ class Priority extends Model
      */
     public function jobcards()
     {
-        return $this->morphedByMany('App\Jobcard', 'owner', 'priority_allocations');
+        return $this->morphedByMany('App\Jobcard', 'owner', 'priority_allocations')->withTimestamps();
     }
 
     /* 

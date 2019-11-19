@@ -3,15 +3,14 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\Store as StoreResource;
-use App\Http\Resources\Company as CompanyResource;
 
 class UssdInterface extends JsonResource
 {
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
+     *
      * @return array
      */
     public function toArray($request)
@@ -23,8 +22,11 @@ class UssdInterface extends JsonResource
             'contact_us' => $this->contact_us,
             'call_to_action' => $this->call_to_action,
             'code' => $this->code,
-
+            'live_mode' => $this->live_mode,
+            
             /*  Attributes */
+            'customer_access_code' => $this->customer_access_code,
+            'team_access_code' => $this->team_access_code,
             'resource_type' => $this->resource_type,
 
             /*  Timestamps */
@@ -33,42 +35,44 @@ class UssdInterface extends JsonResource
 
             /*  Resource Links */
             '_links' => [
-                
                 'curies' => [
-                    [ 'name' => 'oq', 'href' => 'https://oqcloud.co.bw/docs/rels/{rel}', 'templated' => true ]
+                    ['name' => 'oq', 'href' => 'https://oqcloud.co.bw/docs/rels/{rel}', 'templated' => true],
                 ],
 
                 //  Link to current resource
-                'self' => [ 
+                'self' => [
                     'href' => route('ussd-interface', ['ussd_interface_id' => $this->id]),
-                    'title' => 'This ussd interface'
+                    'title' => 'This ussd interface',
+                ],
+
+                //  Link to Ussd Interface products
+                'oq:products' => [
+                    'href' => route('ussd-interface-products', ['ussd_interface_id' => $this->id]),
+                    'title' => 'The ussd interface products',
+                    'total' => $this->products()->count(),
                 ],
 
                 //  Link to the resource that owns this ussd interface owner
-                'owner' =>  [ 
+                'owner' => [
                     'href' => route('store', ['store_id' => $this->store_id]),
-                    'title' => 'The store that owns this ussd interface'
-                ]
-
+                    'title' => 'The store that owns this ussd interface',
+                ],
             ],
 
             /*  Embedded Resources */
             '_embedded' => [
-                
-            ]
+            ],
         ];
     }
 
     /**
      * Customize the outgoing response for the resource.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Illuminate\Http\Response  $response
-     * @return void
+     * @param \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Response $response
      */
     public function withResponse($request, $response)
     {
         $response->header('Content-Type', 'application/hal+json');
     }
-
 }

@@ -35,9 +35,6 @@ class CreateStoresTable extends Migration
 
             /*  Currency Info  */
             $table->json('currency')->nullable();
-            
-            /*  Access Attributes  */
-            $table->boolean('support_ussd')->nullable()->default(false);
         
             /*  Ownership Information  */
             $table->unsignedInteger('owner_id')->nullable();

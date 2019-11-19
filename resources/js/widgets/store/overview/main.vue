@@ -39,8 +39,41 @@
                         <h3 class="d-inline-block">{{ store.name }}</h3>
                     </div>
                     
+                    
+                    <Row v-if="!store.is_mobile_verified" :gutter="20">
+
+                        <Col :span="8">
+
+                            <div v-if="default_mobile_phone && !isLoadingDefaultMobilePhone">
+
+                                <Card class="mb-2">
+                                    <span class="font-weight-bold text-primary">Please verify your mobile number: </span>
+                                    <span class="d-block font-weight-bold mt-2 text-primary" style="font-size:20px;">
+                                        {{ default_mobile_phone.full_number }}
+                                    </span>
+                                </Card>
+                                    
+                                <Card class="mb-2">
+                                    
+                                    <!-- Phone Verification Form -->
+                                    <phoneVerificationForm 
+                                        :phone="default_mobile_phone"
+                                        @success="handleSuccess($event)">
+                                    </phoneVerificationForm>
+
+                                </Card>
+                                
+                            </div>
+
+                            <!-- Loader -->
+                            <Loader v-if="isLoadingDefaultMobilePhone" :loading="true" type="text" class="mt-5 text-left" theme="white">Loading phones...</Loader>
+       
+                        </Col>
+
+                    </Row>
+
                     <!-- Store Tabs -->
-                    <Tabs type="card" :animated="false" class="pb-5">
+                    <Tabs v-else type="card" :animated="false" class="pb-5">
 
                         <!-- Orders Tab -->
                         <TabPane label="Orders" class="p-1">
@@ -58,7 +91,7 @@
 
                         <!-- USSD Interface Tab -->
                         <TabPane label="My Mobile Store" class="p-1">
-
+                            
                             <ussdInterfaceWidget :ussdInterfaceUrl="(store._links['oq:ussd_interface'] || {}).href"></ussdInterfaceWidget>
 
                         </TabPane>
@@ -73,6 +106,7 @@
                         </TabPane>
                         
                     </Tabs>
+
                 </Card>
             </div>
 
@@ -106,7 +140,8 @@
 
 <script>
     
-    import pageToolbar from './../../../components/_common/toolbars/pageToolbar.vue';
+    /*  Phone Verification Form  */
+    import phoneVerificationForm from './../../../components/_common/forms/phone/verifyPhone.vue';
     
     /*  Buttons  */
     import basicButton from './../../../components/_common/buttons/basicButton.vue';
@@ -130,15 +165,17 @@
             }
         },
         components: { 
-            pageToolbar, basicButton, Loader, orderWidget, customerWidget, ussdInterfaceWidget, 
-            productWidget, messageWidget, reviewWidget
+            phoneVerificationForm, basicButton, Loader, orderWidget, customerWidget, 
+            ussdInterfaceWidget, productWidget, messageWidget, reviewWidget
         },
         data(){
             return {
 
                 store: null,
+                isLoadingStore: false,
+                default_mobile_phone: null,
                 localStoreUrl: this.storeUrl,
-                isLoadingStore: false
+                isLoadingDefaultMobilePhone: false,
  
             }
         },
@@ -183,11 +220,59 @@
                         });
                 }
 
+            },
+            fetchDefaultMobilePhone() {
+
+                if( ((this.store._links || [])['oq:mobiles'] || {}).href ){
+
+                    //  Hold constant reference to the vue instance
+                    const self = this;
+
+                    //  Start loader
+                    self.isLoadingDefaultMobilePhone = true;
+
+                    //  Console log to acknowledge the start of api process
+                    console.log('Start getting default mobile phone...');
+                    
+                    //  Use the api call() function located in resources/js/api.js
+                    return api.call('get', ((this.store._links || [])['oq:default_mobile'] || {}).href )
+                        .then(({data}) => {
+                            
+                            //  Console log the data returned
+                            console.log(data);
+
+                            //  Stop loader
+                            self.isLoadingDefaultMobilePhone = false;
+
+                            //  Store the store data
+                            self.default_mobile_phone = data;
+
+                        })         
+                        .catch(response => { 
+
+                            //  Stop loader
+                            self.isLoadingDefaultMobilePhone = false;
+
+                            //  Console log Error Location
+                            console.log('dashboard/store/show/main.vue - Error getting default mobile phone...');
+
+                            //  Log the responce
+                            console.log(response);    
+                        });
+                }
+
+            },
+            handleSuccess(){
+                this.fetchStore();
             }
         },
         created(){
             //  Fetch the store
-            this.fetchStore();
+            this.fetchStore().then((data) => {
+                if( !this.store.is_mobile_verified ){
+                    this.fetchDefaultMobilePhone();
+                }
+            });
         }
     };
   

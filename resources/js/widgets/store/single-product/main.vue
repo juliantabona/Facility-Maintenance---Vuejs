@@ -47,7 +47,7 @@
                             <Tag v-if="localProduct.is_featured" color="primary">Featured</Tag>
                             <Tag v-if="localProduct.is_new" color="success">New</Tag>
                             <Tag v-if="localProduct.unit_sale_price" color="warning">Sale</Tag>
-                            <Tag v-if="localProduct.has_inventory && !localProduct.stock_quantity" color="error">
+                            <Tag v-if="localProduct.allow_stock_management && !localProduct.stock_quantity" color="error">
                                 Out Of Stock
                             </Tag>
                         </div>
@@ -59,12 +59,12 @@
                         <div class="tt-price">
                             
                             <!-- Show sale or normal price -->
-                            <span class="new-price">{{ localProduct.store_currency_symbol + (localProduct.unit_sale_price ? localProduct.unit_sale_price : localProduct.unit_price) }}</span>
+                            <span class="new-price">{{ localProduct.store_currency_symbol + (localProduct.unit_sale_price ? localProduct.unit_sale_price : localProduct.unit_regular_price) }}</span>
                             
                             <!-- Show old price if we have a sale -->
                             <span v-if="localProduct.unit_sale_price" 
                                   class="old-price text-secondary" style="font-size: 20px;">
-                                  {{ localProduct.store_currency_symbol + localProduct.unit_price }}
+                                  {{ localProduct.store_currency_symbol + localProduct.unit_regular_price }}
                             </span>
                         
                         </div>
@@ -73,7 +73,7 @@
                         <div class="tt-add-info">
                             <ul>
                                 <li><span>SKU:</span> {{ localProduct.sku }}</li>
-                                <li v-if="localProduct.has_inventory">
+                                <li v-if="localProduct.allow_stock_management">
                                     <span>Availability:</span> {{ localProduct.stock_quantity }} in Stock
                                 </li>
                             </ul>
@@ -103,7 +103,7 @@
                         </div>
 
                         <!-- If we are tracking inventory and we have stock or if we are not tracking inventory -->
-                        <div v-if="!localProduct.has_inventory || (localProduct.has_inventory && localProduct.stock_quantity)" 
+                        <div v-if="!localProduct.allow_stock_management || (localProduct.allow_stock_management && localProduct.stock_quantity)" 
                              class="tt-wrapper">
                             <div class="tt-row-custom-01">
 

@@ -31,13 +31,12 @@ class Product extends Model
 
         //  Return the following 1/0 as true/false
         'is_new' => 'boolean',
-        'allow_stock' => 'boolean',
         'is_featured' => 'boolean',
         'show_on_store' => 'boolean',
         'allow_variants' => 'boolean',
         'allow_downloads' => 'boolean',
-        'auto_track_stock' => 'boolean',
-        'available_on_ussd' => 'boolean',
+        'auto_manage_stock' => 'boolean',
+        'allow_stock_management' => 'boolean',
     ];
 
     protected $with = ['gallery', 'taxes', 'discounts', 'coupons', 'categories', 'tags'];
@@ -50,11 +49,9 @@ class Product extends Model
     protected $fillable = [
         /*  Product Details  */
         'name', 'description', 'type', 'cost_per_item', 'unit_regular_price', 'unit_sale_price',
-        'sku', 'barcode', 'stock_quantity', 'allow_stock', 'auto_track_stock', 'variants',
+        'sku', 'barcode', 'stock_quantity', 'allow_stock_management', 'auto_manage_stock', 'variants',
         'variant_attributes', 'allow_variants', 'allow_downloads', 'show_on_store',
         'is_new', 'is_featured',
-
-        'available_on_ussd',
 
         /*  Ownership Information  */
         'owner_id', 'owner_type',
@@ -63,7 +60,7 @@ class Product extends Model
     protected $allowedFilters = [];
 
     protected $allowedOrderableColumns = [];
-
+    
     /*
      *  Scope by type
      */
@@ -118,6 +115,15 @@ class Product extends Model
         return $this->hasMany('App\Product', 'parent_product_id');
     }
 
+    /* 
+     *  Scope:
+     *  Returns products that are not variables of another product
+     */
+    public function scopeIsNotVariation($query)
+    {
+        return $query->whereNull('parent_product_id');
+    }
+
     /*
      *  Returns the product variables. These are properties that
      *  make this product a variation e.g size=small, color=blue,
@@ -142,7 +148,7 @@ class Product extends Model
      */
     public function taxes()
     {
-        return $this->morphToMany('App\Tax', 'owner', 'tax_allocations');
+        return $this->morphToMany('App\Tax', 'owner', 'tax_allocations')->withTimestamps();
     }
 
     /*
@@ -150,7 +156,7 @@ class Product extends Model
      */
     public function discounts()
     {
-        return $this->morphToMany('App\Discount', 'owner', 'discount_allocations');
+        return $this->morphToMany('App\Discount', 'owner', 'discount_allocations')->withTimestamps();
     }
 
     /*
@@ -158,7 +164,7 @@ class Product extends Model
      */
     public function coupons()
     {
-        return $this->morphToMany('App\Coupon', 'owner', 'coupon_allocations');
+        return $this->morphToMany('App\Coupon', 'owner', 'coupon_allocations')->withTimestamps();
     }
 
     /*
@@ -174,7 +180,7 @@ class Product extends Model
      */
     public function categories()
     {
-        return $this->morphToMany('App\Category', 'owner', 'category_allocations');
+        return $this->morphToMany('App\Category', 'owner', 'category_allocations')->withTimestamps();
     }
 
     /*
@@ -182,7 +188,7 @@ class Product extends Model
      */
     public function tags()
     {
-        return $this->morphToMany('App\Tag', 'owner', 'tag_allocations');
+        return $this->morphToMany('App\Tag', 'owner', 'tag_allocations')->withTimestamps();
     }
 
     /*
@@ -197,7 +203,7 @@ class Product extends Model
 
     protected $appends = [
         'variations', 'variables',
-        'primary_image', 'unit_price', 'discount_total', 'tax_total', 'sub_total', 'grand_total',
+        'primary_image', 'discount_total', 'tax_total', 'sub_total', 'grand_total',
         'on_sale', 'stock_status', 'currency', 'rating_count', 'average_rating', 'resource_type',
     ];
 
@@ -259,7 +265,7 @@ class Product extends Model
             //  If its a percentage rate based discount
             if ($discount['type'] == 'rate') {
                 //  Calculate the percentage discount amount and add to the total discount
-                $discount_total += $discount['rate'] * $this->unit_price;
+                $discount_total += $discount['rate'] * $this->unit_regular_price;
 
             //  If its a fixed rate based discount
             } elseif ($discount['type'] == 'fixed') {
@@ -281,7 +287,7 @@ class Product extends Model
         //  Foreach tax
         foreach ($this->taxes as $tax) {
             //  Calculate the percentage tax amount and add to the total tax
-            $tax_total += $tax['rate'] * $this->unit_price;
+            $tax_total += $tax['rate'] * $this->unit_regular_price;
         }
 
         return $tax_total;
@@ -298,7 +304,7 @@ class Product extends Model
      */
     public function getSubTotalAttribute()
     {
-        return $this->unit_price;
+        return $this->unit_regular_price;
     }
 
     /*
@@ -311,7 +317,7 @@ class Product extends Model
     public function getGrandTotalAttribute()
     {
         //  Calculate total price with taxes applied
-        $total = $this->unit_price + $this->tax_total;
+        $total = $this->unit_regular_price + $this->tax_total;
 
         //  Calculate total price with discounts applied
         $total = $total - $this->discount_total;
@@ -334,7 +340,7 @@ class Product extends Model
     public function getStockStatusAttribute()
     {
         //  If we allow stock and the quantity is greater than 0
-        if ($this->allow_stock && $this->stock_quantity > 0) {
+        if ($this->allow_stock_management && $this->stock_quantity > 0) {
             return 'In stock';
         } else {
             return 'Out of stock';
@@ -382,14 +388,14 @@ class Product extends Model
         return strtolower(class_basename($this));
     }
 
-    public function setAllowStockAttribute($value)
+    public function setAllowStockManagementAttribute($value)
     {
-        $this->attributes['allow_stock'] = (($value == 'true' || $value == '1') ? 1 : 0);
+        $this->attributes['allow_stock_management'] = (($value == 'true' || $value == '1') ? 1 : 0);
     }
 
-    public function setAutoTrackStockAttribute($value)
+    public function setAutoManageStockAttribute($value)
     {
-        $this->attributes['auto_track_stock'] = (($value == 'true' || $value == '1') ? 1 : 0);
+        $this->attributes['auto_manage_stock'] = (($value == 'true' || $value == '1') ? 1 : 0);
     }
 
     public function setAllowVariantsAttribute($value)
@@ -416,9 +422,5 @@ class Product extends Model
     {
         $this->attributes['is_featured'] = (($value == 'true' || $value == '1') ? 1 : 0);
     }
-
-    public function setAvailableOnUssdAttribute($value)
-    {
-        $this->attributes['available_on_ussd'] = (($value == 'true' || $value == '1') ? 1 : 0);
-    }
+    
 }

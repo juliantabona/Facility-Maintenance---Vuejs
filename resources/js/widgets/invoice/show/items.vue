@@ -70,10 +70,10 @@
                                 size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                     </td>
                     <td colspan="1" class="p-2">
-                        <span v-if="!editMode">{{ item.unit_price | currency(currencySymbol) || '___' }}</span>
+                        <span v-if="!editMode">{{ item.unit_regular_price | currency(currencySymbol) || '___' }}</span>
                         <el-input v-if="editMode" placeholder="e.g) 2,500.00" 
                                 type="text"  @keypress.native="isNumber($event)" :maxlength="10"
-                                v-model="localInvoice.items[i].unit_price" 
+                                v-model="localInvoice.items[i].unit_regular_price" 
                                 @input.native="updateTotals(item, i)"
                                 size="mini" class="p-1" :style="{ maxWidth:'100%' }"></el-input>
                     </td>
@@ -311,7 +311,7 @@
                 this.localInvoice.calculated_taxes = this.runCalculateTaxes();
             },
             runGetTotal: function(){
-                var itemAmounts = (this.localInvoice.items || []).map(item => item.quantity * item.unit_price);
+                var itemAmounts = (this.localInvoice.items || []).map(item => item.quantity * item.unit_regular_price);
                 var total = itemAmounts.length ? itemAmounts.reduce(this.getSum): 0;
 
                 return total;
@@ -324,7 +324,7 @@
             },
             calculateItemTotal: function(item, index){
                 //  Update the item total price
-                this.$set(this.localInvoice.items[index], 'total_price', item.unit_price * item.quantity);
+                this.$set(this.localInvoice.items[index], 'total_price', item.unit_regular_price * item.quantity);
                 
                 //  Return the updated item
                 return this.localInvoice.items[index];
@@ -414,8 +414,8 @@
                         taxes: item.taxes,
                         purchasePrice: item.cost_per_item,
                         unit_sale_price: item.unit_sale_price,
-                        unit_price: item.unit_price,
-                        total_price: item.unit_price,
+                        unit_regular_price: item.unit_regular_price,
+                        total_price: item.unit_regular_price,
                         quantity: 1
                     }
             },

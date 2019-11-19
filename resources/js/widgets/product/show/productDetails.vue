@@ -821,10 +821,10 @@
 
                                 <Col :span="12">
                                     <!-- Price -->
-                                    <el-form-item label="Regular Price" prop="unit_price" class="mb-2">
+                                    <el-form-item label="Regular Price" prop="unit_regular_price" class="mb-2">
                                         <el-input
                                             placeholder="0.00"
-                                            v-model="formData.unit_price"
+                                            v-model="formData.unit_regular_price"
                                             size="small"
                                             :style="{ maxWidth:'100%' }">
                                         </el-input>
@@ -860,7 +860,7 @@
                         <!-- Inventory Details -->
                         <TabPane label="Inventory">
                             <Row :gutter="20" class="p-2">
-                                <Col v-if="!formData.has_inventory" :span="24" class="mb-2">
+                                <Col v-if="!formData.allow_stock_management" :span="24" class="mb-2">
                                     <Alert>
                                         <template slot="desc">{{ getProductInventoryInfo }}</template>
                                     </Alert>
@@ -869,13 +869,13 @@
                                 <Col :span="24" class="mb-0">
 
                                     <!-- Inventory Checkmark -->
-                                    <el-form-item prop="has_inventory" class="mb-1">
-                                        <Checkbox v-model="formData.has_inventory">This {{ lowerCase(getProductName) }} has inventory</Checkbox>
+                                    <el-form-item prop="allow_stock_management" class="mb-1">
+                                        <Checkbox v-model="formData.allow_stock_management">This {{ lowerCase(getProductName) }} has inventory</Checkbox>
                                     </el-form-item>
 
                                 </Col>
 
-                                <Col v-if="formData.has_inventory" :span="24">
+                                <Col v-if="formData.allow_stock_management" :span="24">
                                     <Row :gutter="12">
                                         <Col :span="12">
                                             <!-- SKU -->
@@ -920,8 +920,8 @@
                                             <!-- Track Inventory -->
                                             <Poptip :content="getTrackStockInventoryDescription" trigger="hover" placement="top" width="300">
                                             
-                                                <el-form-item prop="auto_track_inventory">
-                                                    <Checkbox v-model="formData.auto_track_inventory" class="mt-4 ml-2">Track stock inventory</Checkbox>
+                                                <el-form-item prop="auto_manage_stock">
+                                                    <Checkbox v-model="formData.auto_manage_stock" class="mt-4 ml-2">Track stock inventory</Checkbox>
                                                 </el-form-item>
 
                                             </Poptip>
@@ -1035,7 +1035,7 @@
                                                     <el-form-item prop="option_price" class="mb-2">
                                                         <el-input
                                                             placeholder="0.00"
-                                                            v-model="formData.variants[key].unit_price"
+                                                            v-model="formData.variants[key].unit_regular_price"
                                                             size="small"
                                                             :style="{ maxWidth:'100%' }">
                                                         </el-input>
@@ -1400,15 +1400,15 @@ export default {
 
             //  Pricing details
             cost_per_item: 0,
-            unit_price: 0,
+            unit_regular_price: 0,
             unit_sale_price: 0,
 
             //  Inventory & Tracking details
             sku: "",
             barcode: "",
             quantity: 1,
-            has_inventory: false,
-            auto_track_inventory: true,
+            allow_stock_management: false,
+            auto_manage_stock: true,
 
             //  Variant details
             variants:[],
@@ -1654,7 +1654,7 @@ export default {
         for(var x = 0; x < (variantsNames || {}).length; x++){
             variantTemplates.push({
                 name: variantsNames[x],
-                unit_price: 0.00,
+                unit_regular_price: 0.00,
                 unit_sale_price: 0.00,
                 sku: variantsNames[x],
                 barcode: '',

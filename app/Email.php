@@ -54,6 +54,15 @@ class Email extends Model
     {
         return $query->where('verified', 1);
     }
+    
+    /*  
+     *  Returns a verification token associated with this phone
+     */
+
+    public function verification()
+    {
+        return $this->morphOne('App\Verification', 'owner');
+    }
 
     /* 
      *  Returns the owner of the email

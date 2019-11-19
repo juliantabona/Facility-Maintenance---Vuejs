@@ -20,7 +20,7 @@ class UssdInterfacePolicy
      }
      
      /**
-      * Determine whether the user can view all ussd stores.
+      * Determine whether the user can view all ussd interfaces.
       *
       * @param  \App\User  $user
       * @param  \App\User  $model
@@ -32,7 +32,7 @@ class UssdInterfacePolicy
      }
 
     /**
-     * Determine whether the user can view the ussd store.
+     * Determine whether the user can view the ussd interface.
      *
      * @param  \App\User  $user
      * @param  \App\UssdInterface  $UssdInterface
@@ -44,7 +44,7 @@ class UssdInterfacePolicy
     }
 
     /**
-     * Determine whether the user can create ussd stores.
+     * Determine whether the user can create ussd interfaces.
      *
      * @param  \App\User  $user
      * @return mixed
@@ -55,7 +55,19 @@ class UssdInterfacePolicy
     }
 
     /**
-     * Determine whether the user can update the ussd store.
+     * Determine whether the user can update the ussd interface products.
+     *
+     * @param  \App\User  $user
+     * @param  \App\UssdInterface  $UssdInterface
+     * @return mixed
+     */
+    public function updateProducts(User $user, UssdInterface $UssdInterface)
+    {
+        return true;
+    }
+
+    /**
+     * Determine whether the user can update the ussd interface.
      *
      * @param  \App\User  $user
      * @param  \App\UssdInterface  $UssdInterface
@@ -67,7 +79,7 @@ class UssdInterfacePolicy
     }
 
     /**
-     * Determine whether the user can delete the ussd store.
+     * Determine whether the user can delete the ussd interface.
      *
      * @param  \App\User  $user
      * @param  \App\UssdInterface  $UssdInterface
@@ -79,7 +91,7 @@ class UssdInterfacePolicy
     }
 
     /**
-     * Determine whether the user can restore the ussd store.
+     * Determine whether the user can restore the ussd interface.
      *
      * @param  \App\User  $user
      * @param  \App\UssdInterface  $UssdInterface
@@ -91,7 +103,7 @@ class UssdInterfacePolicy
     }
 
     /**
-     * Determine whether the user can permanently delete the ussd store.
+     * Determine whether the user can permanently delete the ussd interface.
      *
      * @param  \App\User  $user
      * @param  \App\UssdInterface  $UssdInterface

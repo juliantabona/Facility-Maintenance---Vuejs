@@ -205,8 +205,8 @@
                   <tr style="background-color:{{ ( ($key + 1) % 2 ) ? $secondaryColor . ' !important': '' }} ;">
                     <td class="tg-bcb9">{{ $item['name'] }}</td>
                     <td class="tg-ryr3" rowspan="2">{{ $item['quantity'] }}</td>
-                    <td class="tg-ryr3" rowspan="2">{{ $item['unit_price'] }}</td>
-                    <td class="tg-2hug" rowspan="2">{{ $item['quantity'] * $item['unit_price'] }}</td>
+                    <td class="tg-ryr3" rowspan="2">{{ $item['unit_regular_price'] }}</td>
+                    <td class="tg-2hug" rowspan="2">{{ $item['quantity'] * $item['unit_regular_price'] }}</td>
                   </tr>
                   <tr style="background-color:{{ ( ($key + 1) % 2 ) ? $secondaryColor . ' !important': '' }} ;">
                     <td class="tg-eaj8" 

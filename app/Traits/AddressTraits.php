@@ -7,6 +7,7 @@ use App\Http\Resources\Addresses as AddressesResource;
 
 trait AddressTraits
 {
+    private $address;
 
     /*  convertToApiFormat() method:
      *
@@ -38,31 +39,25 @@ trait AddressTraits
         }
     }
 
-
     /*  initiateCreate() method:
      *
      *  This method is used to create a new address.
+     *  The $addressInfo variable represents the  
+     *  address dataset provided
      */
-    public function initiateCreate( $template = null )
+    public function initiateCreate( $addressInfo = null )
     {
         /*
-         *  The $address variable represents the address dataset
-         *  provided through the request received.
+         *  The $template variable represents accepted structure of the 
+         *  address data required to create a new resource.
          */
-        $address = request('address');
-
-        /*
-         *  The $template variable represents structure of the address.
-         *  If no template is provided, we create one using the 
-         *  request data.
-         */
-        $template = $template ?? [
-            'address_1' => $address['address_1'] ?? null,
-            'address_2' => $address['address_2'] ?? null,
-            'country' => $address['country'] ?? null,
-            'province' => $address['province'] ?? null,
-            'city' => $address['city'] ?? null,
-            'postal_or_zipcode' => $address['postal_or_zipcode'] ?? null
+        $template = [
+            'address_1' => $addressInfo['address_1'] ?? null,
+            'address_2' => $addressInfo['address_2'] ?? null,
+            'country' => $addressInfo['country'] ?? null,
+            'province' => $addressInfo['province'] ?? null,
+            'city' => $addressInfo['city'] ?? null,
+            'postal_or_zipcode' => $addressInfo['postal_or_zipcode'] ?? null
         ];
 
         try {
@@ -70,13 +65,13 @@ trait AddressTraits
             /*
              *  Create a new address, then retrieve a fresh instance
              */
-            $address = $this->create($template)->fresh();
+            $this->address = $this->create($template)->fresh();
 
             /*  If the address was created successfully  */
-            if( $address ){   
+            if( $this->address ){   
 
                 /*  Return a fresh instance of the address  */
-                return $address->fresh();;
+                return $this->address->fresh();;
 
             }
 

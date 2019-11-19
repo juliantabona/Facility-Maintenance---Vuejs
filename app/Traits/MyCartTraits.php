@@ -189,7 +189,7 @@ trait MyCartTraits
 
                     /*  Build the cart item using the related item information  */
                     $cartItem = collect($relatedItem->toArray())->only([
-                        'id', 'name', 'description','primary_image',  'type', 'currency', 'unit_price',  
+                        'id', 'name', 'description','primary_image',  'type', 'currency', 'unit_regular_price',  
                         'unit_regular_price', 'unit_sale_price', 'tax_total', 'discount_total', 'sub_total', 
                         'grand_total', 'on_sale', 'resource_type'
                     ]);

@@ -88,18 +88,18 @@ window.Event = new Vue;
 
 
 //  Import & Use iView UI Toolkit
-import iView from 'iview';
-import 'iview/dist/styles/iview.css';
-import iViewlocale from 'iview/dist/locale/en-US';
+import ViewUI from 'view-design';
+import 'view-design/dist/styles/iview.css';
+import ViewUIlocale from 'view-design/dist/locale/en-US';
 
-Vue.use(iView, {locale: iViewlocale});
+Vue.use(ViewUI, {locale: ViewUIlocale});
 
 //  Import & Use Element UI Toolkit
 import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
-import locale from 'element-ui/lib/locale/lang/en';
+import ElementUILocale from 'element-ui/lib/locale/lang/en';
 
-Vue.use(ElementUI, { locale });
+Vue.use(ElementUI, { ElementUILocale });
 
 //  Import FullCalendar
 import FullCalendar from 'vue-full-calendar'

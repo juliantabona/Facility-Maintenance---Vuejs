@@ -25,8 +25,7 @@ class Store extends Model
      * @var string
      */
     protected $casts = [
-        'currency' => 'array',
-        'support_ussd' => 'boolean', //  Return the following 1/0 as true/false
+        'currency' => 'array'
     ];
 
     protected $with = ['phones', 'emails', 'addresses'];
@@ -50,9 +49,6 @@ class Store extends Model
         /*  Currency Info  */
         'currency',
 
-        /*  Access Attributes  */
-        'support_ussd',
-
         /*  Ownership Info  */
         'owner_id', 'owner_type'
 
@@ -68,7 +64,7 @@ class Store extends Model
      */
     public function scopeSupportUssd($query)
     {
-        return $query->whereSupportUssd(1);
+        return $query->ussdInterface()->whereLiveMode(1);
     }
 
     /* 
@@ -77,7 +73,7 @@ class Store extends Model
      */
     public function scopeDontSupportUssd($query)
     {
-        return $query->whereSupportUssd(0);
+        return $query->ussdInterface()->whereLiveMode(0);
     }
 
     /* 
@@ -183,7 +179,7 @@ class Store extends Model
      */
     public function contacts()
     {
-        return $this->morphToMany('App\Contact', 'owner', 'contact_allocations');
+        return $this->morphToMany('App\Contact', 'owner', 'contact_allocations')->withTimestamps();
     }
 
     public function contactsWithMobilePhone($mobile = null)
@@ -220,7 +216,7 @@ class Store extends Model
      */
     public function users()
     {
-        return $this->morphToMany('App\User', 'owner', 'user_allocations');
+        return $this->morphToMany('App\User', 'owner', 'user_allocations')->withTimestamps();
     }
 
     /* 
@@ -311,11 +307,15 @@ class Store extends Model
     }
 
     /* 
-     *  Return products available for USSD access (Accessible by 2G Devices via USSD)
+     *  Returns products that are not variations of another product. 
+     *  Variations are different versions of this product such as 
+     *  when this product is available in different sizes, colors 
+     *  or materials, then it will have products with different 
+     *  variables.
      */
-    public function ussdProducts()
+    public function notVariationProducts()
     {
-        return $this->products()->where('available_on_ussd', 1);
+        return $this->products()->isNotVariation();
     }
 
     /* 
@@ -466,8 +466,9 @@ class Store extends Model
     /* ATTRIBUTES */
 
     protected $appends = [
-        'logo', 'phone_list', 'default_mobile', 'default_email', 'default_address', 'average_rating', 
-        'resource_type', 'phone_list', 'last_approved_activity', 'is_approved', 
+        'logo',  'is_verified', 'is_email_verified', 'is_mobile_verified','customer_access_code', 
+        'team_access_code', 'phone_list', 'default_mobile', 'default_email', 'default_address', 
+        'average_rating', 'resource_type', 'phone_list', 'last_approved_activity', 'is_approved', 
         'current_activity_status', 'activity_count'
     ];
 
@@ -478,6 +479,51 @@ class Store extends Model
     {
         return $this->documents()->where('type', 'logo')->first();
     }
+ 
+    /*
+     *  Returns true/false whether the store has a verified email
+     */
+    public function getIsEmailVerifiedAttribute()
+    {
+        $verified_emails_count = $this->emails()->verified()->count();
+
+        return ($verified_emails_count) ? true : false;
+    }
+
+    /*
+     *  Returns true/false whether the store has a verified mobile number
+     */
+    public function getIsMobileVerifiedAttribute()
+    {
+        $verified_mobiles_count = $this->mobiles()->verified()->count();
+
+        return ($verified_mobiles_count) ? true : false;
+    }
+
+    /*
+     *  Returns true/false whether the store is verified.
+     *  A verified store must contain atleast one verified mobile number
+     */
+    public function getIsVerifiedAttribute()
+    {
+        return ($this->is_mobile_verified) ? true : false;
+    }
+
+     /* 
+      *  Returns the resource type
+      */
+     public function getCustomerAccessCodeAttribute()
+     {
+        return $this->ussdInterface->customer_access_code ?? null;
+     }
+ 
+     /* 
+      *  Returns the resource type
+      */
+     public function getTeamAccessCodeAttribute()
+     {
+        return $this->ussdInterface->team_access_code ?? null;
+     }
 
     /* 
      *  Returns the store phones separated with commas
@@ -581,11 +627,6 @@ class Store extends Model
         $count = $this->recentActivities()->select(DB::raw('count(*) as total'))->groupBy('owner_type')->first();
 
         return $count ? $count->only(['total']) : ['total' => 0];
-    }
-
-    public function setSupportUssdAttribute($value)
-    {
-        $this->attributes['support_ussd'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
     }
 
 }

@@ -300,7 +300,7 @@
       return {
 
         user:auth.user,
-        userInitial: (((auth.user || {})._embedded.attributes|| {}).full_name || {}).charAt(0),
+        userInitial: ((auth.user || {}).full_name || {}).charAt(0),
         createVal: '',
         
         searchQuery:'',

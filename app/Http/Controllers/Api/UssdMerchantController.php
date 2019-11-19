@@ -569,7 +569,7 @@ class UssdMerchantController extends Controller
                 /*  Get the product name, currency symbol and price  */
                 $product_id = trim($product['id']);
                 $product_name = trim($product['name']);
-                $product_price = $product['unit_price'];
+                $product_price = $product['unit_regular_price'];
                 $this->currency = $product['currency']['symbol'] ?? $product['currency']['code'];
 
                 /*  Check if the product is on sale  */
@@ -579,7 +579,7 @@ class UssdMerchantController extends Controller
                  *  1 - It has inventory and the quantity is greater than zero (otherwise it is out of stock)
                  *  2 - It does not have inventory (no stock taken)
                  */
-                if (($product['stock_quantity'] > 0 && $product['has_inventory']) || !$product['has_inventory']) {
+                if (($product['stock_quantity'] > 0 && $product['allow_stock_management']) || !$product['allow_stock_management']) {
                     /*  Check if the product has been added to the cart already  */
                     if ($this->isProductAddedToCart($product_id)) {
                         /*  Show the product name, and indicate that the product is in the cart already  */
@@ -798,7 +798,7 @@ class UssdMerchantController extends Controller
         $this->products = $this->store ? $this->store->products : null;
 
         /*  Get the store USSD Products - Only if the store exists  */
-        $this->ussd_products = $this->store ? $this->store->ussdProducts : null;
+        $this->ussd_products = $this->ussd_interface ? $this->ussd_interface->products : null;
 
         /*  Get the store orders only if the store exists  */
         $this->orders = $this->store ? $this->store->orders : null;

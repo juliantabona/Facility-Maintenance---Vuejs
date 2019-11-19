@@ -314,7 +314,15 @@ let routes = [
         path: '/business-tools', name: 'business-tools',
         meta: { layout: 'Dashboard', middlewareAuth: true },
         component: require('./views/dashboard/business-tools/list/main.vue')
-},
+    },
+
+    //  MISC
+    {
+        path: '/dragger', name: 'dragger',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/draggable/main.vue')
+    },
+
 
 ];
 

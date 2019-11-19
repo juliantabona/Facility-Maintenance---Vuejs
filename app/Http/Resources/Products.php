@@ -28,7 +28,7 @@ class Products extends ResourceCollection
                 
                 //  Link to current resource
                 'self' => [
-                    'href' => url()->full(),
+                    'href' => route('products'),
                     'title' => 'These products',
                 ],
 

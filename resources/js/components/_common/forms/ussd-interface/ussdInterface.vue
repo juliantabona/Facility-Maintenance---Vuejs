@@ -4,6 +4,10 @@
         margin-bottom: 0px;
     }
 
+    .live_mode_switch >>> .el-form-item__label {
+        line-height: 2.9em !important;
+    }
+
     .el-form-item >>> .el-form-item__label {
         margin: 0;
         padding: 0;
@@ -20,6 +24,20 @@
 
         <!-- Form -->
         <el-form :model="formData" :rules="formDataRules" ref="formData">
+            
+            <!-- Live Mode -->
+            <el-form-item label="Live Mode" prop="live_mode" class="live_mode_switch mb-2" :error="customErrors.live_mode">
+                <i-switch 
+                    true-color="#13ce66" 
+                    false-color="#ff4949" 
+                    class="ml-1" size="large"
+                    :value="formData.live_mode" 
+                    :before-change="handleBeforeChange"
+                    @on-change="formData.live_mode = $event">
+                    <span slot="open">On</span>
+                    <span slot="close">Off</span>
+                </i-switch>
+            </el-form-item>
 
             <!-- Name -->
             <el-form-item :label="nameLabel" prop="name" class="mb-2" :error="customErrors.name">
@@ -58,7 +76,7 @@
             </div>
 
         </el-form>
-        
+
     </div>
 
 </template>
@@ -104,7 +122,7 @@
         data(){
             return {
                 formHasChanged:false,
-                formBeforeChange: null,
+                formDataBeforeChange: null,
                 formData: formHandle.getFormFields(),
                 formDataRules: formHandle.getFormRules(),
                 customErrors: formHandle.getCustomErrorFields(),
@@ -188,14 +206,35 @@
             checkIfFormHasChanged(formData){
                 
                 var currentForm = _.cloneDeep(formData || this.formData);
-                var isNotEqual = !_.isEqual(currentForm, this.formBeforeChange);
+                var isNotEqual = !_.isEqual(currentForm, this.formDataBeforeChange);
 
                 return isNotEqual;
             },
             storeOriginalFormData(){
                 //  Store the original form data
-                this.formBeforeChange = _.cloneDeep(this.formData);
+                this.formDataBeforeChange = _.cloneDeep(this.formData);
             },
+            handleBeforeChange () {
+                return new Promise((resolve) => {
+                    var title = (this.formData.live_mode == true) 
+                            ? 'Go Offline'
+                            : 'Go Online'
+
+                    var msg = (this.formData.live_mode == true) 
+                            ? 'Are you sure you want to put your Mobile Store Offline. Customers will not be able to access your mobile store. '+
+                              'We will display a "Currently Offline" message to your customers.'
+                            : 'Are you sure you want to put your Mobile Store Online. Customers will be able to access your mobile store, '+
+                              'view products/services, place orders and make payments."'
+
+                    this.$Modal.confirm({
+                        title: title,
+                        content: msg,
+                        onOk: () => {
+                            resolve();
+                        }
+                    });
+                });
+            }
         },
         created(){
 

@@ -42,7 +42,7 @@
                                     <Tag v-if="product.is_featured" color="primary">Featured</Tag>
                                     <Tag v-if="product.is_new" color="success">New</Tag>
                                     <Tag v-if="product.unit_sale_price" color="warning">Sale</Tag>
-                                    <Tag v-if="product.has_inventory && !product.stock_quantity" color="error">
+                                    <Tag v-if="product.allow_stock_management && !product.stock_quantity" color="error">
                                         Out Of Stock
                                     </Tag>
                                 </span>
@@ -102,12 +102,12 @@
                                 
                                 <!-- Show sale or normal price -->
                                 <span>
-                                    {{ product.store_currency_symbol + (product.unit_sale_price ? product.unit_sale_price : product.unit_price) }}
+                                    {{ product.store_currency_symbol + (product.unit_sale_price ? product.unit_sale_price : product.unit_regular_price) }}
                                 </span>
                                 
                                 <!-- Show old price if we have a sale -->
                                 <span v-if="product.unit_sale_price" class="old-price">
-                                    {{ product.store_currency_symbol + product.unit_price }}
+                                    {{ product.store_currency_symbol + product.unit_regular_price }}
                                 </span>
                             
                             </div>
@@ -120,7 +120,7 @@
                                 </ul>
                             </div>
 
-                            <div v-if="!product.has_inventory || (product.has_inventory && product.stock_quantity)" >
+                            <div v-if="!product.allow_stock_management || (product.allow_stock_management && product.stock_quantity)" >
                                 
                                 <div v-if="existsInCart(product)" class="tt-input-counter style-01 small mt-2 ml-3 mr-3" style="max-width:100%;">
                                     <span class="minus-btn" @click="updateItemQuantity(product, 'subtract')"></span>

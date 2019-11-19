@@ -48,7 +48,7 @@ class Tag extends Model
      */
     public function products()
     {
-        return $this->morphedByMany('App\Product', 'owner', 'tag_allocations');
+        return $this->morphedByMany('App\Product', 'owner', 'tag_allocations')->withTimestamps();
     }
 
     /* 

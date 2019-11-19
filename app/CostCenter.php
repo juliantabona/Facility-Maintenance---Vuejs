@@ -48,7 +48,7 @@ class CostCenter extends Model
      */
     public function jobcards()
     {
-        return $this->morphedByMany('App\Jobcard', 'owner', 'cost_center_allocations');
+        return $this->morphedByMany('App\Jobcard', 'owner', 'cost_center_allocations')->withTimestamps();
     }
 
     /* 
