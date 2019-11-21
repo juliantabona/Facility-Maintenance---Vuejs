@@ -24,54 +24,73 @@
 
         <!-- Form -->
         <el-form :model="formData" :rules="formDataRules" ref="formData">
-            
-            <!-- Live Mode -->
-            <el-form-item label="Live Mode" prop="live_mode" class="live_mode_switch mb-2" :error="customErrors.live_mode">
-                <i-switch 
-                    true-color="#13ce66" 
-                    false-color="#ff4949" 
-                    class="ml-1" size="large"
-                    :value="formData.live_mode" 
-                    :before-change="handleBeforeChange"
-                    @on-change="formData.live_mode = $event">
-                    <span slot="open">On</span>
-                    <span slot="close">Off</span>
-                </i-switch>
-            </el-form-item>
 
-            <!-- Name -->
-            <el-form-item :label="nameLabel" prop="name" class="mb-2" :error="customErrors.name">
-                <el-input type="text" v-model="formData.name" size="small" style="width:100%" :placeholder="namePlaceholder"></el-input>
-            </el-form-item>
-            
-            <!-- Call To Action -->
-            <el-form-item label="Call To Action" prop="call_to_action" class="mb-2" :error="customErrors.call_to_action">
-                <el-input type="text" v-model="formData.call_to_action" size="small" style="width:100%" placeholder="Mobile store call to action"></el-input>
-            </el-form-item>
-            
-            <!-- About Us -->
-            <el-form-item label="About Us" prop="about_us" class="mb-2" :error="customErrors.about_us">
-                <el-input type="textarea" v-model="formData.about_us" size="small" style="width:100%" placeholder="Mobile store about us" :rows="3"></el-input>
-            </el-form-item>
-            
-            <!-- Contact Us -->
-            <el-form-item label="Contact Us" prop="contact_us" :error="customErrors.contact_us">
-                <el-input type="textarea" v-model="formData.contact_us" size="small" style="width:100%" placeholder="Mobile store contact us" :rows="3"></el-input>
-            </el-form-item>
+            <Row :gutter="12">
 
-            <!-- Loader -->
-            <Loader v-if="isUpdating" :loading="true" type="text" class="text-left mt-2">{{ loaderText }}</Loader>
-            
-            <div v-if="!isUpdating" class="clearfix">
+                <Col :span="12">
 
-                <!-- Save Button -->
-                <basicButton 
-                    :customClass="btnClass" type="success" size="large" 
-                    :disabled="!formHasChanged"
-                    :ripple="formHasChanged"
-                    @click.native="handleUpdate()">
-                    <span>{{ btnText }}</span>
-                </basicButton>
+                    <!-- Live Mode -->
+                    <el-form-item label="Live Mode" prop="live_mode" class="live_mode_switch mb-2" :error="customErrors.live_mode">
+                        <i-switch 
+                            true-color="#13ce66" 
+                            false-color="#ff4949" 
+                            class="ml-1" size="large"
+                            :disabled="isUpdating"
+                            :value="formData.live_mode" 
+                            :before-change="handleBeforeChange"
+                            @on-change="formData.live_mode = $event">
+                            <span slot="open">On</span>
+                            <span slot="close">Off</span>
+                        </i-switch>
+                    </el-form-item>
+
+                </Col>
+                
+                <Col :span="12">
+                    
+                    <!-- Loader -->
+                    <Loader v-if="isUpdating" :loading="true" type="text" class="text-left mt-2 mb-2">{{ loaderText }}</Loader>
+
+                    <div v-if="!isUpdating" class="clearfix">
+
+                        <!-- Save Button -->
+                        <basicButton 
+                            class="float-right"
+                            :customClass="btnClass" type="success" size="large" 
+                            :disabled="!formHasChanged"
+                            :ripple="formHasChanged"
+                            @click.native="handleUpdate()">
+                            <span>{{ btnText }}</span>
+                        </basicButton>
+
+                    </div>
+                </Col>
+            </Row>
+
+            <div style="position:relative;">
+
+                <!-- Updating Spinner  -->
+                <Spin v-if="isUpdating" size="large" fix></Spin>
+
+                <!-- Name -->
+                <el-form-item :label="nameLabel" prop="name" class="mb-2" :error="customErrors.name">
+                    <el-input type="text" v-model="formData.name" size="small" style="width:100%" :placeholder="namePlaceholder"></el-input>
+                </el-form-item>
+                
+                <!-- Call To Action -->
+                <el-form-item label="Call To Action" prop="call_to_action" class="mb-2" :error="customErrors.call_to_action">
+                    <el-input type="text" v-model="formData.call_to_action" size="small" style="width:100%" placeholder="Mobile store call to action"></el-input>
+                </el-form-item>
+                
+                <!-- About Us -->
+                <el-form-item label="About Us" prop="about_us" class="mb-2" :error="customErrors.about_us">
+                    <el-input type="textarea" v-model="formData.about_us" size="small" style="width:100%" placeholder="Mobile store about us" :rows="3"></el-input>
+                </el-form-item>
+                
+                <!-- Contact Us -->
+                <el-form-item label="Contact Us" prop="contact_us" :error="customErrors.contact_us">
+                    <el-input type="textarea" v-model="formData.contact_us" size="small" style="width:100%" placeholder="Mobile store contact us" :rows="3"></el-input>
+                </el-form-item>
 
             </div>
 
@@ -112,7 +131,7 @@
             },
             btnClass:{
                 type: String,
-                default: 'mr-auto ml-auto mt-3 d-block'
+                default: 'pr-2 pl-2'
             },
             loaderText:{
                 type: String,

@@ -31,7 +31,6 @@ class Product extends JsonResource
 
             'allow_stock_management' => $this->allow_stock_management,
             'auto_manage_stock' => $this->auto_manage_stock,
-            'variants' => $this->variants,
             'variant_attributes' => $this->variant_attributes,
             'allow_variants' => $this->allow_variants,
             'allow_downloads' => $this->allow_downloads,
@@ -65,9 +64,16 @@ class Product extends JsonResource
 
                 //  Link to current resource
                 'self' => [ 
-                    'href' => url()->full(),
+                    'href' => route('product', ['product_id' => $this->id]),
                     'title' => 'This product'
-                ]
+                ],
+
+                //  Link to product variations
+                'oq:variations' => [
+                    'href' => route('product-variations', ['product_id' => $this->id]),
+                    'title' => 'The product variations',
+                    'total' => $this->variations()->count(),
+                ],
 
             ],
 

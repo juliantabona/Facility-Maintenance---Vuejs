@@ -26,7 +26,6 @@ class Product extends Model
      * @var string
      */
     protected $casts = [
-        'variants' => 'array',
         'variant_attributes' => 'array',
 
         //  Return the following 1/0 as true/false
@@ -49,9 +48,9 @@ class Product extends Model
     protected $fillable = [
         /*  Product Details  */
         'name', 'description', 'type', 'cost_per_item', 'unit_regular_price', 'unit_sale_price',
-        'sku', 'barcode', 'stock_quantity', 'allow_stock_management', 'auto_manage_stock', 'variants',
+        'sku', 'barcode', 'stock_quantity', 'allow_stock_management', 'auto_manage_stock',
         'variant_attributes', 'allow_variants', 'allow_downloads', 'show_on_store',
-        'is_new', 'is_featured',
+        'is_new', 'is_featured', 'parent_product_id',
 
         /*  Ownership Information  */
         'owner_id', 'owner_type',
@@ -60,7 +59,7 @@ class Product extends Model
     protected $allowedFilters = [];
 
     protected $allowedOrderableColumns = [];
-    
+
     /*
      *  Scope by type
      */
@@ -115,7 +114,7 @@ class Product extends Model
         return $this->hasMany('App\Product', 'parent_product_id');
     }
 
-    /* 
+    /*
      *  Scope:
      *  Returns products that are not variables of another product
      */
@@ -207,17 +206,13 @@ class Product extends Model
         'on_sale', 'stock_status', 'currency', 'rating_count', 'average_rating', 'resource_type',
     ];
 
-    
-
     /*
      *  Returns the product variations
      */
     public function getVariationsAttribute()
     {
-        if($this->allow_variants){
-            
+        if ($this->allow_variants) {
             return $this->variations()->get();
-
         }
     }
 
@@ -226,10 +221,8 @@ class Product extends Model
      */
     public function getVariablesAttribute()
     {
-        if($this->parent_product_id){
-            
+        if ($this->parent_product_id) {
             return $this->variables()->get();
-
         }
     }
 
@@ -422,5 +415,4 @@ class Product extends Model
     {
         $this->attributes['is_featured'] = (($value == 'true' || $value == '1') ? 1 : 0);
     }
-    
 }

@@ -72,6 +72,36 @@ class ProductController extends Controller
         }
     }
 
+    public function updateProduct( Request $request, $product_id )
+    {
+        //  Get the product
+        $product = Product::where('id', $product_id)->first() ?? null;
+
+        //  Check if the product exists
+        if ($product) {
+
+            //  Check if the user is authourized to update the product
+            if ($this->user->can('update', $product)) {
+
+                //  Update the product
+                $updatedProduct = $product->initiateUpdate($productInfo = $request->all());
+
+                //  Return an API Readable Format of the Product Instance
+                return $updatedProduct->convertToApiFormat();
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+            }
+        }else{
+            
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
     /*********************************
      *  OWNER RELATED RESOURCES      *
     *********************************/
@@ -251,6 +281,92 @@ class ProductController extends Controller
 
                 //  Return an API Readable Format of the Document Instance
                 return $document->convertToApiFormat();
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+
+            }
+        }else{
+            
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
+
+    
+    public function getProductVariations( $product_id )
+    {
+        //  Get the product
+        $product = Product::findOrFail($product_id);
+
+        //  Get the product variations
+        $variations = $product->variations()->paginate() ?? null;
+
+        //  Check if the variations exist
+        if ($variations) {
+
+            //  Check if the user is authourized to view the product variations
+            if ($this->user->can('view', $product)) {
+
+                //  Return an API Readable Format of the Product Instance
+                return ( new \App\Product )->convertToApiFormat($variations);
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+
+            }
+        }else{
+            
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }  
+
+    public function createProductVariations(Request $request, $product_id )
+    {
+        //  Get the product
+        $product = Product::findOrFail($product_id);
+
+        //  Get the request data
+        $requestData = $request->all();
+
+        return $product->initiateCreateVariations( $variantAttributeInfo = $requestData );
+
+        //  Check if the product exist
+        if ($variations) {
+
+            //  Check if the user is authourized to update the product variations
+            if ($this->user->can('update', $product)) {
+
+
+                /*  The request data will be an array in the form of:
+                 * 
+                 *  [
+                 *      ["name"=>"Size", "values"=> ["Small","Medium","Large"]]
+                 *      ["name"=>"Color", "values"=> ["Blue","Green","Red"]]
+                 *      ["name"=>"Material", "values"=> ["Cotton","Nylon"]]
+                 *      ...
+                 *  ] 
+                 * 
+                 */
+
+
+
+                //  Generate the product variations using the options provided
+
+
+                //  Get the product variations
+                $variations = $product->variations()->paginate() ?? null;
+
+                //  Return an API Readable Format of the Product Instance
+                return ( new \App\Product )->convertToApiFormat($variations);
 
             } else {
 

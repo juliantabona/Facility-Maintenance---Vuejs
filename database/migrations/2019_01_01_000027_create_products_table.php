@@ -26,7 +26,6 @@ class CreateProductsTable extends Migration
             $table->unsignedInteger('stock_quantity')->nullable();
             $table->boolean('allow_stock_management')->default(0);
             $table->boolean('auto_manage_stock')->default(1);
-            $table->json('variants')->nullable();
             $table->json('variant_attributes')->nullable();
             $table->unsignedInteger('parent_product_id')->nullable();
             $table->boolean('allow_variants')->default(0);
@@ -34,7 +33,7 @@ class CreateProductsTable extends Migration
             $table->boolean('show_on_store')->default(1);
             $table->boolean('is_new')->default(1);
             $table->boolean('is_featured')->default(1);
-            
+
             /*  Ownership Information  */
             $table->unsignedInteger('owner_id')->nullable();
             $table->string('owner_type')->nullable();

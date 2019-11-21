@@ -24,6 +24,32 @@ Vue.component('oq-Store-Layout',  require('./layouts/main/store-layout.vue'));
 Vue.component('oq-Header',  require('./layouts/header/default.vue'));
 Vue.component('oq-Aside',  require('./layouts/aside/default.vue'));
 
+
+/*  MISC Components - 
+ *  This components where turned into global components so that they could be used within 
+ *  themselves over and over again. The issue was that we wanted them to be single file
+ *  components that we could just import, however vue would render the first instance
+ *  of the component and not the same component that is nested inside. Basically the
+ *  scenerio would be: 
+ * 
+ *  I have Component A which gives me the ability to edit Product 1. However Product 1
+ *  has many variations of itself, basically child products that belong to Product 1.
+ *  I want that while editting Product 1 on Component A, i could lunch another but
+ *  exact same Component A lets call it "Component 2A" to avaoi confusion. This new
+ *  Component 2A will inherit a product variable from Product 1, and this variable
+ *  is still a product. Now the issue is that when we call the same Component in 
+ *  itself Vue throws an error saying it cannot mount the Component, i guess its
+ *  because it only compiled once to create "Component A" but when launching 
+ *  Component 2A it fails since its not compilled... i'm not sure... but to solve
+ *  the issue i need to make it a global component.
+ */
+Vue.component('editProductDrawer',  require('./components/_common/drawers/editProductDrawer.vue'));
+
+
+
+
+
+
 //  Draggable Components
 
 Vue.component('oq-Template-Content',  require('./views/dashboard/draggable/template/content/main.vue'));

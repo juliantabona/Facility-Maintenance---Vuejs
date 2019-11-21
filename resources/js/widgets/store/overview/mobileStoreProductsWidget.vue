@@ -31,7 +31,7 @@
         <Loader v-if="isSavingProducts" :loading="true" type="text" class="mt-2 mb-2 text-left" theme="white">Saving products...</Loader>
 
         <div v-if="!isSavingProducts && !isLoadingProducts && localProducts.length" class="clearfix mb-3">
-
+            
             <!-- Save Button -->
             <basicButton 
                 class="float-right" customClass="pr-2 pl-2" 
@@ -46,7 +46,7 @@
 
         <div class="product-container">
 
-            <!-- Saving Spinnner  -->
+            <!-- Saving Spinner  -->
             <Spin v-if="isSavingProducts" size="large" fix></Spin>
             
             <!-- Product Dragger  -->
@@ -63,7 +63,9 @@
                 <!-- Single Product  -->
                 <singleProduct v-for="(product, index) in localProducts" :key="index"   
                     :index="index"
-                    :product="product">
+                    :product="product"
+                    @removeProduct="handleRemoveProduct(index)"
+                    @editProduct="handleEditProduct($event, index)">
                 </singleProduct>
 
             </draggable>
@@ -71,6 +73,17 @@
 
         <!-- No products message -->
         <Alert v-if="!isLoadingProducts && !localProducts.length" type="info" :style="{ maxWidth: '250px' }" show-icon>No products found</Alert>
+
+        <!-- 
+            DRAWER TO EDIT A PRODUCT
+            - This is a global component
+        -->
+        <editProductDrawer 
+            :product="storedProduct"
+            :showDrawer="showEditProductDrawer"
+            @visibility="showEditProductDrawer = $event"
+            @updateSuccess="handleProductUpdate($event)">
+        </editProductDrawer>
 
     </div>
 
@@ -104,10 +117,12 @@
 
                 //  Products
                 localProducts: [],
+                storedProduct:null,
                 isSavingProducts: false,
                 isLoadingProducts: false,
-                productsHaveChanged: false,
                 productsBeforeChange: null,
+                productsHaveChanged: false,
+                showEditProductDrawer:false,
                 localProductsUrl: this.productsUrl,
  
             }
@@ -127,6 +142,48 @@
             }
         },
         methods: {
+            handleRemoveProduct(index){
+
+            },
+            handleEditProduct(product){
+                
+                this.storedProduct = product;
+                this.openEditProductDrawer();
+
+            },
+            handleProductUpdate(updatedProduct){
+
+                //  Check if the product data has already been changed
+                var isAlreadyChanged = this.productsHaveChanged;
+                
+                /*  Get all the products and find the index value of the product
+                 *  that matcches the updated product id. Once the index is found
+                 *  use the $set method to update the product of that index position
+                 */
+                this.$set(this.localProducts, this.localProducts.findIndex(
+                    product => product.id == updatedProduct.id
+                ), updatedProduct);
+
+                /*  If the product data is not changed then keep the state as unchanged
+                 *  even after updaing this product item. If its alrady changed it means
+                 *  the user had already done something to the product data and needs to
+                 *  save those changes e.g the user had used the drag and drop and did 
+                 *  not save the new product arrangement.
+                 */
+                if( !isAlreadyChanged ){
+
+                    /*  Store the original products data  */
+                    this.storeOriginalProductsData();
+
+                    /*  Check if the the localProducts has changed  */
+                    this.productsHaveChanged = this.checkIfProductsHaveChanged();
+                    
+                }
+
+            },
+            openEditProductDrawer(){
+                this.showEditProductDrawer = true;
+            },
             handleSave() {
 
                 if( this.localProductsUrl ){

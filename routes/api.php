@@ -213,7 +213,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
         //  Multiple stores
         Route::get('/', 'Api\StoreController@getStores')->name('stores');
-        Route::post('/', 'Api\StoreController@createStore')->name('create-store');
+        Route::post('/', 'Api\StoreController@createStore')->name('stores-create');
 
         //  Single store
         Route::get('/{store_id}', 'Api\StoreController@getStore')->name('store')->where('store_id', '[0-9]+');
@@ -354,6 +354,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
                 $route->where('product_id', '[0-9]+');
             }
 
+            //  Update store
+            Route::post('/', 'Api\ProductController@updateProduct')->name('update');
 
             //  Owner related resources
             Route::get('/owner', 'Api\ProductController@getProductOwner')->name('owner');
@@ -364,6 +366,11 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             Route::get('/downloads', 'Api\ProductController@getProductDownloads')->name('downloads');
             Route::get('/documents', 'Api\ProductController@getProductDocuments')->name('documents');
             Route::get('/documents/{document_id}', 'Api\ProductController@getProductDocument')->name('document')->where('document_id', '[0-9]+');
+            
+            //  Variation related resources
+            Route::get('/variations', 'Api\ProductController@getProductVariations')->name('variations');
+            Route::post('/variations', 'Api\ProductController@createProductVariations')->name('variations-create');
+            
             /*
             //  Order related resources
             Route::get('/orders', 'Api\ProductController@getProductOrders')->name('orders');

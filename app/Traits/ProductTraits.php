@@ -17,7 +17,8 @@ use App\Http\Resources\Products as ProductsResource;
 
 trait ProductTraits
 {
-
+    private $product;
+    
     /*  convertToApiFormat() method:
      *
      *  Converts to the appropriate Api Response Format
@@ -47,6 +48,320 @@ trait ProductTraits
 
         }
     }
+
+    /*  initiateUpdate() method =>
+     *
+     *  This method is used to update an existing
+     *  product. The $productInfo variable represents 
+     *  the product dataset provided
+     */
+    public function initiateUpdate( $productInfo = null )
+    {
+        /*
+         *  The $productInfo variable represents accepted structure of the  
+         *  product data required to update the current resource.
+         */
+
+
+        /*
+         *  The $template variable represents structure of the product.
+         *  If no template is provided, we create one using the
+         *  request data.
+         */
+        $template = [
+            /*  Basic Info  */
+            'name' => $productInfo['name'] ?? null,
+            'description' => $productInfo['description'] ?? null,
+            'type' => $productInfo['type'] ?? null,
+            'cost_per_item' => $productInfo['cost_per_item'] ?? null,
+            'unit_regular_price' => $productInfo['unit_regular_price'] ?? null,
+            'unit_sale_price' => $productInfo['unit_sale_price'] ?? null,
+            'sku' => $productInfo['sku'] ?? null,
+            'barcode' => $productInfo['barcode'] ?? null,
+            'stock_quantity' => $productInfo['stock_quantity'] ?? null,
+            'allow_stock_management' => $productInfo['allow_stock_management'] ?? null,
+            'auto_manage_stock' => $productInfo['auto_manage_stock'] ?? null,
+            'variant_attributes' => $productInfo['variant_attributes'] ?? null,
+            'allow_variants' => $productInfo['allow_variants'] ?? null,
+            'allow_downloads' => $productInfo['allow_downloads'] ?? null,
+            'show_on_store' => $productInfo['show_on_store'] ?? null,
+            'is_new' => $productInfo['is_new'] ?? null,
+            'is_featured' => $productInfo['is_featured'] ?? null,
+        ];
+
+        try {
+            
+            /*
+             *  Update the current product instance
+             */
+            $updated = $this->update($template);
+
+            /*  If the product was updated successfully  */
+            if ($updated) {
+
+                /*  Return a fresh instance of the product  */
+                return $this->fresh();
+
+            }
+        } catch (\Exception $e) {
+            //  Return the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+    }
+
+    /*  initiateUpdate() method =>
+     *
+     *  This method is used to create new product variations
+     *  for the current product. The $variantAttributeInfo   
+     *  variable represents the variable attribute names
+     *  and options from the dataset provided
+     */
+    public function initiateCreateVariations( $variantAttributeInfo = null )
+    {
+        try {
+        
+            if( $variantAttributeInfo ){
+
+                /*  Get the product variations:
+                 *  
+                 * [
+                 *   ["Small", "Blue", "Cotton"]
+                 *   ["Small", "Blue", "Nylon"]
+                 *   ["Small", "Red", "Cotton"]
+                 *   ["Small", "Red", "Nylon"],
+                 *   ...
+                 * ]
+                 * 
+                 */
+                $variations = $this->generateVariations($variantAttributeInfo) ?? [];
+    
+                //  If we have any variations
+                if( count($variations) ){
+    
+                    $templates = [];
+
+                    foreach($variations as $key => $variation_options){
+                        /*
+                         *  If the main product is called "Summer Dress" and the
+                         *  $variation_options=["Small", "Blue", "Cotton"]
+                         * 
+                         *  Then the variation product is named using both the parent
+                         *  product name and the variation options. For example:
+                         * 
+                         *  "Summer Dress (Small, Blue, Cotton)"
+                         */
+
+                        $name = $this->name .' ('. ucwords(trim( is_array($variation_options) ? implode(', ', $variation_options) : $variation_options )).')';
+    
+                        //  Create an sku value
+                        $sku = $this->id.'_'.strtolower(trim( is_array($variation_options) ? implode(', ', $variation_options) : $variation_options ) );
+    
+                        /*
+                         *  The $template variable represents structure of the product.
+                         */
+                        $template = [
+    
+                            /*  Basic Info  */
+                            'name' => $name,
+                            'description' => $this->description ?? null,
+                            'type' => $this->type ?? null,
+                            'sku' => $sku ?? null,
+                            'parent_product_id' =>$this->id,
+                            'owner_id' =>$this->owner_id,
+                            'owner_type' =>$this->owner_type
+    
+                        ];
+    
+                        array_push($templates, $template);
+    
+                    }
+
+                    /*
+                     *  Update the current product instance
+                     */
+                    //$created = $this->insert($templates);
+
+                    return [
+                        'before' => $templates,
+                        'after' => (new \App\Product)->find($this->id)->variations
+                    ];
+        
+                    /*  If the product was updated successfully  */
+                    if ($created) {
+        
+                        /*  Return a fresh instance of the product  */
+                        return $this->fresh();
+        
+                    }
+    
+                }
+    
+            }
+        } catch (\Exception $e) {
+            //  Return the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+    }
+
+    public function generateVariations($variantAttributes, $level = 0){
+
+        /*  If we have the following variant attributes
+                ~ Size => [XS, S]
+                ~ Color => [blue, red]
+                ~ Material => [cotton, nylon]
+
+            This function return the variant attribute option name in the 
+            following format:
+                ~ [XS, blue, cotton], [XS, blue, nylon], [XS, red, cotton], [XS, red, nylon]
+                ~ [S, blue, cotton], [S, blue, nylon], [S, red, cotton], [S, red, nylon]
+        */
+
+        //  Get the valid variant attributes
+        $validVariants = $this->validVariants($variantAttributes) ?? [];
+
+        // Check if we have valid variants e.g sizes, colors, materials respectively
+        if( count($validVariants) ){
+            
+            $variations = [];
+
+            //  Foreach valid variant attribute e.g size, color, material
+            for($x = $level; $x < count($validVariants); $x++){
+
+                if( ($x == $level) ){
+
+                    //  Get the variant attribute options e.g)
+                    //  level = 0 : XS, SM, M, L, XL
+                    //  level = 1 : Blue, Red
+                    //  level = 2 : Cottom, Nylon
+                    $variantOptions = $validVariants[$x]['values'] ?? [];
+
+                    //  Foreach variant attribute option e.g "XS, SM, M, L, XL" or "Blue, Red" or "Cottom, Nylon"
+                    for($y=0; $y < count($variantOptions); $y++){
+                        //console.log('--------------------------------------------------------------');
+                        //console.log('level == '+ level);
+                        //console.log('Focus: ' + this.validVariants[x].name);
+                        //console.log(level == 0 ? variantOptions[y] : ' ---' + variantOptions[y]);
+
+                        //  Get the variant option name .g) XS_blue_cotton or XS_blue_nylon e.t.c
+                        //  level = 0 : return XS_Blue_Cotton
+                        //  level = 1 : return Blue
+                        //  level = 2 : return Cottom
+
+                        $variation_option = $variantOptions[$y];
+                        
+                        //  if we have more variations we can attach to the existing 
+                        if( $level != (count($validVariants ?? []) - 1) ){
+
+                            //  Foreach child variation we got e.g) blue, red or cotton, nylon
+                            $childVariations = $this->generateVariations($variantAttributes, $level + 1);
+
+                            //console.log('childVariations');
+                            //console.log(childVariations);
+
+                            for( $z = 0; $z < count($childVariations ?? []); $z++){
+
+                                //  To avoid xs_cotton_cotton or xs_nylon_nylon
+                                if($variation_option != $childVariations[$z]){
+
+                                    //  To avoid xs_cotton_nylon or xs_nylon_cotton
+                                    if($variation_option != $childVariations[$z]){
+                                        
+                                        /*  If we have:
+                                         *  ~ ["Small", ["Blue", "Cotton"]]
+                                         * 
+                                         *  Then the method array_flatten will produce:
+                                         * ~ ["Small", "Blue", "Cotton"]
+                                         */
+                                        array_push($variations, array_flatten([$variation_option, $childVariations[$z]]) );
+
+                                    }
+                                }
+                            }
+                        }else{
+
+                            //  e.g to produce [blue, red] or [cotton, nylon]
+                            array_push($variations, $variation_option);
+
+                        }
+
+                    }
+                }
+
+            }
+
+            return $variations;
+        }
+    }
+
+    public function validVariants($variantAttributes = []){
+        
+        $validVariants = [];
+
+        //  If we have any variant attributes
+        if( count($variantAttributes) ){
+
+            //  Foreach variant attribute
+            foreach($variantAttributes as $variantAttribute){
+
+                //  If this variant attribute has a name and options
+                if( $variantAttribute['name'] && count($variantAttribute['values'] ?? []) ){
+
+                    //  Get the variant attribute
+                    array_push($validVariants , $variantAttribute);
+                }
+
+            }
+        }
+
+        //  Return the valid variant attributes 
+        return $validVariants;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     /*  initiateGetAll() method:
      *
@@ -507,7 +822,7 @@ trait ProductTraits
         }
     }
 
-    /*  initiateUpdate() method:
+    /*  initiateUpdate2() method:
      *
      *  This is used to update an existing product. It also works
      *  to store the update activity and broadcasting of
@@ -515,7 +830,7 @@ trait ProductTraits
      *  the product.
      *
      */
-    public function initiateUpdate($product_id)
+    public function initiateUpdate2($product_id)
     {
 
         //  Current authenticated user

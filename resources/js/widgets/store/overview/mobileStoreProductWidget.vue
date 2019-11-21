@@ -73,22 +73,21 @@
 
             <div class="product-toolbox float-right d-block">
 
-                <!-- Show/Hide Extra Info Button  -->
-                <Icon :type="'ios-arrow-'+(showContent ? 'dropdown':'dropup hidable')" 
+                <!-- Show/Hide Product Details Button  -->
+                <Icon v-if="showViewDetailsButton" :type="'ios-arrow-'+(showContent ? 'dropdown':'dropup hidable')" 
                       class="product-icon mr-2" size="20" @click="showContent = !showContent"/>
 
                 <!-- Remove Product Button  -->
-                <Poptip confirm title="Are you sure you want to remove this product?"
-                    ok-text="Yes" cancel-text="No" width="300"
+                <Poptip v-if="showDeleteButton" confirm title="Are you sure you want to remove this product?" ok-text="Yes" cancel-text="No" width="300"
                     @on-ok="$emit('removeProduct')">
                     <Icon type="ios-trash-outline" class="product-icon hidable mr-2" size="20"/>
                 </Poptip>
 
-                <!-- Move Product Button  -->
-                <Icon type="ios-create-outline" class="product-icon hidable" size="20" />
+                <!-- Edit Product Button  -->
+                <Icon v-if="showEditButton" type="ios-create-outline" class="product-icon hidable" size="20" @click.native="$emit('editProduct', product)" />
 
                 <!-- Move Product Button  -->
-                <Icon type="ios-move" class="product-icon product-dragger-handle hidable mr-2" size="20" />
+                <Icon v-if="showDragButton" type="ios-move" class="product-icon product-dragger-handle hidable mr-2" size="20" />
                 
             </div>
         </div>    
@@ -150,6 +149,22 @@
             product: {
                 type: Object,
                 default:() => {}
+            },
+            showDragButton: {
+                type: Boolean,
+                default:true
+            },
+            showEditButton: {
+                type: Boolean,
+                default:true
+            },
+            showDeleteButton: {
+                type: Boolean,
+                default:true
+            },
+            showViewDetailsButton: {
+                type: Boolean,
+                default:true
             }
         },
         data(){
