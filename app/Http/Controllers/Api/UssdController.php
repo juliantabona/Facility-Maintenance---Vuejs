@@ -538,7 +538,7 @@ class UssdController extends Controller
         /*  Foreach product variant attribute e.g "Size=>[options]", "Color=>[options]",
          *  "Material=>[options]", e.t.c
          */
-        foreach ($variant_attributes as $variant_attribute_name => $variable_options) {
+        foreach ($variant_attributes as $variant_attribute) {
             /*  Increment the offset value since we want to add a new screen to
              *  display the current attribute options e.g if the attribute is
              *  "Size" we increment the offset so that we can add a screen to
@@ -547,10 +547,10 @@ class UssdController extends Controller
             $this->offset = $this->offset + 1;
 
             /*  Get the attribute name e.g "Size", "Color", "Material", e.t.c */
-            $this->variant_attribute_name = $variant_attribute_name;
+            $this->variant_attribute_name = $variant_attribute['name'];
 
             /*  Get the attribute name e.g "Small", "Medium", "Large", e.t.c */
-            $this->variable_options = $variable_options;
+            $this->variable_options = $variant_attribute['values'];
 
             /*  If the user indicated to paginate the "Store Attribute Options Page"  */
             if ($this->wantsToPaginateVariantOptionsPage()) {

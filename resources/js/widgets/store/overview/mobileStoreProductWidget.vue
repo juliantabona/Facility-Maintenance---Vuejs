@@ -134,6 +134,20 @@
 
         </Row>
 
+        <Row v-if="showFooter">
+
+            <Col :span="24" class="p-2 clearfix">
+
+                <!-- Product Variants  -->
+                <Badge v-for="(variable, index) in productVariables" :key="index"
+                        :text="variable.value" type="info" class="float-right mr-2">
+                </Badge>
+
+            </Col>
+
+        </Row>
+
+
     </Card>
 
 </template>
@@ -163,6 +177,10 @@
                 default:true
             },
             showViewDetailsButton: {
+                type: Boolean,
+                default:true
+            },
+            showFooter:{
                 type: Boolean,
                 default:true
             }
@@ -195,9 +213,11 @@
                 return this.productCurrency + this.product.tax_total;
             },
             productStockQuantity(){
-                return(this.product.allow_stock_management ? this.product.stock_quantity : '(N/A)');
+                return (this.product.allow_stock_management ? this.product.stock_quantity : '(N/A)');
+            },
+            productVariables(){
+                return this.product.variables;
             }
-
 
         },
     }

@@ -64,7 +64,9 @@ class Store extends Model
      */
     public function scopeSupportUssd($query)
     {
-        return $query->ussdInterface()->whereLiveMode(1);
+        return $query->whereHas('ussdInterface', function (Builder $query){
+                    $query->where('live_mode', 1);
+                });
     }
 
     /* 
@@ -73,12 +75,15 @@ class Store extends Model
      */
     public function scopeDontSupportUssd($query)
     {
-        return $query->ussdInterface()->whereLiveMode(0);
+        return $query->whereHas('ussdInterface', function (Builder $query){
+                    $query->where('live_mode', 0);
+                });
     }
 
     /* 
      *  Scope:
-     *  Return stores that don't support USSD access (Accessible by 2G Devices via USSD)
+     *  Return stores in order of popularity. For now store popularity is
+     *  determined by how many orders they receive
      */
     public function scopePopular($query)
     {

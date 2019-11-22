@@ -64,6 +64,7 @@
                 <singleProduct v-for="(product, index) in localProducts" :key="index"   
                     :index="index"
                     :product="product"
+                    :showFooter="false"
                     @removeProduct="handleRemoveProduct(index)"
                     @editProduct="handleEditProduct($event, index)">
                 </singleProduct>

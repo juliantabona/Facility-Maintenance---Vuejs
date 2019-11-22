@@ -39,7 +39,6 @@ class Product extends JsonResource
             'is_featured' => $this->is_featured,
             
             //  Attributes
-            'variations' => $this->variations,
             'variables' => $this->variables,
             'discount_total' => $this->discount_total,
             'tax_total' => $this->tax_total,

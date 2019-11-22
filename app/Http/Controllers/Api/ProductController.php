@@ -334,50 +334,25 @@ class ProductController extends Controller
         //  Get the product
         $product = Product::findOrFail($product_id);
 
-        //  Get the request data
-        $requestData = $request->all();
+        //  Check if the user is authourized to update the product variations
+        if ($this->user->can('update', $product)) {
 
-        return $product->initiateCreateVariations( $variantAttributeInfo = $requestData );
+            //  Get the request data
+            $requestData = $request->all();
 
-        //  Check if the product exist
-        if ($variations) {
+            //  Generate the  product variations
+            $product->initiateCreateVariations( $variantAttributeInfo = $requestData );
 
-            //  Check if the user is authourized to update the product variations
-            if ($this->user->can('update', $product)) {
+            //  Get the product variations
+            $variations = $product->variations()->paginate() ?? null;
 
+            //  Return an API Readable Format of the Product Instance
+            return ( new \App\Product )->convertToApiFormat($variations);
 
-                /*  The request data will be an array in the form of:
-                 * 
-                 *  [
-                 *      ["name"=>"Size", "values"=> ["Small","Medium","Large"]]
-                 *      ["name"=>"Color", "values"=> ["Blue","Green","Red"]]
-                 *      ["name"=>"Material", "values"=> ["Cotton","Nylon"]]
-                 *      ...
-                 *  ] 
-                 * 
-                 */
+        } else {
 
-
-
-                //  Generate the product variations using the options provided
-
-
-                //  Get the product variations
-                $variations = $product->variations()->paginate() ?? null;
-
-                //  Return an API Readable Format of the Product Instance
-                return ( new \App\Product )->convertToApiFormat($variations);
-
-            } else {
-
-                //  Not Authourized
-                return oq_api_not_authorized();
-
-            }
-        }else{
-            
-            //  Not Found
-            return oq_api_notify_no_resource();
+            //  Not Authourized
+            return oq_api_not_authorized();
 
         }
     }

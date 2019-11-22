@@ -188,18 +188,9 @@
 
                                 </Row>
 
-                                <Row v-if="hasVariants" :gutter="12">
-                                    <Col :span="12">
-                                        <basicButton 
-                                                @click.native="addVariantAttribute()"
-                                                customClass="mt-3 mb-3" :style="{ width: 'fit-content', position:'relative' }"
-                                                type="success" size="small" 
-                                                :ripple="false">
-                                            + Add Another Variant
-                                        </basicButton>
-                                    </Col>
+                                <Row :gutter="12">
                                     
-                                    <Col :span="12">
+                                    <Col v-if="hasVariants" :span="12">
                                         <basicButton 
                                                 @click.native="saveVariations()"
                                                 customClass="mt-3 mb-3"
@@ -208,11 +199,24 @@
                                             Create Variations
                                         </basicButton>
                                     </Col>
+                                    
+                                    <Col :span="hasVariants ? 12 : 24" class="clearfix">
+                                        <basicButton 
+                                                customClass="mt-3 mb-3" :style="{ width: 'fit-content', position:'relative' }"
+                                                @click.native="addVariantAttribute()"
+                                                type="default" size="small" 
+                                                class="float-right"
+                                                :ripple="false">
+                                            + Add Another Variant
+                                        </basicButton>
+                                    </Col>
                                 </Row>
 
                             </Col>
 
-                            <Col :span="24">
+                            <Col :span="24" class="pb-5 mb-5">
+
+                                <hr class="mt-2 pt-4" />
 
                                 <!-- Loader -->
                                 <Loader v-if="isLoadingVariations" :loading="true" type="text" class="text-left mt-2 mb-2">Loading variations...</Loader>
@@ -221,6 +225,7 @@
                                 <singleProductVariation v-else v-for="(product, index) in variations" :key="index"   
                                     :index="index"
                                     :product="product"
+                                    :showFooter="true"
                                     :showDragButton="false"
                                     :showDeleteButton="false"
                                      @editProduct="handleEditProductVariation($event, index)">
@@ -231,9 +236,6 @@
                         </Row>
 
                     </Col>
-
-
-                    formData.variant_attributes: {{ formData.variant_attributes }}<br><br>
 
                 </Row>
 
@@ -555,9 +557,7 @@
 
                     /*  Check if the the form data has changed  */
                     this.formHasChanged = this.checkIfFormHasChanged();
-
-                    //  Fetch the product variations
-                    this.fetchVariations();
+                    
                 },
                 deep: true
 
@@ -596,12 +596,6 @@
             }
         },
         methods: {
-            handleBeforeAllowStockManagementChange(){
-
-            },
-            handleBeforeAutoManageStockChange(){
-
-            },
             handleUpdate(){
 
                 /*  Call the initiateUpdate() function from the formHandle in order to make 
@@ -632,6 +626,39 @@
                 }
 
             },
+            updateFormFieldValues(currentFormData = this.product)
+            {
+                //  Get the form fields
+                var formFields = formHandle.getFormFields();
+
+                //  Foreach form field
+                for(var x = 0; x < _.size(formFields); x++){
+                    
+                    //  Get the current field key e.g name, description, e.t.c
+                    var key = Object.keys(formFields)[x];
+
+                    /*
+                    *  Vue.set()
+                    *  We use Vue.set to set a new object property. This method ensures the  
+                    *  property is created as a reactive property and triggers view updates:
+                    */
+
+                    //  If we have form data, then overide the form field values
+                    if(currentFormData){
+
+                        //  Update the form data fields using the current form data
+                        this.$set(this.formData, key, currentFormData[key]);
+
+                    }
+                }
+
+            },
+            handleBeforeAllowStockManagementChange(){
+
+            },
+            handleBeforeAutoManageStockChange(){
+
+            },
             handleEditProductVariation(product){
                 console.log('Edit this product');
                 console.log(product);
@@ -640,6 +667,9 @@
 
             },
             handleProductVariationUpdate(updatedProduct){
+                
+                console.log('Updated Product Variation');
+                console.log(updatedProduct);
 
                 //  Check if the product data has already been changed
                 var isAlreadyChanged = this.formHasChanged;
@@ -649,9 +679,16 @@
                  *  index is found use the $set method to update the product of that 
                  *  index position
                  */
-                this.$set(this.product.variations, this.product.variations.findIndex(
+
+                console.log('Variations Before');
+                console.log(this.variations);
+
+                this.$set(this.variations, this.variations.findIndex(
                     product => product.id == updatedProduct.id
                 ), updatedProduct);
+
+                console.log('Variations After');
+                console.log(this.variations);
 
                 /*  If the current product data is not changed then keep the state as unchanged
                  *  even after updaing this product variation. If its already changed it means
@@ -679,33 +716,6 @@
             },
             updateVariantAttributeOptions(key, options){
                 this.formData.variant_attributes[key].values = options;
-            },
-            updateFormFieldValues(currentFormData = this.product)
-            {
-                //  Get the form fields
-                var formFields = formHandle.getFormFields();
-
-                //  Foreach form field
-                for(var x = 0; x < _.size(formFields); x++){
-                    
-                    //  Get the current field key e.g name, description, e.t.c
-                    var key = Object.keys(formFields)[x];
-
-                    /*
-                    *  Vue.set()
-                    *  We use Vue.set to set a new object property. This method ensures the  
-                    *  property is created as a reactive property and triggers view updates:
-                    */
-
-                    //  If we have form data, then overide the form field values
-                    if(currentFormData){
-
-                        //  Update the form data fields using the current form data
-                        this.$set(this.formData, key, currentFormData[key]);
-
-                    }
-                }
-
             },
             checkIfFormHasChanged(formData){
                 
@@ -833,7 +843,7 @@
                             self.isSavingVariations = false;
 
                             //  Store the product variations data
-                            //  self.variations = ((data || {})._embedded || {}).products || [];
+                            self.variations = ((data || {})._embedded || {}).products || [];
 
                         })         
                         .catch(response => { 
@@ -852,6 +862,11 @@
             }
         },
         created(){
+            
+            //  Update the form fields with the current Ussd Interface field values
+            this.updateFormFieldValues();
+
+            console.log('UPDATE PRODUCT WIDGET CREATED!');
 
             //  If the switch is already turned on
             if(this.formData.allow_variants){
@@ -860,9 +875,6 @@
                 this.fetchVariations();
 
             }
-
-            //  Update the form fields with the current Ussd Interface field values
-            this.updateFormFieldValues();
 
             //  Store the original form data before editing
             this.storeOriginalFormData();

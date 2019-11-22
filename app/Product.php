@@ -38,8 +38,8 @@ class Product extends Model
         'allow_stock_management' => 'boolean',
     ];
 
-    protected $with = ['gallery', 'taxes', 'discounts', 'coupons', 'categories', 'tags'];
-
+    protected $with = ['gallery', 'taxes', 'discounts', 'coupons', 'categories', 'tags', 'variables'];
+    
     /*
      * The attributes that are mass assignable.
      *
@@ -201,30 +201,9 @@ class Product extends Model
     /* ATTRIBUTES */
 
     protected $appends = [
-        'variations', 'variables',
         'primary_image', 'discount_total', 'tax_total', 'sub_total', 'grand_total',
         'on_sale', 'stock_status', 'currency', 'rating_count', 'average_rating', 'resource_type',
     ];
-
-    /*
-     *  Returns the product variations
-     */
-    public function getVariationsAttribute()
-    {
-        if ($this->allow_variants) {
-            return $this->variations()->get();
-        }
-    }
-
-    /*
-     *  Returns the product variables
-     */
-    public function getVariablesAttribute()
-    {
-        if ($this->parent_product_id) {
-            return $this->variables()->get();
-        }
-    }
 
     /*
      *  Returns the product primary image

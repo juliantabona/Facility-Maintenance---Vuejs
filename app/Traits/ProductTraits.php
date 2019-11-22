@@ -133,14 +133,14 @@ trait ProductTraits
                  * ]
                  * 
                  */
-                $variations = $this->generateVariations($variantAttributeInfo) ?? [];
-    
-                //  If we have any variations
-                if( count($variations) ){
+                $generated_variations = $this->generateVariations($variantAttributeInfo) ?? [];
+
+                //  If we have any generated variations
+                if( count($generated_variations) ){
     
                     $templates = [];
 
-                    foreach($variations as $key => $variation_options){
+                    foreach($generated_variations as $key => $variation_options){
                         /*
                          *  If the main product is called "Summer Dress" and the
                          *  $variation_options=["Small", "Blue", "Cotton"]
@@ -149,12 +149,17 @@ trait ProductTraits
                          *  product name and the variation options. For example:
                          * 
                          *  "Summer Dress (Small, Blue, Cotton)"
+                         * 
+                         *  If the parent product id is 65 then this variation poduct
+                         *  will have an sku in the format
+                         * 
+                         *  "65_small_blue_cotton"
                          */
 
                         $name = $this->name .' ('. ucwords(trim( is_array($variation_options) ? implode(', ', $variation_options) : $variation_options )).')';
     
                         //  Create an sku value
-                        $sku = $this->id.'_'.strtolower(trim( is_array($variation_options) ? implode(', ', $variation_options) : $variation_options ) );
+                        $sku = $this->id.'_'.strtolower(trim( is_array($variation_options) ? implode('_', $variation_options) : $variation_options ) );
     
                         /*
                          *  The $template variable represents structure of the product.
@@ -177,21 +182,124 @@ trait ProductTraits
                     }
 
                     /*
-                     *  Update the current product instance
+                     *  Delete all previous variations
                      */
-                    //$created = $this->insert($templates);
+                    $deletedProductVariations = $this->variations()->forceDelete();
 
-                    return [
-                        'before' => $templates,
-                        'after' => (new \App\Product)->find($this->id)->variations
-                    ];
-        
-                    /*  If the product was updated successfully  */
-                    if ($created) {
-        
-                        /*  Return a fresh instance of the product  */
-                        return $this->fresh();
-        
+                    /*
+                     *  Create the new variations
+                     */
+                    $createdProductVariations = $this->insert($templates);
+
+                    /*
+                     *  Set the allow variants to true
+                     */
+                    $updatedProduct = $this->update([
+                        'variant_attributes' => $variantAttributeInfo,
+                        'allow_variants' => true
+                    ]);
+
+                    //  Get the created variations
+                    $saved_variations = $this->variations()->get();
+
+                    /*  We need an $variants array to store all the variants for each
+                     *  product variation we just created 
+                     */
+                    $variants = [];
+
+                    //  Foearch variation saved as a product
+                    foreach($saved_variations as $x => $saved_variation){
+
+                        //  Get the saved product id
+                        $product_id = $saved_variation['id'];
+
+                        /*  Get the generated variations. Sometimes each generated 
+                         *  variation can be a single element or an array. We need 
+                         *  to check for either case.
+                         * 
+                         *  A single element example:
+                         * 
+                         *   ~ Small
+                         * 
+                         *  An array example:
+                         *  
+                         *   ~ ["Small", "Blue", "Cotton"]
+                         */
+                        if(is_array($generated_variations[$x])){
+
+                            /*  $generated_variations[$x] is array e.g:
+                             *   ~ ["Small", "Blue", "Cotton"] or
+                             *   ~ ["Small", "Blue", "Nylon"] or
+                             *   ~ ["Small", "Red", "Cotton"] or
+                             *   e.t.c ...
+                             * 
+                             *  This means we had multiple variant attributes e.g 
+                             *   ~ "Size" with options "Small", "Medium", "Large",
+                             *   ~ "Color" with options "Blue", "Red",
+                             *   ~ "Size" with options "Cotton", "Nylon",
+                             *   e.t.c
+                             */
+                            foreach($generated_variations[$x] as $y => $generated_variation_option){
+                            
+                                /*  We can get the name of the variable attribute that each
+                                 *  $generated_variation belongs to e.g:
+                                 *  name = Size, name = Color, e.t.c 
+                                 */
+                                $variable_attribute_name = $variantAttributeInfo[$y]['name'];
+
+                                /*  Final result make be variants with details showing the variant
+                                 *  attribute name, the option value and product it e.g =>
+                                 *
+                                 *  [ name => "Sizes", value => "Small", product_id => 82 ]
+                                 *  [ name => "Color", value => "Blue", product_id => 82 ]
+                                 *  [ name => "Material", value => "Cotton", product_id => 82 ]
+                                 *  [ name => "Sizes", value => "Small", product_id => 83 ]
+                                 *  [ name => "Color", value => "Blue", product_id => 83 ]
+                                 *  [ name => "Material", value => "Nylon", product_id => 83 ]
+                                 *  e.t.c
+                                 * 
+                                 *  We push each one into the $variants array for storage
+                                 */
+                                array_push($variants, [
+                                    'name' => $variable_attribute_name,             //  E.g Size / Color / Material
+                                    'value' => $generated_variation_option,         //  E.g Small / Blue / Cotton
+                                    'product_id' => $saved_variations[$x]['id'],    //  E.g 10
+                                ]);
+
+                            }
+
+                        }else{
+
+                            /*  $generated_variations[$x] is a single element e.g:
+                             *   ~ "Small" or
+                             *   ~ "Medium" or
+                             *   ~ "Large" or
+                             *   e.t.c ...
+                             * 
+                             *  This means we only had one variant attribute e.g "Size"
+                             *  with options e.g "Small", "Medium" or "Large"
+                             */
+
+                            /*  We can get the name of the variable attribute that each
+                             *  $generated_variation belongs to e.g:
+                             *  name = Size, name = Color, e.t.c 
+                             */
+                            $variable_attribute_name = $variantAttributeInfo[0]['name'];
+
+                            array_push($variants, [
+                                'name' => $variable_attribute_name,             //  E.g Size / Color / Material
+                                'value' => $generated_variations[$x],         //  E.g Small / Blue / Cotton
+                                'product_id' => $saved_variations[$x]['id'],    //  E.g 10
+                            ]);
+                        }
+                        
+                    }
+
+                    if( count($variants) ){
+
+                        //  Create the variants of the variations
+                        $createdProductVariats = DB::table('variables')->insert($variants);
+
                     }
     
                 }

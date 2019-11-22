@@ -8,15 +8,16 @@
         :showDrawer="showDrawer"
         @visibility="$emit('visibility', $event)">
 
-        <div v-if="product">
+        <template v-if="showDrawer">
 
             <!-- Edit Product -->
             <updateProductForm 
+                v-if="product"
                 :product="product"
                 @updateSuccess="$emit('updateSuccess', $event)">
             </updateProductForm>                
 
-        </div>
+        </template>
 
     </mainDrawer> 
         
