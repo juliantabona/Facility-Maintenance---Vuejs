@@ -33,15 +33,15 @@
                 <Col :span="12">
                 
                     <Divider orientation="left">My Mobile Store</Divider>
-
+                    
                     <Tabs value="general" :animated="false">
-                        
+
                         <TabPane label="General" name="general">
                             
                             <!-- Ussd Interface Update Form -->
                             <ussdInterfaceUpdateForm
-                                :ussdInterface="ussdInterface"
                                 nameLabel="Store Name"
+                                :ussdInterface="ussdInterface"
                                 namePlaceholder="Enter store name"
                                 @updateSuccess="handleUpdateSuccess($event)">
                             </ussdInterfaceUpdateForm>
@@ -52,7 +52,8 @@
                             
                             <!-- Ussd Interface Update Form -->
                             <mobileStoreProductsWidget
-                                :productsUrl="productsUrl"
+                                :store="store"
+                                :ussdInterface="ussdInterface"
                                 @updateSuccess="handleUpdateSuccess($event)">
                             </mobileStoreProductsWidget>
 
@@ -163,8 +164,8 @@
 
     export default {
         props: {
-            ussdInterfaceUrl: {
-                type: String,
+            store: {
+                type: Object,
                 default: null
             }
         }, 
@@ -174,13 +175,11 @@
         },
         data(){
             return {
-                //  Customers
+                
                 accordion: '1',
-                productsUrl: null,
                 ussdInterface: null,
                 isLoadingUssdInterface: false,
-                localUssdInterfaceUrl: this.ussdInterfaceUrl,
-                
+                localUssdInterfaceUrl: (this.store._links['oq:ussd_interface'] || {}).href,
 
                 showCustomerAccessInstructions: false,
                 showStaffAccessInstructions: false,
@@ -219,10 +218,8 @@
                             //  Stop loader
                             self.isLoadingUssdInterface = false;
 
-                            //  Customer the customer data
+                            //  Store the customer data
                             self.ussdInterface = data;
-
-                            self.productsUrl = (((data || {})._links || {})['oq:products'] || {}).href;
 
                         })         
                         .catch(response => { 

@@ -214,7 +214,7 @@
                                     }
                                 }, [
                                     h('div', {
-                                            class: ['order-status', this.getOrderStatusColor(params.row.current_lifecycle_main_status)]
+                                            class: ['order-status', this.getOrderStatusColor( (params.row.current_lifecycle_main_status || {}) )]
                                         })
                                 ]);
                     }

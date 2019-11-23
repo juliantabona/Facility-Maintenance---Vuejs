@@ -342,6 +342,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
         //  Multiple products
         Route::get('/', 'Api\ProductController@getProducts')->name('products');
+        Route::post('/', 'Api\ProductController@createProduct')->name('products-create');
 
         //  Single product
         Route::get('/{product_id}', 'Api\ProductController@getProduct')->name('product')->where('product_id', '[0-9]+');
@@ -354,8 +355,11 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
                 $route->where('product_id', '[0-9]+');
             }
 
-            //  Update store
+            //  Update product
             Route::post('/', 'Api\ProductController@updateProduct')->name('update');
+
+            //  Delete product
+            Route::delete('/', 'Api\ProductController@deleteProduct')->name('delete');
 
             //  Owner related resources
             Route::get('/owner', 'Api\ProductController@getProductOwner')->name('owner');

@@ -11,9 +11,10 @@
 
     .cut-text { 
         text-overflow: ellipsis !important;
-        overflow: hidden !important; 
-        width: 90% !important; 
+        overflow: hidden !important;
+        width: 85% !important;
         white-space: nowrap !important;
+        display: block;
     }
 
     .unbolded >>> .field-label{
@@ -60,13 +61,17 @@
 
     <Card v-if="product" :class="'box-card single-product mb-2'+(!showContent ? ' hidden-content':'')">
 
+        <!-- Deleting Spinner  -->
+        <Spin v-if="isDeletingProduct" size="large" fix></Spin>
+
         <div slot="title">
 
             <!-- Product Name  -->
-            <span class="product-name font-weight-bold">
+            <span class="product-name font-weight-bold cut-text">
                 {{ productNumber ? productNumber +'. ' : '' }}
                 {{ product.name }}
             </span>
+            
         </div>
 
         <div slot="extra">
@@ -78,8 +83,9 @@
                       class="product-icon mr-2" size="20" @click="showContent = !showContent"/>
 
                 <!-- Remove Product Button  -->
-                <Poptip v-if="showDeleteButton" confirm title="Are you sure you want to remove this product?" ok-text="Yes" cancel-text="No" width="300"
-                    @on-ok="$emit('removeProduct')">
+                <Poptip v-if="showDeleteButton" confirm title="Are you sure you want to remove this product?" 
+                        ok-text="Yes" cancel-text="No" width="300" @on-ok="handleRemoveProduct(index)"
+                        placement="left">
                     <Icon type="ios-trash-outline" class="product-icon hidable mr-2" size="20"/>
                 </Poptip>
 
@@ -88,7 +94,7 @@
 
                 <!-- Move Product Button  -->
                 <Icon v-if="showDragButton" type="ios-move" class="product-icon product-dragger-handle hidable mr-2" size="20" />
-                
+            
             </div>
         </div>    
 
@@ -147,6 +153,36 @@
 
         </Row>
 
+        <Row>
+
+            <Col :span="24">
+
+                <div class="float-right mb-1 mt-1">
+
+                    <Poptip title="Reminders" trigger="hover" width="300" placement="top-end">
+
+                        <Badge style="margin: 0px 25px 5px 0px;">
+                            <Icon type="ios-alert-outline" slot="count" color="#ed4014" size="20" />
+                        </Badge>
+
+                        <!-- Reminder Poptip Content  -->
+                        <div slot="content">
+                            
+                            <List size="small">
+                                <ListItem>No price provided</ListItem>
+                                <ListItem>Stock is very low</ListItem>
+                            </List>
+
+                        </div>
+
+                    </Poptip>
+
+                </div>
+
+            </Col>
+
+        </Row>
+
 
     </Card>
 
@@ -187,6 +223,7 @@
         },
         data(){
             return {
+                isDeletingProduct:false,
                 showContent: false
             }
         },
@@ -219,6 +256,50 @@
                 return this.product.variables;
             }
 
+        },
+        methods: {
+            handleRemoveProduct(index) {
+
+                let url = ((this.product._links || {}).self || {}).href;
+
+                if( url ){
+
+                    //  Hold constant reference to the vue instance
+                    const self = this;
+
+                    //  Start loader
+                    self.isDeletingProduct = true;
+
+                    //  Console log to acknowledge the start of api process
+                    console.log('Start deleting the product...');
+
+                    //  Use the api call() function located in resources/js/api.js
+                    return api.call('delete', url )
+                        .then(({data}) => {
+                            
+                            //  Console log the data returned
+                            console.log(data);
+
+                            //  Stop loader
+                            self.isDeletingProduct = false;
+
+                            self.$emit('removeProduct', index);
+
+                        })         
+                        .catch(response => { 
+
+                            //  Stop loader
+                            self.isDeletingProduct = false;
+
+                            //  Console log Error Location
+                            console.log('resources/js/widgets/store/overview/mobileStoreProductWidget.vue - Error getting products...');
+
+                            //  Log the responce
+                            console.log(response);    
+                        });
+                }
+
+            }
         },
     }
 

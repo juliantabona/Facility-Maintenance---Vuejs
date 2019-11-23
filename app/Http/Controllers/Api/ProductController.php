@@ -71,6 +71,24 @@ class ProductController extends Controller
 
         }
     }
+    
+    public function createProduct( Request $request )
+    {
+        //  Check if the user is authourized to create a product
+        if ($this->user->can('create', Product::class)) {
+
+            //  Create the product
+            $product = ( new \App\Product )->initiateCreate( $productInfo = $request->all() );
+            
+            //  Return an API Readable Format of the Product Instance
+            return $product->convertToApiFormat();
+
+        } else {
+
+            //  Not Authourized
+            return oq_api_not_authorized();
+        }
+    }
 
     public function updateProduct( Request $request, $product_id )
     {
@@ -88,6 +106,36 @@ class ProductController extends Controller
 
                 //  Return an API Readable Format of the Product Instance
                 return $updatedProduct->convertToApiFormat();
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+            }
+        }else{
+            
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
+    public function deleteProduct( Request $request, $product_id )
+    {
+        //  Get the product
+        $product = Product::where('id', $product_id)->first() ?? null;
+
+        //  Check if the product exists
+        if ($product) {
+
+            //  Check if the user is authourized to delete the product
+            if ($this->user->can('delete', $product)) {
+
+                //  Delete the product
+                $deletedProduct = $product->initiatedelete();
+                
+                //  Return status 200
+                return oq_api_notify(null, 200);
 
             } else {
 

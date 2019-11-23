@@ -30,16 +30,26 @@
         <Loader v-if="isLoadingProducts" :loading="true" type="text" class="mt-5 text-left" theme="white">Loading products...</Loader>
         <Loader v-if="isSavingProducts" :loading="true" type="text" class="mt-2 mb-2 text-left" theme="white">Saving products...</Loader>
 
-        <div v-if="!isSavingProducts && !isLoadingProducts && localProducts.length" class="clearfix mb-3">
+        <div v-if="!isSavingProducts && !isLoadingProducts" class="clearfix mb-3">
             
             <!-- Save Button -->
-            <basicButton 
-                class="float-right" customClass="pr-2 pl-2" 
-                type="success" size="large" 
-                :disabled="!productsHaveChanged"
-                :ripple="productsHaveChanged"
-                @click.native="handleSave()">
+            <basicButton v-if="productsHaveChanged" 
+                :ripple="true"
+                customClass="pr-2 pl-2" 
+                class="float-right ml-2" 
+                type="success" size="large"
+                @click.native="handleSaveProduct()">
                 <span>Save Changes</span>
+            </basicButton>
+
+            <!-- Save Button -->
+            <basicButton 
+                class="float-right" 
+                customClass="pr-2 pl-2" 
+                type="success" size="large" 
+                :disabled="productsHaveChanged"
+                @click.native="handleCreateProduct()">
+                <span>Create Product</span>
             </basicButton>
 
         </div>
@@ -79,12 +89,17 @@
             DRAWER TO EDIT A PRODUCT
             - This is a global component
         -->
-        <editProductDrawer 
+        <editOrCreateProductDrawer 
+            :store="store"
+            :createUrl="createUrl"
+            :updateUrl="updateUrl"
             :product="storedProduct"
-            :showDrawer="showEditProductDrawer"
-            @visibility="showEditProductDrawer = $event"
-            @updateSuccess="handleProductUpdate($event)">
-        </editProductDrawer>
+            :ussdInterface="ussdInterface"
+            :showDrawer="showEditOrCreateProductDrawer"
+            @visibility="showEditOrCreateProductDrawer = $event"
+            @createSuccess="handleCreatedProduct($event)"
+            @updateSuccess="handleUpdatedProduct($event)">
+        </editOrCreateProductDrawer>
 
     </div>
 
@@ -105,8 +120,12 @@
 
     export default {
         props: {
-            productsUrl: {
-                type: String,
+            store: {
+                type: Object,
+                default: null
+            },
+            ussdInterface: {
+                type: Object,
                 default: null
             }
         }, 
@@ -115,16 +134,16 @@
         },
         data(){
             return {
-
-                //  Products
+                createUrl:null,
+                updateUrl:null,
                 localProducts: [],
                 storedProduct:null,
                 isSavingProducts: false,
                 isLoadingProducts: false,
                 productsBeforeChange: null,
                 productsHaveChanged: false,
-                showEditProductDrawer:false,
-                localProductsUrl: this.productsUrl,
+                showEditOrCreateProductDrawer:false,
+                localProductsUrl: (((this.ussdInterface || {})._links || {})['oq:products'] || {}).href,
  
             }
         },
@@ -145,14 +164,80 @@
         methods: {
             handleRemoveProduct(index){
 
-            },
-            handleEditProduct(product){
-                
-                this.storedProduct = product;
-                this.openEditProductDrawer();
+                //  Remove the product from the list
+                this.localProducts.splice(index, 1);
+
+                /*  Store the original products data  */
+                this.storeOriginalProductsData();
+
+                /*  Check if the the localProducts has changed  */
+                this.productsHaveChanged = this.checkIfProductsHaveChanged();
 
             },
-            handleProductUpdate(updatedProduct){
+            handleCreateProduct(){
+
+                //  Remove the update url
+                this.updateUrl = null;
+
+                //  Use the products url for the Post Request on create
+                this.createUrl = this.createUrl;
+
+                //  Remove any stored product
+                this.storedProduct = null;
+
+                //  Open the product drawer
+                this.openEditOrCreateProductDrawer();
+
+            },
+            handleEditProduct(product){
+
+                //  Remove the create url
+                this.createUrl = null;
+
+                //  Use the product url for the Post Request on update
+                this.updateUrl = product['_links'].self.href;
+
+                //  Store the current product for editting
+                this.storedProduct = product;
+
+                //  Open the edit product drawer
+                this.openEditOrCreateProductDrawer();
+
+            },
+            handleCreatedProduct(createdProduct){
+
+                //  Check if the product data has already been changed
+                var isAlreadyChanged = this.productsHaveChanged;
+                
+                //  Add the new create product to the top of the list
+                this.localProducts.unshift(createdProduct);
+
+                /*  If the product data is not changed then keep the state as unchanged
+                 *  even after updaing this product item. If its alrady changed it means
+                 *  the user had already done something to the product data and needs to
+                 *  save those changes e.g the user had used the drag and drop and did 
+                 *  not save the new product arrangement.
+                 */
+                if( !isAlreadyChanged ){
+
+                    /*  Store the original products data  */
+                    this.storeOriginalProductsData();
+
+                    /*  Check if the the localProducts has changed  */
+                    this.productsHaveChanged = this.checkIfProductsHaveChanged();
+                    
+                }
+
+                //  Close the drawer
+                this.showEditOrCreateProductDrawer = false;
+
+                //  Show success message
+                this.$Notice.success({
+                    title: 'Created successfully'
+                });
+
+            },
+            handleUpdatedProduct(updatedProduct){
 
                 //  Check if the product data has already been changed
                 var isAlreadyChanged = this.productsHaveChanged;
@@ -182,10 +267,10 @@
                 }
 
             },
-            openEditProductDrawer(){
-                this.showEditProductDrawer = true;
+            openEditOrCreateProductDrawer(){
+                this.showEditOrCreateProductDrawer = true;
             },
-            handleSave() {
+            handleSaveProduct() {
 
                 if( this.localProductsUrl ){
 
@@ -260,6 +345,9 @@
 
                             //  Stop loader
                             self.isLoadingProducts = false;
+
+                            //  Get the url to create a new product
+                            self.createUrl = (((data || {})._links || {}).self || {}).href;
 
                             //  Get the product data
                             self.localProducts = ((data || {})._embedded || {}).products || [];

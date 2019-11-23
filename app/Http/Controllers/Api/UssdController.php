@@ -551,33 +551,41 @@ class UssdController extends Controller
 
             /*  Get the attribute name e.g "Small", "Medium", "Large", e.t.c */
             $this->variable_options = $variant_attribute['values'];
-
+            
             /*  If the user indicated to paginate the "Store Attribute Options Page"  */
             if ($this->wantsToPaginateVariantOptionsPage()) {
+
                 /*  Paginate the variable options page  */
                 $this->variable_options_to_display = $this->getPaginatedVariantOptionsToList();
 
                 /*  Paginate the variable options page  */
                 $this->offset = $this->offset + 1;
+
             } else {
+
                 $this->variable_options_to_display = $this->getFirstVariantOptionsToList();
+
             }
 
             /*  If the user has not already selected an option for this variable page.  */
             if (!$this->hasSelectedProductVariantPageOption()) {
+
                 /*  Determine if this is the last variant attribute in the loop */
                 $is_last_variant_page = ($variant_attribute_offset == count($variant_attributes));
 
                 /*  Display the menu for the user to select a product variable */
                 return $this->displayProductVariablePage($is_last_variant_page);
+
             } else {
                 /*  Get the selected option for this variable page.  */
                 $selected_option = $this->getSelectedVariableOption();
 
                 /*  If selected variable does not exist  */
                 if (!$selected_option) {
+
                     /*  Notify the user of incorrect option selected  */
                     return $this->displayIncorrectOptionPage();
+
                 }
 
                 array_push($this->selected_variable_options, $selected_option);
@@ -588,6 +596,19 @@ class UssdController extends Controller
 
         /*  Make sure the selected product variation is always available from here on  */
         $this->selected_product = $this->getSelectedProductVariation();
+
+        /*  If the selected product variable also has variables  */
+        if ($this->hasVariables()) {
+
+            /*  Remove all previous selected variable options. This is so that they do not
+             *  affect the new variations we want to collect.
+             */
+            $this->selected_variable_options = [];
+
+            /*  Handle the variable selection process again (but for this variation product)  */
+            return $this->handleProductVariables();
+
+        }
     }
 
     public function handleProductQuantity()

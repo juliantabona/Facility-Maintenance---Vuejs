@@ -3,6 +3,7 @@
 namespace App;
 
 use DB;
+use Illuminate\Support\Str;
 use App\AdvancedFilter\Dataviewer;
 use App\Traits\UssdInterfaceTraits;
 use Illuminate\Database\Eloquent\Model;
@@ -91,14 +92,14 @@ class UssdInterface extends Model
      {
         return '*'.config('app.MERCHANT_USSD_CODE').'*'.$this->code.'#';
      }
- 
-     /* 
-      *  Returns the resource type
-      */
-     public function getResourceTypeAttribute()
-     {
-         return strtolower(class_basename($this));
-     }
+
+    /*
+     *  Returns the resource type
+     */
+    public function getResourceTypeAttribute()
+    {
+        return strtolower(Str::snake(class_basename($this)));
+    }
 
      public function setLiveModeAttribute($value)
      {

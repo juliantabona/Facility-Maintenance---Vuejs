@@ -43,7 +43,7 @@ Vue.component('oq-Aside',  require('./layouts/aside/default.vue'));
  *  Component 2A it fails since its not compilled... i'm not sure... but to solve
  *  the issue i need to make it a global component.
  */
-Vue.component('editProductDrawer',  require('./components/_common/drawers/editProductDrawer.vue'));
+Vue.component('editOrCreateProductDrawer',  require('./components/_common/drawers/editOrCreateProductDrawer.vue'));
 
 
 

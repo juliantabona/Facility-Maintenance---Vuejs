@@ -17,6 +17,7 @@ use App\Http\Resources\Products as ProductsResource;
 
 trait ProductTraits
 {
+    private $store;
     private $product;
     
     /*  convertToApiFormat() method:
@@ -46,6 +47,121 @@ trait ProductTraits
             //  Log the error
             return oq_api_notify_error('Query Error', $e->getMessage(), 404);
 
+        }
+    }
+
+    /*  initiateCreate() method =>
+     *
+     *  This method is used to create a new product.
+     *  The $productInfo variable represents the
+     *  product dataset provided
+     */
+    public function initiateCreate( $productInfo = null )
+    {
+        /*  If we have the store id  */
+        if ($productInfo['store_id']) {
+
+            /*  Retrieve the store details using the store id  */
+            $this->store = ( new \App\Store )::find($productInfo['store_id']);
+
+        }
+
+        /*
+         *  The $template variable represents the accepted structure of the product.
+         *  If no template is provided, we create one using the request data.
+         */
+        $template = [
+            /*  Basic Info  */
+            'name' => $productInfo['name'] ?? null,
+            'description' => $productInfo['description'] ?? null,
+            'type' => $productInfo['type'] ?? null,
+            'cost_per_item' => $productInfo['cost_per_item'] ?? null,
+            'unit_regular_price' => $productInfo['unit_regular_price'] ?? null,
+            'unit_sale_price' => $productInfo['unit_sale_price'] ?? null,
+            'sku' => $productInfo['sku'] ?? null,
+            'barcode' => $productInfo['barcode'] ?? null,
+            'stock_quantity' => $productInfo['stock_quantity'] ?? null,
+            'allow_stock_management' => $productInfo['allow_stock_management'] ?? null,
+            'auto_manage_stock' => $productInfo['auto_manage_stock'] ?? null,
+            'variant_attributes' => $productInfo['variant_attributes'] ?? null,
+            'allow_variants' => $productInfo['allow_variants'] ?? null,
+            'allow_downloads' => $productInfo['allow_downloads'] ?? null,
+            'show_on_store' => $productInfo['show_on_store'] ?? null,
+            'is_new' => $productInfo['is_new'] ?? null,
+            'is_featured' => $productInfo['is_featured'] ?? null,
+            'is_new' => $productInfo['is_new'] ?? null,
+            'is_featured' => $productInfo['is_featured'] ?? null,
+            'owner_id' => $this->store->id ?? null,
+            'owner_type' => $this->store->resource_type ?? null,
+
+        ];
+
+        try {
+            
+            /*
+             *  Create a new product
+             */
+            $this->product = $this->create($template);
+
+            /*  If the product was created successfully  */
+            if ($this->product) {
+
+                /*  If we have the ussd interface id  */
+                if ($productInfo['ussd_interface_id']) {
+
+                    /*  Get the ussd interface  */
+                    $ussdInterface = $this->store->ussdInterface;
+
+                    /*  Get all the current product allocations by order of arrangement  */
+                    $current_product_allocations = DB::table('product_allocations')->where([
+                        'owner_id' => $ussdInterface->id,
+                        'owner_type' => $ussdInterface->resource_type,
+                    ])->orderBy('arrangement')->get();
+
+                    /*  Create a new product allocation and add the product we just created as the first on the list  */
+                    $new_product_allocations[] = [
+                        'arrangement' => 1,
+                        'owner_id' => $ussdInterface->id,
+                        'product_id' => $this->product->id,
+                        'owner_type' => $ussdInterface->resource_type,                    
+                        'created_at' => DB::raw('now()'),                       
+                        'updated_at' => DB::raw('now()')
+                    ];
+
+                    /*  Get all the current product allocations and add them in their original order but arranged
+                     *  after the new product we just created
+                     */
+                    foreach ($current_product_allocations as $key => $product_allocation) {
+                        $new_product_allocations[] = [
+                            'arrangement' => $key + 2,
+                            'owner_id' => $product_allocation->owner_id,
+                            'product_id' => $product_allocation->product_id,
+                            'owner_type' => $product_allocation->owner_type,
+                            'created_at' => $product_allocation->created_at,
+                            'updated_at' => DB::raw('now()'),
+                        ];
+                    }
+
+                    /*  Delete all the current product allocations
+                     */
+                    DB::table('product_allocations')->where([
+                        'owner_id' => $ussdInterface->id,
+                        'owner_type' => $ussdInterface->resource_type,   
+                    ])->delete();
+
+                    /*  Insert all the product allocations in their updated order of arrangement
+                     */
+                    DB::table('product_allocations')->insert($new_product_allocations);
+
+                }
+
+                /*  Return a fresh instance of the product  */
+                return $this->product->fresh();
+
+            }
+        } catch (\Exception $e) {
+            //  Return the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
         }
     }
 
@@ -103,6 +219,25 @@ trait ProductTraits
                 return $this->fresh();
 
             }
+        } catch (\Exception $e) {
+            //  Return the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+    }
+
+    /*  initiateDelete() method =>
+     *
+     *  This method is used to delete an existing product.
+     */
+    public function initiateDelete()
+    {
+        try {
+            
+            /*
+             *  Delete the current product instance
+             */
+            $deleted = $this->delete();
+
         } catch (\Exception $e) {
             //  Return the error
             return oq_api_notify_error('Query Error', $e->getMessage(), 404);
@@ -734,7 +869,7 @@ trait ProductTraits
      *  the product.
      *
      */
-    public function initiateCreate($template = null)
+    public function initiateCreate2($template = null)
     {
         //  Current authenticated user
         $auth_user = auth('api')->user();

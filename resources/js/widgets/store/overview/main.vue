@@ -92,7 +92,7 @@
                         <!-- USSD Interface Tab -->
                         <TabPane label="My Mobile Store" class="p-1">
                             
-                            <ussdInterfaceWidget :ussdInterfaceUrl="(store._links['oq:ussd_interface'] || {}).href"></ussdInterfaceWidget>
+                            <ussdInterfaceWidget :store="store"></ussdInterfaceWidget>
 
                         </TabPane>
 

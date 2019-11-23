@@ -2,6 +2,7 @@
 
 namespace App;
 
+use Illuminate\Support\Str;
 use App\AdvancedFilter\Dataviewer;
 use App\Traits\RecentActivityTraits;
 use Illuminate\Database\Eloquent\Model;
@@ -79,4 +80,17 @@ class RecentActivity extends Model
         return $this->belongsTo('App\User');
     }
 
+    /* ATTRIBUTES */
+
+    protected $appends = [
+        'resource_type',
+    ];
+
+    /*
+     *  Returns the resource type
+     */
+    public function getResourceTypeAttribute()
+    {
+        return strtolower(Str::snake(class_basename($this)));
+    }
 }

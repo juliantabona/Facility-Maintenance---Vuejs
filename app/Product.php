@@ -39,7 +39,7 @@ class Product extends Model
     ];
 
     protected $with = ['gallery', 'taxes', 'discounts', 'coupons', 'categories', 'tags', 'variables'];
-    
+
     /*
      * The attributes that are mass assignable.
      *
@@ -393,5 +393,38 @@ class Product extends Model
     public function setIsFeaturedAttribute($value)
     {
         $this->attributes['is_featured'] = (($value == 'true' || $value == '1') ? 1 : 0);
+    }
+
+    //  ON DELETE EVENT
+    public static function boot()
+    {
+        parent::boot();
+
+        // before delete() method call this
+        static::deleting(function ($product) {
+            //  Delete all reviews
+            $product->reviews()->delete();
+
+            //  Delete all settings
+            $product->settings()->delete();
+
+            //  Delete all variables
+            $product->variables()->delete();
+
+            //  Delete all documents
+            foreach ($product->documents as $document) {
+                $document->delete();
+            }
+
+            //  Delete all variations
+            foreach ($product->variations as $variation) {
+                $variation->delete();
+            }
+
+            //  Delete all activities
+            $product->recentActivities()->delete();
+
+            // do the rest of the cleanup...
+        });
     }
 }
