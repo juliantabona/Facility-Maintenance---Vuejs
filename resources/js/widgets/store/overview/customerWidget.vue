@@ -127,7 +127,6 @@
                 if(this.tableColumnsToShowByDefault.includes('ID')){
                     allowedColumns.push(
                     {
-                        width: 80,
                         title: 'ID',
                         render: (h, params) => {
                             return h('span', (params.row.id));
@@ -139,7 +138,6 @@
                 if(this.tableColumnsToShowByDefault.includes('Name')){
                     allowedColumns.push(
                     {
-                        width: 150,
                         title: 'Name',
                         render: (h, params) => {
                             return h('span', (
@@ -153,7 +151,6 @@
                 if(this.tableColumnsToShowByDefault.includes('Type')){
                     allowedColumns.push(
                     {
-                        width: 150,
                         title: 'Type',
                         render: (h, params) => {
                             return h('span', (
@@ -167,7 +164,6 @@
                 if(this.tableColumnsToShowByDefault.includes('Email')){
                     allowedColumns.push(
                     {
-                        width: 200,
                         title: 'Email',
                         render: (h, params) => {
                             return h('span', ((params.row.default_email || {}).email || '...'));
@@ -179,7 +175,6 @@
                 if(this.tableColumnsToShowByDefault.includes('Phone')){
                     allowedColumns.push(
                     {
-                        width: 130,
                         title: 'Phone',
                         render: (h, params) => {
                             return h('span', ((params.row.default_mobile || {}).full_number || '...'));
@@ -191,7 +186,6 @@
                 if(this.tableColumnsToShowByDefault.includes('Date')){
                     allowedColumns.push(
                     {
-                        width: 120,
                         title: 'Date',
                         sortable: true,
                         render: (h, params) => {

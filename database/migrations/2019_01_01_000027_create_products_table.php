@@ -39,7 +39,6 @@ class CreateProductsTable extends Migration
             $table->string('owner_type')->nullable();
 
             /*  Timestamps  */
-            $table->softDeletes();
             $table->timestamps();
         });
     }

@@ -2,10 +2,10 @@
 
 namespace App;
 
+use DB;
 use App\Traits\ProductTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
@@ -16,7 +16,6 @@ Relation::morphMap([
 
 class Product extends Model
 {
-    use SoftDeletes;
     use Dataviewer;
     use ProductTraits;
 
@@ -423,6 +422,9 @@ class Product extends Model
 
             //  Delete all activities
             $product->recentActivities()->delete();
+
+            //  Delete all product allocations
+            DB::table('product_allocations')->where(['product_id' => $product->id])->delete();
 
             // do the rest of the cleanup...
         });

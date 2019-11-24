@@ -25,7 +25,7 @@
 <template>
 
     <div>
-
+        Create URL: {{ createUrl }}
         <!-- Loader -->
         <Loader v-if="isLoadingProducts" :loading="true" type="text" class="mt-5 text-left" theme="white">Loading products...</Loader>
         <Loader v-if="isSavingProducts" :loading="true" type="text" class="mt-2 mb-2 text-left" theme="white">Saving products...</Loader>
@@ -137,6 +137,7 @@
                 createUrl:null,
                 updateUrl:null,
                 localProducts: [],
+                localProductsData: null,
                 storedProduct:null,
                 isSavingProducts: false,
                 isLoadingProducts: false,
@@ -178,9 +179,9 @@
 
                 //  Remove the update url
                 this.updateUrl = null;
-
+                
                 //  Use the products url for the Post Request on create
-                this.createUrl = this.createUrl;
+                this.createUrl = ((((this.localProductsData || {})._links || {})).self || {}).href;
 
                 //  Remove any stored product
                 this.storedProduct = null;
@@ -346,11 +347,11 @@
                             //  Stop loader
                             self.isLoadingProducts = false;
 
-                            //  Get the url to create a new product
-                            self.createUrl = (((data || {})._links || {}).self || {}).href;
+                            //  Get the product links
+                            self.localProductsData = data;
 
                             //  Get the product data
-                            self.localProducts = ((data || {})._embedded || {}).products || [];
+                            self.localProducts = ((self.localProductsData || {})._embedded || {}).products || [];
 
                         })         
                         .catch(response => { 

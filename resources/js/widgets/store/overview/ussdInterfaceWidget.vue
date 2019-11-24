@@ -34,9 +34,9 @@
                 
                     <Divider orientation="left">My Mobile Store</Divider>
                     
-                    <Tabs value="general" :animated="false">
+                    <el-tabs value="general">
 
-                        <TabPane label="General" name="general">
+                        <el-tab-pane label="General" name="general">
                             
                             <!-- Ussd Interface Update Form -->
                             <ussdInterfaceUpdateForm
@@ -46,9 +46,9 @@
                                 @updateSuccess="handleUpdateSuccess($event)">
                             </ussdInterfaceUpdateForm>
 
-                        </TabPane>
+                        </el-tab-pane>
 
-                        <TabPane label="Products" name="products">
+                        <el-tab-pane label="Products" name="products">
                             
                             <!-- Ussd Interface Update Form -->
                             <mobileStoreProductsWidget
@@ -56,10 +56,10 @@
                                 :ussdInterface="ussdInterface"
                                 @updateSuccess="handleUpdateSuccess($event)">
                             </mobileStoreProductsWidget>
+                            
+                        </el-tab-pane>
 
-                        </TabPane>
-
-                        <TabPane label="FAQ" name="faq">
+                        <el-tab-pane label="FAQ" name="faq">
 
                             <!-- What Is A Mobile Store -->
                             <Alert type="success" @click.native="showMobileStoreInfo = !showMobileStoreInfo" style="cursor:pointer;">
@@ -125,9 +125,9 @@
 
                             </Alert>
 
-                        </TabPane>
-                        
-                    </Tabs>
+                        </el-tab-pane>
+
+                    </el-tabs>
 
                 </Col>
 

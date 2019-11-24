@@ -10,6 +10,19 @@
         display:inline-block;
     }
 
+    .order-table >>> .breakdown-poptip .ivu-poptip-body{
+        padding: 0 16px;
+    }
+
+    .order-table >>> .breakdown-poptip .ivu-list-container{
+        margin-top: -20px !important;
+        margin-bottom: -20px !important;
+    }
+
+    .order-table, .order-table >>> .ivu-table{
+        overflow: inherit !important;
+    }
+
     .order-table >>> .order-status{
         width: 10px;
         height: 10px;
@@ -224,7 +237,6 @@
                 if(this.tableColumnsToShowByDefault.includes('Order #')){
                     allowedColumns.push(
                     {
-                        width: 80,
                         title: 'Order #',
                         render: (h, params) => {
                             return h('span', (params.row.number));
@@ -236,7 +248,6 @@
                 if(this.tableColumnsToShowByDefault.includes('Customer')){
                     allowedColumns.push(
                     {
-                        width: 150,
                         title: 'Customer',
                         render: (h, params) => {
                             return h('span', (
@@ -250,33 +261,60 @@
                 if(this.tableColumnsToShowByDefault.includes('Email')){
                     allowedColumns.push(
                     {
-                        width: 200,
                         title: 'Email',
                         render: (h, params) => {
-                            return h('span', ((params.row.billing_info || {}).email) || '...');
+                            return h('Poptip', {
+                                style: {
+                                    width: '100%',
+                                    textAlign:'left'
+                                },
+                                props: {
+                                    width: 280,
+                                    wordWrap: true,
+                                    trigger:'hover',
+                                    placement: 'top-start',
+                                    title: 'Email: '+((params.row.billing_info || {}).email  || '...')
+                                }
+                            }, [
+                                h('span', {
+                                    class: ['cut-text']
+                                }, ((params.row.billing_info || {}).email) || '...')
+                            ])
                         }
-                    });
+                    })
                 }
                 
                 //  Customer Phones
                 if(this.tableColumnsToShowByDefault.includes('Phone')){
                     allowedColumns.push(
                     {
-                        width: 130,
                         title: 'Phone',
                         render: (h, params) => {
-                            return h('span', ( 
-                                ((params.row.billing_info || {}).default_mobile || {}).full_number 
-                            ));
+                            return h('Poptip', {
+                                style: {
+                                    width: '100%',
+                                    textAlign:'left'
+                                },
+                                props: {
+                                    width: 280,
+                                    wordWrap: true,
+                                    trigger:'hover',
+                                    placement: 'top-start',
+                                    title: 'Phone: '+(((params.row.billing_info || {}).default_mobile || {}).full_number  || '...')
+                                }
+                            }, [
+                                h('span', {
+                                    class: ['cut-text']
+                                }, (((params.row.billing_info || {}).default_mobile || {}).full_number  || '...'))
+                            ])
                         }
-                    });
+                    })
                 }
                 
                 //  Date
                 if(this.tableColumnsToShowByDefault.includes('Date')){
                     allowedColumns.push(
                     {
-                        width: 120,
                         title: 'Date',
                         sortable: true,
                         render: (h, params) => {
@@ -289,16 +327,45 @@
                 if(this.tableColumnsToShowByDefault.includes('Grand Total')){
                     allowedColumns.push(
                     {
-                        width: 130,
                         title: 'Total',
-                        key: 'grand_total',
-                        sortable: true,
                         render: (h, params) => {
-                            var grandTotal = (params.row.grand_total || 0) 
+                            
+                            var subTotal = (params.row.sub_total || 0);
+                            var taxTotal = (params.row.tax_total || 0);
+                            var discountTotal = (params.row.discount_total || 0);
+                            var grandTotal = (params.row.grand_total || 0); 
                             var symbol = (params.row.currency || {}).symbol || '';
-                            return h('span', this.formatPrice(grandTotal, symbol) );
+
+                            return h('Poptip', {
+                                style: {
+                                    width: '100%',
+                                    textAlign:'left'
+                                },
+                                props: {
+                                    width: 280,
+                                    wordWrap: true,
+                                    trigger:'hover',
+                                    placement: 'top-end',
+                                    title: 'Breakdown'
+                                },
+                                class: ['breakdown-poptip']
+                            }, [
+                                h('span', this.formatPrice(grandTotal, symbol) ),
+                                h('List', {
+                                        slot: 'content',
+                                        props: {
+                                            slot: 'content',
+                                            size: 'small'
+                                        }
+                                    }, [
+                                        h('ListItem', 'Sub Total: '+this.formatPrice(subTotal, symbol) ),
+                                        h('ListItem', 'Tax Total: '+this.formatPrice(taxTotal, symbol) ),
+                                        h('ListItem', 'Discount Total: '+this.formatPrice(discountTotal, symbol) ),
+                                        h('ListItem', 'Grand Total: '+this.formatPrice(grandTotal, symbol) )
+                                    ])
+                            ])
                         }
-                    });
+                    })
                 }
                 
                 //  Action
