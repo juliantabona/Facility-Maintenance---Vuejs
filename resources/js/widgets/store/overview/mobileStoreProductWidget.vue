@@ -152,8 +152,8 @@
             </Col>
 
         </Row>
-
-        <Row>
+        
+        <Row v-if="hasReminders">
 
             <Col :span="24">
 
@@ -169,8 +169,27 @@
                         <div slot="content">
                             
                             <List size="small">
-                                <ListItem>No price provided</ListItem>
-                                <ListItem>Stock is very low</ListItem>
+
+                                <!-- If its a simple product and does not have a price -->
+                                <ListItem v-if="(isSimpleProduct && !hasPrice)">No price provided</ListItem>
+
+                                <!-- If its a variable product and does not have a price on atleast one variation -->
+                                <ListItem v-if="(!isSimpleProduct && !hasPriceOnVariations)">No price on variations</ListItem>
+
+                                <!-- If its a simple product and does not have stock -->
+                                <ListItem v-if="(isSimpleProduct && !hasStock)">No stock</ListItem>
+
+                                <!-- If its a simple product and it does have stock -->
+                                <template v-else>
+
+                                    <!-- If its a simple product and does not have plenty stock -->
+                                    <ListItem v-if="(isSimpleProduct && !hasPlentyStock)">Low stock</ListItem>
+
+                                </template>
+
+                                <!-- If its a variable product and does not have stock on atleast one variation -->
+                                <ListItem v-if="(!isSimpleProduct && !hasEnoughStockOnAllOnVariations)">Low stock on variations</ListItem>
+
                             </List>
 
                         </div>
@@ -230,6 +249,87 @@
         computed: {
             productNumber(){
                 return (this.index != null ? this.index + 1 : '');
+            },
+            isSimpleProduct(){
+                //  A simple product doest not support variations
+                return (!this.product.allow_variants) ? true : false;
+            },
+            hasReminders(){
+                return ( 
+                        //  If its a simple product and does not have a price
+                        (this.isSimpleProduct && !this.hasPrice) ||
+                        
+                        //  If its a variable product and does not have a price on atleast one variation
+                        (!this.isSimpleProduct && !this.hasPriceOnVariations) || 
+
+                        //  If its a simple product and does not have stock  
+                        (this.isSimpleProduct && !this.hasStock) ||
+
+                        //  If its a simple product and does not have plenty stock  
+                        (this.isSimpleProduct && !this.hasPlentyStock) ||
+                
+                        //  If its a variable product and does not have stock on atleast one variation
+                        (!this.isSimpleProduct && !this.hasEnoughStockOnAllOnVariations)
+                );
+            },
+            hasPrice(){
+                if( this.product.has_price != null ){
+
+                    return (this.product.has_price === true ? true : false);
+
+                /*  If the has_price is null it means this product has a price but
+                 *  its determined by the product variations.
+                 */
+                }else{
+
+                    return true;
+
+                }
+            },
+            hasPriceOnVariations(){
+
+                return (this.product.has_prices_on_all_variations === true ? true : false);
+
+            },
+            hasStock(){
+
+                //  If the stock status is not null it means this product supports stock take.
+                if( this.product.stock_status != null ){
+
+                    //  If the stock status type is not set to "out_of_stock" then we still have stock
+                    return ((this.product.stock_status || {}).type !== 'out_of_stock') ? true : false;
+
+                /*  If the stock status is null it means this product does not take stock.
+                 *  This means we always have stock for this product
+                 */
+                }else{
+
+                    return true;
+
+                }
+            },
+            hasPlentyStock(){
+
+                //  If the stock status is not null it means this product supports stock take.
+                if( this.product.stock_status != null ){
+
+                    //  If the stock status type is set to "in_stock" then we still have plenty stock
+                    return ((this.product.stock_status || {}).type === 'in_stock') ? true : false;
+
+                /*  If the stock status is null it means this product does not take stock.
+                 *  This means we always have stock for this product
+                 */
+                }else{
+
+                    return true;
+
+                }
+            },
+            hasEnoughStockOnAllOnVariations(){
+                return (this.product.has_enough_stock_on_all_variations === true ? true : false);
+            },
+            productStockDescription(){
+                return this.product.stock_status.description;
             },
             productCurrency(){
                 return (this.product.currency.symbol || this.product.currency.code);

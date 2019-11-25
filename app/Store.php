@@ -7,7 +7,6 @@ use App\Traits\StoreTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
 Relation::morphMap([
@@ -25,7 +24,7 @@ class Store extends Model
      * @var string
      */
     protected $casts = [
-        'currency' => 'array'
+        'currency' => 'array',
     ];
 
     protected $with = ['phones', 'emails', 'addresses'];
@@ -36,51 +35,52 @@ class Store extends Model
      * @var array
      */
     protected $fillable = [
-
         /*  Basic Info  */
-        'name', 'abbreviation', 'description', 'type', 'industry',  
-        
+        'name', 'abbreviation', 'description', 'type', 'industry',
+
         /*  Account Info  */
-        'setup', 
-        
+        'setup',
+
         /*  Social Info  */
         'website_link', 'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link',
 
         /*  Currency Info  */
         'currency',
 
-        /*  Ownership Info  */
-        'owner_id', 'owner_type'
+        /*  Stock Info  */
+        'minimum_stock_quantity',
 
+        /*  Ownership Info  */
+        'owner_id', 'owner_type',
     ];
 
     protected $allowedFilters = [];
 
     protected $allowedOrderableColumns = [];
 
-    /* 
+    /*
      *  Scope:
      *  Return stores that support USSD access (Accessible by 2G Devices via USSD)
      */
     public function scopeSupportUssd($query)
     {
-        return $query->whereHas('ussdInterface', function (Builder $query){
-                    $query->where('live_mode', 1);
-                });
+        return $query->whereHas('ussdInterface', function (Builder $query) {
+            $query->where('live_mode', 1);
+        });
     }
 
-    /* 
+    /*
      *  Scope:
      *  Return stores that don't support USSD access (Accessible by 2G Devices via USSD)
      */
     public function scopeDontSupportUssd($query)
     {
-        return $query->whereHas('ussdInterface', function (Builder $query){
-                    $query->where('live_mode', 0);
-                });
+        return $query->whereHas('ussdInterface', function (Builder $query) {
+            $query->where('live_mode', 0);
+        });
     }
 
-    /* 
+    /*
      *  Scope:
      *  Return stores in order of popularity. For now store popularity is
      *  determined by how many orders they receive
@@ -90,7 +90,7 @@ class Store extends Model
         return $query->withCount('orders')->orderByDesc('orders_count');
     }
 
-    /* 
+    /*
      *  Scope:
      *  Return stores that match a given name or contain similar tags
      */
@@ -99,7 +99,7 @@ class Store extends Model
         return $query->orWhere('name', $name)->orWhere('abbreviation', $name);
     }
 
-    /* 
+    /*
      *  Returns the owner of the store. In this case it returns the
      *  Account that owns this store
      */
@@ -108,9 +108,9 @@ class Store extends Model
         return $this->morphTo();
     }
 
-    /*  
+    /*
      *  Returns documents associated with this store. These are various files such as images,
-     *  videos, files and so on. Basically any file/image/video the user wants to save to 
+     *  videos, files and so on. Basically any file/image/video the user wants to save to
      *  this store is stored in this relation
      */
 
@@ -119,7 +119,7 @@ class Store extends Model
         return $this->morphMany('App\Document', 'owner');
     }
 
-    /* 
+    /*
      *  Returns documents categorized as files
      */
     public function files()
@@ -127,17 +127,18 @@ class Store extends Model
         return $this->documents()->whereType('file');
     }
 
-    /* 
+    /*
      *  Returns phones associated with this store. This includes all
      *  types of phones such as telephones, mobiles and fax numbers.
-     *  We can then filter our results to be more specific (using a scope) 
+     *  We can then filter our results to be more specific (using a scope)
      *  e.g) Get only mobile phones
      */
     public function phones()
     {
         return $this->morphMany('App\Phone', 'owner')->orderBy('created_at', 'desc');
     }
-    /* 
+
+    /*
      *  Returns phones categorized as mobile phones
      */
     public function mobiles()
@@ -145,7 +146,7 @@ class Store extends Model
         return $this->phones()->whereType('mobile');
     }
 
-    /* 
+    /*
      *  Returns phones categorized as telephones
      */
     public function telephones()
@@ -153,7 +154,7 @@ class Store extends Model
         return $this->phones()->whereType('tel');
     }
 
-    /* 
+    /*
      *  Returns phones categorized as fax numbers
      */
     public function fax()
@@ -161,7 +162,7 @@ class Store extends Model
         return $this->phones()->whereType('fax');
     }
 
-    /* 
+    /*
      *  Returns addresses associated with this store
      */
     public function addresses()
@@ -169,7 +170,7 @@ class Store extends Model
         return $this->morphMany('App\Address', 'owner')->orderBy('created_at', 'desc');
     }
 
-    /* 
+    /*
      *  Returns emails associated with this store
      */
     public function emails()
@@ -177,9 +178,9 @@ class Store extends Model
         return $this->morphMany('App\Email', 'owner')->orderBy('created_at', 'desc');
     }
 
-    /* 
-     *  Returns all the contacts that are associated with this store. We can filter our 
-     *  results to be more specific (using a scope) e.g) Get all contacts that are 
+    /*
+     *  Returns all the contacts that are associated with this store. We can filter our
+     *  results to be more specific (using a scope) e.g) Get all contacts that are
      *  customers, vendors or that use a particular number or email.
      */
     public function contacts()
@@ -212,11 +213,11 @@ class Store extends Model
         return $this->vendorContacts()->withMobilePhone($mobile);
     }
 
-    /* 
+    /*
      *  Returns all the users that are associated with this store. This includes associations
-     *  were the user as admin, staff, customer, vendor e.t.c. Any association to this store 
-     *  will pass as a valid user to retrieve on this relationship. We can then filter our 
-     *  results to be more specific (using a scope) e.g) Get all users where the user 
+     *  were the user as admin, staff, customer, vendor e.t.c. Any association to this store
+     *  will pass as a valid user to retrieve on this relationship. We can then filter our
+     *  results to be more specific (using a scope) e.g) Get all users where the user
      *  is an admin.
      */
     public function users()
@@ -224,19 +225,17 @@ class Store extends Model
         return $this->morphToMany('App\User', 'owner', 'user_allocations')->withTimestamps();
     }
 
-    /* 
+    /*
      *  Scope the users by type
      */
     public function scopeWhereUserType($query, $type)
     {
         //  If multiple type provided
-        if( is_array($type) ){
-
+        if (is_array($type)) {
             return $query->whereIn('user_allocations.type', $type);
 
         //  If single type provided
-        }else{
-
+        } else {
             return $query->where('user_allocations.type', $type);
         }
 
@@ -244,7 +243,7 @@ class Store extends Model
         return $query;
     }
 
-    /* 
+    /*
      *  Scope the users by id
      */
     public function scopeWhereUserId($query, $id)
@@ -252,7 +251,7 @@ class Store extends Model
         return $query->where('user_allocations.user_id', '=', $id);
     }
 
-    /* 
+    /*
      *  Returns users where the user is an admin
      */
     public function admins()
@@ -260,7 +259,7 @@ class Store extends Model
         return $this->users()->whereUserType('admin');
     }
 
-    /* 
+    /*
      *  Returns users where the user is a staff member
      */
     public function staff()
@@ -268,7 +267,7 @@ class Store extends Model
         return $this->users()->whereUserType('staff');
     }
 
-    /* 
+    /*
      *  Checks if a given user is an admin to the store
      */
     public function isAdmin($user_id)
@@ -276,7 +275,7 @@ class Store extends Model
         return ($this->admins()->whereUserId($user_id)->count()) ? true : false;
     }
 
-    /* 
+    /*
      *  Checks if a given user is a staff member to the store
      */
     public function isStaff($user_id)
@@ -284,15 +283,15 @@ class Store extends Model
         return ($this->staff()->whereUserId($user_id)->count()) ? true : false;
     }
 
-    /* 
+    /*
      *  Checks if a given user is an admin or staff member to the store
      */
     public function isAdminOrStaff($user_id)
     {
-        return ($this->isAdmin($user_id) || $this->isStaff($user_id));
+        return $this->isAdmin($user_id) || $this->isStaff($user_id);
     }
 
-    /* 
+    /*
      *  Returns the USSD Interface owned by this store
      */
     public function ussdInterface()
@@ -300,10 +299,10 @@ class Store extends Model
         return $this->morphOne('App\UssdInterface', 'owner');
     }
 
-    /* 
+    /*
      *  Returns products owned by this store. This includes both
-     *  products available and not available for stores that 
-     *  support USSD accessibility. Basically this will 
+     *  products available and not available for stores that
+     *  support USSD accessibility. Basically this will
      *  return ALL the products linked to this store
      */
     public function products()
@@ -311,11 +310,11 @@ class Store extends Model
         return $this->morphMany('App\Product', 'owner');
     }
 
-    /* 
-     *  Returns products that are not variations of another product. 
-     *  Variations are different versions of this product such as 
-     *  when this product is available in different sizes, colors 
-     *  or materials, then it will have products with different 
+    /*
+     *  Returns products that are not variations of another product.
+     *  Variations are different versions of this product such as
+     *  when this product is available in different sizes, colors
+     *  or materials, then it will have products with different
      *  variables.
      */
     public function notVariationProducts()
@@ -323,16 +322,16 @@ class Store extends Model
         return $this->products()->isNotVariation();
     }
 
-    /* 
+    /*
      *  Returns orders owned by this store
      */
     public function orders()
     {
         return $this->morphMany('App\Order', 'merchant');
     }
-    
-    /* 
-     *  Returns orders owned by this store that belong 
+
+    /*
+     *  Returns orders owned by this store that belong
      *  to a specific contact id
      */
     public function contactOrders($contact_id = null)
@@ -343,7 +342,7 @@ class Store extends Model
         });
     }
 
-    /* 
+    /*
      *  Returns taxes owned by this store
      */
     public function taxes()
@@ -351,7 +350,7 @@ class Store extends Model
         return $this->morphMany('App\Tax', 'owner');
     }
 
-    /* 
+    /*
      *  Returns discounts owned by this store
      */
     public function discounts()
@@ -359,7 +358,7 @@ class Store extends Model
         return $this->morphMany('App\Discount', 'owner');
     }
 
-    /* 
+    /*
      *  Returns coupons owned by this store
      */
     public function coupons()
@@ -367,7 +366,7 @@ class Store extends Model
         return $this->morphMany('App\Coupon', 'owner');
     }
 
-    /* 
+    /*
      *  Returns messages sent to this store
      */
     public function messages()
@@ -375,7 +374,7 @@ class Store extends Model
         return $this->morphMany('App\Message', 'owner')->latest();
     }
 
-    /* 
+    /*
      *  Returns reviews sent to this store
      */
     public function reviews()
@@ -383,7 +382,7 @@ class Store extends Model
         return $this->morphMany('App\Review', 'owner')->latest();
     }
 
-    /* 
+    /*
      *  Returns the store settings
      */
     public function settings()
@@ -395,7 +394,7 @@ class Store extends Model
     /*  BILLING RELATED RELATIONSHIPS    */
     /*************************************/
 
-    /* 
+    /*
      *  Returns invoices owned by this store
      */
     public function invoices()
@@ -403,12 +402,11 @@ class Store extends Model
         return $this->morphMany('App\Invoice', 'owner');
     }
 
-
     /*************************************/
     /*  MISCELLANEOUS RELATIONSHIPS      */
     /*************************************/
 
-    /* 
+    /*
      *  Returns lifecycles owned by this store
      */
     public function availableLifecycles()
@@ -416,7 +414,7 @@ class Store extends Model
         return $this->morphMany('App\Lifecycle', 'owner');
     }
 
-    /* 
+    /*
      *  Returns lifecycles owned by this store for managing orders
      */
     public function orderLifecycles()
@@ -424,10 +422,10 @@ class Store extends Model
         return $this->availableLifecycles()->where('type', 'order');
     }
 
-    /* 
+    /*
      *  Returns categories owned by this store.
      *  Examples are "Electrical", "Mechanical", "Construction", "Renovation"
-     *  Note: Categories can be used by multiple resources and are categorized 
+     *  Note: Categories can be used by multiple resources and are categorized
      *  using the type attribute to identify and distinguish the relevant resources.
      */
     public function availableCategories()
@@ -435,7 +433,7 @@ class Store extends Model
         return $this->morphMany('App\Category', 'owner')->whereNull('parent_category_id');
     }
 
-    /* 
+    /*
      *  Returns categories owned by this store for managing products
      */
     public function productCategories()
@@ -443,7 +441,7 @@ class Store extends Model
         return $this->availableCategories()->where('type', 'product');
     }
 
-    /* 
+    /*
      *  Returns recent activities owned by this store
      */
     public function recentActivities()
@@ -451,7 +449,7 @@ class Store extends Model
         return $this->morphMany('App\RecentActivity', 'owner')->orderBy('created_at', 'desc');
     }
 
-    /* 
+    /*
      *  Returns store creation activity
      */
     public function createdActivities()
@@ -459,7 +457,7 @@ class Store extends Model
         return $this->recentActivities()->whereType('created');
     }
 
-    /* 
+    /*
      *  Returns store approval activity
      */
     public function approvedActivities()
@@ -467,24 +465,23 @@ class Store extends Model
         return $this->recentActivities()->whereType('approved');
     }
 
-
     /* ATTRIBUTES */
 
     protected $appends = [
-        'logo',  'is_verified', 'is_email_verified', 'is_mobile_verified','customer_access_code', 
-        'team_access_code', 'phone_list', 'default_mobile', 'default_email', 'default_address', 
-        'average_rating', 'resource_type', 'phone_list', 'last_approved_activity', 'is_approved', 
-        'current_activity_status', 'activity_count'
+        'logo',  'is_verified', 'is_email_verified', 'is_mobile_verified', 'customer_access_code',
+        'team_access_code', 'phone_list', 'default_mobile', 'default_email', 'default_address',
+        'average_rating', 'resource_type', 'phone_list', 'last_approved_activity', 'is_approved',
+        'current_activity_status', 'activity_count',
     ];
 
-    /* 
+    /*
      *  Returns the store logo
      */
     public function getLogoAttribute()
     {
         return $this->documents()->where('type', 'logo')->first();
     }
- 
+
     /*
      *  Returns true/false whether the store has a verified email
      */
@@ -514,23 +511,23 @@ class Store extends Model
         return ($this->is_mobile_verified) ? true : false;
     }
 
-     /* 
-      *  Returns the resource type
-      */
-     public function getCustomerAccessCodeAttribute()
-     {
+    /*
+     *  Returns the resource type
+     */
+    public function getCustomerAccessCodeAttribute()
+    {
         return $this->ussdInterface->customer_access_code ?? null;
-     }
- 
-     /* 
-      *  Returns the resource type
-      */
-     public function getTeamAccessCodeAttribute()
-     {
-        return $this->ussdInterface->team_access_code ?? null;
-     }
+    }
 
-    /* 
+    /*
+     *  Returns the resource type
+     */
+    public function getTeamAccessCodeAttribute()
+    {
+        return $this->ussdInterface->team_access_code ?? null;
+    }
+
+    /*
      *  Returns the store phones separated with commas
      */
     public function getPhoneListAttribute()
@@ -539,19 +536,17 @@ class Store extends Model
         $phones = $this->phones()->whereIn('type', ['mobile', 'tel'])->get();
 
         foreach ($phones as $key => $phone) {
-
             /*  Merge the calling code and phone number  */
             $phoneList .= ($key != 0 ? ', ' : '').'(+'.$phone['calling_code'].') '.$phone['number'];
 
             /*  If this is not the last item add "," otherwise nothing  */
             $phoneList .= (next($phones)) ? ', ' : '';
-
         }
 
         return $phoneList;
     }
 
-    /* 
+    /*
      *  Returns the store default mobile phone
      */
     public function getDefaultMobileAttribute()
@@ -559,7 +554,7 @@ class Store extends Model
         return $this->mobiles()->where('default', 1)->first();
     }
 
-    /* 
+    /*
      *  Returns the store default email
      */
     public function getDefaultEmailAttribute()
@@ -567,7 +562,7 @@ class Store extends Model
         return $this->emails()->where('default', 1)->first();
     }
 
-    /* 
+    /*
      *  Returns the store default address
      */
     public function getDefaultAddressAttribute()
@@ -575,7 +570,7 @@ class Store extends Model
         return $this->addresses()->where('default', 1)->first();
     }
 
-    /* 
+    /*
      *  Returns the store average rating
      */
     public function getAverageRatingAttribute()
@@ -584,15 +579,13 @@ class Store extends Model
         $reviews = $this->reviews ?? [];
 
         //  If we have any reviews
-        if( $reviews ){
-            
+        if ($reviews) {
             //  Return the average of the ratings combined
-            return collect( $reviews )->avg('rating');
-
+            return collect($reviews)->avg('rating');
         }
     }
 
-    /* 
+    /*
      *  Returns the resource type
      */
     public function getResourceTypeAttribute()
@@ -600,7 +593,7 @@ class Store extends Model
         return strtolower(class_basename($this));
     }
 
-    /* 
+    /*
      *  Returns the last approved activity
      */
     public function getLastApprovedActivityAttribute()
@@ -608,7 +601,7 @@ class Store extends Model
         return $this->approvedActivities()->select('type', 'user_id', 'created_at')->first();
     }
 
-    /* 
+    /*
      *  Returns true/false if the store was approved
      */
     public function getIsApprovedAttribute()
@@ -616,7 +609,7 @@ class Store extends Model
         return $this->last_approved_activity ? true : false;
     }
 
-    /* 
+    /*
      *  Returns the status of the store
      */
     public function getCurrentActivityStatusAttribute()
@@ -624,7 +617,7 @@ class Store extends Model
         return $this->is_approved ? 'Approved' : 'Draft';
     }
 
-    /* 
+    /*
      *  Returns the total number of activities
      */
     public function getActivityCountAttribute()
@@ -633,5 +626,4 @@ class Store extends Model
 
         return $count ? $count->only(['total']) : ['total' => 0];
     }
-
 }

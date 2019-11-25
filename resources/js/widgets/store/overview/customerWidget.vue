@@ -140,9 +140,23 @@
                     {
                         title: 'Name',
                         render: (h, params) => {
-                            return h('span', (
-                                params.row.name
-                            ));
+                            return h('Poptip', {
+                                style: {
+                                    width: '100%',
+                                    textAlign:'left'
+                                },
+                                props: {
+                                    width: 280,
+                                    wordWrap: true,
+                                    trigger:'hover',
+                                    placement: 'top-start',
+                                    content: 'Name: '+(params.row.name) || '...'
+                                }
+                            }, [
+                                h('span', {
+                                    class: ['cut-text']
+                                }, (params.row.name) || '...')
+                            ])
                         }
                     });
                 }
@@ -153,7 +167,9 @@
                     {
                         title: 'Type',
                         render: (h, params) => {
-                            return h('span', (
+                            return h('span', {
+                                class: ['cut-text']
+                            },(
                                 params.row.type
                             ));
                         }
@@ -166,9 +182,25 @@
                     {
                         title: 'Email',
                         render: (h, params) => {
-                            return h('span', ((params.row.default_email || {}).email || '...'));
+                            return h('Poptip', {
+                                style: {
+                                    width: '100%',
+                                    textAlign:'left'
+                                },
+                                props: {
+                                    width: 280,
+                                    wordWrap: true,
+                                    trigger:'hover',
+                                    placement: 'top-start',
+                                    content: 'Email: '+((params.row.default_email || {}).email  || '...')
+                                }
+                            }, [
+                                h('span', {
+                                    class: ['cut-text']
+                                }, ((params.row.default_email || {}).email) || '...')
+                            ])
                         }
-                    });
+                    })
                 }
                 
                 //  Customer Phones
@@ -177,9 +209,25 @@
                     {
                         title: 'Phone',
                         render: (h, params) => {
-                            return h('span', ((params.row.default_mobile || {}).full_number || '...'));
+                            return h('Poptip', {
+                                style: {
+                                    width: '100%',
+                                    textAlign:'left'
+                                },
+                                props: {
+                                    width: 280,
+                                    wordWrap: true,
+                                    trigger:'hover',
+                                    placement: 'top-start',
+                                    content: 'Phone: '+((params.row.default_mobile || {}).full_number  || '...')
+                                }
+                            }, [
+                                h('span', {
+                                    class: ['cut-text']
+                                }, ((params.row.default_mobile || {}).full_number  || '...'))
+                            ])
                         }
-                    });
+                    })
                 }
                 
                 //  Date
@@ -189,7 +237,9 @@
                         title: 'Date',
                         sortable: true,
                         render: (h, params) => {
-                            return h('span', this.formatDate(params.row.created_at.date));
+                            return h('span', {
+                                class: ['cut-text']
+                            }, this.formatDate(params.row.created_at.date));
                         }
                     });
                 }

@@ -141,13 +141,23 @@
                         <!-- Allow Variants -->
                         <el-form-item label="Allow Variables" prop="allow_variants" class="switch mb-2" :error="customErrors.allow_variants">
                             
-                            <Poptip trigger="hover" width="380" placement="top-start" word-wrap 
-                                    content="Add variables if this product/service comes in multiple versions e.g) different sizes, materials or colors. You can change the price and information for each variable">
+                            <Poptip trigger="hover" width="380" placement="top-start" word-wrap>
+                                
+                                <template slot="content">
+                                    <span class="d-block">Add variables if this product/service comes in multiple versions e.g) different sizes, materials or colors. You can change the price and information for each variable</span>
+                                
+                                    <span v-if="(createUrl ? true : false)"
+                                            style="margin-top: -15px;"
+                                            class="border-top d-block pt-2">
+                                        <span class="font-weight-bold">Note: Only available when editing this product after you create it.</span>
+                                    </span>
+                                </template>
+
                                 <i-switch 
                                     true-color="#13ce66" 
                                     false-color="#ff4949" 
                                     class="ml-1" size="large"
-                                    :disabled="isLoading"
+                                    :disabled="(createUrl ? true : false) || isLoading"
                                     :value="formData.allow_variants" 
                                     @on-change="formData.allow_variants = $event"
                                     :before-change="handleAllowVariantsBeforeChange">
@@ -168,7 +178,7 @@
 
                                 <Row v-for="(attribute, index) in formData.variant_attributes" :gutter="20" :key="index">
                                     
-                                    <Col :span="8">
+                                    <Col :span="6">
 
                                         <!-- Option Names -->
                                         <el-form-item :label="index == 0 ? 'Option name' : ''" prop="option_names" class="mb-2">
@@ -200,27 +210,50 @@
 
                                     </Col>
 
+                                    <Col :span="2" v-if="(formData.variant_attributes || {}).length > 1">
+
+                                        <!-- Remove Variant Button  -->
+                                        <Poptip confirm 
+                                                title="Are you sure you want to remove this variant? After removing the variant we will delete all the current variations and create new ones."
+                                                ok-text="Yes" cancel-text="No" width="300" placement="left"
+                                                @on-ok="handleRemoveVariantAttribute(index)">
+                                            <Icon type="ios-trash-outline" class="mr-2 mt-4" size="20"/>
+                                        </Poptip>
+
+                                    </Col>
+
+
                                 </Row>
 
                                 <Row :gutter="12">
                                     
-                                    <Col v-if="hasVariants" :span="12">
-                                        <basicButton 
-                                                @click.native="saveVariations()"
-                                                customClass="mt-3 mb-3"
+                                    <Col v-if="hasVariants" :span="8">
+
+                                        <!-- Generate Variations Button  -->
+                                        <Poptip confirm 
+                                                title="Create new variations?"
+                                                ok-text="Yes" cancel-text="No" width="300" placement="top-start"
+                                                @on-ok="generateVariations(index)">
+
+                                            <basicButton 
+                                                :disabled="isCreatingVariations"
                                                 type="success" size="small" 
+                                                customClass="mt-3 mb-3"
                                                 :ripple="false">
-                                            Create Variations
-                                        </basicButton>
+                                                Create Variations
+                                            </basicButton>
+                                        </Poptip>
+
                                     </Col>
                                     
-                                    <Col :span="hasVariants ? 12 : 24" class="clearfix">
+                                    <Col :span="hasVariants ? 16 : 24" class="clearfix">
                                         <basicButton 
-                                                customClass="mt-3 mb-3" :style="{ width: 'fit-content', position:'relative' }"
-                                                @click.native="addVariantAttribute()"
-                                                type="default" size="small" 
-                                                class="float-right"
-                                                :ripple="false">
+                                            customClass="mt-3 mb-3" :style="{ width: 'fit-content', position:'relative' }"
+                                            @click.native="addVariantAttribute()"
+                                            :disabled="isCreatingVariations"
+                                            type="default" size="small" 
+                                            class="float-right"
+                                            :ripple="false">
                                             + Add Another Variant
                                         </basicButton>
                                     </Col>
@@ -234,7 +267,10 @@
 
                                 <!-- Loader -->
                                 <Loader v-if="isLoadingVariations" :loading="true" type="text" class="text-left mt-2 mb-2">Loading variations...</Loader>
-                                
+
+                                <!-- Loader -->
+                                <Loader v-if="isCreatingVariations" :loading="true" type="text" class="text-left mt-2 mb-2">Creating variations...</Loader>
+
                                 <!-- Single Product Variation  -->
                                 <singleProductVariation v-else v-for="(product, index) in variations" :key="index"   
                                     :index="index"
@@ -547,11 +583,11 @@
                 variations: [],
                 isLoading: false,
                 formHasChanged: false,
-                isSavingVariations: false,
-                isLoadingVariations: false,
                 formDataBeforeChange: null,
+                isLoadingVariations: false,
+                isCreatingVariations: false,
                 storedProductVariation: null,
-                productVariationUpdateUrl:null,
+                productVariationUpdateUrl: null,
                 variantAttributesBeforeChange: null,
                 showEditProductVariationDrawer: false,
                 formData: formHandle.getFormFields(),
@@ -857,7 +893,32 @@
 
                 }
             },
-            saveVariations() {
+
+            handleRemoveVariantAttribute(index) {
+
+                //  If we have more that one variant attribute
+                if( this.formData.variant_attributes.length > 1 ){
+
+                    //  Remove the variant attribute
+                    this.formData.variant_attributes.splice(index, 1);
+
+                    /*  Generate the new variations. This will delete the old variations and
+                    *  create new variations using the current variant attributes
+                    */
+                    this.generateVariations();
+
+                }else{
+
+                    this.$Notice.warning({
+                        
+                        title: 'You must have atleast one variant'
+
+                    });
+
+                }
+
+            },
+            generateVariations() {
 
                 //  Hold constant reference to the vue instance
                 const self = this;
@@ -872,7 +933,7 @@
                     console.log(updateData);
 
                     //  Start loader
-                    self.isSavingVariations = true;
+                    self.isCreatingVariations = true;
 
                     //  Use the api call() function located in resources/js/api.js
                     api.call('post', this.product._links['oq:variations'].href, updateData)
@@ -882,16 +943,23 @@
                             console.log(data);
 
                             //  Stop loader
-                            self.isSavingVariations = false;
+                            self.isCreatingVariations = false;
 
                             //  Store the product variations data
                             self.variations = ((data || {})._embedded || {}).products || [];
+
+                            /*  Update the rest of the product details. This is because we want a fresh instance 
+                             *  of this product with the updated attributes. Remember that since we updated
+                             *  the variations this will affect specific attributes on the product iteself. 
+                             *  We therefore need a fresh version to pick up those changed attributes.
+                             */
+                            self.handleCreateOrUpdate();
 
                         })         
                         .catch(response => { 
 
                             //  Stop loader
-                            self.isSavingVariations = false;
+                            self.isCreatingVariations = false;
 
                             //  Console log Error Location
                             console.log('Error saving variations...');

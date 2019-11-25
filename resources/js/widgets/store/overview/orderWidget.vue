@@ -250,9 +250,23 @@
                     {
                         title: 'Customer',
                         render: (h, params) => {
-                            return h('span', (
-                                (params.row.billing_info || {}).name
-                            ));
+                            return h('Poptip', {
+                                style: {
+                                    width: '100%',
+                                    textAlign:'left'
+                                },
+                                props: {
+                                    width: 280,
+                                    wordWrap: true,
+                                    trigger:'hover',
+                                    placement: 'top-start',
+                                    content: 'Customer: '+((params.row.billing_info || {}).name  || '...')
+                                }
+                            }, [
+                                h('span', {
+                                    class: ['cut-text']
+                                }, ((params.row.billing_info || {}).name) || '...')
+                            ])
                         }
                     });
                 }
@@ -273,7 +287,7 @@
                                     wordWrap: true,
                                     trigger:'hover',
                                     placement: 'top-start',
-                                    title: 'Email: '+((params.row.billing_info || {}).email  || '...')
+                                    content: 'Email: '+((params.row.billing_info || {}).email  || '...')
                                 }
                             }, [
                                 h('span', {
@@ -300,7 +314,7 @@
                                     wordWrap: true,
                                     trigger:'hover',
                                     placement: 'top-start',
-                                    title: 'Phone: '+(((params.row.billing_info || {}).default_mobile || {}).full_number  || '...')
+                                    content: 'Phone: '+(((params.row.billing_info || {}).default_mobile || {}).full_number  || '...')
                                 }
                             }, [
                                 h('span', {
@@ -318,7 +332,9 @@
                         title: 'Date',
                         sortable: true,
                         render: (h, params) => {
-                            return h('span', this.formatDate(params.row.created_at.date));
+                            return h('span', {
+                                class: ['cut-text']
+                            }, this.formatDate(params.row.created_at.date));
                         }
                     });
                 }
@@ -350,7 +366,9 @@
                                 },
                                 class: ['breakdown-poptip']
                             }, [
-                                h('span', this.formatPrice(grandTotal, symbol) ),
+                                h('span', {
+                                    class: ['cut-text']
+                                }, this.formatPrice(grandTotal, symbol) ),
                                 h('List', {
                                         slot: 'content',
                                         props: {

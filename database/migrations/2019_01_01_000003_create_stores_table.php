@@ -35,7 +35,10 @@ class CreateStoresTable extends Migration
 
             /*  Currency Info  */
             $table->json('currency')->nullable();
-        
+
+            /*  Stock Info  */
+            $table->unsignedInteger('minimum_stock_quantity')->default(10);
+
             /*  Ownership Information  */
             $table->unsignedInteger('owner_id')->nullable();
             $table->string('owner_type')->nullable();
