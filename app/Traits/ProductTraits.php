@@ -225,6 +225,74 @@ trait ProductTraits
         }
     }
 
+    /*  initiateUpdateVariables() method =>
+     *
+     *  This method is used to update an existing product's
+     *  variables. The $variableInfo represents the 
+     *  variables dataset provided
+     */
+    public function initiateUpdateVariables( $variableInfo = null )
+    {
+        /*
+         *  The $variableInfo variable represents accepted structure of the  
+         *  product data required to update the current resource.
+         */
+
+        
+        /*
+         *  The $templates variable represents structure for each variable.
+         */
+        $templates = [];
+
+        foreach($variableInfo as $key => $variable){
+
+            //  Get the variable name e.g size, color, material ... e.t.c
+            $name = $variable['name'];
+
+            //  Get the variable value e.g small, blue, cotton ... e.t.c
+            $value = $variable['value'];
+
+            /*
+             *  The $template variable represents structure of the variable.
+             */
+            $template = [
+
+                /*  Variable Info  */
+                'name' => $name,
+                'value' => $value
+
+            ];
+
+            //  Add the variable template to the rest of the templates
+            array_push($templates, $template);
+
+        }
+
+        try {
+            
+            /**
+             *  Delete all previous variables
+             */
+            $deletedProductVariables = $this->variables()->delete();
+
+            /**
+             *  Create the new variables
+             */
+            $createdProductVariables = $this->variables()->createMany($templates);
+
+            /*  If the variables were created successfully  */
+            if ($createdProductVariables) {
+
+                /*  Return a fresh instance of the product  */
+                return $this->fresh();
+
+            }
+        } catch (\Exception $e) {
+            //  Return the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+    }
+
     /*  initiateDelete() method =>
      *
      *  This method is used to delete an existing product.

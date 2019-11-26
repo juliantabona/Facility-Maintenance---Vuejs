@@ -361,6 +361,11 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             //  Delete product
             Route::delete('/', 'Api\ProductController@deleteProduct')->name('delete');
 
+            //  Variable related resources
+            Route::get('/variables', 'Api\ProductController@getProductVariables')->name('variables');
+            Route::post('/variables', 'Api\ProductController@updateProductVariables')->name('variables-update');
+            Route::get('/variables/{variable_id}', 'Api\ProductController@getProductVariable')->name('variable')->where('variable_id', '[0-9]+');
+
             //  Owner related resources
             Route::get('/owner', 'Api\ProductController@getProductOwner')->name('owner');
 

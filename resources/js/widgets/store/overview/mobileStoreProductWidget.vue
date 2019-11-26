@@ -68,8 +68,8 @@
 
             <!-- Product Name  -->
             <span class="product-name font-weight-bold cut-text">
-                {{ productNumber ? productNumber +'. ' : '' }}
-                {{ product.name }}
+                {{ getProductNumber ? getProductNumber +'. ' : '' }}
+                {{ localProduct.name }}
             </span>
             
         </div>
@@ -144,10 +144,70 @@
 
             <Col :span="24" class="p-2 clearfix">
 
-                <!-- Product Variants  -->
-                <Badge v-for="(variable, index) in productVariables" :key="index"
-                        :text="variable.value" type="info" class="float-right mr-2">
-                </Badge>
+                <!-- View Product Variants  -->
+                <template v-if="!editVariants">
+                    
+                    <Badge v-for="(variable, index) in productVariables" :key="index"
+                            :text="variable.value" type="info" class="float-right mr-2">
+                    </Badge>
+
+                    <Button type="dashed" icon="ios-create-outline" 
+                            @click="editVariants = true">
+                        Edit Variants
+                    </Button>
+
+                </template>
+
+                <!-- Edit Product Variants  -->
+                <template v-else>
+                        
+                    <div v-for="(variable_attribute, index) in getParentVariantAttributes" :key="index" class="mb-2">
+
+                        <Row :gutter="12">
+
+                            <!-- Variant Name  -->
+                            <Col :span="12">
+
+                                <span class="font-weight-bold">{{ variable_attribute.name ? variable_attribute.name+': ': '' }}</span>
+
+                            </Col>
+
+                            <!-- Variant Value  -->
+                            <Col :span="12">
+                            
+                                <Select :value="getSelectedVariantAttributeOption(variable_attribute.name)" style="width:200px"
+                                        @on-change="updateSelectedVariantAttributeOption(variable_attribute.name, $event)">
+                                    <Option v-for="(option, index) in getAvailableVariantAttributeOptions(variable_attribute.name)" 
+                                            :value="option" :key="index">
+                                        {{ option }}
+                                    </Option>
+                                </Select>
+
+                            </Col>
+
+                        </Row>
+
+                    </div>
+
+                    <div class="mt-2">
+
+                        <!-- Save Button -->
+                        <basicButton 
+                            v-if="checkIfProductHasChanged" :disabled="isSavingVariants" class="float-right mr-2" 
+                            type="success" size="default" :ripple="!isSavingVariants"
+                            @click.native="handleSaveVariants()">
+                            <span>Save Changes</span>
+                        </basicButton>
+
+                        <!-- Cancel Button -->
+                        <Button type="error" size="default" ghost
+                                class="float-right mr-2" @click="handleCancel()" >
+                            Cancel
+                        </Button>
+                        
+                    </div>
+
+                </template>
 
             </Col>
 
@@ -209,6 +269,9 @@
 
 <script>
 
+    /*  Buttons  */
+    import basicButton from './../../../components/_common/buttons/basicButton.vue';
+
     export default {
         props:{
             index: {
@@ -239,20 +302,48 @@
                 type: Boolean,
                 default:true
             }
+        }, 
+        components: { 
+            basicButton
         },
         data(){
             return {
-                isDeletingProduct:false,
+                localProduct: this.product,
+                productBeforeChange: null,
+                isDeletingProduct: false,
+                isSavingVariants: false,
+                editVariants: false,
                 showContent: false
             }
         },
         computed: {
-            productNumber(){
+            getProductNumber(){
+                /**
+                 *  Returns the product number. We use this as we list the products.
+                 *  It works like a counter.
+                 */
                 return (this.index != null ? this.index + 1 : '');
             },
+            getParentVariantAttributes(){
+                /**
+                 *  Get the parent variant attribute names. If this product is a variation,
+                 *  then we can get the variant attributes of the parent product that this
+                 *  variation belongs to. The variant attributes may be returned as 
+                 *  follows:
+                 * 
+                 *  [
+                 *      [ name: 'size', 'values': ['small', 'medium', 'large'],
+                 *      [ name: 'color', 'values': ['blue', 'green', 'red'],
+                 *      [ name: 'material', 'values': ['cotton', 'nylon'],
+                 *      ... e.t.c
+                 *  ] 
+                 *      
+                 */
+                return this.localProduct.parent_variant_attributes || [];
+            },
             isSimpleProduct(){
-                //  A simple product doest not support variations
-                return (!this.product.allow_variants) ? true : false;
+                //  A simple product does not support variations
+                return (!this.localProduct.allow_variants) ? true : false;
             },
             hasReminders(){
                 return ( 
@@ -273,9 +364,9 @@
                 );
             },
             hasPrice(){
-                if( this.product.has_price != null ){
+                if( this.localProduct.has_price != null ){
 
-                    return (this.product.has_price === true ? true : false);
+                    return (this.localProduct.has_price === true ? true : false);
 
                 /*  If the has_price is null it means this product has a price but
                  *  its determined by the product variations.
@@ -288,16 +379,16 @@
             },
             hasPriceOnVariations(){
 
-                return (this.product.has_prices_on_all_variations === true ? true : false);
+                return (this.localProduct.has_prices_on_all_variations === true ? true : false);
 
             },
             hasStock(){
 
                 //  If the stock status is not null it means this product supports stock take.
-                if( this.product.stock_status != null ){
+                if( this.localProduct.stock_status != null ){
 
                     //  If the stock status type is not set to "out_of_stock" then we still have stock
-                    return ((this.product.stock_status || {}).type !== 'out_of_stock') ? true : false;
+                    return ((this.localProduct.stock_status || {}).type !== 'out_of_stock') ? true : false;
 
                 /*  If the stock status is null it means this product does not take stock.
                  *  This means we always have stock for this product
@@ -311,10 +402,10 @@
             hasPlentyStock(){
 
                 //  If the stock status is not null it means this product supports stock take.
-                if( this.product.stock_status != null ){
+                if( this.localProduct.stock_status != null ){
 
                     //  If the stock status type is set to "in_stock" then we still have plenty stock
-                    return ((this.product.stock_status || {}).type === 'in_stock') ? true : false;
+                    return ((this.localProduct.stock_status || {}).type === 'in_stock') ? true : false;
 
                 /*  If the stock status is null it means this product does not take stock.
                  *  This means we always have stock for this product
@@ -326,41 +417,266 @@
                 }
             },
             hasEnoughStockOnAllOnVariations(){
-                return (this.product.has_enough_stock_on_all_variations === true ? true : false);
+                return (this.localProduct.has_enough_stock_on_all_variations === true ? true : false);
             },
             productStockDescription(){
-                return this.product.stock_status.description;
+                return this.localProduct.stock_status.description;
             },
             productCurrency(){
-                return (this.product.currency.symbol || this.product.currency.code);
+                return (this.localProduct.currency.symbol || this.localProduct.currency.code);
             },
             productDescription(){
-                return this.product.description;
+                return this.localProduct.description;
             },
             productRegularPrice(){
-                return this.productCurrency + this.product.unit_regular_price;
+                return this.productCurrency + this.localProduct.unit_regular_price;
             },
             productSalesPrice(){
-                return this.product.on_sale ? (this.productCurrency + this.product.unit_sale_price) : '(N/A)';
+                return this.localProduct.on_sale ? (this.productCurrency + this.localProduct.unit_sale_price) : '(N/A)';
             },
             productDiscountTotal(){
-                return  this.productCurrency + this.product.discount_total;
+                return  this.productCurrency + this.localProduct.discount_total;
             },
             productTaxTotal(){
-                return this.productCurrency + this.product.tax_total;
+                return this.productCurrency + this.localProduct.tax_total;
             },
             productStockQuantity(){
-                return (this.product.allow_stock_management ? this.product.stock_quantity : '(N/A)');
+                return (this.localProduct.allow_stock_management ? this.localProduct.stock_quantity : '(N/A)');
             },
             productVariables(){
-                return this.product.variables;
+                return this.localProduct.variables;
+            },
+            checkIfProductHasChanged(){
+                var now = _.cloneDeep(this.localProduct);
+                var before = (this.productBeforeChange);
+                var isNotEqual = !_.isEqual(now, before);
+
+                return isNotEqual;
             }
 
         },
         methods: {
+            getAvailableVariantAttributeNames(){
+                /**
+                 *  Get the avaialable variant attribute names. If we have the
+                 *  following variant attribute:
+                 * 
+                 *  [
+                 *      [ name: 'size', 'values': ['small', 'medium', 'large'],
+                 *      [ name: 'color', 'values': ['blue', 'green', 'red'],
+                 *      [ name: 'material', 'values': ['cotton', 'nylon'],
+                 *      ... e.t.c
+                 *  ] 
+                 * 
+                 *  We would like to only return the name values e.g
+                 *  
+                 *  ['size', 'color', 'material', ... e.t.c]
+                 *      
+                 */
+                return this.getParentVariantAttributes.map( (variant_attribute) => {
+                    return variant_attribute.name
+                });
+            },
+            getAvailableVariantAttributeOptions(variant_attribute_name) {
+                if( variant_attribute_name ){
+
+                    /**
+                     *  Get the parent variant attributes e.g
+                     *  [
+                     *      [ name: 'size', 'values': ['small', 'medium', 'large'],
+                     *      [ name: 'color', 'values': ['blue', 'green', 'red'],
+                     *      [ name: 'material', 'values': ['cotton', 'nylon'],
+                     *      ... e.t.c
+                     *  ] 
+                     * 
+                     *  Once collected map through each one e.g
+                     *  [ name: 'size', 'values': ['small', 'medium', 'large']
+                     * 
+                     *  Then check if the name matches the variant_attribute_name provided.
+                     *  If yes then return the options of that variant attribute name e.g
+                     *  ['small', 'medium', 'large'].
+                     * 
+                     *  Since we are using the map function, if the variant_attribute_name 
+                     *  does not match the current variant_attribute name then it will 
+                     *  return null by default. The results may be returned as follows:
+                     *  
+                     *  results = [
+                     *      null,
+                     *      ['small', 'medium', 'large'],
+                     *      null,
+                     *      ... e.t.c
+                     *  ] 
+                     */
+                    var results = this.getParentVariantAttributes.map( (variant_attribute) => {
+                        if(variant_attribute_name == variant_attribute.name){
+                            return variant_attribute.values
+                        }
+                    });
+
+                    /**
+                     *  We need to only return the values that are not null
+                     */
+                    for(var x = 0; x < results.length; x++){
+
+                        //  If not equal to null
+                        if( results[x] != null ){
+
+                            //  Returns a non null value e.g ['small', 'medium', 'large']
+                            return results[x];
+
+                        }
+
+                    }
+                    
+                }
+            },
+            getSelectedVariantAttributeOption(variant_attribute_name) {
+                if( variant_attribute_name ){
+
+                    /**
+                     *  Get the current product variables e.g
+                     *  [
+                     *      [ name: 'size', 'value': 'small'],
+                     *      [ name: 'color', 'value': 'blue'],
+                     *      [ name: 'material', 'value': 'cotton'],
+                     *      ... e.t.c
+                     *  ] 
+                     * 
+                     *  Once collected map through each one e.g
+                     *  [ name: 'size', 'value': 'small']
+                     * 
+                     *  Then check if the name matches the variant_attribute_name provided.
+                     *  If yes then return the value of that variable e.g
+                     *  'small', 'blue', 'cotton', ... e.t.c
+                     * 
+                     *  Since we are using the map function, if the variant_attribute_name 
+                     *  does not match the current variable name then it will return null 
+                     *  by default. The results may be returned as follows:
+                     *  
+                     *  results = [
+                     *      null,
+                     *      'small',
+                     *      null,
+                     *      ... e.t.c
+                     *  ] 
+                     */
+                    var results = this.localProduct.variables.map( (variable) => {
+                        if(variant_attribute_name == variable.name){
+                            return variable.value
+                        }
+                    });
+
+                    /**
+                     *  We need to only return the values that are not null
+                     */
+                    for(var x = 0; x < results.length; x++){
+
+                        //  If not equal to null
+                        if( results[x] != null ){
+
+                            //  Returns a non null value e.g 'small' or 'blue' or 'cotton' ... e.t.c
+                            return results[x];
+
+                        }
+
+                    }
+                    
+                }
+            },
+            updateSelectedVariantAttributeOption(variant_attribute_name, newOption){
+
+                /** Get all the product variables and find the index value of the product 
+                 *  variable with a name value that matches the variant_attribute_name. 
+                 *  Once the index is found use the $set method to update the product 
+                 *  variable value of that index position
+                 */
+                console.log('variant_attribute_name: '+variant_attribute_name);
+                console.log('newOption: '+newOption);
+                console.log('Variables');
+                console.log(this.localProduct.variables);
+
+                var index = this.localProduct.variables.findIndex(
+                        variable => variable.name == variant_attribute_name
+                    );
+
+                this.$set(this.localProduct.variables[index], 'value', newOption);
+            },
+            storeOriginalProductData(){
+
+                //  Store the original product data
+                this.productBeforeChange = _.cloneDeep(this.localProduct);
+
+            },
+            handleCancel(){
+
+                //  Stop editing the product variants
+                this.editVariants = false;
+
+                //  Undo any changes made to the product while editing
+                this.undoProductChanges();
+
+            },
+            handleSaveVariants(){
+
+                //  Hold constant reference to the vue instance
+                const self = this;
+
+                //  Product data to update
+                let variableData = self.localProduct.variables.map( (variable) => {
+                    return {name: variable.name, value: variable.value}
+                });
+
+                if( (variableData || []).length ){
+
+                    //  Console log to acknowledge the start of api process
+                    console.log('Attempt to save product variables using the following...');  
+                    console.log(variableData);
+
+                    //  Start loader
+                    self.isSavingVariants = true;
+
+                    //  Use the api call() function located in resources/js/api.js
+                    api.call('post', this.localProduct._links['oq:variables'].href, variableData)
+                        .then(({data}) => {
+                            
+                            //  Console log the data returned
+                            console.log(data);
+
+                            //  Stop loader
+                            self.isSavingVariants = false;
+
+                            //  Update the local product
+                            self.localProduct = data;
+
+                            //  Store the updated local product as the  original product
+                            self.storeOriginalProductData();
+
+                            //  Close the editor
+                            self.handleCancel();
+
+                        })         
+                        .catch(response => { 
+
+                            //  Stop loader
+                            self.isSavingVariants = false;
+
+                            //  Console log Error Location
+                            console.log('Error saving product variables...');
+
+                            //  Log the responce
+                            console.log(response);    
+                        });
+
+                }
+            },
+            undoProductChanges(){
+                
+                this.localProduct = _.cloneDeep(this.productBeforeChange);
+
+            },
             handleRemoveProduct(index) {
 
-                let url = ((this.product._links || {}).self || {}).href;
+                let url = ((this.localProduct._links || {}).self || {}).href;
 
                 if( url ){
 
@@ -401,6 +717,12 @@
 
             }
         },
+        created(){
+
+            //  Store the original product data before editing
+            this.storeOriginalProductData();
+
+        }
     }
 
 </script>

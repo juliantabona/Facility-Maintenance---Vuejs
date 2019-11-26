@@ -902,10 +902,15 @@
                     //  Remove the variant attribute
                     this.formData.variant_attributes.splice(index, 1);
 
-                    /*  Generate the new variations. This will delete the old variations and
-                    *  create new variations using the current variant attributes
-                    */
-                    this.generateVariations();
+                    /** Update the product details. This is so that we can actually save the current
+                     *  variant attributes of the product. 
+                     */
+                    self.handleCreateOrUpdate();
+
+                    /** Re-fetch the product variations so that they can pick up the changes of the
+                     *  parent variant attributes. 
+                     */
+                    self.fetchVariations();
 
                 }else{
 

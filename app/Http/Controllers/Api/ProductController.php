@@ -120,6 +120,102 @@ class ProductController extends Controller
         }
     }
 
+    /**************************************
+     *  VARIABLE RELATED RESOURCES        *
+    **************************************/
+
+    public function getProductVariables( $product_id )
+    {
+        //  Get the product
+        $product = Product::findOrFail($product_id);
+
+        //  Get the product variables
+        $variables = $product->variables()->paginate() ?? null;
+
+        //  Check if the variables exist
+        if ($variables) {
+
+            //  Check if the user is authourized to view the product variables
+            if ($this->user->can('view', $product)) {
+
+                //  Return an API Readable Format of the Variable Instance
+                return ( new \App\Variable )->convertToApiFormat($variables);
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+
+            }
+        }else{
+            
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
+    public function getProductVariable( $product_id, $variable_id )
+    {
+        //  Get the product
+        $product = Product::findOrFail($product_id);
+
+        //  Get the product variable
+        $variable = $product->variables()->where('variables.id', $variable_id)->first() ?? null;
+
+        //  Check if the variable exists
+        if ($variable) {
+
+            //  Check if the user is authourized to view the product variable
+            if ($this->user->can('view', $product)) {
+
+                //  Return an API Readable Format of the Variable Instance
+                return $variable->convertToApiFormat();
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+
+            }
+        }else{
+            
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+    
+    public function updateProductVariables( Request $request, $product_id )
+    {
+        //  Get the product
+        $product = Product::where('id', $product_id)->first() ?? null;
+
+        //  Check if the product exists
+        if ($product) {
+
+            //  Check if the user is authourized to update the product variables
+            if ($this->user->can('update', $product)) {
+
+                //  Update the product
+                $updatedProduct = $product->initiateUpdateVariables($variableInfo = $request->all());
+
+                //  Return an API Readable Format of the Product Instance
+                return $updatedProduct->convertToApiFormat();
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+            }
+        }else{
+            
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
     public function deleteProduct( Request $request, $product_id )
     {
         //  Get the product
