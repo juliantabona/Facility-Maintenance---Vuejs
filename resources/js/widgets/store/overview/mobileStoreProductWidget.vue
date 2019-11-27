@@ -200,7 +200,7 @@
                         </basicButton>
 
                         <!-- Cancel Button -->
-                        <Button type="error" size="default" ghost
+                        <Button type="error" size="default" ghost :disabled="isSavingVariants"
                                 class="float-right mr-2" @click="handleCancel()" >
                             Cancel
                         </Button>
@@ -315,6 +315,21 @@
                 editVariants: false,
                 showContent: false
             }
+        },
+
+        watch: {
+            /*  Keep track of changes on the product.  */
+            product: {
+
+                handler: function (val, oldVal) {
+
+                    /*  Update the local product  */
+                    this.localProduct = val;
+
+                },
+                deep: true
+
+            },
         },
         computed: {
             getProductNumber(){

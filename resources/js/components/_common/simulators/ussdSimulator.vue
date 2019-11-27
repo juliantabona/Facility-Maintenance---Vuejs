@@ -193,22 +193,26 @@
                             @keyup.escape.native="closeUssdSimulator()">
                         </el-input>
 
-                        <!-- Send/Cancel buttons -->
-                        <div class="clearfix mt-2">
-                                        
-                            <Poptip trigger="hover" content="Press ENTER on keyboard" class="float-right" placement="bottom-end" word-wrap width="220">
-                                <Button type="success" size="large" @click="handleUssdReply()">Send</Button>
-                            </Poptip>
-                                        
-                            <Poptip trigger="hover" content="Press ESC on keyboard" class="float-right mr-2" placement="bottom" word-wrap width="200">
-                                <Button type="default" size="large" @click="closeUssdSimulator()">Cancel</Button>
-                            </Poptip>
-                        </div>
-
                     </div>
 
                     <!-- Loader -->
                     <Loader v-show="isSendingUssdResponse" :loading="true" type="text" class="text-left mt-2">{{ ussdLoaderText }}</Loader>
+
+                    <!-- Send/Cancel buttons -->
+                    <div class="clearfix mt-2">
+                                    
+                        <Poptip v-show="!isSendingUssdResponse" trigger="hover" content="Press ENTER on keyboard" 
+                                class="float-right" placement="bottom-end" word-wrap width="220">
+                            <Button type="success" size="large" @click="handleUssdReply()">{{ ussd_reply ? 'Send' : 'Refresh'  }}</Button>
+                        </Poptip>
+                                    
+                        <Poptip trigger="hover" content="Press ESC on keyboard" class="float-right mr-2" 
+                                :placement="isSendingUssdResponse? 'bottom-end' : 'bottom'" word-wrap width="200">
+                            <Button type="default" size="large" @click="closeUssdSimulator()">Cancel</Button>
+                        </Poptip>
+                    </div>
+
+                    <div>Text: {{ ussd_text }}</div>
 
                 </Card>
 
@@ -294,19 +298,48 @@
             },
             focusOnReplyInput(){
 
-                this.$refs.reply_input.$refs.input.focus();
+                const self = this;
+
+                this.$nextTick(() => {
+
+                    //  Wait for 100 miliseconds
+                    setTimeout(()=>{
+
+                        //  Focus on the reply input field
+                        self.$refs.reply_input.$refs.input.focus();
+
+                    },100);
+
+                });
 
             },
             resetUssdSimulator(){
                 this.ussd_reply = '';
                 this.ussd_text = '';
             },
-            handleUssdReply(reply=null) {
-
+            handleUssdReply() {
+                /** If the the USSD Text (ussd_text) is empty, it means the user has not 
+                 *  responded before, therefore this reply will be the first response. If  
+                 *  this is infact the first response we will not append the asterix symbol
+                 *  '*' which is used when separating multiple responses provided by the user.
+                 *  
+                 *  If the the USSD Text (ussd_text) is not empty, it means the user has 
+                 *  responded before, therefore this reply will not be the first response. 
+                 *  If this is infact the case, then we will append the asterix symbol '*'
+                 *  which is used to separate our current responses from all other responses
+                 *  provided by the user.
+                 *  
+                 *  Also check if the user has provided a reply using the reply input field.
+                 *  If ther user input field is empty '' then the user is not actually sending
+                 *  a response, but is only requesting that we refresh the current information
+                 *  on screen. This makes sense since we don't actually change the (ussd_text),
+                 *  We only resend our previous responses.
+                 *   
+                 */
                 if( this.ussd_text == '' ){
-                    this.ussd_text += (reply || this.ussd_reply);
+                    this.ussd_text += this.ussd_reply;
                 }else{
-                    this.ussd_text += '*'+(reply || this.ussd_reply);;
+                    this.ussd_text += ( this.ussd_reply != '' ? '*'+this.ussd_reply : '');
                 }
 
                 this.ussd_reply = '';
@@ -323,11 +356,15 @@
                     test_mode: true
                 };
 
+                //  Start loader
                 self.isSendingUssdResponse = true;
 
                 //  Use the api call() function located in resources/js/api.js
                 return api.call('post', self.postURL, ussdData)
                     .then(({data}) => {
+
+                        //  Stop loader
+                        self.isSendingUssdResponse = false;
 
                         self.ussdResponse = data.substr(4);
 
@@ -342,9 +379,6 @@
                             self.focusOnReplyInput();
 
                         }
-
-                        //  Reset the custom errors
-                        self.isSendingUssdResponse = false;
                         
                     })         
                     .catch(response => { 
