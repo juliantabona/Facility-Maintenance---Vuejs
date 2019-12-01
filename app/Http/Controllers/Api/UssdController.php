@@ -20,6 +20,7 @@ class UssdController extends Controller
     private $contact;
     private $products;
     private $currency;
+    private $test_mode;
     private $session_id;
     private $service_code;
     private $phone_number;
@@ -48,6 +49,9 @@ class UssdController extends Controller
 
     public function __construct(Request $request)
     {
+        /*  Check if we are on TEST MODE  */
+        $this->test_mode = ( $request->get('testMode') == 'true' || $request->get('testMode') == '1' ) ? true : false;
+
         /*  Get the name of "TEXT" field used to save the user responses  */
         $this->text_field_name = 'text';
 
@@ -2548,6 +2552,7 @@ class UssdController extends Controller
 
         /*  If the payment status was successful  */
         if ($payment_response['status']) {
+            
             /******************************************************************
              *  Find/Create a contact
              *  Create a new order for contact
@@ -2558,21 +2563,45 @@ class UssdController extends Controller
              *  Send a payment confirmation sms with an order ref #
              ******************************************************************/
 
-            /*  Get the customer information */
-            $customer_info = [
-                'name' => 'Julian Tabona',
-                'is_vendor' => false,
-                'is_customer' => true,
-                'is_individual' => true,
-                'phone' => [
-                    'calling_code' => $this->user['phone']['calling_code'],
-                    'number' => $this->user['phone']['number'],
-                    'provider' => 'orange',
-                    'type' => 'mobile',
-                ],
-                'address' => null,
-                'email' => null,
-            ];
+            //  If we are on TEST MODE use the test mode contact details 
+            if( $this->test_mode ){
+
+                /*  Get the customer information */
+                $customer_info = [
+                    'name' => 'Test Name',
+                    'is_vendor' => false,
+                    'is_customer' => true,
+                    'is_individual' => true,
+                    'phone' => [
+                        'calling_code' => '267',
+                        'number' => '79999999',
+                        'provider' => 'test provider',
+                        'type' => 'mobile',
+                    ],
+                    'address' => null,
+                    'email' => null,
+                ];
+
+            //  If we are not on TEST MODE use the actual customer contact details 
+            }else{
+
+                /*  Get the customer information */
+                $customer_info = [
+                    'name' => 'Julian Tabona',
+                    'is_vendor' => false,
+                    'is_customer' => true,
+                    'is_individual' => true,
+                    'phone' => [
+                        'calling_code' => $this->user['phone']['calling_code'],
+                        'number' => $this->user['phone']['number'],
+                        'provider' => 'orange',
+                        'type' => 'mobile',
+                    ],
+                    'address' => null,
+                    'email' => null,
+                ];
+
+            }
 
             /*  Create a new order using the provided customer information,
              *  merchant id and items. The initiateCreate() method will create,
@@ -2584,11 +2613,16 @@ class UssdController extends Controller
                 'items' => $this->cart['items'],
             ]);
 
-            /*  Send the order as a summarised SMS to the merchant  */
-            //$merchantSMS = $this->order->smsOrderToMerchant();
+            //  If we are not on TEST MODE then send SMS to Customer and Merchant
+            if( !$this->test_mode ){
 
-            /*  Send the invoice receipt as a summarized SMS to the customer  */
-            //$customerSMS = $this->order->invoices()->first()->smsInvoiceReceiptToCustomer();
+                /*  Send the order as a summarised SMS to the merchant  */
+                $merchantSMS = $this->order->smsOrderToMerchant();
+
+                /*  Send the invoice receipt as a summarized SMS to the customer  */
+                $customerSMS = $this->order->invoices()->first()->smsInvoiceReceiptToCustomer();
+
+            }
 
             /*  Mark the order invoice as paid  */
             $payment = $this->order->invoices()->first()->recordAutomaticPayment($transaction = [
@@ -2598,7 +2632,8 @@ class UssdController extends Controller
 
             /*  Notify the user of the payment success  */
             $response = $this->displayPaymentSuccessPage();
-        } else {
+            
+       } else {
             /*  Fetch the error (Reason why the payment failed)  */
             $error = $payment_response['error'];
 

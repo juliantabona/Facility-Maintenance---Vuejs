@@ -41,6 +41,7 @@ class Product extends JsonResource
             'variables' => $this->variables,
 
             //  Attributes
+            'unit_price' => $this->unit_price,
             'discount_total' => $this->discount_total,
             'tax_total' => $this->tax_total,
             'sub_total' => $this->sub_total,

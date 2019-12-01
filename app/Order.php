@@ -3,7 +3,6 @@
 namespace App;
 
 use Carbon\Carbon;
-use Illuminate\Support\Str;
 use App\Traits\OrderTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
@@ -80,8 +79,7 @@ class Order extends Model
 
     protected $allowedOrderableColumns = [];
 
-
-    /* 
+    /*
      *  Scope orders by status
      */
     public function scopeOpen($query)
@@ -119,9 +117,8 @@ class Order extends Model
         return $query->where('manual_status', 'closed');
     }
 
-
     /*
-     *  Returns the merchant of the order 
+     *  Returns the merchant of the order
      *  This refers to the seller of the goods/services
      */
     public function merchant()
@@ -147,7 +144,7 @@ class Order extends Model
         return $this->belongsTo('App\Contact', 'reference_id');
     }
 
-    /* 
+    /*
      *  Scope by type
      */
     public function scopeWhereType($query, $type)
@@ -155,9 +152,9 @@ class Order extends Model
         return $query;
     }
 
-    /*  
+    /*
      *  Returns documents associated with this order. These are various files such as images,
-     *  videos, files and so on. Basically any file/image/video the user wants to save to 
+     *  videos, files and so on. Basically any file/image/video the user wants to save to
      *  this order is stored in this relation
      */
 
@@ -166,7 +163,7 @@ class Order extends Model
         return $this->morphMany('App\Document', 'owner');
     }
 
-    /* 
+    /*
      *  Returns documents categorized as files
      */
     public function files()
@@ -174,7 +171,7 @@ class Order extends Model
         return $this->documents()->whereType('file');
     }
 
-    /* 
+    /*
      *  Returns the order taxes
      */
     public function taxes()
@@ -182,7 +179,7 @@ class Order extends Model
         return $this->morphToMany('App\Tax', 'owner', 'tax_allocations')->withTimestamps();
     }
 
-    /* 
+    /*
      *  Returns the order discounts
      */
     public function discounts()
@@ -190,7 +187,7 @@ class Order extends Model
         return $this->morphToMany('App\Discount', 'owner', 'discount_allocations')->withTimestamps();
     }
 
-    /* 
+    /*
      *  Returns the order coupons
      */
     public function coupons()
@@ -229,8 +226,8 @@ class Order extends Model
     {
         return $this->morphToMany('App\Lifecycle', 'owner', 'lifecycle_allocations')->withTimestamps();
     }
-    
-    /* 
+
+    /*
      *  Returns recent activities owned by this store
      */
     public function recentActivities()
@@ -238,7 +235,7 @@ class Order extends Model
         return $this->morphMany('App\RecentActivity', 'owner')->orderBy('created_at', 'desc');
     }
 
-    /* 
+    /*
      *  Returns store creation activity
      */
     public function createdActivities()
@@ -246,7 +243,7 @@ class Order extends Model
         return $this->recentActivities()->whereType('created');
     }
 
-    /* 
+    /*
      *  Returns store approval activity
      */
     public function approvedActivities()
@@ -254,7 +251,7 @@ class Order extends Model
         return $this->recentActivities()->whereType('approved');
     }
 
-    /* 
+    /*
      *  Returns order lifecycle progress update activity
      */
     public function updatedLifecycleStagesActivities()
@@ -262,7 +259,7 @@ class Order extends Model
         return $this->recentActivities()->whereType('updated lifecycle stage');
     }
 
-    /* 
+    /*
      *  Returns order lifecycle progress reversal activity
      */
     public function reversedLifecycleStagesActivities()
@@ -272,11 +269,11 @@ class Order extends Model
 
     protected $appends = [
         'resource_type', 'transaction_total', 'refund_total', 'outstanding_balance',
-        'created_at_format', 'lifecycle_status_title', 'lifecycle_status_description', 
-        'lifecycle_history', 'lifecycle_flow'
+        'created_at_format', 'lifecycle_status_title', 'lifecycle_status_description',
+        'lifecycle_history', 'lifecycle_flow',
     ];
 
-    /* 
+    /*
      *  Returns the resource type
      */
     public function getResourceTypeAttribute()
@@ -284,55 +281,49 @@ class Order extends Model
         return strtolower(class_basename($this));
     }
 
-    /* 
+    /*
      *  Returns the total payment made to this order
      */
     public function getTransactionTotalAttribute()
     {
         $total = 0;
 
-        foreach($this->invoices as $invoice){
-            
+        foreach ($this->invoices as $invoice) {
             $total += $invoice->transaction_total;
-
         }
 
         return $total;
     }
 
-    /* 
+    /*
      *  Returns the total refund paid to this order
      */
     public function getRefundTotalAttribute()
     {
         $total = 0;
 
-        foreach($this->invoices as $invoice){
-            
+        foreach ($this->invoices as $invoice) {
             $total += $invoice->refund_total;
-
         }
-        
+
         return $total;
     }
 
-    /* 
+    /*
      *  Returns the outstanding balance after all payments
      */
     public function getOutstandingBalanceAttribute()
     {
         $total = 0;
 
-        foreach($this->invoices as $invoice){
-            
+        foreach ($this->invoices as $invoice) {
             $total += $invoice->outstanding_balance;
-
         }
-        
+
         return $total;
     }
 
-    /* 
+    /*
      *  Returns the created at formatted for readability
      */
     public function getCreatedAtFormatAttribute()
@@ -340,8 +331,8 @@ class Order extends Model
         return $this->created_at->format('M d Y @ H:i');
     }
 
-    /* 
-     *  Returns the lifecycle history to show all the activities that occured 
+    /*
+     *  Returns the lifecycle history to show all the activities that occured
      *  whilst the lifecycle kept changing states until current date and time.
      *  It gives insights by naming and describing all activities as well as
      *  revealing the user responsible for a given activity
@@ -356,25 +347,23 @@ class Order extends Model
         $activityHistory = [];
 
         foreach ($lifecycleStages as $key => $currStage) {
-
             $createdStatus = ($currStage['type'] == 'created');
             $updatedStatus = ($currStage['type'] == 'updated lifecycle stage');
             $reversedStatus = ($currStage['type'] == 'reversed lifecycle stage');
 
             //  If this is a type of created
             if ($createdStatus) {
-
                 $currType = 'open';
                 $currInstance = 1;
 
                 array_push($activityHistory, [
                     'title' => 'Open',
                     'description' => 'Received on '.(new Carbon($currStage->created_at))->format('M d Y @ H:iA'),
-                    'status' => 'active'
+                    'status' => 'active',
                 ]);
 
             //  If this is a type of updated lifecycle
-            }else{
+            } else {
                 //  Current stage details
                 $currType = $currStage['activity']['type'];
                 $currInstance = $currStage['activity']['instance'];
@@ -434,9 +423,9 @@ class Order extends Model
                         if ($currType == 'payment') {
                             array_push($activityHistory, [
                                 'title' => 'Pending Payment',
-                                'description' => 'Set to pending payment on '.(new Carbon($currStage->created_at))->format('M d Y @ H:iA'),   
+                                'description' => 'Set to pending payment on '.(new Carbon($currStage->created_at))->format('M d Y @ H:iA'),
                                 'status' => 'pending',
-                                'reason' => $currIsPendingReason
+                                'reason' => $currIsPendingReason,
                             ]);
                         //  If it is pending delivery
                         } elseif ($currType == 'delivery') {
@@ -444,10 +433,10 @@ class Order extends Model
                                 'title' => 'Pending Delivery',
                                 'description' => 'Set to pending delivery on '.(new Carbon($currStage->created_at))->format('M d Y @ H:iA'),
                                 'status' => 'pending',
-                                'reason' => $currIsPendingReason
+                                'reason' => $currIsPendingReason,
                             ]);
                         }
-                    //  If the current stage is skipped
+                        //  If the current stage is skipped
                     } elseif ($currIsSkipped == true) {
                         //  If it is skipped payment
                         if ($currType == 'payment') {
@@ -466,7 +455,7 @@ class Order extends Model
                                 'reason' => $currIsSkippedReason,
                             ]);
                         }
-                    //  If it is cancelled
+                        //  If it is cancelled
                     } elseif ($currIsCancelled == true) {
                         array_push($activityHistory, [
                             'title' => 'Cancelled',
@@ -480,7 +469,7 @@ class Order extends Model
                         array_push($activityHistory, [
                             'title' => 'Undo Cancellation',
                             'description' => 'Reversed to undo cancellation. Updated on '.(new Carbon($currStage['created_at']))->format('M d Y @ H:iA'),
-                            'status' => 'active'
+                            'status' => 'active',
                         ]);
                     //  Otherwise if it was not pending, skipped or cancelled
                     } else {
@@ -492,7 +481,7 @@ class Order extends Model
                                                 .' via '.$currStage['activity']['meta']['payment_method']
                                                 .' on '.(new Carbon($currStage->created_at))->format('M d Y @ H:iA'),
                                 'meta_data' => $currStage['activity']['meta'],
-                                'status' => 'active'
+                                'status' => 'active',
                             ]);
                         //  If it is delivery
                         } elseif ($currType == 'delivery') {
@@ -501,20 +490,20 @@ class Order extends Model
                                 'description' => 'Delivered via '.$currStage['activity']['meta']['courier']
                                                 .' on '.(new Carbon($currStage['activity']['meta']['date_delivered']))->format('M d Y')
                                                 .' @ '.(new Carbon($currStage['activity']['meta']['time_delivered']))->format('H:iA'),
-                                'meta_data' => $currStage['activity']['meta'],                
-                                'status' => 'active'
+                                'meta_data' => $currStage['activity']['meta'],
+                                'status' => 'active',
                             ]);
                         //  If it is close
                         } elseif ($currType == 'closed') {
                             array_push($activityHistory, [
                                 'title' => 'Completed',
                                 'description' => 'Completed on '.(new Carbon($currStage->created_at))->format('M d Y @ H:iA'),
-                                'status' => 'active'
+                                'status' => 'active',
                             ]);
                         }
                     }
 
-                //  If this is a type of reversed lifecycle
+                    //  If this is a type of reversed lifecycle
                 } elseif ($reversedStatus) {
                     if ($currIsPending == true) {
                         if ($currType == 'payment') {
@@ -522,14 +511,14 @@ class Order extends Model
                             array_push($activityHistory, [
                                 'title' => 'Resumed',
                                 'description' => 'Resumed order after pending payment on '.(new Carbon($currStage['created_at']))->format('M d Y @ H:iA'),
-                                'status' => 'inactive'
+                                'status' => 'inactive',
                             ]);
                         } elseif ($currType == 'delivery') {
                             //  Then this is an undo pending delivery
                             array_push($activityHistory, [
                                 'title' => 'Resumed',
                                 'description' => 'Resumed order after pending delivery on '.(new Carbon($currStage['created_at']))->format('M d Y @ H:iA'),
-                                'status' => 'inactive'
+                                'status' => 'inactive',
                             ]);
                         }
                     } elseif ($currIsSkipped == true) {
@@ -538,14 +527,14 @@ class Order extends Model
                             array_push($activityHistory, [
                                 'title' => 'Undo Skip Payment',
                                 'description' => 'Reversed to undo skipping payment. Updated on '.(new Carbon($currStage->created_at))->format('M d Y @ H:iA'),
-                                'status' => 'inactive'
+                                'status' => 'inactive',
                             ]);
                         //  Then this is an undo skip delivery
                         } elseif ($currType == 'delivery') {
                             array_push($activityHistory, [
                                 'title' => 'Undo Skip Delivery',
                                 'description' => 'Reversed to undo skipping payment. Updated on '.(new Carbon($currStage->created_at))->format('M d Y @ H:iA'),
-                                'status' => 'inactive'    
+                                'status' => 'inactive',
                             ]);
                         }
                     } else {
@@ -554,21 +543,21 @@ class Order extends Model
                             array_push($activityHistory, [
                                 'title' => 'Undo Payment',
                                 'description' => 'Reversed to undo payment. Updated on '.(new Carbon($currStage['created_at']))->format('M d Y @ H:iA'),
-                                'status' => 'inactive'
+                                'status' => 'inactive',
                             ]);
                         } elseif ($currType == 'delivery') {
                             //  Then this is an undo setting the status to delivered
                             array_push($activityHistory, [
                                 'title' => 'Undo Delivery',
                                 'description' => 'Reversed to undo delivery. Updated on '.(new Carbon($currStage['created_at']))->format('M d Y @ H:iA'),
-                                'status' => 'inactive' 
+                                'status' => 'inactive',
                             ]);
                         } elseif ($currType == 'closed') {
                             //  Then this is an undo setting the status to delivered
                             array_push($activityHistory, [
                                 'title' => 'Undo Completed',
                                 'description' => 'Reversed to undo completed. Updated on '.(new Carbon($currStage['created_at']))->format('M d Y @ H:iA'),
-                                'status' => 'inactive' 
+                                'status' => 'inactive',
                             ]);
                         }
                     }
@@ -586,12 +575,12 @@ class Order extends Model
         return $activityHistory;
     }
 
-    /* 
-     *  Returns the lifecycle stages in their current state. It shows all the stages 
+    /*
+     *  Returns the lifecycle stages in their current state. It shows all the stages
      *  that the order must follow from begining to end and what their states are e.g active,
      *  pending, cancelled... Actions are also listed if available so that the user can change
      *  the stage of the lifecycle and further advance or undo past actions. Templates are
-     *  provided to help the user know what form data is required when executing a given 
+     *  provided to help the user know what form data is required when executing a given
      *  action e.g) Provide a data field called "reason" with a message to describe
      *  your reason for taking a particular action
      */
@@ -605,10 +594,8 @@ class Order extends Model
 
         //  If we have the lifecycle stages and history
         if (count($lifecycle_stages) && count($lifecycle_history_events)) {
-
             //  Foreach stage that we have
-            foreach($lifecycle_stages as $key => $current_stage){
-
+            foreach ($lifecycle_stages as $key => $current_stage) {
                 //  Build the stage using the default stage data
                 $lifecycle_stages[$key] = [
                     'name' => $current_stage['name'],
@@ -616,20 +603,17 @@ class Order extends Model
                     'type' => $current_stage['type'],
                     'instance' => $current_stage['instance'],
                     'status' => 'inactive',
-                    'actions' => []
+                    'actions' => [],
                 ];
 
                 $current_stage = $lifecycle_stages[$key];
 
                 //  Foreach history event
-                foreach($lifecycle_history_events as $current_event){
-
+                foreach ($lifecycle_history_events as $current_event) {
                     //  If the current stage matches the current history event
-                    if( $current_stage['type'] == $current_event['type'] &&
-                        $current_stage['instance'] == $current_event['instance'] ){
-
-                        if( $current_event['status'] != 'inactive' ){
-
+                    if ($current_stage['type'] == $current_event['type'] &&
+                        $current_stage['instance'] == $current_event['instance']) {
+                        if ($current_event['status'] != 'inactive') {
                             //  Build the stage using the history data
                             $lifecycle_stages[$key]['name'] = $current_event['title'];
                             $lifecycle_stages[$key]['description'] = $current_event['description'];
@@ -637,18 +621,13 @@ class Order extends Model
                             $lifecycle_stages[$key]['instance'] = $current_event['instance'];
                             $lifecycle_stages[$key]['status'] = $current_event['status'];
                             $lifecycle_stages[$key]['meta_data'] = $current_event['meta_data'] ?? null;
-
                         }
 
                         // Break out of the only this inner foreach loop
                         break 1;
-
                     }
-
                 }
-
             }
-            
         }
 
         $activeStages = collect($lifecycle_stages)->where('status', 'active');
@@ -657,38 +636,34 @@ class Order extends Model
          *  This means that the stage had already been updated
          *  to allow the lifecycle to proceed to the next stage
          */
-        foreach($activeStages as $key => $current_stage){
-            
+        foreach ($activeStages as $key => $current_stage) {
             /*  Every stage here should have actions the user can
              *  perform to change the lifecycle progress. By default
              *  we need to make sure that all stages can be editable.
              *  After that we need to target the last stage and give
-             *  it all the other actions such the ability to 
+             *  it all the other actions such the ability to
              *  proceed, undo, cancel, skip, e.t.c
              */
 
-            /*  Lets first attempt to get the next stage from the current stage. 
+            /*  Lets first attempt to get the next stage from the current stage.
              *  If we have a next stage then return it otherwise return nothing.
              */
             $next_stage = $lifecycle_stages[$key + 1] ?? null;
 
-            if( $key < ( count($activeStages) -1 ) ){
-
-                /*  This is the stage that should only have the edit option. 
+            if ($key < (count($activeStages) - 1)) {
+                /*  This is the stage that should only have the edit option.
                  *  We call the getLifecycleActions() and pass the current stage
                  *  as well as the $config to instruct that we only want to add
                  *  the edit action only
                  */
-                $config= [ 'can_only_edit' => true ];
+                $config = ['can_only_edit' => true];
                 $lifecycle_stages[$key]['actions'] = $this->getLifecycleActions($current_stage, $next_stage, $config);
-            
-            }else{
-
+            } else {
                 /*  This is the stage that should allow the user to edit as well
-                 *  as proceed, undo, cancel, skip, e.t.c depending on the actions 
+                 *  as proceed, undo, cancel, skip, e.t.c depending on the actions
                  *  supported on the specified status on the stage. We call the
                  *  getLifecycleActions() which will require both the current
-                 *  and next stage (if available) to determine the possible 
+                 *  and next stage (if available) to determine the possible
                  *  actions that the user can run.
                  */
 
@@ -697,23 +672,22 @@ class Order extends Model
         }
 
         //  Foreach stage remove the meta data
-        foreach($lifecycle_stages as $key => $stage){
+        foreach ($lifecycle_stages as $key => $stage) {
             //  Remove meta_data information
             unset($lifecycle_stages[$key]['meta_data']);
         }
 
         return $lifecycle_stages;
-
     }
 
-    /* 
+    /*
      *  Returns an array of data the represents all the information required to make a
      *  lifecycle change. Actions define the names, icons and templates and hyperlinks
      *  that will be required for each action that can be executed at a given instance
      *  of a lifecycle
      */
-    public function getLifecycleActions($current_stage = null, $next_stage = null, $config = []){
-        
+    public function getLifecycleActions($current_stage = null, $next_stage = null, $config = [])
+    {
         //  Default settings
         $defaults = array(
             //  Means that we should only return the edit option only
@@ -724,8 +698,7 @@ class Order extends Model
         $config = array_merge($defaults, $config);
 
         /*  First we need to make sure that the current stage has been provided. */
-        if( $current_stage ){
-
+        if ($current_stage) {
             /*  lets determine the current stage statuses  */
             $isActiveStatus = ($current_stage['status'] == 'active') ? true : false;
             $isPendingStatus = ($current_stage['status'] == 'pending') ? true : false;
@@ -737,12 +710,12 @@ class Order extends Model
 
             $current_stage_meta_data = ($current_stage['meta_data'] ?? null);
 
-            $notifyClientText = ''; 
+            $notifyClientText = '';
             $options = [];
 
             $paymentTemplate = [
                 'invoice_id' => null,
-                'comment' => null
+                'comment' => null,
             ];
 
             $deliveryTemplate = [
@@ -750,148 +723,112 @@ class Order extends Model
                 'time_delivered' => null,
                 'courier' => ['DHL', 'FedEx', 'Sprint Couries', 'Pickup by customer', 'Other'],
                 'other_courier' => null,
-                'comment' => null
+                'comment' => null,
             ];
 
             $reasonTemplate = [
-                'reason' => null
+                'reason' => null,
             ];
 
             //  If we are instructed to only return the edit option
-            if( $config['can_only_edit'] ){
-
-
+            if ($config['can_only_edit']) {
                 /******************************************
                 *   EDIT (UPDATE) OPTION                  *
                 /*****************************************/
 
-               //   If the current stage is not of type open or closed then show the edit option
-               if($current_stage['type'] == 'payment'){
-
+                //   If the current stage is not of type open or closed then show the edit option
+                if ($current_stage['type'] == 'payment') {
                     //  Overide the template to add the required fields for payment update
                     array_push($options, $this->createAction('Edit Payment Details', 'update', 'ios-create-outline', false, $paymentTemplate, $current_stage_meta_data));
-
-                }else if($current_stage['type'] == 'delivery'){
-
+                } elseif ($current_stage['type'] == 'delivery') {
                     array_push($options, $this->createAction('Edit Delivery Details', 'update', 'ios-create-outline', false, $deliveryTemplate, $current_stage_meta_data));
-                    
-                }else if($current_stage['type'] == 'job_started'){
-
+                } elseif ($current_stage['type'] == 'job_started') {
                     array_push($options, $this->createAction('Edit Job Started Details', 'update', 'ios-create-outline', false, null, $current_stage_meta_data));
-                    
                 }
 
                 //  Return the actions options at this point so that we do not get anymore possible actions
                 return $options;
-
             }
 
-
             //  If the current stage is pending, cancelled or requires manual verification
-            if( $isPendingStatus || $isCancelledStatus || $isManualVerificationStatus ){
-             
+            if ($isPendingStatus || $isCancelledStatus || $isManualVerificationStatus) {
                 /**************************************************************************
                 *   CURRENT STEP -  PENDING, CANCELLED, OR MANUAL VERIFICATION OPTIONS    *
                 /*************************************************************************/
 
                 //  If the current stage is not cancelled but is pending
-                if( !$isCancelledStatus && $isPendingStatus ){
-
+                if (!$isCancelledStatus && $isPendingStatus) {
                     //  Option to set to pending stage
                     $notifyClientText = 'Notify Client (Pending)';
 
                     array_push($options, $this->createAction('Resume '.$this->resource_type, 'resume', 'ios-repeat', false, null));
-
                 }
 
                 //  If the current stage is cancelled
-                if( $isCancelledStatus ){
-
+                if ($isCancelledStatus) {
                     //  Option to reverse a cancelled stage
                     $notifyClientText = 'Notify Client (Cancelled)';
 
                     array_push($options, $this->createAction('Re-open '.$this->resource_type, 'resume', 'ios-repeat', true, null));
-
                 }
 
                 //  If the current stage requires manual verification
-                if( $isManualVerificationStatus ){
-
+                if ($isManualVerificationStatus) {
                     //  Option to verify a stage
                     $notifyClientText = 'Notify Client (Verified)';
 
-                    if($current_stage['type'] == 'payment'){
-                        
+                    if ($current_stage['type'] == 'payment') {
                         array_push($options, $this->createAction('Approve Payment', 'approve', 'ios-checkmark', false, null));
                         array_push($options, $this->createAction('Decline Payment', 'decline', 'ios-close', true, null));
-
-                    }elseif($current_stage['type'] == 'delivery'){
-
+                    } elseif ($current_stage['type'] == 'delivery') {
                         array_push($options, $this->createAction('Approve Delivery', 'approve', 'ios-checkmark', false, null));
                         array_push($options, $this->createAction('Decline Delivery', 'decline', 'ios-close', true, null));
-
                     }
                 }
-             
-            }else{
-
+            } else {
                 /******************************************
                 *   PROCEED OPTION                        *
                 /*****************************************/
 
                 $next_stage_name = ($next_stage['name'] ?? null);
 
-               //   If the current stage is not of type closed then show the proceed option
-                if($current_stage['type'] != 'closed'){
+                //   If the current stage is not of type closed then show the proceed option
+                if ($current_stage['type'] != 'closed') {
+                    $proceedText = $next_stage_name ? 'Proceed to '.$next_stage_name : 'Proceed';
 
-                    $proceedText = $next_stage_name ? 'Proceed to ' . $next_stage_name : 'Proceed';
-                    
-                    if( $next_stage['type'] == 'payment' ){
-
+                    if ($next_stage['type'] == 'payment') {
                         //  Overide the template to add the required fields for payment update
                         array_push($options, $this->createAction($proceedText, 'proceed', 'ios-redo-outline', false, $paymentTemplate));
-
-                    }elseif( $next_stage['type'] == 'delivery' ){
-
+                    } elseif ($next_stage['type'] == 'delivery') {
                         //  Overide the template to add the required fields for delivery update
                         array_push($options, $this->createAction($proceedText, 'proceed', 'ios-redo-outline', false, $deliveryTemplate));
-
                     }
-
                 }
 
                 /******************************************
                 *   UNDO OPTION                           *
                 /******************************************/
 
-               //   If the current stage is not of type open then show the undo option
-                if($current_stage['type'] != 'open'){
-
-                    $undoText = $isSkippedStatus ? 'Undo Skip' : 'Undo ' . $current_stage_name;
+                //   If the current stage is not of type open then show the undo option
+                if ($current_stage['type'] != 'open') {
+                    $undoText = $isSkippedStatus ? 'Undo Skip' : 'Undo '.$current_stage_name;
 
                     //  Overide the template to add the required fields for payment update
                     array_push($options, $this->createAction($undoText, 'undo', 'ios-undo-outline', true, null));
-
                 }
 
                 /******************************************
                 *   EDIT (UPDATE) OPTION                  *
                 /*****************************************/
 
-               //   If the current stage is not of type open or closed then show the edit option
-                if($current_stage['type'] == 'payment'){
-
+                //   If the current stage is not of type open or closed then show the edit option
+                if ($current_stage['type'] == 'payment') {
                     //  Overide the template to add the required fields for payment update
                     array_push($options, $this->createAction('Edit Payment Details', 'update', 'ios-create-outline', false, $paymentTemplate));
-
-                }else if($current_stage['type'] == 'delivery'){
-
+                } elseif ($current_stage['type'] == 'delivery') {
                     array_push($options, $this->createAction('Edit Delivery Details', 'update', 'ios-create-outline', false, $deliveryTemplate));
-                    
-                }else if($current_stage['type'] == 'job_started'){
-
+                } elseif ($current_stage['type'] == 'job_started') {
                     array_push($options, $this->createAction('Edit Job Started Details', 'update', 'ios-create-outline', false, null));
-                    
                 }
 
                 /******************************************
@@ -899,62 +836,52 @@ class Order extends Model
                 /*****************************************/
 
                 //  If the next stage is a payment stage
-                if( $next_stage['type'] == 'payment'){
-
+                if ($next_stage['type'] == 'payment') {
                     //  Show the set to pending payment option
                     array_push($options, $this->createAction('Set As Pending Payment', 'pending', 'ios-time-outline', true, $reasonTemplate));
 
                     //  Show the skip payment option
-                    array_push($options, $this->createAction('Skip Payment', 'skip', 'ios-fastforward-outline', false, $reasonTemplate));   
-                
-                //  If the next stage is a delivery stage
-                }else if( $next_stage['type'] == 'delivery'){
+                    array_push($options, $this->createAction('Skip Payment', 'skip', 'ios-fastforward-outline', false, $reasonTemplate));
 
+                //  If the next stage is a delivery stage
+                } elseif ($next_stage['type'] == 'delivery') {
                     //  Show the set to pending delivery option
                     array_push($options, $this->createAction('Set As Pending Delivery', 'pending', 'ios-time-outline', true, $reasonTemplate));
 
                     //  Show the skip delivery option
-                    array_push($options, $this->createAction('Skip Delivery', 'skip', 'ios-fastforward-outline', false, $reasonTemplate));       
-                
-                //  If the next stage is a job started stage
-                }else if( $next_stage['type'] == 'job_started'){
+                    array_push($options, $this->createAction('Skip Delivery', 'skip', 'ios-fastforward-outline', false, $reasonTemplate));
 
+                //  If the next stage is a job started stage
+                } elseif ($next_stage['type'] == 'job_started') {
                     //  Show the set to pending delivery option
                     array_push($options, $this->createAction('Set As Pending Job', 'pending', 'ios-time-outline', true, $reasonTemplate));
 
                     //  Show the skip delivery option
-                    array_push($options, $this->createAction('Skip Job Started', 'skip', 'ios-fastforward-outline', false, $reasonTemplate));   
-                      
+                    array_push($options, $this->createAction('Skip Job Started', 'skip', 'ios-fastforward-outline', false, $reasonTemplate));
                 }
 
                 /******************************************
                 /   CANCEL OPTION                         *
                 ******************************************/
-                
+
                 //   If the current stage is not of type closed then show the cancel option
-                if($current_stage['type'] != 'closed'){
-
-                    array_push($options, $this->createAction('Set As Cancelled', 'cancel', 'ios-hand-outline', false, $reasonTemplate));  
-
+                if ($current_stage['type'] != 'closed') {
+                    array_push($options, $this->createAction('Set As Cancelled', 'cancel', 'ios-hand-outline', false, $reasonTemplate));
                 }
             }
 
             /******************************************
             /   NOTIFY CLIENT OPTION                  *
             ******************************************/
-            if( $notifyClientText ){
-
+            if ($notifyClientText) {
                 array_push($options, $this->createAction($notifyClientText, 'notify', 'ios-chatboxes-outline', false, null));
-                
             }
-            
+
             return $options;
-
         }
-
     }
 
-    /* 
+    /*
      *  Returns an single action in proper array format
      */
     public function createAction($name, $trigger_name, $icon, $divider, $template, $meta_data = null)
@@ -963,7 +890,7 @@ class Order extends Model
          *
          *  $href = route('order-lifecycle-resume', ['order_id' => 1])
          *      converts to: http://oqcloud.co.bw/api/orders/1/lifecycle/resume
-         * 
+         *
          *  $href = route('order-lifecycle-approve', ['order_id' => 1]);
          *      converts to: http://oqcloud.co.bw/api/orders/1/lifecycle/approve
          *  ...
@@ -971,8 +898,8 @@ class Order extends Model
         $href = route($this->resource_type.'-lifecycle-'.$trigger_name, [$this->resource_type.'_id' => $this->id]);
 
         $action = [
-            'name' => $name, 'trigger_name' => $trigger_name, 'icon' => $icon,  
-            'divider' => $divider, 'href' => $href, 'template' => $template
+            'name' => $name, 'trigger_name' => $trigger_name, 'icon' => $icon,
+            'divider' => $divider, 'href' => $href, 'template' => $template,
         ];
 
         $meta_data ? ($action['data'] = $meta_data) : null;
@@ -980,31 +907,62 @@ class Order extends Model
         return $action;
     }
 
-    /* 
+    /*
      *  Returns the title of the must recent lifecycle history event
      */
     public function getLifecycleStatusTitleAttribute()
     {
         //  If we have lifecycle activity
         if (count($this->lifecycle_history)) {
-
             //  Get the last stage title
             return $this->lifecycle_history[0]['title'] ?? null;
-            
         }
     }
 
-    /* 
+    /*
      *  Returns the description of the must recent lifecycle history event
      */
     public function getLifecycleStatusDescriptionAttribute()
     {
         //  If we have lifecycle activity
         if (count($this->lifecycle_history)) {
-
             //  Get the last stage description
             return $this->lifecycle_history[0]['description'] ?? null;
-
         }
+    }
+
+    public function getManualStatusAttribute($value)
+    {
+        switch($value) {
+            case 'Pending Payment':
+                $status_description = 'The order has not been paid (unpaid)';
+                break;
+            case 'Failed Payment':
+                $status_description = 'The order payment failed or was declined (unpaid).';
+                break;
+            case 'Paid':
+                $status_description = 'The order has been paid';
+                break;
+            case 'Processing':
+                $status_description = 'Payment received (paid) and stock has been reduced. The order is now awaiting fulfillment.';
+                break;
+            case 'On Hold':
+                $status_description = 'Awaiting payment – stock is reduced, but payment requires confirmation.';
+                break;
+            case 'Cancelled':
+                $status_description = 'Order fulfilled and complete – requires no further action';
+                break;
+            case 'Completed':
+                $status_description = 'Order fulfilled and complete – requires no further action';
+                break;
+            default:
+                $status_description = 'Status is unknown.';
+        }
+
+        return [
+            'name' => ucwords($value),
+            'description' => $status_description
+        ];
+
     }
 }

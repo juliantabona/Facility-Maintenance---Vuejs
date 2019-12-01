@@ -78,7 +78,7 @@
                         <!-- Orders Tab -->
                         <TabPane label="Orders" class="p-1">
                             
-                            <orderWidget :ordersUrl="(store._links['oq:orders'] || {}).href"></orderWidget>
+                            <orderWidget :ordersUrl="(store._links['oq:orders'] || {}).href" :store="store"></orderWidget>
                         
                         </TabPane>
 
@@ -150,7 +150,7 @@
     import Loader from './../../../components/_common/loaders/Loader.vue'; 
 
     /*  Widgets  */
-    import orderWidget from './orderWidget.vue';
+    import orderWidget from './../../order/list/main.vue';
     import customerWidget from './customerWidget.vue'
     import ussdInterfaceWidget from './ussdInterfaceWidget.vue'
     import productWidget from './productWidget.vue';

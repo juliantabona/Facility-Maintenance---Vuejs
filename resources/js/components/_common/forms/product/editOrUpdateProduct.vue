@@ -70,8 +70,6 @@
                 <!-- Updating Spinner  -->
                 <Spin v-if="isLoading" size="large" fix></Spin>
 
-                Post URL: {{ createUrl || updateUrl }}
-
                 <Row :gutter="12" class="mt-2">
                     <Col :span="12">
 
@@ -753,9 +751,6 @@
 
             },
             handleProductVariationUpdate(updatedProduct){
-
-                //  Check if the product data has already been changed
-                var isAlreadyChanged = this.formHasChanged;
                 
                 /*  Get all the product variations and find the index value of the 
                  *  product variation that matches the updated product id. Once the 
@@ -767,22 +762,24 @@
                     product => product.id == updatedProduct.id
                 ), updatedProduct);
 
-                /*  If the current product data is not changed then keep the state as unchanged
-                 *  even after updaing this product variation. If its already changed it means
-                 *  the user had already done something to the product data and needs to save
-                 *  those changes e.g the user was editting the current product name,
-                 *  description, pricing, stock, e.t.c and did not save the current 
-                 *  product updates.
+                /*  Remember that after updating the product variation we need to get an new
+                 *  instance of the parent product to get the updated attributes so that we
+                 *  can get the lastest state of the product. We could just make an API Call
+                 *  to get the current product again however we must remember that it is 
+                 *  also possible that the user made changes on the product itself before
+                 *  editting the variation, therefore it is best that we just update the
+                 *  current information of the product and return a fresh instace of it.
+                 * 
+                 *  The reason why we need the updated attributes is because they contain
+                 *  information such as: 
+                 *  
+                 *  "has_prices_on_all_variations": Which checks if the current product 
+                 *  variations all have prices
+                 *  
+                 *  "has_enough_stock_on_all_variations": Which checks if the current product 
+                 *  variations all have enough stock
                  */
-                if( !isAlreadyChanged ){
-                    
-                    //  Store the original form data before editing
-                    this.storeOriginalFormData();
-
-                    /*  Check if the the form data has changed  */
-                    this.formHasChanged = this.checkIfFormHasChanged();
-                    
-                }
+                this.handleCreateOrUpdate();
 
             },
             openEditProductVariationDrawer(){

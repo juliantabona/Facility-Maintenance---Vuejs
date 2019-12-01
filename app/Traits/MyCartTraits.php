@@ -189,9 +189,15 @@ trait MyCartTraits
 
                     /*  Build the cart item using the related item information  */
                     $cartItem = collect($relatedItem->toArray())->only([
-                        'id', 'name', 'description','primary_image',  'type', 'currency', 'unit_regular_price',  
-                        'unit_regular_price', 'unit_sale_price', 'tax_total', 'discount_total', 'sub_total', 
-                        'grand_total', 'on_sale', 'resource_type'
+
+                        /** Product Details  */
+                        'id', 'name', 'description', 'type', 'cost_per_item', 'unit_regular_price', 'unit_sale_price',
+                        'sku', 'barcode',
+
+                        /** Attribute Information  */
+                        'primary_image', 'unit_price', 'discount_total', 'tax_total', 'sub_total', 'grand_total', 'on_sale',
+                        'currency', 'resource_type'
+
                     ]);
 
                     /*  Update the details of the cart item to match its quantity  */

@@ -64,7 +64,7 @@
     import Loader from './../../../components/_common/loaders/Loader.vue';  
 
     /* Expand Table Row  */
-    import orderRowDropDown from './orderRowDropDown.vue';  
+    import orderRowDropDown from './../../order/show/main.vue';  
 
     import moment from 'moment';
 

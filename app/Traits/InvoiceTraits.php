@@ -76,8 +76,11 @@ trait InvoiceTraits
      *  The $invoiceInfo variable represents the  
      *  invoice dataset provided
      */
-    public function initiateCreate( $invoiceInfo = null )
+    public function initiateCreate( $invoiceInfo = [] )
     {
+        //  Incase we have passed an Object always convert it to an Array
+        $invoiceInfo = collect( $invoiceInfo )->toArray();
+
         /*
          *  The $invoiceInfo variable represents accepted structure of the USSD 
          *  Interface data required to create a new resource.

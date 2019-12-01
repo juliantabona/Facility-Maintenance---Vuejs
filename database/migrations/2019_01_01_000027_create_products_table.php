@@ -18,9 +18,9 @@ class CreateProductsTable extends Migration
             $table->string('name')->nullable();
             $table->string('description')->nullable();
             $table->string('type')->nullable();
-            $table->float('cost_per_item')->nullable()->default(0);
-            $table->float('unit_regular_price')->nullable()->default(0);
-            $table->float('unit_sale_price')->nullable()->default(0);
+            $table->float('cost_per_item')->nullable();
+            $table->float('unit_regular_price')->nullable();
+            $table->float('unit_sale_price')->nullable();
             $table->string('sku')->nullable();
             $table->string('barcode')->nullable();
             $table->unsignedInteger('stock_quantity')->default(0);

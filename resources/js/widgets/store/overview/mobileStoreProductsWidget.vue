@@ -25,7 +25,7 @@
 <template>
 
     <div>
-        Create URL: {{ createUrl }}
+        
         <!-- Loader -->
         <Loader v-if="isLoadingProducts" :loading="true" type="text" class="mt-5 text-left" theme="white">Loading products...</Loader>
         <Loader v-if="isSavingProducts" :loading="true" type="text" class="mt-2 mb-2 text-left" theme="white">Saving products...</Loader>

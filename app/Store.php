@@ -327,7 +327,7 @@ class Store extends Model
      */
     public function orders()
     {
-        return $this->morphMany('App\Order', 'merchant');
+        return $this->morphMany('App\Order', 'merchant')->orderBy('created_at', 'desc');
     }
 
     /*

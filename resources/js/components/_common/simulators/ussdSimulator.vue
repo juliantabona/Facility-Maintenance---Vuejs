@@ -212,8 +212,6 @@
                         </Poptip>
                     </div>
 
-                    <div>Text: {{ ussd_text }}</div>
-
                 </Card>
 
                 <div class="overlay"></div>
@@ -353,7 +351,7 @@
                 let ussdData = {
                     text: this.ussd_text,
                     phoneNumber: this.phoneNumber,
-                    test_mode: true
+                    testMode: true
                 };
 
                 //  Start loader

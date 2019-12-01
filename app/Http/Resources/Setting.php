@@ -35,9 +35,9 @@ class Setting extends JsonResource
                             'title' => 'The owner of these settings'
                         ]),
 
-                //  Link to the owning company
-                'company' => $this->when($this->owner_type == 'company', [ 
-                    'href' => route('company', ['company_id' => $this->owner_id]),
+                //  Link to the owning account
+                'store' => $this->when($this->owner_type == 'store', [ 
+                    'href' => route('stores', ['store_id' => $this->owner_id]),
                     'title' => 'The owner of these settings'
                 ]),
 

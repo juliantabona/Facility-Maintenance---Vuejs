@@ -52,10 +52,10 @@ trait OrderTraits
      *  The $orderInfo variable represents the  
      *  order dataset provided
      */
-    public function initiateCreate( $orderInfo = null )
+    public function initiateCreate( $orderInfo = [] )
     {
         /*
-         *  The $orderInfoInfo variable represents accepted structure of the USSD 
+         *  The $orderInfo variable represents accepted structure of the USSD 
          *  Interface data required to create a new resource.
          */
 
@@ -160,7 +160,7 @@ trait OrderTraits
          *  Replace the default template with any custom data provided 
          *  by the orderInfo
          */
-        $template = array_merge($template, $orderInfoInfo);
+        $template = array_merge($template, $orderInfo);
 
         try {
             /*
@@ -185,9 +185,12 @@ trait OrderTraits
                 /*  Return a fresh instance of the order  */
                 return $this->order->fresh();
             }
+
         } catch (\Exception $e) {
+
             //  Return the error
             return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+            
         }
     }
 
@@ -272,7 +275,7 @@ trait OrderTraits
         $this->recordActivity('paid');
     }
 
-    public function convertToInvoice($template)
+    public function convertToInvoice()
     {
         //  Create a new invoice using this order details
         $invoice = ( new Invoice() )->initiateCreate($invoiceInfo = $this);

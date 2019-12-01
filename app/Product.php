@@ -45,13 +45,13 @@ class Product extends Model
      * @var array
      */
     protected $fillable = [
-        /*  Product Details  */
+        /** Product Details  */
         'name', 'description', 'type', 'cost_per_item', 'unit_regular_price', 'unit_sale_price',
         'sku', 'barcode', 'stock_quantity', 'allow_stock_management', 'auto_manage_stock',
         'variant_attributes', 'allow_variants', 'allow_downloads', 'show_on_store',
         'is_new', 'is_featured', 'parent_product_id',
 
-        /*  Ownership Information  */
+        /** Ownership Information  */
         'owner_id', 'owner_type',
     ];
 
@@ -208,7 +208,7 @@ class Product extends Model
     /* ATTRIBUTES */
 
     protected $appends = [
-        'primary_image', 'discount_total', 'tax_total', 'sub_total', 'grand_total', 'on_sale',
+        'primary_image', 'unit_price', 'discount_total', 'tax_total', 'sub_total', 'grand_total', 'on_sale',
         'has_price', 'has_prices_on_all_variations', 'stock_status', 'has_enough_stock_on_all_variations',
         'currency', 'rating_count', 'average_rating', 'parent_variant_attributes', 'resource_type',
     ];
@@ -342,48 +342,55 @@ class Product extends Model
     {
         //  If this product supports variations
         if ($this->allow_variants) {
+
             //  Get the product variations
-            $variations = $this->variations ?? [];
+            $variations = $this->variations()->get() ?? [];
 
             //  If this product has variations
             if (count($variations)) {
+
                 //  Foreach variation
-                foreach ($this->variations as $variation) {
-                    //  If the current variation has nested variations
-                    if ($variation->allow_variants) {
-                        /*  Since the current variation has nested variations, we need to check if the
-                         *  nested variations have prices.
+                foreach ($variations as $variation) {
+
+                    /** Since the current variation has nested variations, we need to check if the
+                     *  nested variations have prices.
+                     */
+                    if( $variation->has_prices_on_all_variations === false ){
+                     
+                        /** If the nested variation returned false then it means that the price has not been
+                         *  set, in this case we return false here to indicated that one of the variations
+                         *  has no price. 
+                         * 
                          */
-                        return $variation->has_prices_on_all_variations;
+                        return false;
 
-                    //  If the current variation has no nested variations
-                    } else {
-                        //  If the current variation has a price
-                        if ($variation->has_price === true) {
-                            //  Return true to indicate that we have a price on this variation
-                            return true;
-
-                        //  If the current variation does not have a price
-                        } elseif ($variation->has_price === false) {
-                            //  Return false to indicate that we don't have a price on this variation
-                            return false;
-
-                            //  Stop the loop
-                            break;
-                        }
                     }
+
                 }
+
+                /** If after going through each variation and have confirmed that each and every variation
+                 *  did not return false, which means that each and every variation has a price, we return
+                 *  true to indicate that all variations have prices.
+                 */
+                return true;
+
             } else {
-                /*  We return false since the product supports variations but no variations were found
+
+                /** We return false since the product supports variations but no variations were found
                  *  This means that the variation prices do not exist therefore we return false to
                  *  indicate that this product does not have prices for its variations.
                  */
                 return false;
-            }
-        }
 
-        //  Its not a variable product, therefore variation prices do not apply
-        return null;
+            }
+
+        }else{
+
+           /**  Since this is a simple product, we can check if it has a price
+            */
+            return $this->has_price;
+
+        }
     }
 
     /*
@@ -456,48 +463,63 @@ class Product extends Model
     {
         //  If this product supports variations
         if ($this->allow_variants) {
+
             //  Get the product variations
-            $variations = $this->variations ?? [];
+            $variations = $this->variations()->get() ?? [];
 
             //  If this product has variations
             if (count($variations)) {
+
                 //  Foreach variation
-                foreach ($this->variations as $variation) {
-                    //  If the current variation has nested variations
-                    if ($variation->allow_variants) {
-                        /*  Since the current variation has nested variations, we need to check if the
-                         *  nested variations have enough stock.
+                foreach ($variations as $variation) {
+
+                    /** Since the current variation has nested variations, we need to check if the
+                     *  nested variations have enough stock.
+                     */
+                    if( $variation->has_enough_stock_on_all_variations === false ){
+                     
+                        /** If the nested variation returned false then it means that the stock is not
+                         *  enough, in this case we return false here to indicated that one of the variations
+                         *  stock is low or has no stock at all
+                         * 
                          */
-                        return $variation->has_enough_stock_on_all_variations;
+                        return false;
 
-                    //  If the current variation has no nested variations
-                    } else {
-                        //  If the current variation has stock
-                        if ($variation->stock_status['type'] == 'in_stock') {
-                            //  Return true to indicate that we have stock on this variation
-                            return true;
-
-                        //  If the current variation does not have stock or has low stock
-                        } else {
-                            //  Return false to indicate that we don't have stock or th stock is too low
-                            return false;
-
-                            //  Stop the loop
-                            break;
-                        }
                     }
+
                 }
+
+                /** If after going through each variation and have confirmed that each and every variation
+                 *  did not return false, which means that each and every variation has enough stock, we 
+                 *  return true to indicate that all variations have enough stock.
+                 */
+                return true;
+                
             } else {
-                /*  We return false since the product supports variations but no variations were found
+
+                /** We return false since the product supports variations but no variations were found
                  *  This means that the variations stock does not exists therefore we return false to
                  *  indicate that this product does not have stock for its variations.
                  */
                 return false;
-            }
-        }
 
-        //  Its not a variable product, therefore variation stock statuses do not apply
-        return null;
+            }
+        }else{
+            
+            //  If the current product has stock
+            if ($this->stock_status['type'] == 'in_stock') {
+
+                //  Return true to indicate that we have stock
+                return true;
+
+            //  Otherwise if the current product has low stock or no stock at all
+            }else{
+
+                //  Return false to indicate that we don't have enough stock
+                return false;
+
+            }
+         }
     }
 
     /*
