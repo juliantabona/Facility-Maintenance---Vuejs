@@ -381,11 +381,25 @@
                         title: 'Date',
                         sortable: true,
                         render: (h, params) => {
-                            return h('span', {
-                                class: ['cut-text']
-                            }, this.formatDate(params.row.created_at.date));
+                            return h('Poptip', {
+                                style: {
+                                    width: '100%',
+                                    textAlign:'left'
+                                },
+                                props: {
+                                    width: 280,
+                                    wordWrap: true,
+                                    trigger:'hover',
+                                    placement: 'top-start',
+                                    content: 'Date: '+ this.formatDate(params.row.created_at.date, true)
+                                }
+                            }, [
+                                h('span', {
+                                    class: ['cut-text']
+                                }, this.formatDate(params.row.created_at.date))
+                            ])
                         }
-                    });
+                    })
                 }
                 
                 //  Grand Total
@@ -488,8 +502,16 @@
                 let val = (money/1).toFixed(2).replace(',', '.');
                 return symbol + val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             },
-            formatDate(date) {
-                return this.moment(date).format('MMM DD YYYY');
+            formatDate(date, withTime = false) {
+                if( withTime ){
+
+                    return this.moment(date).format('MMM DD YYYY @H:mmA');
+
+                }else{
+
+                    return this.moment(date).format('MMM DD YYYY');
+
+                }
             },
             fetchOrders() {
 
