@@ -23,37 +23,6 @@
         overflow: inherit !important;
     }
 
-    .order-table >>> .order-status{
-        width: 10px;
-        height: 10px;
-        background: #b3b3b3;
-        border-radius: 10px;
-    }
-
-    .order-table >>> .order-open-status{
-        background:#2d8cf0;
-    }
-
-    .order-table >>> .order-in-progress-status{
-        background: #e8c207;
-    }
-
-    .order-table >>> .order-fail-status{
-        background:#ff0000;
-    }
-
-    .order-table >>> .order-paid-status{
-        background:#0de8c0;
-    }
-
-    .order-table >>> .order-delivered-status{
-        background:#db0de8;
-    }
-
-    .order-table >>> .order-completed-status{
-        background:#24d806;
-    }
-
 </style>
 
 <template>

@@ -192,7 +192,7 @@ class Store extends Model
      */
     public function contacts()
     {
-        return $this->morphToMany('App\Contact', 'owner', 'contact_allocations')->withTimestamps();
+        return $this->morphToMany('App\Contact', 'owner', 'contact_allocations')->withTimestamps()->orderBy('created_at', 'desc');
     }
 
     public function contactsWithMobilePhone($mobile = null)

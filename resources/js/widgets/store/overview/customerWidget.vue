@@ -2,54 +2,106 @@
 
     <div>
 
-        <!-- Loader -->
-        <Loader v-if="isLoadingCustomers" :loading="true" type="text" class="mt-5 text-left" theme="white">Loading customers...</Loader>
-        
-        <!-- No customers message -->
-        <Alert v-if="!isLoadingCustomers && !localCustomers" type="info" :style="{ maxWidth: '250px' }" show-icon>No customers found</Alert>
-        
-        <!-- Customer Filter & Create Button -->
-        <Card v-if="!isLoadingCustomers && localCustomers" class="mb-3">
-            <Row :gutter="20">
-                <Col :span="6">
-                    <Select v-model="selectedCustomerStatuses" filterable multiple placeholder="Search customer...">
-                        <Option v-for="customer in localCustomers" :value="customer.id" :key="customer.id">
-                            {{ customer.name }}
-                        </Option>
-                    </Select>
-                </Col>
-                <Col :span="7">
-                    <DatePicker type="date" placeholder="From"></DatePicker>
-                </Col>
-                <Col :span="7">
-                    <DatePicker type="date" placeholder="To"></DatePicker>
-                </Col>
-                <Col :span="4">
+        <!-- Manage Columns Button / Add Customer Button -->
+        <Row :gutter="12">
+
+            <Col :span="24">
+                <div class="clearfix">
+                    
                     <!-- Add Customer Button -->
-                    <div class="clearfix">
-                        <basicButton @click.native="$router.push({ name:'create-customer' })" 
-                                    size="large" class="float-right">
-                                    <span>+ Add Customer</span>
-                        </basicButton>
-                    </div>
-                </Col>
-            </Row>
-        </Card>
+                    <basicButton @click.native="$router.push({ name:'create-Customer' })" 
+                                size="large" class="float-right">
+                                <span>Create Customer</span>
+                    </basicButton>
 
-        <!-- Table Column Checkboxes -->
-        <CheckboxGroup  
-            v-if="!isLoadingCustomers && localCustomers" 
-            v-model="tableColumnsToShowByDefault" class="mb-3">
-            <Checkbox label="ID"></Checkbox>
-            <Checkbox label="Name"></Checkbox>
-            <Checkbox label="Type"></Checkbox>
-            <Checkbox label="Email"></Checkbox>
-            <Checkbox label="Phone"></Checkbox>
-            <Checkbox label="Date"></Checkbox>
-        </CheckboxGroup>
+                </div>
+            </Col>
 
-        <!-- Store Customers -->
-        <Table v-if="!isLoadingCustomers && localCustomers" :columns="dynamicColumns" :data="localCustomers"></Table>
+        </Row>
+
+        <el-tabs value="first">
+            
+            <!-- Search / Filter Tools -->
+            <el-tab-pane label="Search / Filter" name="first">
+        
+                <Card class="mb-3">
+                    <Row :gutter="20">
+                        <Col :span="6">
+                            <Select v-model="selectedCustomers" filterable multiple placeholder="Search customer...">
+                                <Option v-for="customer in localCustomers" :value="customer.id" :key="customer.id">
+                                    {{ customer.name }}
+                                </Option>
+                            </Select>
+                        </Col>
+                        <Col :span="6">
+                            <Select v-model="selectedCustomerTypes" placeholder="Filter customers">
+
+                                <OptionGroup label="Customer Type">
+                                    <Option v-for="item in ['Individual', 'Company']" :value="item" :key="item">{{ item }}</Option>
+                                </OptionGroup>
+
+                            </Select>
+                        </Col>
+                        <Col :span="4">
+                            <DatePicker type="date" placeholder="From"></DatePicker>
+                        </Col>
+                        <Col :span="4">
+                            <DatePicker type="date" placeholder="To"></DatePicker>
+                        </Col>
+                        <Col :span="4">
+                            <!-- Refresh Orders Button -->
+                            <div class="clearfix">
+                                <basicButton @click.native="fetchCustomers()" 
+                                            size="default" class="float-right mr-4"
+                                            :disabled="isLoadingCustomers">
+                                            <Icon type="ios-refresh" :size="20"/>
+                                            <span>Refresh</span>
+                                </basicButton>
+                            </div>
+                        </Col>
+                    </Row>
+                </Card>
+
+            </el-tab-pane>
+            
+            <!-- Manage Table Columns Tools -->
+            <el-tab-pane label="Manage Columns" name="second">
+
+                <Card class="mb-3">
+                    <Row :gutter="12">
+
+                        <Col :span="24" class="clearfix">
+                            <span class="font-weight-bold d-block mt-2 mb-3">Select Columns to show:</span>
+                        </Col>
+
+                        <Col :span="24" class="clearfix">
+                                    
+                            <!-- Table Column Checkboxes -->
+                            <CheckboxGroup  
+                                v-model="tableColumnsToShowByDefault" class="mb-3">
+                                <Checkbox label="ID"></Checkbox>
+                                <Checkbox label="Name"></Checkbox>
+                                <Checkbox label="Type"></Checkbox>
+                                <Checkbox label="Email"></Checkbox>
+                                <Checkbox label="Phone"></Checkbox>
+                                <Checkbox label="Date"></Checkbox>
+                            </CheckboxGroup>
+
+                        </Col>
+
+                    </Row>
+                </Card>
+
+            </el-tab-pane>
+
+        </el-tabs>
+
+        <!-- Store Orders -->
+        <Table :columns="dynamicColumns" :data="localCustomers"
+               no-data-text="No customers found"
+               :loading="isLoadingCustomers"
+               class="order-table">
+        </Table>
 
     </div>
 
@@ -83,13 +135,12 @@
                 moment: moment,
 
                 //  Customers
-                localCustomers: null,
+                localCustomers: [],
+                selectedCustomers: [],
+                selectedCustomerTypes: [],
                 isLoadingCustomers: false,
                 localCustomersUrl: this.customersUrl || this.$route.params.customersUrl,
                 tableColumnsToShowByDefault:['ID', 'Name', 'Type', 'Email', 'Phone', 'Date'],
-
-                //  Filters
-                selectedCustomerStatuses:[],
  
             }
         },
