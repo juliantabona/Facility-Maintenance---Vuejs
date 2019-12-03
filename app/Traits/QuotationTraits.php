@@ -64,7 +64,39 @@ trait QuotationTraits
         }
     }
 
-
+    /*  getTemplateSettings() method:
+     *
+     *  Get the settings required to create an quotation template
+     *
+     */
+    public function getTemplateSettings()
+    {
+        return [
+            'heading_title' => 'QUOTATION',
+            'reference_no_title' => 'Quote Number',
+            'created_date_title' => 'Quote Date',
+            'expiry_date_title' => 'Expiry Date',
+            'expire_after_no_of_days' => '7',
+            'sub_total_title' => 'Total',
+            'grand_total_title' => 'Grand Total',
+            'recipient_title' => 'QUOTE TO',
+            'table_columns' => [
+               'Services',
+               'Quantity',
+               'Unit Price',
+               'Amount'
+            ],
+            'notes' => [
+               'title' => 'Payment Information',
+               'details' => '<p><b>Note that all payments must be made before the quotation expiry date since quotation prices are subject to change. Payments can be made in cash, cheque or via bank transfer'
+            ],
+            'colors' => [
+               '#017BB8',
+               '#EEF4FF'
+            ],
+            'footer_notes' => 'Terms & Conditions Apply'
+        ];
+    }
 
 
 

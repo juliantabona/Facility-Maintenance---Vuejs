@@ -17,10 +17,13 @@
         <!-- Basic Layout -->
         <Row :gutter="12">
 
+            <!-- Saving Spinner  -->
+            <Spin v-if="isSavingOrder" size="large" fix></Spin>
+
             <Col :span="24">
 
                 <!--    Order Lifecycle   -->
-                <Row :gutter="20">
+                <Row v-if="localOrder.allow_lifecycle" :gutter="20">
                     <Col :span="24" class="mb-2">
                         <Card :style="{ width: '100%' }">
                                         
@@ -59,7 +62,7 @@
                 </Row>
 
                 <!--    Order Status   -->
-                <Row :gutter="20">
+                <Row v-else :gutter="20">
                     <Col :span="24" class="mb-2">
                         <Card :style="{ width: '100%' }">
                             <Row :gutter="20">
@@ -68,10 +71,11 @@
                                 <Col :span="8">
                             
                                     <span>Status: </span>
-                                    <Poptip trigger="hover" width="380" placement="top-start" word-wrap 
+                                    <Poptip trigger="hover" width="400" placement="top-start" word-wrap 
                                             :content="manualStatusHint">
 
                                         <Select v-model="localOrder.manual_status.name" placeholder="Select order status"
+                                                @mouseenter.native="updateManualStatusPoptip(localOrder.manual_status.name)"
                                                 style="width: 180px !important;">
 
                                             <OptionGroup label="Payment status">
@@ -128,7 +132,7 @@
 
                                     <!-- Save Button -->
                                     <basicButton class="float-right" type="success" size="large" 
-                                                 @click.native="true">
+                                                 @click.native="saveOrder()">
                                         <span>Save Changes</span>
                                     </basicButton>
 
@@ -141,6 +145,7 @@
 
                 <!--    Customer / Order / Activity details   -->
                 <Row :gutter="20" class="column-equal-height">
+
                     <Col :span="8">
                         <!--    Show the customers details   -->
                         <customerSummaryCard :customer="order.billing_info"></customerSummaryCard>
@@ -247,6 +252,7 @@
                         </Card>
                     </Col>
                 </Row>
+
             </Col>
 
             <!-- Order Items & Cost -->
@@ -342,6 +348,7 @@
         data(){
             return {
                 orderSettings: null,
+                isSavingOrder: false,
                 localOrder: this.order,
                 manualStatusHint: null,
                 currencySymbol: ((this.order || {}).currency || {}).symbol,
@@ -431,6 +438,54 @@
 
                             //  Console log Error Location
                             console.log('dashboard/order/show/main.vue - Error getting store settings...');
+
+                            //  Log the responce
+                            console.log(response);    
+                        });
+                }
+
+            },
+            saveOrder() {
+
+                //  If we have the order POST link
+                if( this.localOrder._links.self.href ){
+
+                    //  Hold constant reference to the vue instance
+                    const self = this;
+
+                    //  Start loader
+                    self.isSavingOrder = true;
+
+                    var orderData = {
+                        manual_status: this.localOrder.manual_status.name
+                    }
+
+                    //  Console log to acknowledge the start of api process
+                    console.log('Start saving the order...');
+
+                    //  Use the api call() function located in resources/js/api.js
+                    api.call('post', this.localOrder._links.self.href, orderData)
+                        .then(({data}) => {
+                            
+                            //  Console log the data returned
+                            console.log(data);
+
+                            //  Stop loader
+                            self.isSavingOrder = false;
+
+                            //  Order the order data
+                            self.localOrder = data;
+
+                            self.$emit('updated', data);
+
+                        })         
+                        .catch(response => { 
+
+                            //  Stop loader
+                            self.isSavingOrder = false;
+
+                            //  Console log Error Location
+                            console.log('dashboard/order/show/main.vue - Error saving the order...');
 
                             //  Log the responce
                             console.log(response);    

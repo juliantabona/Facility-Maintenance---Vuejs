@@ -18,6 +18,7 @@ class CreateUserAllocationsTable extends Migration
             /*  User Details  */
             $table->unsignedInteger('user_id');
             $table->string('type');
+            $table->boolean('default')->default(false);
 
             /*  Ownership Information  */
             $table->unsignedInteger('owner_id')->nullable();

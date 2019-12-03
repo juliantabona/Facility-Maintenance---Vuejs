@@ -72,6 +72,38 @@ class OrderController extends Controller
         }
     }
 
+
+    public function updateOrder( Request $request, $order_id )
+    {
+        //  Get the order
+        $order = order::where('id', $order_id)->first() ?? null;
+
+        //  Check if the order exists
+        if ($order) {
+
+            //  Check if the user is authourized to update the order
+            if ($this->user->can('update', $order)) {
+
+                //  Update the order
+                $updatedOrder = $order->initiateUpdate($orderInfo = $request->all());
+
+                //  Return an API Readable Format of the order Instance
+                return $updatedOrder->convertToApiFormat();
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+            }
+        }else{
+            
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
+
     /*********************************
      *  MERCHANT RELATED RESOURCES   *
     *********************************/

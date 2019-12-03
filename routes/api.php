@@ -417,6 +417,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
         //  Single order
         Route::get('/{order_id}', 'Api\OrderController@getOrder')->name('order')->where('order_id', '[0-9]+');
+        Route::post('/{order_id}', 'Api\OrderController@updateOrder')->name('order-update')->where('order_id', '[0-9]+');
 
         //  Single order resources
         Route::prefix('{order_id}')->name('order-')->group(function ($group) {

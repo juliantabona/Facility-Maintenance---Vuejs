@@ -60,95 +60,117 @@
 
     <div>
 
-        <!-- Loader -->
-        <Loader v-if="isLoadingOrders" :loading="true" type="text" class="mt-5 text-left" theme="white">Loading orders...</Loader>
-        
-        <!-- No orders message -->
-        <Alert v-if="!isLoadingOrders && !localOrders" type="info" :style="{ maxWidth: '250px' }" show-icon>No orders found</Alert>
-        
-        <!-- Order Filter & Create Button -->
-        <Card v-if="!isLoadingOrders && localOrders" class="mb-3">
-            <Row :gutter="20">
-                <Col :span="6">
-                    <Select v-model="selectedOrderStatuses" filterable multiple placeholder="Search customer...">
-                        <Option v-for="customer in localOrders" :value="customer.id" :key="customer.id">
-                            {{ (customer.billing_info || {}).first_name || (customer.billing_info || {}).name }} {{ (customer.billing_info || {}).last_name }}
-                        </Option>
-                    </Select>
-                </Col>
-                <Col :span="6">
-                    <Select v-model="selectedOrderStatuses" filterable multiple placeholder="Filter by status">
+        <!-- Manage Columns Button / Add Order Button -->
+        <Row :gutter="12">
 
-                        <OptionGroup label="Payment status">
-                            <Option v-for="item in ['Pending Payment', 'Verify Payment', 'Failed Payment', 'Paid']" :value="item" :key="item">{{ item }}</Option>
-                        </OptionGroup>
-
-                        <OptionGroup label="Refund status">
-                            <Option v-for="item in ['Pending Refund', 'Refunded']" :value="item" :key="item">{{ item }}</Option>
-                        </OptionGroup>
-
-                        <OptionGroup label="Delivery status">
-                            <Option v-for="item in ['Pending Delivery', 'Verify Delivery','Delivered']" :value="item" :key="item">{{ item }}</Option>
-                        </OptionGroup>
-
-                        <OptionGroup label="Final status">
-                            <Option v-for="item in ['Cancelled', 'Completed']" :value="item" :key="item">{{ item }}</Option>
-                        </OptionGroup>
-
-                    </Select>
-                </Col>
-                <Col :span="4">
-                    <DatePicker type="date" placeholder="From"></DatePicker>
-                </Col>
-                <Col :span="4">
-                    <DatePicker type="date" placeholder="To"></DatePicker>
-                </Col>
-                <Col :span="4">
+            <Col :span="24">
+                <div class="clearfix">
+                    
                     <!-- Add Order Button -->
-                    <div class="clearfix">
-                        <basicButton @click.native="$router.push({ name:'create-order' })" 
-                                    size="large" class="float-right">
-                                    <span>+ Add Order</span>
-                        </basicButton>
-                    </div>
-                </Col>
-            </Row>
-        </Card>
+                    <basicButton @click.native="$router.push({ name:'create-order' })" 
+                                size="large" class="float-right">
+                                <span>Create Order</span>
+                    </basicButton>
 
-        <Row :gutter="12" v-if="!isLoadingOrders && localOrders">
-            
-            <Col :span="16">
-                        
-                <!-- Table Column Checkboxes -->
-                <CheckboxGroup  
-                    v-model="tableColumnsToShowByDefault" class="mb-3">
-                    <Checkbox label="Order #"></Checkbox>
-                    <Checkbox label="Customer"></Checkbox>
-                    <Checkbox label="Email"></Checkbox>
-                    <Checkbox label="Phone"></Checkbox>
-                    <Checkbox label="Date"></Checkbox>
-                    <Checkbox label="Grand Total"></Checkbox>
-                </CheckboxGroup>
-
-            </Col>
-
-            <Col :span="8" class="clearfix">
-                
-                <!-- Refresh Orders Button -->
-                <basicButton @click.native="fetchOrders()" 
-                            size="large" class="float-right mr-4">
-                            <Icon type="ios-refresh" :size="20"/>
-                            <span>Refresh</span>
-                </basicButton>
-
+                </div>
             </Col>
 
         </Row>
 
+        <el-tabs value="first">
+            
+            <!-- Search / Filter Tools -->
+            <el-tab-pane label="Search / Filter" name="first">
+        
+                <Card class="mb-3">
+                    <Row :gutter="20">
+                        <Col :span="6">
+                            <Select v-model="selectedOrderStatuses" filterable multiple placeholder="Search customer...">
+                                <Option v-for="customer in localOrders" :value="customer.id" :key="customer.id">
+                                    {{ (customer.billing_info || {}).first_name || (customer.billing_info || {}).name }} {{ (customer.billing_info || {}).last_name }}
+                                </Option>
+                            </Select>
+                        </Col>
+                        <Col :span="6">
+                            <Select v-model="selectedOrderStatuses" filterable multiple placeholder="Filter by status">
+
+                                <OptionGroup label="Payment status">
+                                    <Option v-for="item in ['Pending Payment', 'Verify Payment', 'Failed Payment', 'Paid']" :value="item" :key="item">{{ item }}</Option>
+                                </OptionGroup>
+
+                                <OptionGroup label="Refund status">
+                                    <Option v-for="item in ['Pending Refund', 'Refunded']" :value="item" :key="item">{{ item }}</Option>
+                                </OptionGroup>
+
+                                <OptionGroup label="Delivery status">
+                                    <Option v-for="item in ['Pending Delivery', 'Verify Delivery','Delivered']" :value="item" :key="item">{{ item }}</Option>
+                                </OptionGroup>
+
+                                <OptionGroup label="Final status">
+                                    <Option v-for="item in ['Cancelled', 'Completed']" :value="item" :key="item">{{ item }}</Option>
+                                </OptionGroup>
+
+                            </Select>
+                        </Col>
+                        <Col :span="4">
+                            <DatePicker type="date" placeholder="From"></DatePicker>
+                        </Col>
+                        <Col :span="4">
+                            <DatePicker type="date" placeholder="To"></DatePicker>
+                        </Col>
+                        <Col :span="4">
+                            <!-- Refresh Orders Button -->
+                            <div class="clearfix">
+                                <basicButton @click.native="fetchOrders()" 
+                                            size="default" class="float-right mr-4"
+                                            :disabled="isLoadingOrders">
+                                            <Icon type="ios-refresh" :size="20"/>
+                                            <span>Refresh</span>
+                                </basicButton>
+                            </div>
+                        </Col>
+                    </Row>
+                </Card>
+
+            </el-tab-pane>
+            
+            <!-- Manage Table Columns Tools -->
+            <el-tab-pane label="Manage Columns" name="second">
+
+                <Card class="mb-3">
+                    <Row :gutter="12">
+
+                        <Col :span="24" class="clearfix">
+                            <span class="font-weight-bold d-block mt-2 mb-3">Select Columns to show:</span>
+                        </Col>
+
+                        <Col :span="24" class="clearfix">
+                                    
+                            <!-- Table Column Checkboxes -->
+                            <CheckboxGroup  
+                                v-model="tableColumnsToShowByDefault" class="mb-3">
+                                <Checkbox label="Order #"></Checkbox>
+                                <Checkbox label="Customer"></Checkbox>
+                                <Checkbox label="Email"></Checkbox>
+                                <Checkbox label="Phone"></Checkbox>
+                                <Checkbox label="Date"></Checkbox>
+                                <Checkbox label="Grand Total"></Checkbox>
+                            </CheckboxGroup>
+
+                        </Col>
+
+                    </Row>
+                </Card>
+
+            </el-tab-pane>
+
+        </el-tabs>
+
         <!-- Store Orders -->
-        <Table v-if="!isLoadingOrders && localOrders" 
-                :columns="dynamicColumns" :data="localOrders"
-                class="order-table">
+        <Table :columns="dynamicColumns" :data="localOrders"
+               no-data-text="No orders found"
+               :loading="isLoadingOrders"
+               class="order-table">
         </Table>
 
     </div>
@@ -187,8 +209,9 @@
                 moment: moment,
 
                 //  Orders
-                localOrders: null,
+                localOrders: [],
                 isLoadingOrders: false,
+                showColumnManager: false,
                 localOrdersUrl: this.ordersUrl || this.$route.params.ordersUrl,
                 tableColumnsToShowByDefault:['Order #', 'Customer', 'Email', 'Phone', 'Date', 'Grand Total'],
 
@@ -241,17 +264,20 @@
                                         textAlign:'left'
                                     },
                                     props: {
-                                        width: 280,
+                                        width: 350,
                                         wordWrap: true,
                                         trigger:'hover',
                                         placement: 'right',
-                                        title: (params.row.current_lifecycle_main_status || {}).title,
-                                        content: (params.row.current_lifecycle_main_status || {}).description,
+                                        title: (params.row.status || {}).name,
+                                        content: (params.row.status || {}).description,
                                     }
                                 }, [
-                                    h('div', {
-                                            class: ['order-status', this.getOrderStatusColor( (params.row.current_lifecycle_main_status || {}) )]
-                                        })
+                                    h('Badge', {
+                                        props: {
+                                            status: this.getOrderStatusColor( (params.row.status || {}).name )
+                                        },
+                                        class: ['d-flex']
+                                    })
                                 ]);
                     }
                 });
@@ -441,18 +467,19 @@
             getOrderStatusColor(status){
                 if (['Open', 'Resumed', 'Undo Cancellation', 
                      'Undo Skip Payment', 'Undo Skip Delivery', 
-                     'Undo Payment', 'Undo Delivery', 'Undo Completed'].includes(status.title)) {
-                    return 'order-open-status';
-                }else if(['Pending Payment', 'Pending Delivery'].includes(status.title)) {
-                    return 'order-in-progress-status';
-                }else if(['Cancelled', 'Failed Payment'].includes(status.title)) {
-                    return 'order-fail-status';
-                }else if(['Paid'].includes(status.title)) {
-                    return 'order-paid-status';
-                }else if(['Delivered'].includes(status.title)) {
+                     'Undo Payment', 'Undo Delivery', 'Undo Completed'].includes(status)) {
+                    return 'default';
+                }else if(['Pending Payment', 'Pending Delivery'].includes(status)) {
+                    return 'warning';
+                }else if(['Paid', 'Processing'].includes(status)) {
+                    return 'processing';
+                }else if(['Cancelled', 'Failed Payment'].includes(status)) {
+                    return 'error';
+                /*}else if(['Delivered'].includes(status)) {
                     return 'order-delivered-status';
-                }else if(['Completed'].includes(status.title)) {
-                    return 'order-completed-status';
+                }*/
+                }else if(['Completed'].includes(status)) {
+                    return 'success';
                 }else{
                     return '';
                 }

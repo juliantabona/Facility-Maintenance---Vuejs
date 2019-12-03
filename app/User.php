@@ -24,6 +24,13 @@ class User extends Authenticatable
 
     protected $with = ['phones'];
 
+
+    protected $casts = [
+        
+        'default' => 'boolean', //  Return the following 1/0 as true/false
+        
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -368,7 +375,8 @@ class User extends Authenticatable
 
     protected $appends = [
         'is_verified', 'is_email_verified', 'is_mobile_verified', 'profile_image', 'full_name',
-        'phone_list', 'default_mobile', 'default_email', 'default_address', 'resource_type',
+        'phone_list', 'default_account', 'default_mobile', 'default_email', 'default_address', 
+        'resource_type'
     ];
 
     /*
@@ -436,6 +444,15 @@ class User extends Authenticatable
         return $phoneList;
     }
 
+
+    /*
+     *  Returns the users default account
+     */
+    public function getDefaultAccountAttribute()
+    {
+        return $this->accounts()->where('user_allocations.default', 1)->first();
+    }
+
     /*
      *  Returns the users default mobile phone
      */
@@ -466,5 +483,10 @@ class User extends Authenticatable
     public function getResourceTypeAttribute()
     {
         return strtolower(class_basename($this));
+    }
+    
+    public function setDefaultAttribute($value)
+    {
+        $this->attributes['default'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
     }
 }

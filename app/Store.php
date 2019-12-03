@@ -18,6 +18,13 @@ class Store extends Model
     use Dataviewer;
     use StoreTraits;
 
+    /*  Custom variables
+     *  The variables below are custom variables not related to Laravel 
+     *  but are still referenced by our application
+     */
+
+    protected $default_currency = 'BWP';
+
     /**
      * The table associated with the model.
      *

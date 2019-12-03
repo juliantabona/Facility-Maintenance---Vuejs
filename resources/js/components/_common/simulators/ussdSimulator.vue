@@ -108,7 +108,7 @@
                             <p class="mt-2">
                                 <span class="d-block">
                                     Inform your customers to Dial 
-                                    <span class="font-weight-bold text-primary">{{ ussdInterface.customer_access_code}}</span> 
+                                    <span class="font-weight-bold text-primary">{{ localUssdInterface.customer_access_code}}</span> 
                                      to visit your store on their mobile phones. Click <span class="font-weight-bold text-primary">Launch Simulator</span> 
                                      to see how your customers view your store.
                                 </span>
@@ -139,7 +139,7 @@
                             <p class="mt-2">
                                 <span class="d-block">
                                     Inform your team to Dial 
-                                    <span class="font-weight-bold text-primary">{{ ussdInterface.team_access_code }}</span> 
+                                    <span class="font-weight-bold text-primary">{{ localUssdInterface.team_access_code }}</span> 
                                      to manage your store on their mobile phones. Click <span class="font-weight-bold text-primary">Launch Simulator</span> 
                                      to see how your team view your store.
                                 </span>
@@ -169,8 +169,8 @@
                     
                 <Poptip trigger="hover" :content="liveModeStatusMsg" word-wrap width="300">
                         
-                    <span :class="'ussd-heading' + (ussdInterface.live_mode ? ' online' : ' offline')">
-                        <span>Your store is {{ (ussdInterface.live_mode ? 'Online' : 'Offline') }}</span>
+                    <span :class="'ussd-heading' + (localUssdInterface.live_mode ? ' online' : ' offline')">
+                        <span>Your store is {{ (localUssdInterface.live_mode ? 'Online' : 'Offline') }}</span>
                     </span>
 
                 </Poptip>
@@ -255,14 +255,29 @@
                 ussd_text: '',
                 ussd_reply: '',
                 ussdResponse: '',
+                localUssdInterface: null,
                 phoneNumber: '+26700000000',
                 showUssdContentModal: false,
-                isSendingUssdResponse: false
+                isSendingUssdResponse: false,
+            }
+        },
+        watch: {
+            /*  Keep track of changes on the ussdInterface.  */
+            ussdInterface: {
+
+                handler: function (val, oldVal) {
+
+                    /*  Check if the the localProducts has changed  */
+                    this.localUssdInterface = val;
+
+                },
+                deep: true
+
             }
         },
         computed: {
             liveModeStatusMsg(){
-                if( this.ussdInterface.live_mode == true ){
+                if( this.localUssdInterface.live_mode == true ){
                     return 'This means that your Mobile Store is Online and can be accessed by your customers using their mobile phones.';
                 }else{
                     return 'This means that your Mobile Store is Offline and can\'t be accessed by your customers. Turn on Live Mode to allow '+
@@ -280,13 +295,13 @@
             },
             launchCustomerUssdSimulator(){
                 this.resetUssdSimulator();
-                this.ussd_reply = '1*'+this.ussdInterface.code;
+                this.ussd_reply = '1*'+this.localUssdInterface.code;
                 this.handleUssdReply();
                 this.showUssdPopup();
             },
             launchStaffUssdSimulator(){
                 this.resetUssdSimulator();
-                this.ussd_reply = '1*'+this.ussdInterface.code;
+                this.ussd_reply = '1*'+this.localUssdInterface.code;
                 this.handleUssdReply();
                 this.showUssdPopup();
             },
@@ -390,7 +405,10 @@
 
             }
 
-        }
+        },
+        created() {
+            this.localUssdInterface = this.ussdInterface;
+        },
 
     }
 

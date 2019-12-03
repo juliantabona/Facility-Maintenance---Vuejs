@@ -1118,9 +1118,12 @@ class UssdController extends Controller
                     }
 
                     //  Otherwise show this product as out of stock
-                } else {
+                }else if (!$product_has_variables && !$this->hasStock($product)) {
                     /*  Show the product name, and indicate that this product is out of stock  */
                     $response .= $option_number.'. '.$product_name." (out of stock)\n";
+                }else{
+                    /*  Show the product name, and indicate that this product is out of stock  */
+                    $response .= $option_number.'. '.$product_name."\n";
                 }
             }
 
@@ -1163,6 +1166,9 @@ class UssdController extends Controller
                     $product_price = $product_variation['unit_regular_price'];
                     $product_on_sale = $this->isOnSale($product_variation);
 
+                    /*  Check if the product has variables  */
+                    $product_has_variables = $this->hasVariables($product_variation);
+
                     $response .= $option_number.'. '.$option;
 
                     if ($is_last_variant_page) {
@@ -1182,11 +1188,15 @@ class UssdController extends Controller
                                 $response .= ($product_on_sale ? ' (on sale)' : '');
                             }
 
-                            //  Otherwise show this variation product is out of stock
-                        } else {
+                        //  Otherwise show this variation product as out of stock
+                        }else if (!$product_has_variables && !$this->hasStock($product_variation)) {
+                            /*  Indicate that this product is out of stock  */
+                            $response .= " (out of stock)";
+                        }else{
                             /*  Show the product name, and indicate that this product is out of stock  */
-                            $response .= ' (out of stock)';
+                            $response .= "";
                         }
+
                     }
                 }
 

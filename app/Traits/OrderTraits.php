@@ -45,6 +45,52 @@ trait OrderTraits
         }
     }
 
+    /*  getTemplateSettings() method:
+     *
+     *  Get the settings required to create an quotation template
+     *
+     */
+    public function getTemplateSettings()
+    {
+        return [
+            'heading_title' => 'ORDER',
+            'reference_no_title' => 'Order Number',
+            'created_date_title' => 'Created Date',
+            'sub_total_title' => 'Sub Total',
+            'grand_total_title' => 'Grand Total',
+            'recipient_title' => 'ORDER TO',
+            'table_columns' => [
+               'Items',
+               'Qty',
+               'Unit Price',
+               'Amount'
+            ],
+            'notes' => [
+               'title' => 'Payment Information',
+               'details' => 'Note that orders may take 24-48 hrs to process. Payments can be made in cash, cheque or via bank transfer. For any queries regarding your order please contact (+267) 75993221'
+            ],
+            'colors' => [
+               '#017BB8',
+               '#EEF4FF'
+            ],
+            'intro_note' => [
+               'title' => 'Thank you for your order',
+               'description' => 'Your order has been received and is currently being processed. The order details are show below for your reference.'
+            ],
+            'how_to_pay' => [
+               'title' => 'How To Pay?',
+               'description' => 'We have attached our bank account details for your reference. Payment can be done via bank deposit, bank transfer or cheque. Make sure to take a picture or to download your receipt. Use this link below to attach your receipt or proof of payment so that your order is completed. Contact (+267) 75993221 for any assistance you need. Thank you.'
+            ],
+            'bank_details' => [
+               'account_name' => 'Optimum Quality',
+               'branch_name' => 'Corporate Branch',
+               'branch_code' => '282267',
+               'swift_code' => 'FIRNBWGX',
+               'account_number' => '57131113369'
+            ],
+            'footer_notes' => 'Terms & Conditions Apply'
+        ];
+    }
 
     /*  initiateCreate() method:
      *
@@ -191,6 +237,37 @@ trait OrderTraits
             //  Return the error
             return oq_api_notify_error('Query Error', $e->getMessage(), 404);
             
+        }
+    }
+
+    /*  initiateUpdate() method
+     *
+     *  This method is used to update an existing
+     *  order. The $orderInfo variable represents 
+     *  the order dataset provided
+     */
+    public function initiateUpdate( $orderInfo = null )
+    {
+        //  The $template variable represents structure of the order.
+        $template = $orderInfo;
+
+        try {
+            
+            /*
+             *  Update the current order instance
+             */
+            $updated = $this->update($template);
+
+            /*  If the order was updated successfully  */
+            if ($updated) {
+
+                /*  Return a fresh instance of the order  */
+                return $this->fresh();
+
+            }
+        } catch (\Exception $e) {
+            //  Return the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
         }
     }
 
@@ -754,7 +831,7 @@ trait OrderTraits
         }
     }
 
-    /*  initiateUpdate() method:
+    /*  initiateUpdate2() method:
      *
      *  This is used to update an existing order. It also works
      *  to order the update activity and broadcasting of
@@ -762,7 +839,7 @@ trait OrderTraits
      *  the order.
      *
      */
-    public function initiateUpdate($order_id)
+    public function initiateUpdate2($order_id)
     {
     }
 

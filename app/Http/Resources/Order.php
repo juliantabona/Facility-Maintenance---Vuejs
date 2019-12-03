@@ -68,8 +68,7 @@ class Order extends JsonResource
             'refund_total' => $this->refund_total, 
             'outstanding_balance' => $this->outstanding_balance, 
             'created_at_format' => $this->created_at_format, 
-            'lifecycle_status_title' => $this->lifecycle_status_title, 
-            'lifecycle_status_description' => $this->lifecycle_status_description, 
+            'status' => $this->status, 
             'lifecycle_history' => $this->lifecycle_history, 
             'lifecycle_flow' => $this->lifecycle_flow, 
             'resource_type' => $this->resource_type, 
@@ -86,8 +85,8 @@ class Order extends JsonResource
 
                 //  Link to current resource
                 'self' => [ 
-                    'href' => url()->full(),
-                    'title' => 'This order'
+                    'href' => route('order', ['order_id' => $this->id]),
+                    'title' => 'This order',
                 ]
             ],
 

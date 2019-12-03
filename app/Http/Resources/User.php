@@ -50,7 +50,8 @@ class user extends JsonResource
             /*  Attributes  */
             'full_name' => $this->full_name,
             'phone_list' => $this->phone_list, 
-            'default_email' => $this->default_email, 
+            'default_account' => $this->default_account, 
+            'default_email' => $this->default_email,
             'default_mobile' => $this->default_mobile, 
             'default_address' => $this->default_address, 
             'is_verified' => $this->is_verified,

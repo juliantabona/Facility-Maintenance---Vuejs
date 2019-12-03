@@ -32,6 +32,7 @@ class Order extends Model
         'shipping_info' => 'array',
         'merchant_info' => 'array',
         'discount_lines' => 'array',
+        'allow_lifecycle' => 'boolean',
     ];
 
     /**
@@ -50,7 +51,7 @@ class Order extends Model
      */
     protected $fillable = [
         /*  Basic Info  */
-        'number', 'currency', 'created_date', 'manual_status',
+        'number', 'currency', 'created_date', 'manual_status', 'allow_lifecycle',
 
         /*  Item Info  */
         'item_lines',
@@ -269,8 +270,7 @@ class Order extends Model
 
     protected $appends = [
         'resource_type', 'transaction_total', 'refund_total', 'outstanding_balance',
-        'created_at_format', 'lifecycle_status_title', 'lifecycle_status_description',
-        'lifecycle_history', 'lifecycle_flow',
+        'created_at_format', 'status', 'lifecycle_history', 'lifecycle_flow',
     ];
 
     /*
@@ -910,30 +910,33 @@ class Order extends Model
     /*
      *  Returns the title of the must recent lifecycle history event
      */
-    public function getLifecycleStatusTitleAttribute()
+    public function getStatusAttribute()
     {
-        //  If we have lifecycle activity
-        if (count($this->lifecycle_history)) {
-            //  Get the last stage title
-            return $this->lifecycle_history[0]['title'] ?? null;
+        if( $this->allow_lifecycle ){
+
+            //  Get the lifecycle status 
+            return $this->lifecycle_status;
+
+        }else{
+
+            //  Get the manual status
+            return $this->manual_status;
+
         }
     }
 
-    /*
-     *  Returns the description of the must recent lifecycle history event
-     */
-    public function getLifecycleStatusDescriptionAttribute()
+    public function getLifecycleStatusAttribute($value)
     {
-        //  If we have lifecycle activity
-        if (count($this->lifecycle_history)) {
-            //  Get the last stage description
-            return $this->lifecycle_history[0]['description'] ?? null;
-        }
+        return [
+            'name' => $this->lifecycle_history[0]['title'] ?? null,
+            'description' => $this->lifecycle_history[0]['description'] ?? null,
+        ];
+
     }
 
     public function getManualStatusAttribute($value)
     {
-        switch($value) {
+        switch( ucwords($value) ) {
             case 'Pending Payment':
                 $status_description = 'The order has not been paid (unpaid)';
                 break;
@@ -965,4 +968,10 @@ class Order extends Model
         ];
 
     }
+
+    public function setAllowLifecycleAttribute($value)
+    {
+        $this->attributes['allow_lifecycle'] = (($value == 'true' || $value == '1') ? 1 : 0);
+    }
+
 }

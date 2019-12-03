@@ -56,12 +56,17 @@ trait StoreTraits
      */
     public function initiateCreate( $storeInfo = null )
     {
+        //  Get the authenticated user
+        $user = auth('api')->user();
+
         /*
          *  The $template variable represents accepted structure of the store 
          *  data required to create a new resource.
          */
         $template = [
-            'name' => $storeInfo['name'] ?? null
+            'name' => $storeInfo['name'] ?? null,
+            'owner_id' => $user->default_account->id,
+            'owner_type' => $user->default_account->resource_type
         ];
 
         try {
@@ -73,6 +78,17 @@ trait StoreTraits
 
             /*  If the store was created successfully  */
             if( $this->store ){
+
+                //  If the store does not have a currency
+                if( !$this->store->currency ){
+
+                    /*  Add the default current if non was specified  */
+                    $this->store->addDefaultCurrency();
+
+                }
+
+                /*  Add the store settings  */
+                $this->store->addSettings();
 
                 /*  Create a new Ussd Interface  */
                 $this->store->createUssdInterface();
@@ -165,6 +181,68 @@ trait StoreTraits
                 $this->users()->save( $user, ['type' => 'admin']);
             
             }
+        }
+
+    }
+
+    /*  addDefaultCurrency() method:
+     *
+     *  This method is used to add a default currency incase no currency was
+     *  specified
+     */
+    public function addDefaultCurrency()
+    {
+        //  Get the default currency code e.g "EUR", "BWP", e.t.c
+        $default_currency_code = 'BWP'; // $this->default_currency ?? 'BWP';
+
+        //  Get the currency symbol using the currency code e.g "BWP" would produce "P"
+        $default_currency_symbol = 'P'; // getCurrencySymbol( $default_currency_code );
+
+        //  Update the store with the default currency
+        $this->update([
+            'currency' => [
+                'code' => $default_currency_code,
+                'symbol' => $default_currency_symbol
+            ]
+        ]);
+    }
+
+    /*  addSettings() method:
+     *
+     *  This method is used to add settings to the current store
+     */
+    public function addSettings()
+    {
+        //  Delete any existing settings of this store
+        $this->settings()->delete();
+
+        /*  Create new Settings using the initiateCreate() method from the Setting Model  */
+        $settings = ( new \App\Setting() )->initiateCreate( $settingsInfo = [
+
+            //  The setting details
+            'details' => [
+
+                //  Get the quotation template settings
+                'quotationTemplate' => (new \App\Quotation )->getTemplateSettings(),
+                
+                //  Get the invoice template settings
+                'invoiceTemplate' => (new \App\Invoice )->getTemplateSettings(),
+
+                //  Get the order template settings
+                'orderTemplate' => (new \App\Order )->getTemplateSettings(),
+            ]
+
+        ]);
+
+       /*  If the settings were created successfully  */
+       if( $settings ){
+
+            /*  Assign the new settings to the store  */
+            $settings->update([
+                'owner_id' => $this->id, 
+                'owner_type' => $this->resource_type
+            ]);
+
         }
 
     }

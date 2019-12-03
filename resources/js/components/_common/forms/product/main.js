@@ -9,15 +9,15 @@ function getFormFields() {
         unit_sale_price: null,
         sku: null,
         barcode: null,
-        stock_quantity: null,
-        allow_stock_management: null,
-        auto_manage_stock: null,
+        stock_quantity: 0,
+        allow_stock_management: true,
+        auto_manage_stock: true,
         variant_attributes: null,
-        allow_variants: null,
-        allow_downloads: null,
-        show_on_store: null,
-        is_new: null,
-        is_featured: null
+        allow_variants: false,
+        allow_downloads: false,
+        show_on_store: true,
+        is_new: false,
+        is_featured: false
     }
 }
 
@@ -30,7 +30,14 @@ function getFormRules() {
 }
 
 function getCustomErrorFields() {
-    return getFormFields();
+
+    var customErrorFields = getFormFields();
+
+    for (var key in customErrorFields ) {
+        customErrorFields[key] = null;
+    }
+
+    return customErrorFields;
 }
 
 function resetCustomErrorFields(self) {

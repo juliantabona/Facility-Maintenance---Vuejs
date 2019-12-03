@@ -343,7 +343,8 @@
                         <Col :span="12">
 
                             <!-- Allow Stock Management -->
-                            <el-form-item label="Allow Stock Management" prop="allow_stock_management" class="switch mb-2" :error="customErrors.allow_stock_management">
+                            <el-form-item label="Allow Stock Management" prop="allow_stock_management" class="switch mb-2" 
+                                :error="customErrors.allow_stock_management">
                                 <Poptip trigger="hover" width="380" placement="top-start" word-wrap 
                                         content="Does your product/service have stock or limited items?">
                                     <i-switch 

@@ -43,7 +43,7 @@
                                 nameLabel="Store Name"
                                 :ussdInterface="ussdInterface"
                                 namePlaceholder="Enter store name"
-                                @updateSuccess="handleUpdateSuccess($event)">
+                                @updateSuccess="handleMobileStoreUpdateSuccess($event)">
                             </ussdInterfaceUpdateForm>
 
                         </el-tab-pane>
@@ -54,7 +54,7 @@
                             <mobileStoreProductsWidget
                                 :store="store"
                                 :ussdInterface="ussdInterface"
-                                @updateSuccess="handleUpdateSuccess($event)">
+                                @updateSuccess="handleMobileStoreProductsUpdateSuccess($event)">
                             </mobileStoreProductsWidget>
                             
                         </el-tab-pane>
@@ -188,6 +188,15 @@
             }
         },
         methods: {
+            handleMobileStoreUpdateSuccess(updatedUssdInterface){
+
+                this.$Notice.success({
+                    title: 'Updated successfully'
+                });
+
+                this.ussdInterface = updatedUssdInterface;
+
+            },
             handleUpdateSuccess(ussdInterface){
 
                 this.$Notice.success({
