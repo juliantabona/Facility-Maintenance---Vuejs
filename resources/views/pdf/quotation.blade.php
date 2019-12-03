@@ -11,7 +11,7 @@
 
         <meta http-equiv="X-UA-Compatible" content="IE=8"></meta>
 
-        <title>Laravel</title>
+        <title>{{ env('APP_NAME') }} | Quotation</title>
 
         <style type="text/css">
             

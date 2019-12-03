@@ -6,7 +6,7 @@
   <meta name="x-apple-disable-message-reformatting"> 
   <meta http-equiv="X-UA-Compatible" content="IE=edge"> 
   <meta content="telephone=no" name="format-detection"> 
-  <title>Quotation</title> 
+  <title>{{ env('APP_NAME') }} | Quotation</title>
   <!--[if (mso 16)]>
     <style type="text/css">
     a {text-decoration: none;}
