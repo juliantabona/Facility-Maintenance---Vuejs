@@ -1,22 +1,21 @@
 <?php
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | MY CUSTOM - THESE ARE CREATED BY JULIAN TABONA
     |--------------------------------------------------------------------------
     |
-    | I noticed that you should only directly call your .env variables in the config 
+    | I noticed that you should only directly call your .env variables in the config
     | directory and not else where in our code because sometimes laravel can return
-    | nothing in some instances. So for instance if you want to use CUSTOM_VARIABLE 
+    | nothing in some instances. So for instance if you want to use CUSTOM_VARIABLE
     | from your .env file in a view:
     */
-    
+
     'AWS_URL' => env('AWS_URL', 'http://oq-bucket.s3.amazonaws.com/'),
     'MERCHANT_USSD_CODE' => env('MERCHANT_USSD_CODE'),
     'CUSTOMER_USSD_CODE' => env('CUSTOMER_USSD_CODE'),
-    
+
     /*
     |--------------------------------------------------------------------------
     | Application Name
@@ -28,7 +27,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'OQ Cloud'),
 
     /*
     |--------------------------------------------------------------------------
@@ -80,7 +79,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'Africa/Gaborone',   //    'UTC',
 
     /*
     |--------------------------------------------------------------------------
@@ -239,6 +238,6 @@ return [
         'View' => Illuminate\Support\Facades\View::class,
         'PDF' => Barryvdh\DomPDF\Facade::class,
         'Swap' => Swap\Laravel\Facades\Swap::class,
-        'Cart' => Gloudemans\Shoppingcart\Facades\Cart::class
+        'Cart' => Gloudemans\Shoppingcart\Facades\Cart::class,
     ],
 ];
