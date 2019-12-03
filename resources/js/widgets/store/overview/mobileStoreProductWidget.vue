@@ -444,7 +444,7 @@
                 return this.localProduct.description;
             },
             productRegularPrice(){
-                return this.productCurrency + this.localProduct.unit_regular_price;
+                return this.localProduct.hasPrice ? (this.productCurrency + this.localProduct.unit_regular_price) : '(N/A)';
             },
             productSalesPrice(){
                 return this.localProduct.on_sale ? (this.productCurrency + this.localProduct.unit_sale_price) : '(N/A)';
