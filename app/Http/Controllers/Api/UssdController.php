@@ -680,22 +680,22 @@ class UssdController extends Controller
                     $response = $this->displayAirtimePaymentConfirmationPage();
                 }
 
-                /*  If the user already selected that they want to pay with Orange Money  */
+                /*  If the user already selected that they want to pay with Smega  */
             } elseif ($this->wantsToPayWithOrangeMoney()) {
-                /*  If the user already confirmed that they want to pay with Orange Money  */
+                /*  If the user already confirmed that they want to pay with Smega  */
                 if ($this->hasConfirmedPaymentWithOrangeMoney()) {
-                    /*  If the user provided a valid Orange Money pin  */
+                    /*  If the user provided a valid Smega pin  */
                     if ($this->isValidOrangeMoneyPin()) {
-                        /*  Process the order using Orange Money  */
+                        /*  Process the order using Smega  */
                         $response = $this->procressOrder($payment_method = 'orange_money');
 
-                    /*  If the user's Orange Money pin was not valid  */
+                    /*  If the user's Smega pin was not valid  */
                     } else {
                         /*  Notify the user of incorrect pin  */
                         $response = $this->displayCustomGoBackPage("Incorrect pin provided. Please try again.\n");
                     }
                 } else {
-                    /*  Show the user the Orange Money payment confirmation page  */
+                    /*  Show the user the Smega payment confirmation page  */
                     $response = $this->displayOrangeMoneyPaymentConfirmationPage();
                 }
 
@@ -1252,7 +1252,7 @@ class UssdController extends Controller
         $summary_text = $this->summarize('You are paying '.$cart_total.' for '.$cart_items, 100);
         $response = $summary_text.". Select payment method\n";
         $response .= "1. Airtime\n";
-        $response .= '2. Orange Money';
+        $response .= '2. Smega';
 
         return $this->displayCustomGoBackPage($response);
     }
@@ -1274,7 +1274,7 @@ class UssdController extends Controller
     }
 
     /*  displayOrangeMoneyPaymentConfirmationPage()
-     *  This is the page displayed when a user must confirm payment using Orange Money
+     *  This is the page displayed when a user must confirm payment using Smega
      */
     public function displayOrangeMoneyPaymentConfirmationPage()
     {
@@ -1283,7 +1283,7 @@ class UssdController extends Controller
         $service_fee = $this->currency.$this->convertToMoney($this->getServiceFee());
 
         $summary_text = $this->summarize('You are paying '.$cart_total.' for '.$cart_items, 100);
-        $response = $summary_text.' using Orange Money. You will be charged ('.$service_fee.") as a service fee. Please confirm\n";
+        $response = $summary_text.' using Smega. You will be charged ('.$service_fee.") as a service fee. Please confirm\n";
         $response .= '1. Enter pin to confirm';
 
         return $this->displayCustomGoBackPage($response);
@@ -2493,7 +2493,7 @@ class UssdController extends Controller
     public function wantsToPayWithOrangeMoney()
     {
         /*  If the user already responded to the Select payment method page (Level 6)
-         *  by selecting option (2) for pay using Orange Money.
+         *  by selecting option (2) for pay using Smega.
          */
         return  $this->completedLevel(7 + $this->offset) && $this->getResponseFromLevel(7 + $this->offset) == '2';
     }
@@ -2516,7 +2516,7 @@ class UssdController extends Controller
 
     public function hasConfirmedPaymentWithOrangeMoney()
     {
-        /*  If the user already responded to the Confirm payment using Orange Money page (Level 7)
+        /*  If the user already responded to the Confirm payment using Smega page (Level 7)
          *  by selecting a specific option.
          */
         return  $this->completedLevel(8 + $this->offset);
@@ -2524,8 +2524,8 @@ class UssdController extends Controller
 
     public function isValidOrangeMoneyPin()
     {
-        /*  If the user already responded to the "Confirm payment using Orange Money page" (Level 7)
-         *  by selecting a specific option. Then we can capture the Orange Money pin they provided
+        /*  If the user already responded to the "Confirm payment using Smega page" (Level 7)
+         *  by selecting a specific option. Then we can capture the Smega pin they provided
          */
         $orange_money_pin = $this->getResponseFromLevel(8 + $this->offset);
 
@@ -2552,9 +2552,9 @@ class UssdController extends Controller
             /*  Attempt to process the payment using Airtime  */
             $payment_response = $this->processPaymentWithAirtime();
 
-        /* If the user specified to pay using Orange Money  */
+        /* If the user specified to pay using Smega  */
         } elseif ($payment_method == 'orange_money') {
-            /*  Attempt to process the payment using Orange Money  */
+            /*  Attempt to process the payment using Smega  */
             $payment_response = $this->processPaymentWithOrangeMoney();
         } else {
             $payment_response = ['status' => false, 'error' => 'No payment method was specified'];
@@ -2669,7 +2669,7 @@ class UssdController extends Controller
     public function processPaymentWithOrangeMoney()
     {
         /*********************************************
-         *  API TO PAY THE ORDER USING Orange Money
+         *  API TO PAY THE ORDER USING Smega
          ********************************************/
 
         /*  The response we return will be an array holding a status of the
