@@ -1272,7 +1272,7 @@ class UssdController extends Controller
         $service_fee = $this->currency.$this->convertToMoney($this->getServiceFee());
 
         $summary_text = $this->summarize('You are paying '.$cart_total.' for '.$cart_items, 100);
-        $response = $summary_text.' using Smega. You will be charged ('.$service_fee.") as a service fee. Please confirm\n";
+        $response = $summary_text.' using Smega. You will be charged ('.$service_fee.") as a service fee.\n";
         $response .= 'Reply with pin to confirm';
 
         return $this->displayCustomGoBackPage($response);
