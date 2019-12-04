@@ -50,7 +50,7 @@ class UssdController extends Controller
     public function __construct(Request $request)
     {
         /*  Check if we are on TEST MODE  */
-        $this->test_mode = ( $request->get('testMode') == 'true' || $request->get('testMode') == '1' ) ? true : false;
+        $this->test_mode = ($request->get('testMode') == 'true' || $request->get('testMode') == '1') ? true : false;
 
         /*  Get the name of "TEXT" field used to save the user responses  */
         $this->text_field_name = 'text';
@@ -555,41 +555,33 @@ class UssdController extends Controller
 
             /*  Get the attribute name e.g "Small", "Medium", "Large", e.t.c */
             $this->variable_options = $variant_attribute['values'];
-            
+
             /*  If the user indicated to paginate the "Store Attribute Options Page"  */
             if ($this->wantsToPaginateVariantOptionsPage()) {
-
                 /*  Paginate the variable options page  */
                 $this->variable_options_to_display = $this->getPaginatedVariantOptionsToList();
 
                 /*  Paginate the variable options page  */
                 $this->offset = $this->offset + 1;
-
             } else {
-
                 $this->variable_options_to_display = $this->getFirstVariantOptionsToList();
-
             }
 
             /*  If the user has not already selected an option for this variable page.  */
             if (!$this->hasSelectedProductVariantPageOption()) {
-
                 /*  Determine if this is the last variant attribute in the loop */
                 $is_last_variant_page = ($variant_attribute_offset == count($variant_attributes));
 
                 /*  Display the menu for the user to select a product variable */
                 return $this->displayProductVariablePage($is_last_variant_page);
-
             } else {
                 /*  Get the selected option for this variable page.  */
                 $selected_option = $this->getSelectedVariableOption();
 
                 /*  If selected variable does not exist  */
                 if (!$selected_option) {
-
                     /*  Notify the user of incorrect option selected  */
                     return $this->displayIncorrectOptionPage();
-
                 }
 
                 array_push($this->selected_variable_options, $selected_option);
@@ -603,7 +595,6 @@ class UssdController extends Controller
 
         /*  If the selected product variable also has variables  */
         if ($this->hasVariables()) {
-
             /*  Remove all previous selected variable options. This is so that they do not
              *  affect the new variations we want to collect.
              */
@@ -611,7 +602,6 @@ class UssdController extends Controller
 
             /*  Handle the variable selection process again (but for this variation product)  */
             return $this->handleProductVariables();
-
         }
     }
 
@@ -1118,10 +1108,10 @@ class UssdController extends Controller
                     }
 
                     //  Otherwise show this product as out of stock
-                }else if (!$product_has_variables && !$this->hasStock($product)) {
+                } elseif (!$product_has_variables && !$this->hasStock($product)) {
                     /*  Show the product name, and indicate that this product is out of stock  */
                     $response .= $option_number.'. '.$product_name." (out of stock)\n";
-                }else{
+                } else {
                     /*  Show the product name, and indicate that this product is out of stock  */
                     $response .= $option_number.'. '.$product_name."\n";
                 }
@@ -1188,15 +1178,14 @@ class UssdController extends Controller
                                 $response .= ($product_on_sale ? ' (on sale)' : '');
                             }
 
-                        //  Otherwise show this variation product as out of stock
-                        }else if (!$product_has_variables && !$this->hasStock($product_variation)) {
+                            //  Otherwise show this variation product as out of stock
+                        } elseif (!$product_has_variables && !$this->hasStock($product_variation)) {
                             /*  Indicate that this product is out of stock  */
-                            $response .= " (out of stock)";
-                        }else{
+                            $response .= ' (out of stock)';
+                        } else {
                             /*  Show the product name, and indicate that this product is out of stock  */
-                            $response .= "";
+                            $response .= '';
                         }
-
                     }
                 }
 
@@ -1284,7 +1273,7 @@ class UssdController extends Controller
 
         $summary_text = $this->summarize('You are paying '.$cart_total.' for '.$cart_items, 100);
         $response = $summary_text.' using Smega. You will be charged ('.$service_fee.") as a service fee. Please confirm\n";
-        $response .= '1. Enter pin to confirm';
+        $response .= 'Reply with pin to confirm';
 
         return $this->displayCustomGoBackPage($response);
     }
@@ -2562,7 +2551,6 @@ class UssdController extends Controller
 
         /*  If the payment status was successful  */
         if ($payment_response['status']) {
-            
             /******************************************************************
              *  Find/Create a contact
              *  Create a new order for contact
@@ -2573,9 +2561,8 @@ class UssdController extends Controller
              *  Send a payment confirmation sms with an order ref #
              ******************************************************************/
 
-            //  If we are on TEST MODE use the test mode contact details 
-            if( $this->test_mode ){
-
+            //  If we are on TEST MODE use the test mode contact details
+            if ($this->test_mode) {
                 /*  Get the customer information */
                 $customer_info = [
                     'name' => 'Test Name',
@@ -2592,9 +2579,8 @@ class UssdController extends Controller
                     'email' => null,
                 ];
 
-            //  If we are not on TEST MODE use the actual customer contact details 
-            }else{
-
+            //  If we are not on TEST MODE use the actual customer contact details
+            } else {
                 /*  Get the customer information */
                 $customer_info = [
                     'name' => 'Julian Tabona',
@@ -2610,7 +2596,6 @@ class UssdController extends Controller
                     'address' => null,
                     'email' => null,
                 ];
-
             }
 
             /*  Create a new order using the provided customer information,
@@ -2624,14 +2609,12 @@ class UssdController extends Controller
             ]);
 
             //  If we are not on TEST MODE then send SMS to Customer and Merchant
-            if( !$this->test_mode ){
-
+            if (!$this->test_mode) {
                 /*  Send the order as a summarised SMS to the merchant  */
                 $merchantSMS = $this->order->smsOrderToMerchant();
 
                 /*  Send the invoice receipt as a summarized SMS to the customer  */
                 $customerSMS = $this->order->invoices()->first()->smsInvoiceReceiptToCustomer();
-
             }
 
             /*  Mark the order invoice as paid  */
@@ -2642,8 +2625,7 @@ class UssdController extends Controller
 
             /*  Notify the user of the payment success  */
             $response = $this->displayPaymentSuccessPage();
-            
-       } else {
+        } else {
             /*  Fetch the error (Reason why the payment failed)  */
             $error = $payment_response['error'];
 
