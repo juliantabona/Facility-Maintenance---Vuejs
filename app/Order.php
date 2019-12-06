@@ -568,7 +568,9 @@ class Order extends Model
             if (isset($activityHistory[$key]['title']) && !empty($activityHistory[$key]['title'])) {
                 $activityHistory[$key]['type'] = $currType;
                 $activityHistory[$key]['instance'] = $currInstance;
-                $activityHistory[$key]['user'] = $currStage->user->only(['id', 'first_name', 'last_name', 'full_name']) ?? null;
+                $activityHistory[$key]['user'] = ($currStage->user)
+                    ? $currStage->user->only(['id', 'first_name', 'last_name', 'full_name']) 
+                    : null;
             }
         }
 
