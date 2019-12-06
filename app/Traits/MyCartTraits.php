@@ -112,15 +112,15 @@ trait MyCartTraits
                 'items_summarized_array' => $this->getItemsSummarizedInArray($cart_items),
                 'items_summarized_inline' => $this->getItemsSummarizedInline($cart_items),
                 'currency' => $merchant->currency,
-                'sub_total' => $this->convertToMoney($sub_total),
-                'item_tax_total' => $this->convertToMoney($item_tax_total),
-                'global_tax_total' => $this->convertToMoney($global_tax_total),
-                'grand_tax_total' => $this->convertToMoney($grand_tax_total),
-                'item_discount_total' => $this->convertToMoney($item_discount_total),
-                'global_discount_total' => $this->convertToMoney($global_discount_total),
-                'grand_discount_total' => $this->convertToMoney($grand_discount_total),
-                'shipping_total' => $this->convertToMoney($shipping_total),
-                'grand_total' => $this->convertToMoney($grand_total)
+                'sub_total' => $sub_total,
+                'item_tax_total' => $item_tax_total,
+                'global_tax_total' => $global_tax_total,
+                'grand_tax_total' => $grand_tax_total,
+                'item_discount_total' => $item_discount_total,
+                'global_discount_total' => $global_discount_total,
+                'grand_discount_total' => $grand_discount_total,
+                'shipping_total' => $shipping_total,
+                'grand_total' => $grand_total
             ];
 
             //  Action was executed successfully
