@@ -51,6 +51,7 @@ class Product extends JsonResource
             'has_prices_on_all_variations' => $this->has_prices_on_all_variations,
             'stock_status' => $this->stock_status,
             'has_enough_stock_on_all_variations' => $this->has_enough_stock_on_all_variations,
+            'is_available_for_sale' => $this->is_available_for_sale,
             'currency' => $this->currency,
             'rating_count' => $this->rating_count,
             'average_rating' => $this->average_rating,

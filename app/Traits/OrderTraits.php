@@ -409,7 +409,7 @@ trait OrderTraits
         $order_number = 'Order #'.$order_number.', ';
         $items = 'for '.$items_inline;
         $amount = 'Amount: '.$currency.$grand_total.'.';
-        $dial = 'Dial '.$this->merchant->team_access_code.' to view order. Customer: '.$mobile_number;
+        $dial = 'Dial *'.$this->merchant->team_access_code.'# to view order. Customer: '.$mobile_number;
 
         $characters_left = ($character_limit - strlen($order_number.$amount.$dial));
         $summarized_items = $this->truncateWithDots($items.(strlen($items) < $characters_left ? '.' : ''), $characters_left);

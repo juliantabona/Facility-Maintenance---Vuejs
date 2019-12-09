@@ -511,18 +511,41 @@ class UssdController extends Controller
             }
         }
 
-        /*  Selected a product already in cart  */
-        if ($this->isProductAddedToCart($this->selected_product->id)) {
-            /*  Notify user that the product is already in the cart  */
-            return $this->displayCustomGoBackPage("This item has already been added.\n");
+        /*  Selected a product that does not have a price  */
+        if (!$this->selected_product->has_price) {
+
+            /*  Notify user that the product does not have a price  */
+            return $this->displayCustomGoBackPage("Sorry, \"".$this->selected_product['name']."\" does not have a price.\n");
+
         }
 
-        /*  If the user already selected the product quantity  */
-        if ($this->hasSelectedProductQuantity()) {
+        /*  Selected a product that does not have stock  */
+        if ($this->selected_product->stock_status['type'] == 'out_of_stock') {
+
+            /*  Notify user that the product does not have a price  */
+            return $this->displayCustomGoBackPage("Sorry, \"".$this->selected_product['name']."\" is out of stock.\n");
+
+        }
+
+        /*  Selected a product already in cart  */
+        if ($this->isProductAddedToCart($this->selected_product->id)) {
+
+            /*  Notify user that the product is already in the cart  */
+            return $this->displayCustomGoBackPage("This item has already been added.\n");
+            
+        }
+
+        /*  If the current product requires the user to select a quantity  */
+        if( $this->requiresQuantity() ){
+
             $response = $this->handleProductQuantity();
-        } else {
-            /*  Show the user the product quantity selection page  */
-            $response = $this->displayProductQuantityPage();
+
+        /*  If the current product does not require the user to select a quantity  */
+        }else{
+            
+            /*  Use one (1) as the product quantity selected  */
+            $response = $this->handleProductQuantity( $default_quantity = 1 );
+
         }
 
         return $response;
@@ -605,43 +628,101 @@ class UssdController extends Controller
         }
     }
 
-    public function handleProductQuantity()
+    public function handleProductQuantity( $default_quantity = null )
     {
-        if ($this->isValidProductQuantity()) {
-            /*  Update the selected product quantity */
-            $this->selected_product['quantity'] = $this->getSelectedProductQuantity();
+        /** If the $default_quantity variable is not set, as in it is not provided and is still actually null,
+         *  then we need to increment the offset since we want to offer the user a new screen so that 
+         *  they can provided the quantity manually. Since adding a new screen on the fly will change
+         *  the expected arrangement of our future responses, the offset helps to re-arrange our
+         *  future responses.
+         * 
+         *  e.g If Product 1 (which has no variables) is selected in Level 4, the we expect that the 
+         *  wantsToPay() response is provided by the user in Level 5. However if we launch a screen
+         *  for the user to select a specific quantity of their choice, we will get a user response
+         *  for quantity in Level 5. This means we need to increase our offset to let the system
+         *  know that it should expect the wantsToPay() response in (Level 5 + offset) which is 
+         *  (Level 6 since offset = 1).
+         */
+        if( !isset( $default_quantity ) ){
 
-            /* Add the selected product to the rest of the other selected products */
-            array_push($this->selected_products, $this->selected_product);
+            //  Increment the offset before providing the user with the "Select Quantity Page"
+            $this->offset = $this->offset + 1;
 
-            /*  Get the cart and make sure the cart is always available from here on */
-            $this->cart = $this->getCart();
-
-            /*  If the user already selected the payment method  */
-            if ($this->hasSelectedOrderSummaryOption()) {
-                /*  If the user already selected that they want to add another product  */
-                if ($this->wantsToAddAnotherProduct()) {
-                    /*  Revisit the store to select another product  */
-                    $response = $this->revisitStore();
-
-                /*  If the user already selected that they want to checkout and pay  */
-                } elseif ($this->wantsToPay()) {
-                    $response = $this->handleCartCheckout();
-
-                /*  Selected an option that does not exist  */
-                } else {
-                    /*  Notify the user of incorrect option selected  */
-                    return $this->displayIncorrectOptionPage();
-                }
-            } else {
-                /*  Show the user the cart summary page with options to decide what to do next  */
-                $response = $this->displayCartSummaryPage();
-            }
-        } else {
-            /*  Notify the user to provide a valid quantity  */
-            return $this->displayCustomGoBackPage("The product quantity you provided is not available.\n");
         }
 
+        /*  If the user already selected the product quantity  */
+        if ($this->hasSelectedProductQuantity()) {
+
+            /** If we have provided a default quantity e.g $default_quantity = 1, or if the quantity
+             *  was provided by the user themselves then check if the product quantity
+             *  provided is valid to proceed.
+             */
+            if ($this->isValidProductQuantity($default_quantity)) {
+
+                /** Update the selected product quantity. First attempt to use the default $default_quantity
+                 *  value if not equal to (0) otherwise refer to the user provided quantity.
+                 */
+                $this->selected_product['quantity'] = isset( $default_quantity ) ? $default_quantity : $this->getSelectedProductQuantity();
+
+                //  If the product allows stock management
+                if($this->selected_product->allow_stock_management){
+
+                    //  Get the current available stock quantity of this product 
+                    $avail_stock_quantity = $this->selected_product->stock_quantity;
+
+                    /*  Selected a product quantity that exceeds the stock quantity available  */
+                    if ( $this->selected_product['quantity'] > $avail_stock_quantity) {
+
+                        /*  Notify user that the selected quantity exceeds the stock available  */
+                        return $this->displayCustomGoBackPage(
+                            'Sorry, the quantity selected '. 
+                            'for "' . $this->selected_product['name'].'" '.
+                            'is more than the available stock. '.
+                            'Only ('.$avail_stock_quantity.') available.'."\n"
+                        );
+
+                    }
+
+                }
+
+                /* Add the selected product to the rest of the other selected products */
+                array_push($this->selected_products, $this->selected_product);
+
+                /*  Get the cart and make sure the cart is always available from here on */
+                $this->cart = $this->getCart();
+
+                /*  If the user already selected the payment method  */
+                if ($this->hasSelectedOrderSummaryOption()) {
+                    /*  If the user already selected that they want to add another product  */
+                    if ($this->wantsToAddAnotherProduct()) {
+                        /*  Revisit the store to select another product  */
+                        $response = $this->revisitStore();
+
+                    /*  If the user already selected that they want to checkout and pay  */
+                    } elseif ($this->wantsToPay()) {
+                        $response = $this->handleCartCheckout();
+
+                    /*  Selected an option that does not exist  */
+                    } else {
+                        /*  Notify the user of incorrect option selected  */
+                        return $this->displayIncorrectOptionPage();
+                    }
+                } else {
+                    /*  Show the user the cart summary page with options to decide what to do next  */
+                    $response = $this->displayCartSummaryPage();
+                }
+            } else {
+                /*  Notify the user to provide a valid quantity  */
+                return $this->displayCustomGoBackPage("The product quantity you provided is not available.\n");
+            }
+
+        } else {
+
+            /*  Show the user the product quantity selection page  */
+            $response = $this->displayProductQuantityPage();
+
+        }
+        
         return $response;
     }
 
@@ -765,21 +846,25 @@ class UssdController extends Controller
          *  When we want to visit the store again we need to figure out where to start expecting the
          *  next product. Lets assume that Product 1 was selected in Level 3, then in the simplest
          *  scenerio we would expect that Product 2 was selected in Level 4. To indicate that we
-         *  want to target Product 2 we need to offset by (1). However since we need to select the
-         *  quantity we need to offset again by (1). But since we also had to use the "#" symbol
-         *  to indicate that we wanted to add another product we need to offset again. This means
-         *  if we selected Product 1 in Level 3 we need to offset by 3 to target product 2 in
-         *  Level 6.
+         *  want to target Product 2 we need to offset by (1). However since we need to use the 
+         *  "#" symbol to indicate that we wanted to add another product we need to offset
+         *  again by (1). This means if we selected Product 1 in Level 3 we need to offset 
+         *  by a total of (2) to target product 2 in Level 6.
          *
          *  1      *    2      *      #       *     4
          *
          *  Lv3          lv4          lv5           lv6          ...so on
          *  Product 1    Product 1    Wants To      Product 2    ...so on
          *  Selected     Quantity     Add Another   Selected
-         *
+         *  
+         *  Remember that the offset for the quantity and variable selections is already set
+         *  in previous methods e.g handleProductVariables() and handleProductQuantity(),
+         *  therefore we don't have to add them to the offset here. We only have to 
+         *  increment by an additional (2) to target the next product.
+         * 
          */
 
-        $this->offset = $this->offset + 3;
+        $this->offset = $this->offset + 2;
 
         /*  Empty the previously selected variable options of the current product selected */
         $this->selected_variable_options = [];
@@ -1059,7 +1144,7 @@ class UssdController extends Controller
         /*  List the store products  */
         $response .= $this->getStoreLandingPageProducts();
 
-        return $this->displayCustomGoBackPage($response);
+        return $this->displayCustomGoBackPage($response, $include_line_breaker = false);
     }
 
     public function getStoreLandingPageProducts()
@@ -1070,54 +1155,81 @@ class UssdController extends Controller
         if (count($this->products_on_display)) {
             /*  List the products available  */
             foreach ($this->products_on_display as $key => $product) {
+
                 $option_number = $key + 1;
 
                 /*  Get the product name, currency symbol and price  */
                 $product_id = trim($product['id']);
                 $product_name = trim($product['name']);
-                $product_price = $product['unit_regular_price'];
-
+                $product_price = $product['grand_total'];
+                
                 /*  Check if the product has variables  */
                 $product_has_variables = $this->hasVariables($product);
-
+                
                 /*  Check if the product is on sale  */
                 $product_on_sale = $this->isOnSale($product);
 
-                /*  Show this product with price only if:
-                 *  1 - It has inventory and the quantity is greater than zero (otherwise it is out of stock)
-                 *  2 - It does not have inventory (no stock taken)
-                 */
-                if ($this->hasStock($product)) {
-                    /*  Check if the product has been added to the cart already  */
-                    if ($this->isProductAddedToCart($product_id)) {
-                        /*  Show the product name, and indicate that the product is in the cart already  */
-                        $response .= $option_number.'. '.$product_name." (added)\n";
+                /**  First we need to know if this is a simple product or a product with
+                  *  variations. 
+                  */
+                if( $product_has_variables ){
 
-                    /*  If the product hasn't been added to the cart already  */
-                    } else {
-                        if ($product_has_variables) {
-                            /*  Show the product name only  */
-                            $response .= $option_number.'. '.$product_name."\n";
-                        } else {
-                            /*  Show the product name, currency and price  */
-                            $response .= $option_number.'. '.$product_name.' -'.$this->currency.$product_price;
+                    /*  Show the product name only  */
+                    $response .= $option_number.'. '.$product_name;
 
-                            /*  If the product is on sale then make an indication  */
-                            $response .= ($product_on_sale ? ' (on sale)' : '')."\n";
+                }else{
+                    
+                    //  Check if the product has a price
+                    if( $product->has_price ){
+
+                        //  Check if the product has stock
+                        if( $product->stock_status['type'] != 'out_of_stock' ){
+
+                            /*  Check if the product has been added to the cart already  */
+                            if ($this->isProductAddedToCart($product_id)) {
+
+                                /*  Show the product name, and indicate that the product is in the cart already  */
+                                $response .= $option_number.'. '.$product_name.' (added)';
+
+                            /*  If the product hasn't been added to the cart already  */
+                            } else {
+
+                                /*  Show the product name, currency and price  */
+                                $response .= $option_number.'. '.$product_name.' -'.$this->currency.$product_price;
+
+                                /*  If the product is on sale then make an indication  */
+                                $response .= ($product_on_sale ? ' (on sale)' : '');
+
+                            }
+
+                        }else{
+                            
+                            /*  Show the product name, and indicate that the product has no stock  */
+                            $response .= $option_number.'. '.$product_name.' (out of stock)';
+
                         }
+
+                    }else{
+                        
+                        /*  Show the product name, and indicate that the product has no price  */
+                        $response .= $option_number.'. '.$product_name.' (no price)';
+
                     }
 
-                    //  Otherwise show this product as out of stock
-                } elseif (!$product_has_variables && !$this->hasStock($product)) {
-                    /*  Show the product name, and indicate that this product is out of stock  */
-                    $response .= $option_number.'. '.$product_name." (out of stock)\n";
-                } else {
-                    /*  Show the product name, and indicate that this product is out of stock  */
-                    $response .= $option_number.'. '.$product_name."\n";
                 }
+
+                $response .= "\n";
+                
             }
 
-            $response .= '99. Show More';
+            //  Check if we have more products to show
+            $hasMoreToShow = $this->hasMoreToShow(
+                                $all_items = $this->products, 
+                                $items_on_display = $this->products_on_display
+                            );
+
+            $response .= $hasMoreToShow ? "99. Show More\n" : "";
+
         } else {
             /*  If we don't have any products to list  */
             $response = count($this->products) ? "\nNo more items to show.\n" : "\nNo items found :(\n";
@@ -1151,49 +1263,84 @@ class UssdController extends Controller
 
                 /*  If we atleast have one variant avaialable  */
                 if ($product_variation) {
+                    
                     $option_number = $key + 1;
                     $product_id = $product_variation['id'];
-                    $product_price = $product_variation['unit_regular_price'];
-                    $product_on_sale = $this->isOnSale($product_variation);
-
+                    $product_price = $product_variation['grand_total'];
+                
                     /*  Check if the product has variables  */
                     $product_has_variables = $this->hasVariables($product_variation);
+                    
+                    /*  Check if the product is on sale  */
+                    $product_on_sale = $this->isOnSale($product_variation);
 
                     $response .= $option_number.'. '.$option;
 
                     if ($is_last_variant_page) {
-                        //  If this variation product is not out of stock
-                        if ($this->hasStock($product_variation)) {
-                            /*  Check if the product has been added to the cart already  */
-                            if ($this->isProductAddedToCart($product_id)) {
-                                /*  Indicate that the product is in the cart already  */
-                                $response .= ' (added)';
 
-                            /*  If the product hasn't been added to the cart already  */
-                            } else {
-                                /*  Show the product name, currency and price  */
-                                $response .= $product_price ? ' -'.$this->currency.$this->convertToMoney($product_price) : ' (Not Available)';
+                        /** First we need to know if this is a simple product or a product with
+                         *  variations. If its not a produt with variations then show the price
+                         *  or product details e.g on sale.
+                         */
+                        if( !$product_has_variables ){
+                            
+                            //  Check if the product has a price
+                            if( $product_variation->has_price ){
 
-                                /*  If the product is on sale then make an indication  */
-                                $response .= ($product_on_sale ? ' (on sale)' : '');
+                                //  Check if the product has stock
+                                if( $product_variation->stock_status['type'] != 'out_of_stock' ){
+
+                                    /*  Check if the product has been added to the cart already  */
+                                    if ($this->isProductAddedToCart($product_id)) {
+
+                                        /*  Show the product name, and indicate that the product is in the cart already  */
+                                        $response .= ' (added)';
+
+                                    /*  If the product hasn't been added to the cart already  */
+                                    } else {
+
+                                        /*  Show the product name, currency and price  */
+                                        $response .= ' -'.$this->currency.$product_price;
+
+                                        /*  If the product is on sale then make an indication  */
+                                        $response .= ($product_on_sale ? ' (on sale)' : '');
+
+                                    }
+
+                                }else{
+                                    
+                                    /*  Show the product name, and indicate that the product has no stock  */
+                                    $response .= ' (out of stock)';
+
+                                }
+
+                            }else{
+                                
+                                /*  Show the product name, and indicate that the product has no price  */
+                                $response .= ' (no price)';
+
                             }
 
-                            //  Otherwise show this variation product as out of stock
-                        } elseif (!$product_has_variables && !$this->hasStock($product_variation)) {
-                            /*  Indicate that this product is out of stock  */
-                            $response .= ' (out of stock)';
-                        } else {
-                            /*  Show the product name, and indicate that this product is out of stock  */
-                            $response .= '';
                         }
+
                     }
+                    
                 }
 
                 $response .= "\n";
             }
+
+            //  Check if we have more variable options to show
+            $hasMoreToShow = $this->hasMoreToShow(
+                $all_items = $this->variable_options, 
+                $items_on_display = $this->variable_options_to_display
+            );
+
+            $response .= $hasMoreToShow ? "99. Show More\n" : "";
+
         } else {
             /*  If we don't have anymore options to list  */
-            $response .= count($this->variable_options) ? "\nNo more options to show.\n\n" : "\nNo options found :(\n\n";
+            $response .= count($this->variable_options) ? "\nNo more options to show.\n" : "\nNo options found :(\n";
         }
 
         return $this->displayCustomGoBackPage($response, $include_line_breaker = false);
@@ -1284,10 +1431,8 @@ class UssdController extends Controller
      */
     public function displayPaymentSuccessPage($order = null)
     {
-        $response = 'CON Payment completed successfully. You will receive your payment confirmation details via SMS. ';
+        $response = 'END Payment completed successfully. You will receive your payment confirmation details via SMS. ';
         $response .= 'Refer to your Order Reference #'.$this->order->number." when receiving your items. Thank you :)\n";
-        $response .= "1. Continue shopping\n";
-        $response .= "2. Exit\n";
 
         return $response;
     }
@@ -2266,6 +2411,75 @@ class UssdController extends Controller
         return collect($this->products)->slice($start_position, $this->products_per_page);
     }
 
+    /*  This method checks if we still have more items to show as we paginate
+     *  through a list of items. Lets assume we have a list of items:
+     *  
+     *  $all_items = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+     * 
+     *  and lets assume that only the following items are on display:
+     * 
+     *  $items_on_display = [4, 5, 6, 7]
+     * 
+     *  Since we are only showing items 4 to 7, it is clear that we still have
+     *  more items to show e.g 8 to 12. We need to build an algorithm that will
+     *  return true if we have more items to show and false if we don't have 
+     *  anymore items to show. 
+     * 
+     *   
+     */
+    public function hasMoreToShow($all_items = [], $items_on_display = [])
+    {
+        //  Get the total number of all the items we have
+        $total_items = count($all_items) ?? 0;
+
+        //  Get the total number of all the items we have on display
+        $total_items_on_display = count($items_on_display) ?? 0;
+
+        //  If we don't have any items or any items on display
+        if( !$total_items || !$total_items_on_display ){
+            
+            //  Return false to say we don't have more to show
+            return false;
+
+        }
+
+        /** Foreach item on display, lets get its index which is $key in our current case. The $key
+         *  variable holds the index of the current item in each iteration. Once we have the item 
+         *  index we can target the exact item on the $all_items array which has a list of all the 
+         *  items. Once we increment the value by one (1) we then target the next item on the 
+         *  $all_items array. At this point we can run a simple if statement to check if the 
+         *  next item exists. If it does we continue the foreach loop, but if no item exists
+         *  we immediately return false. Lets assume:
+         * 
+         *  $all_items = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+         * 
+         *  and
+         * 
+         *  $items_on_display = [4, 5, 6, 7]
+         * 
+         *  Foreach $items_on_display i.e [4, 5, 6, 7] we want to find the exact item on the
+         *  $all_items. In this case if we start with 4 the $key = 3 which will target item
+         *  4 on $all_items since it is also $key = 3. Once located we increment the $key by
+         *  (1) to target the next item which is 5. The loop continues unless the target item
+         *  is not found. When an item is not found or is not set it simply means that the item
+         *  does not exists on the $all_items array, which means we have reached the limit of all
+         *  possible items to show.
+         */
+        foreach ($items_on_display as $key => $item_on_display) {
+
+            //  If the next item does not exist
+            if( !isset( $all_items[$key + 1] ) ){
+
+                //  Return false immediately to indicate that the next item does not exists
+                return false;
+
+            }
+
+        }
+
+        return true;
+    }
+
     public function hasSelectedProduct()
     {
         /*  If the user already responded to the "Store Landing Page" (Level 3)
@@ -2408,18 +2622,19 @@ class UssdController extends Controller
 
     public function hasSelectedProductQuantity()
     {
-        /*  If the user already responded to the "Select Product Quantity Page" (Level 5)
+        /*  If the user already responded to the "Select Product Quantity Page" (Level 4)
          *  by providing a specific product quantity.
          */
-        return  $this->completedLevel(5 + $this->offset);
+        return  $this->completedLevel(4 + $this->offset);
     }
 
-    public function isValidProductQuantity()
+    public function isValidProductQuantity($default_quantity = null)
     {
-        /*  If the user already responded to the "Select Product Quantity Page" (Level 5)
-         *  by providing a quantity. Get the product quantity provided.
+        /*  If the user already responded to the "Select Product Quantity Page" (Level 4) by
+         *  providing a quantity. Get the product quantity provided. If the $default_quantity
+         *  variable has a value use the provided $quantity value instead.
          */
-        $quantity_provided = (int) $this->getResponseFromLevel(5 + $this->offset);
+        $quantity_provided = (int) (isset($default_quantity) ? $default_quantity : $this->getResponseFromLevel(4 + $this->offset));
 
         /*  Check if the quantity provided by the user does not exceed the maximum item quantity allowed  */
         $doesNotExceedMaximumQty = ($this->maximum_item_quantity >= $quantity_provided);
@@ -2433,42 +2648,42 @@ class UssdController extends Controller
 
     public function getSelectedProductQuantity()
     {
-        /*  If the user already responded to the "Select Product Quantity Page" (Level 5)
+        /*  If the user already responded to the "Select Product Quantity Page" (Level 4)
          *  by providing a specific product quantity. We can return this quantity
          */
-        return  $this->getResponseFromLevel(5 + $this->offset);
+        return  $this->getResponseFromLevel(4 + $this->offset);
     }
 
     public function hasSelectedOrderSummaryOption()
     {
-        /*  If the user already responded to the "Cart Summary Page" (Level 6)
+        /*  If the user already responded to the "Cart Summary Page" (Level 5)
          *  by selecting any available option.
          */
-        return  $this->completedLevel(6 + $this->offset);
+        return  $this->completedLevel(5 + $this->offset);
     }
 
     public function wantsToAddAnotherProduct()
     {
-        /*  If the user already responded to the Cart summary page (Level 6)
+        /*  If the user already responded to the Cart summary page (Level 5)
          *  by selecting option (1) for pay now.
          */
-        return  $this->completedLevel(6 + $this->offset) && $this->getResponseFromLevel(6 + $this->offset) == '#';
+        return  $this->completedLevel(5 + $this->offset) && $this->getResponseFromLevel(5 + $this->offset) == '#';
     }
 
     public function wantsToPay()
     {
-        /*  If the user already responded to the Cart summary page (Level 6)
+        /*  If the user already responded to the Cart summary page (Level 5)
          *  by selecting option (1) for pay now.
          */
-        return  $this->completedLevel(6 + $this->offset) && $this->getResponseFromLevel(6 + $this->offset) == '1';
+        return  $this->completedLevel(5 + $this->offset) && $this->getResponseFromLevel(5 + $this->offset) == '1';
     }
 
     public function hasSelectedPaymentMethod()
     {
-        /*  If the user already responded to the Select payment method page (Level 7)
+        /*  If the user already responded to the Select payment method page (Level 6)
          *  by selecting a specific payment method option.
          */
-        return  $this->completedLevel(7 + $this->offset);
+        return  $this->completedLevel(6 + $this->offset);
     }
 
     public function wantsToPayWithAirtime()
@@ -2476,7 +2691,7 @@ class UssdController extends Controller
         /*  If the user already responded to the Select payment method page (Level 6)
          *  by selecting option (1) for pay using Airtime.
          */
-        return  $this->completedLevel(7 + $this->offset) && $this->getResponseFromLevel(7 + $this->offset) == '1';
+        return  $this->completedLevel(6 + $this->offset) && $this->getResponseFromLevel(6 + $this->offset) == '1';
     }
 
     public function wantsToPayWithOrangeMoney()
@@ -2484,7 +2699,7 @@ class UssdController extends Controller
         /*  If the user already responded to the Select payment method page (Level 6)
          *  by selecting option (2) for pay using Smega.
          */
-        return  $this->completedLevel(7 + $this->offset) && $this->getResponseFromLevel(7 + $this->offset) == '2';
+        return  $this->completedLevel(6 + $this->offset) && $this->getResponseFromLevel(6 + $this->offset) == '2';
     }
 
     public function hasSelectedAirtimeConfirmationOption()
@@ -2492,7 +2707,7 @@ class UssdController extends Controller
         /*  If the user already responded to the "Confirm Payment Using Airtime Page" (Level 7)
          *  by selecting any option.
          */
-        return  $this->completedLevel(8 + $this->offset);
+        return  $this->completedLevel(7 + $this->offset);
     }
 
     public function hasConfirmedPaymentWithAirtime()
@@ -2500,7 +2715,7 @@ class UssdController extends Controller
         /*  If the user already responded to the "Confirm Payment Using Airtime Page" (Level 7)
          *  by selecting option (1) to confirm payment.
          */
-        return  $this->completedLevel(8 + $this->offset) && $this->getResponseFromLevel(8 + $this->offset) == '1';
+        return  $this->completedLevel(7 + $this->offset) && $this->getResponseFromLevel(7 + $this->offset) == '1';
     }
 
     public function hasConfirmedPaymentWithOrangeMoney()
@@ -2508,7 +2723,7 @@ class UssdController extends Controller
         /*  If the user already responded to the Confirm payment using Smega page (Level 7)
          *  by selecting a specific option.
          */
-        return  $this->completedLevel(8 + $this->offset);
+        return  $this->completedLevel(7 + $this->offset);
     }
 
     public function isValidOrangeMoneyPin()
@@ -2516,7 +2731,7 @@ class UssdController extends Controller
         /*  If the user already responded to the "Confirm payment using Smega page" (Level 7)
          *  by selecting a specific option. Then we can capture the Smega pin they provided
          */
-        $orange_money_pin = $this->getResponseFromLevel(8 + $this->offset);
+        $orange_money_pin = $this->getResponseFromLevel(7 + $this->offset);
 
         /*  If the Pin provide is 4 digits long  */
         if (strlen($orange_money_pin) == 4) {
@@ -2717,6 +2932,11 @@ class UssdController extends Controller
         return !empty($product['unit_sale_price']) ? true : false;
     }
 
+    public function requiresQuantity($product = null)
+    {
+        return $product ? $product->allow_stock_management : $this->selected_product->allow_stock_management;
+    }
+
     /*  redirectToStore()
      *  Forces a redirect in order to access a store using a Store Code
      */
@@ -2892,4 +3112,5 @@ class UssdController extends Controller
     {
         return number_format($amount, 2, '.', ',');
     }
+    
 }

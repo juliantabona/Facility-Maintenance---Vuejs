@@ -210,7 +210,8 @@ class Product extends Model
     protected $appends = [
         'primary_image', 'unit_price', 'discount_total', 'tax_total', 'sub_total', 'grand_total', 'on_sale',
         'has_price', 'has_prices_on_all_variations', 'stock_status', 'has_enough_stock_on_all_variations',
-        'currency', 'rating_count', 'average_rating', 'parent_variant_attributes', 'resource_type',
+        'is_available_for_sale', 'currency', 'rating_count', 'average_rating', 'parent_variant_attributes', 
+        'resource_type',
     ];
 
     /*
@@ -520,6 +521,43 @@ class Product extends Model
 
             }
          }
+    }
+
+    /*
+     *  Returns true if the product is avaialable for sale. If the product
+     *  has variations, then it is not available for sale since only its
+     *  variations can be for sale. If the product is a simple product 
+     *  (does not have variations) then it is available only if it has
+     *  a price and stock.
+     */
+    public function getiSAvailableForSaleAttribute()
+    {
+        //  If this is not a simple product
+        if ($this->allow_variants) {
+
+            /** Since this is not a simple product it is by default not avaialable
+             *  for sale. This is because it does not provide the exact product 
+             *  price since only its variations provide those details.
+             */
+            return false;
+
+        //  If this is a simple product
+        }else{
+
+            /** As long as this simple product has a price and stock then it is
+             *  available for sale.
+             */
+            if( $this->has_price && $this->stock_status['type'] != 'out_of_stock' ){
+
+                //  Return true to indicate that this product is available for sale
+                return true;
+
+            }
+
+        }
+
+        //  Return false to indicate that this product is not avaialable for sale
+        return false;
     }
 
     /*
