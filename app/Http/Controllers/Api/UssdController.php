@@ -266,6 +266,8 @@ class UssdController extends Controller
             }
         }
 
+        $response = \App\Order::find(174);
+
         /*  Return the response to the user  */
         return response($response)->header('Content-Type', 'text/plain');
         //return response($response)->header('Content-Type', 'application/json');
