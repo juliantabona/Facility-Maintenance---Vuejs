@@ -344,29 +344,29 @@ trait InvoiceTraits
 
     public function createInvoiceSms()
     {
-        /*  Set the character limit  */
+        //  Set the character limit
         $character_limit = 160;
 
-        /*  Get the invoice number  */
+        //  Get the invoice number
         $invoice_number = $this->number;
 
-        /*  Get the invoice grand total  */
+        //  Get the invoice grand total
         $grand_total = number_format($this->grand_total, 2, '.', ',');
 
-        /*  Get the currency symbol or currency code  */
+        //  Get the currency symbol or currency code
         $currency = $this->currency['symbol'] ?? $this->currency['code'];
 
-        /*  Get the invoice expiry date  */
+        //  Get the invoice expiry date
         $expiry_date = (new Carbon($this->expiry_date))->format('M d Y');
 
-        /*  Get the reference/customer contact mobile number  */
+        //  Get the reference/customer available mobile number
         $mobile = $this->reference->getAvailalbleMobilePhone() ?? $this->customer->getAvailalbleMobilePhone();
         $mobile_number = $mobile ? $mobile['calling_code'].$mobile['number'] : null;
 
-        /*  Get the cart items (inline) e.g 1x(Product 1), 2x(Product 2)  */
+        //  Get the cart items (inline) e.g 1x(Product 1), 2x(Product 2)
         $items_inline = ( new \App\MyCart() )->getItemsSummarizedInline($this->item_lines);
 
-        /*  Craft the sms message  */
+        //  Craft the sms message
         $invoice_number = 'Invoice #'.$invoice_number.', ';
         $items = 'for '.$items_inline;
         $amount = 'Amount: '.$currency.$grand_total.' ';
@@ -377,7 +377,7 @@ trait InvoiceTraits
         $summarized_items = $this->truncateWithDots($items.(strlen($items) < $characters_left ? '.' : ''), $characters_left);
         $sms = $invoice_number.$summarized_items.$amount.$due_date.$dial;
 
-        /*  Return the sms message  */
+        //  Return the sms message
         return $sms;
     }
 

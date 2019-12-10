@@ -403,36 +403,39 @@ trait OrderTraits
 
     public function createOrderSms()
     {
-        /*  Set the character limit  */
+        //  Set the character limit
         $character_limit = 160;
 
-        /*  Get the order number  */
+        //  Get the order number
         $order_number = $this->number;
 
-        /*  Get the order grand total  */
+        //  Get the order grand total
         $grand_total = number_format($this->grand_total, 2, '.', ',');
 
-        /*  Get the currency symbol or currency code  */
+        //  Get the currency symbol or currency code
         $currency = $this->currency['symbol'] ?? $this->currency['code'];
 
-        /*  Get the reference contact number  */
-        $mobile = $this->reference->default_mobile ?? $this->reference->mobiles()->first();
-        $mobile_number = $mobile['calling_code'].$mobile['number'];
+        //  Get the merchant
+        $merchant = $this->merchant()->first();
 
-        /*  Get the cart items (inline)  e.g 1x(Product 1), 2x(Product 3)  */
+        //  Get the reference/customer available mobile number
+        $mobile = $this->reference->getAvailalbleMobilePhone() ?? $this->customer->getAvailalbleMobilePhone();
+        $mobile_number = $mobile ? $mobile['calling_code'].$mobile['number'] : null;
+
+        //  Get the cart items (inline)  e.g 1x(Product 1), 2x(Product 3)
         $items_inline = ( new \App\MyCart() )->getItemsSummarizedInline($this->item_lines);
 
-        /*  Craft the sms message  */
+        //  Craft the sms message
         $order_number = 'Order #'.$order_number.', ';
         $items = 'for '.$items_inline;
         $amount = 'Amount: '.$currency.$grand_total.'.';
-        $dial = 'Dial *'.$this->merchant->team_access_code.'# to view order. Customer: '.$mobile_number;
+        $dial = 'Dial *'.$merchant->team_access_code.'# to view order. Customer: '.$mobile_number;
 
         $characters_left = ($character_limit - strlen($order_number.$amount.$dial));
         $summarized_items = $this->truncateWithDots($items.(strlen($items) < $characters_left ? '.' : ''), $characters_left);
         $sms = $order_number.$summarized_items.$amount.$dial;
 
-        /*  Return the sms message  */
+        //  Return the sms message
         return $sms;
     }
 
