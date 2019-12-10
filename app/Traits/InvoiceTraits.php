@@ -356,6 +356,9 @@ trait InvoiceTraits
         //  Get the currency symbol or currency code
         $currency = $this->currency['symbol'] ?? $this->currency['code'];
 
+        //  Get the merchant
+        $merchant = $this->merchant()->first();
+
         //  Get the invoice expiry date
         $expiry_date = (new Carbon($this->expiry_date))->format('M d Y');
 
@@ -371,7 +374,7 @@ trait InvoiceTraits
         $items = 'for '.$items_inline;
         $amount = 'Amount: '.$currency.$grand_total.' ';
         $due_date = 'due '.$expiry_date.'.';
-        $dial = 'Dial *'.$this->merchant->customer_access_code.'# to pay';
+        $dial = 'Dial *'.$merchant->customer_access_code.'# to pay';
 
         $characters_left = ($character_limit - strlen($invoice_number.$amount.$due_date.$dial));
         $summarized_items = $this->truncateWithDots($items.(strlen($items) < $characters_left ? '.' : ''), $characters_left);
@@ -400,34 +403,37 @@ trait InvoiceTraits
 
     public function createInvoiceReceiptSms()
     {
-        /*  Set the character limit  */
+        //  Set the character limit
         $character_limit = 160;
 
-        /*  Get the invoice number  */
+        //  Get the invoice number
         $invoice_number = $this->number;
 
-        /*  Get the order number (if linked to order)  */
+        //  Get the order number (if linked to order)
         $order_number = $this->owner->resource_type == 'order' ? $this->owner->number : null;
 
-        /*  Get the invoice grand total  */
+        //  Get the invoice grand total
         $grand_total = number_format($this->grand_total, 2, '.', ',');
 
-        /*  Get the currency symbol or currency code  */
+        //  Get the currency symbol or currency code
         $currency = $this->currency['symbol'] ?? $this->currency['code'];
 
-        /*  Get the reference contact mobil number  */
-        $mobile = $this->reference->default_mobile ?? $this->reference->mobiles()->first();
-        $mobile_number = $mobile['calling_code'].$mobile['number'];
+        //  Get the merchant
+        $merchant = $this->merchant()->first();
 
-        /*  Get the cart items (inline)  e.g 1x(Product 1), 2x(Product 3)  */
+        //  Get the reference/customer available mobile number
+        $mobile = $this->reference->getAvailalbleMobilePhone() ?? $this->customer->getAvailalbleMobilePhone();
+        $mobile_number = $mobile ? $mobile['calling_code'].$mobile['number'] : null;
+
+        //  Get the cart items (inline)  e.g 1x(Product 1), 2x(Product 3)
         $items_inline = ( new \App\MyCart() )->getItemsSummarizedInline($this->item_lines);
 
-        /*  Craft the sms message  */
+        //  Craft the sms message
         $invoice_number = 'Payment confirmation: Invoice #'.$invoice_number;
         $order_number = ($order_number) ? ', Order #'.$order_number.' ' : ' ';
         $items = 'for '.$items_inline;
         $amount = 'Amount: '.$currency.$grand_total.'.';
-        $dial = 'Dial *'.$this->merchant->customer_access_code.'# to view order';
+        $dial = 'Dial *'.$merchant->customer_access_code.'# to view order';
 
         $characters_left = ($character_limit - strlen($invoice_number.$order_number.$amount.$dial));
         $summarized_items = $this->truncateWithDots($items.(strlen($items) < $characters_left ? '.' : ''), $characters_left);
