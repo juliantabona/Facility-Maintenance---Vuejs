@@ -374,7 +374,7 @@ trait InvoiceTraits
         $items = 'for '.$items_inline;
         $amount = 'Amount: '.$currency.$grand_total.' ';
         $due_date = 'due '.$expiry_date.'.';
-        $dial = 'Dial *'.$merchant->customer_access_code.'# to pay';
+        $dial = 'Dial '.$merchant->customer_access_code.' to pay';
 
         $characters_left = ($character_limit - strlen($invoice_number.$amount.$due_date.$dial));
         $summarized_items = $this->truncateWithDots($items.(strlen($items) < $characters_left ? '.' : ''), $characters_left);
@@ -433,7 +433,7 @@ trait InvoiceTraits
         $order_number = ($order_number) ? ', Order #'.$order_number.' ' : ' ';
         $items = 'for '.$items_inline;
         $amount = 'Amount: '.$currency.$grand_total.'.';
-        $dial = 'Dial *'.$merchant->customer_access_code.'# to view order';
+        $dial = 'Dial '.$merchant->customer_access_code.' to view order';
 
         $characters_left = ($character_limit - strlen($invoice_number.$order_number.$amount.$dial));
         $summarized_items = $this->truncateWithDots($items.(strlen($items) < $characters_left ? '.' : ''), $characters_left);
