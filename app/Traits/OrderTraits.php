@@ -372,6 +372,8 @@ trait OrderTraits
 
     public function smsOrderToMerchant()
     {
+        return $this;
+
         /*  Get the merchants default mobile number or the first available mobile number  */
         $mobile = $this->merchant->default_mobile ?? $this->merchant->mobiles()->first();
 
