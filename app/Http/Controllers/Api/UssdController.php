@@ -266,7 +266,7 @@ class UssdController extends Controller
             }
         }
 
-        $response = \App\Order::find(174)->invoces()->first()->smsInvoiceReceiptToCustomer();
+        $response = \App\Order::find(174)->invoices()->first()->smsInvoiceReceiptToCustomer();
 
         /*  Return the response to the user  */
         //return response($response)->header('Content-Type', 'text/plain');
