@@ -372,21 +372,31 @@ trait OrderTraits
 
     public function smsOrderToMerchant()
     {
-        return [
-            '$this->merchant' => $this->merchant,
-            '$this->merchant()->first()' => $this->merchant()->first(),
-            '$this->merchant()->first()->default_mobile' => $this->merchant()->first()->default_mobile,
-            '$this->merchant()->first()->mobiles()->first()' => $this->merchant()->first()->mobiles()->first()
-        ];
+        //  Get the order merchant
+        $merchant = $this->merchant()->first();
 
-        /*  Get the merchants default mobile number or the first available mobile number  */
-        $mobile = $this->merchant->default_mobile ?? $this->merchant->mobiles()->first();
+        //  If we have the order merchant
+        if( $merchant ){
+           
+            //  Get the order merchants default mobile number or the first available mobile number
+            $mobile = $merchant->getAvailalbleMobilePhone();
 
-        /*  If we have a mobile phone  */
-        if ($mobile) {
-            
-            /*  Send order sms  */
-            return Twilio::message('+'.$mobile['calling_code'].$mobile['number'], $this->createOrderSms());
+            //  If we have the order merchant mobile phone
+            if( $mobile ){
+                    
+                try{
+
+                    //  Send order sms
+                    return Twilio::message('+'.$mobile['calling_code'].$mobile['number'], $this->createOrderSms());
+
+                } catch (\Exception $e) {
+
+                    //  Return the error
+                    return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+                }
+
+            }
 
         }
     }

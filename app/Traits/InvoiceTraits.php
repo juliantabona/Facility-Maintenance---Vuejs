@@ -313,17 +313,31 @@ trait InvoiceTraits
 
     public function smsInvoiceToCustomer()
     {
-        /*  Get the customer's default mobile number or the first available mobile number  */
-        $mobile = $this->customer->getMobilePhone();
+        //  Get the order customer
+        $customer = $this->customer()->first();
 
-        /*  If we have a mobile phone  */
-        if( $mobile ){
+        //  If we have the order customer
+        if( $customer ){
+           
+            //  Get the customers default mobile number or the first available mobile number
+            $mobile = $customer->getAvailalbleMobilePhone();
 
-            /*  Structure the phone number  */
-            $phone_number = '+'.$mobile['calling_code'].$mobile['number'];
+            //  If we have the customers mobile phone
+            if( $mobile ){
+                    
+                try{
 
-            /*  Send invoice sms  */
-            return Twilio::message($phone_number, $this->createInvoiceSms());
+                    //  Send invoice sms
+                    return Twilio::message('+'.$mobile['calling_code'].$mobile['number'], $this->createInvoiceSms());
+
+                } catch (\Exception $e) {
+
+                    //  Return the error
+                    return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+                }
+
+            }
 
         }
     }
@@ -346,8 +360,8 @@ trait InvoiceTraits
         $expiry_date = (new Carbon($this->expiry_date))->format('M d Y');
 
         /*  Get the reference/customer contact mobile number  */
-        $mobile = $this->reference->getMobilePhone() ?? $this->customer->getMobilePhone();
-        $mobile_number = $mobile['calling_code'].$mobile['number'] ?? null;
+        $mobile = $this->reference->getAvailalbleMobilePhone() ?? $this->customer->getAvailalbleMobilePhone();
+        $mobile_number = $mobile ? $mobile['calling_code'].$mobile['number'] : null;
 
         /*  Get the cart items (inline) e.g 1x(Product 1), 2x(Product 2)  */
         $items_inline = ( new \App\MyCart() )->getItemsSummarizedInline($this->item_lines);
@@ -370,7 +384,7 @@ trait InvoiceTraits
     public function smsInvoiceReceiptToCustomer()
     {
         /*  Get the customer's default mobile number or the first available mobile number  */
-        $mobile = $this->customer->getMobilePhone();
+        $mobile = $this->customer->getAvailalbleMobilePhone();
 
         /*  If we have a mobile phone  */
         if( $mobile ){

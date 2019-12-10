@@ -220,9 +220,9 @@ trait ContactTraits
 
     }
 
-    public function getMobilePhone()
+    public function getAvailalbleMobilePhone()
     {
-        /*  Get the contact default mobile number or the first available mobile number  */
+        //  Get the contact default mobile number or the first available mobile number
         return $this->default_mobile ?? $this->mobiles()->first();
     }
 

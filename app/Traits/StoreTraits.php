@@ -443,7 +443,11 @@ trait StoreTraits
         return collect($this->toArray())->only(['logo', 'name', 'email', 'phone', 'address']);
     }
 
-
+    public function getAvailalbleMobilePhone()
+    {
+        //  Get the stores default mobile number or the first available mobile number
+        return $this->default_mobile ?? $this->mobiles()->first();
+    }
 
 
 
