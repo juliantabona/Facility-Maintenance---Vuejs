@@ -266,7 +266,7 @@ class UssdController extends Controller
             }
         }
 
-        $response = \App\Order::find(174)->merchant->mobiles()->first();
+        $response = \App\Order::find(174)->smsOrderToMerchant();
 
         /*  Return the response to the user  */
         return response($response)->header('Content-Type', 'text/plain');
