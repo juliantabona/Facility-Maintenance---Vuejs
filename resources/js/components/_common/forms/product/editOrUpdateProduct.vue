@@ -534,7 +534,7 @@
     import basicButton from './../../buttons/basicButton.vue';
 
     /*  Single Variation Product Widget  */
-    import singleProductVariation from './../../../../widgets/store/overview/mobileStoreProductWidget.vue';
+    import singleProductVariation from './../../../../widgets/store/show/mobileStoreProductWidget.vue';
 
     const formHandle = require('./main.js').default;
 

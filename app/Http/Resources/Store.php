@@ -54,6 +54,8 @@ class Store extends JsonResource
             'customer_access_code' => $this->customer_access_code,
             'team_access_code' => $this->team_access_code,
             'resource_type' => $this->resource_type,
+            'statistics' => $this->statistics,
+            
 
             /*  Timestamps  */
             'created_at' => $this->created_at,
@@ -270,6 +272,13 @@ class Store extends JsonResource
                     'href' => route('store-settings', ['store_id' => $this->id]),
                     'title' => 'Settings for this store',
                 ],
+
+                //  Link to store statistics
+                'oq:statistics' => [
+                    'href' => route('store-statistics', ['store_id' => $this->id]),
+                    'title' => 'Statistics for this store',
+                ],
+
             ],
 
             /*  Embedded Resources */

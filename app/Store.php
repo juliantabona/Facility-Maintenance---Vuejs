@@ -478,8 +478,181 @@ class Store extends Model
         'logo',  'is_verified', 'is_email_verified', 'is_mobile_verified', 'customer_access_code',
         'team_access_code', 'phone_list', 'default_mobile', 'default_email', 'default_address',
         'average_rating', 'resource_type', 'phone_list', 'last_approved_activity', 'is_approved',
-        'current_activity_status', 'activity_count',
+        'current_activity_status', 'activity_count', 
+        
+        'statistics'
     ];
+
+    /*
+     *  Returns the store statistics
+     */
+    public function getStatisticsAttribute()
+    {
+        return [
+            'order' => [
+                'totals' => [
+                    'total_gross_revenue' => [
+                        'name' => 'Gross Revenue',
+                        'amount' => $this->total_gross_revenue
+                    ],
+                    'total_refunds' => [
+                        'name' => 'Refunds',
+                        'amount' => $this->total_refunds
+                    ],
+                    'total_discounts' => [
+                        'name' => 'Discounts',
+                        'amount' => $this->total_discounts
+                    ],
+                    'total_taxes' => [
+                        'name' => 'Taxes',
+                        'amount' => $this->total_taxes
+                    ],
+                    'total_delivery' => [
+                        'name' => 'Delivery',
+                        'amount' => 0
+                    ],
+                    'total_net_revenue' => [
+                        'name' => 'Net Revenue',
+                        'amount' => $this->total_net_revenue
+                    ],
+                ],
+                'count' => $this->orders()->count()
+            ],
+            'customers' => [
+                'count' => $this->customerContacts()->count()
+            ],
+        ];
+    }
+
+    /*
+     *  Returns the total gross revenue made by this store
+     */
+    public function getTotalGrossRevenueAttribute()
+    {
+        $total = 0;
+
+        foreach ($this->orders as $order) {
+
+            // If the order status is not any of the following statuses
+            if( !collect(['Failed Payment', 'Cancelled', 'Pending Payment'])->contains($order->status['name']) ){
+
+                $total += $order->grand_total;
+
+            }
+
+        }
+
+        return $total;
+    }
+    
+    /*
+     *  Returns the total taxes made by this store
+     */
+    public function getTotalTaxesAttribute()
+    {
+        $total = 0;
+
+        foreach ($this->orders as $order) {
+
+            // If the order status is not any of the following statuses
+            if( !collect(['Failed Payment', 'Cancelled', 'Pending Payment'])->contains($order->status['name']) ){
+
+                $total += $order->grand_tax_total;
+
+            }
+
+        }
+
+        return $total;
+    }
+    
+    /*
+     *  Returns the total discounts made by this store
+     */
+    public function getTotalDiscountsAttribute()
+    {
+        $total = 0;
+
+        foreach ($this->orders as $order) {
+
+            // If the order status is not any of the following statuses
+            if( !collect(['Failed Payment', 'Cancelled', 'Pending Payment'])->contains($order->status['name']) ){
+
+                $total += $order->grand_discount_total;
+
+            }
+            
+        }
+
+        return $total;
+    }
+
+    /*
+     *  Returns the total discounts made by this store
+     */
+    public function getTotalNetRevenueAttribute()
+    {
+        $total = 0;
+
+        foreach ($this->orders as $order) {
+
+            // If the order status is not any of the following statuses
+            if( !collect(['Failed Payment', 'Cancelled', 'Pending Payment'])->contains($order->status['name']) ){
+
+                //  Subtotal = Grand Total - Tax Total - Discount Total
+                $total += $order->sub_total;
+
+            }
+
+        }
+
+        //  Remove Refunds Total
+        $total = $total - $this->refund_total;
+
+        return $total;
+    }
+
+    /*
+     *  Returns the total payment made to this store
+     */
+    public function getTransactionTotalAttribute()
+    {
+        $total = 0;
+
+        foreach ($this->orders as $order) {
+            $total += $order->transaction_total;
+        }
+
+        return $total;
+    }
+
+    /*
+     *  Returns the total refund paid to this store
+     */
+    public function getTotalRefundsAttribute()
+    {
+        $total = 0;
+
+        foreach ($this->orders as $order) {
+            $total += $order->refund_total;
+        }
+
+        return $total;
+    }
+
+    /*
+     *  Returns the outstanding balance after all payments to orders
+     */
+    public function getOutstandingBalanceAttribute()
+    {
+        $total = 0;
+
+        foreach ($this->orders as $order) {
+            $total += $order->outstanding_balance;
+        }
+
+        return $total;
+    }
 
     /*
      *  Returns the store logo

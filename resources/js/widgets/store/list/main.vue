@@ -1,14 +1,18 @@
 <template>
 
-    <Row :gutter="20">
+    <Row>
 
-        <Col v-if="activeStoreUrl">
-            
-            <storeOverview :storeUrl="activeStoreUrl" @goBack="fetchStores()"></storeOverview>
+        <Col :span="22" :offset="1" v-if="activeStoreUrl">
+
+            <!-- Show store widget -->
+            <showStoreWidget :storeUrl="activeStoreUrl" :stores="stores"
+                @changeStore="activeStoreUrl = $event" 
+                @goBack="fetchStores()">
+            </showStoreWidget>
 
         </Col>
 
-        <Col v-else :span="20" :offset="2">
+        <Col v-else :span="22" :offset="1">
 
             <div class="pb-3 border-bottom">
                 <h2>Stores</h2>
@@ -16,19 +20,20 @@
 
             <Row :gutter="20">
 
-                <!-- Show when we have stores -->
+                <!-- Loading stores -->
                 <Col v-if="isLoadingStores" :span="8">
                 
-                    <!-- Loader -->
+                    <!-- Show loader -->
                     <Loader :loading="true" type="text" class="mt-5 text-left" theme="white">Loading stores...</Loader>
 
                 </Col>
 
+                <!-- Wants to create a store  -->
                 <template v-if="wantsToCreateStore && createStoreUrl">
 
                     <Col :span="8" class="pt-5">
 
-                        <!-- Create Store Form -->
+                        <!-- Show create store form -->
                         <createStoreForm 
                             :postURL="createStoreUrl"
                             @createSuccess="handleCreateSuccess($event)">
@@ -40,25 +45,27 @@
 
                 <template v-else>
 
-                    <!-- Show when we have stores -->
+                    <!-- Show list of stores -->
                     <Col v-if="(stores || {}).length && !isLoadingStores" :span="8">
                     
                         <div class="mt-5 mb-3 pb-3 clearfix border-bottom">
                             <div class="mb-3">
                                 
-                                <Card v-for="(store, key) in stores" :key="key"
-                                    @click.native="activeStoreUrl = ((store._links || {}).self || {}).href"
-                                    class="mb-2">
+                                <Card v-for="(store, key) in stores" :key="key" class="mb-2"
+                                    @click.native="activeStoreUrl = ((store._links || {}).self || {}).href">
+
+                                    <!-- Store name -->
                                     <span>{{ store.name }}</span>
                                     <Icon type="md-arrow-forward" :size="15" class="float-right mt-1"/>
+
                                 </Card>
                             </div>
                         </div>
 
                         <!-- Add Store Button -->
                         <basicButton @click.native="wantsToCreateStore = true" 
-                                        size="large" class="float-left mb-3 mr-1">
-                                        <span>+ Add Store</span>
+                                     size="large" class="float-left mb-3 mr-1">
+                                     <span>+ Add Store</span>
                         </basicButton>
 
                     </Col>
@@ -94,7 +101,7 @@
 
 <script>
     
-    import storeOverview from './../overview/main.vue';
+    import showStoreWidget from './../show/main.vue';
 
     /*  Create Store Form  */
     import createStoreForm from './../../../components/_common/forms/create-store/createStore.vue';
@@ -104,13 +111,10 @@
 
     /*  Loaders  */
     import Loader from './../../../components/_common/loaders/Loader.vue';  
-    
-    import lodash from 'lodash';
-    Event.prototype._ = lodash;
 
     export default {
-        components: { 
-            storeOverview, createStoreForm, basicButton, Loader
+        components: {
+            showStoreWidget, createStoreForm, basicButton, Loader
         },
         data(){
             return {
@@ -124,8 +128,13 @@
         },
         methods: {
             handleCreateSuccess(store){
+
+                //  Close the create store form
                 this.wantsToCreateStore = false;
+
+                //  Set the active store url to the url of the store we just created
                 this.activeStoreUrl = ((store._links || {}).self || {}).href;
+
             },
             fetchStores() {
 
@@ -135,7 +144,7 @@
                 //  Start loader
                 self.isLoadingStores = true;
 
-                //  Make sure we are not displaying a store
+                //  Make sure we are not displaying any store
                 self.activeStoreUrl = null;
 
                 //  Console log to acknowledge the start of api process
@@ -157,7 +166,7 @@
                         //  Store the stores data
                         self.stores = ((data || {})._embedded || {}).stores || [];
 
-                        //  Store the create store url
+                        //  Store the create store url (This is the URL used to make a POST Request to when creating a store)
                         self.createStoreUrl = (((data || {})._links || {}).self || {}).href;
 
                     })         
@@ -175,8 +184,10 @@
             }
         },
         created(){
+            
             //  Fetch the store
             this.fetchStores();
+
         }
     };
   

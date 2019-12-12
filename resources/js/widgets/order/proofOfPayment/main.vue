@@ -253,7 +253,7 @@
     /*  scrollBox  */
     import scrollBox from './../../../components/_common/scrollBox/scrollBox.vue'; 
 
-    import messageChatBox from './../../store/overview/messageChatBox.vue';
+    import messageChatBox from './../../store/show/messageChatBox.vue';
 
     import moment from 'moment';
 

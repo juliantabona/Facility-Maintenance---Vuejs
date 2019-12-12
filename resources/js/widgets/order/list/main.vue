@@ -1,13 +1,32 @@
 <style scoped>
 
-    .roundedShape{
-        width: 60px;
-        height: 60px;
-        border: 1px solid #c5c5c5;
-        padding: 3px;
-        margin: -15px 10px 0 0;
-        border-radius: 100%;
-        display:inline-block;
+    .order-card >>> .ivu-card-head{
+        padding-bottom:0 !important;
+    }
+
+    .order-card >>> .order-menu {
+        height: 35px;
+        line-height: 30px;
+        background: transparent;
+    }
+
+    .order-card >>> .order-menu:after {
+        background: transparent;
+    }
+
+    .order-card >>> .order-menu li {
+        padding: 0 15px;
+        font-size: 12px !important;
+    }
+
+    .order-search-bar >>> input {
+        height: 30px;
+        border: none;
+    }
+
+    .order-dropdown-item >>> .ivu-select-dropdown {
+        top: 30px !important;
+        left: 0px !important;
     }
 
     .order-table >>> .breakdown-poptip .ivu-poptip-body{
@@ -30,9 +49,15 @@
     <div>
 
         <!-- Manage Columns Button / Add Order Button -->
-        <Row :gutter="12">
+        <Row class="border-bottom pb-3">
 
-            <Col :span="24">
+            <Col :span="4">
+
+                <h2 class="font-weight-bold pl-4">Orders</h2>
+
+            </Col>
+
+            <Col :span="20">
                 <div class="clearfix">
                     
                     <!-- Add Order Button -->
@@ -46,7 +71,7 @@
 
         </Row>
 
-        <el-tabs value="first">
+        <el-tabs v-if="false" value="first">
             
             <!-- Search / Filter Tools -->
             <el-tab-pane label="Search / Filter" name="first">
@@ -110,7 +135,7 @@
                     <Row :gutter="12">
 
                         <Col :span="24" class="clearfix">
-                            <span class="font-weight-bold d-block mt-2 mb-3">Select Columns to show:</span>
+                            <span class="font-weight-bold pl-4 d-block mt-2 mb-3">Select Columns to show:</span>
                         </Col>
 
                         <Col :span="24" class="clearfix">
@@ -135,12 +160,163 @@
 
         </el-tabs>
 
-        <!-- Store Orders -->
-        <Table :columns="dynamicColumns" :data="localOrders"
-               no-data-text="No orders found"
-               :loading="isLoadingOrders"
-               class="order-table">
-        </Table>
+
+        <Card dis-hover class="order-card p-2">
+
+            <Row slot="title">
+                <Col :span="24">
+
+                    <Menu mode="horizontal" theme="light" :active-name="activeTab" class="order-menu"
+                          @on-select="changeActiveTab($event)">
+                        <MenuItem name="all">
+                            <span class="font-weight-bold">All</span>
+                        </MenuItem>
+                        <MenuItem name="open">
+                            <Icon type="ios-browsers-outline" :size="20" />
+                            <span class="font-weight-bold">Open</span>
+                        </MenuItem>
+                        <MenuItem name="archieved">
+                            <Icon type="ios-archive-outline" :size="20" />
+                            <span class="font-weight-bold">Archieved</span>
+                        </MenuItem>
+                        <MenuItem name="cancelled">
+                            <Icon type="ios-hand-outline" :size="20" />
+                            <span class="font-weight-bold">Cancelled</span>
+                        </MenuItem>
+                    </Menu>
+
+                </Col>
+            </Row>
+            
+            <Row class="mb-4">
+
+                <Col :span="18">
+
+                    <ButtonGroup>
+
+                        <Button class="p-0">
+                            <Input v-model="searchedOrder" prefix="ios-search" placeholder="Search orders..." 
+                                   class="order-search-bar" style="width: 300px;" />
+                        </Button>
+
+                        <!-- Payment Status Button -->
+                        <Button>
+
+                            <!-- Dropdown -->
+                            <Dropdown trigger="custom" class="order-dropdown-item"
+                                      :visible="paymentFilterIsVisible">
+                                
+                                <!-- Title -->
+                                <span @click="paymentFilterIsVisible = true">
+                                    Payment Status
+                                    <Icon type="ios-arrow-down"></Icon>
+                                </span>
+
+                                <!-- Dropdown Options -->
+                                <DropdownMenu slot="list">
+                                    
+                                    <div class="p-2 pl-3 pr-5 text-left">
+
+                                        <!-- Status Checkboxes -->
+                                        <CheckboxGroup v-model="selectedPaymentStatuses">
+                                            <Checkbox class="d-block" label="Authorized"></Checkbox>
+                                            <Checkbox class="d-block" label="Paid"></Checkbox>
+                                            <Checkbox class="d-block" label="Partially refunded"></Checkbox>
+                                            <Checkbox class="d-block" label="Partially paid"></Checkbox>
+                                            <Checkbox class="d-block" label="Pending"></Checkbox>
+                                            <Checkbox class="d-block" label="Refunded"></Checkbox>
+                                            <Checkbox class="d-block" label="Unpaid"></Checkbox>
+                                            <Checkbox class="d-block" label="Voided"></Checkbox>
+                                        </CheckboxGroup>
+
+                                        <div class="mt-4">
+
+                                            <!-- Apply Filter Button -->
+                                            <Button type="primary" @click="paymentFilterIsVisible = false">Apply Filter(s)</Button>
+
+                                        </div>
+
+                                    </div>
+
+                                </DropdownMenu>
+
+                            </Dropdown>
+
+                        </Button>
+
+                        <!-- Fulfillment Status Button -->
+                        <Button>
+
+                            <!-- Dropdown -->
+                            <Dropdown trigger="custom" class="order-dropdown-item"
+                                      :visible="fulfillmentFilterIsVisible">
+                                
+                                <!-- Title -->
+                                <span @click="fulfillmentFilterIsVisible = true">
+                                    Fulfillment Status
+                                    <Icon type="ios-arrow-down"></Icon>
+                                </span>
+
+                                <!-- Dropdown Options -->
+                                <DropdownMenu slot="list">
+                                    
+                                    <div class="p-2 pl-3 pr-5 text-left">
+
+                                        <!-- Status Checkboxes -->
+                                        <CheckboxGroup v-model="selectedFulfillmentStatuses">
+                                            <Checkbox class="d-block" label="Fulfilled"></Checkbox>
+                                            <Checkbox class="d-block" label="Unfulfilled"></Checkbox>
+                                            <Checkbox class="d-block" label="Partially Fulfilled"></Checkbox>
+                                        </CheckboxGroup>
+
+                                        <div class="mt-4">
+
+                                            <!-- Apply Filter Button -->
+                                            <Button type="primary" @click="fulfillmentFilterIsVisible = false">Apply Filter(s)</Button>
+
+                                        </div>
+
+                                    </div>
+
+                                </DropdownMenu>
+
+                            </Dropdown>
+
+                        </Button>
+
+                        <!-- Fulfillment Status Button -->
+                        <Button>More Filters</Button>
+
+                    </ButtonGroup>
+
+                </Col>
+
+                <Col :span="6">
+
+                    <!-- Save Filter Button -->
+                    <Button class="ml-1">
+                        <Icon type="md-star-outline" :size="20" />
+                        <span>Saved</span>
+                    </Button>
+
+                    <!-- Sort Button -->
+                    <Button class="ml-2">
+                        <Icon type="ios-shuffle" :size="20" />
+                        <span>Sort</span>
+                    </Button>
+
+                </Col>
+
+            </Row>
+
+            <!-- Store Orders -->
+            <Table :columns="dynamicColumns" :data="localOrders"
+                no-data-text="No orders found"
+                :loading="isLoadingOrders"
+                class="order-table">
+            </Table>
+
+        </Card>
 
     </div>
 
@@ -179,8 +355,13 @@
 
                 //  Orders
                 localOrders: [],
+                searchedOrder: null,
                 isLoadingOrders: false,
                 showColumnManager: false,
+                selectedPaymentStatuses: [],
+                paymentFilterIsVisible: false,
+                fulfillmentFilterIsVisible: false,
+                selectedFulfillmentStatuses: [],
                 localOrdersUrl: this.ordersUrl || this.$route.params.ordersUrl,
                 tableColumnsToShowByDefault:['Order #', 'Customer', 'Email', 'Phone', 'Date', 'Grand Total'],
 
@@ -190,6 +371,9 @@
             }
         },
         computed:{
+            activeTab(){
+                return this.$route.query.orderType || 'all';
+            },
             dynamicColumns(status){ 
                 
                 var allowedColumns = [];
@@ -211,8 +395,21 @@
                                     //  Update the row data
                                     this.$set(this.localOrders, params.index, order);
 
-                                    //  Automatically open the expandable data
-                                    this.$set(this.localOrders[params.index], '_expanded', true);
+                                    for(var x=0; x < this.localOrders.length; x++){
+
+                                        if( x == params.index){
+
+                                            //  Automatically open the expandable data
+                                            this.$set(this.localOrders[params.index], '_expanded', true);
+
+                                        }else{
+
+                                            //  Automatically close the expandable data
+                                            this.$set(this.localOrders[x], '_expanded', false);
+
+                                        }
+
+                                    }
                                     
                                 }
                             }

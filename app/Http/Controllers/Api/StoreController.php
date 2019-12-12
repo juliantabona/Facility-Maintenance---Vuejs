@@ -1232,6 +1232,38 @@ class StoreController extends Controller
         }
     }
 
+    public function getStoreStatistics($store_id)
+    {
+        //  Get the store
+        $store = Store::findOrFail($store_id);
+
+        //  Get the store statistics
+        $statistics = $store->statistics ?? null;
+
+        //  Check if the statistics exist
+        if ($statistics) {
+
+            //  Check if the user is authourized to view the store statistics
+            if ($this->user->can('view', $store)) {
+
+                //  Return the statistics
+                return $statistics;
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+
+            }
+        } else {
+
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
+
     /*
     public function index()
     {
