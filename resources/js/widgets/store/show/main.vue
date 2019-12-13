@@ -66,8 +66,8 @@
 
                 <Col :span="14">
 
-                    <Menu mode="horizontal" theme="light" :active-name="activeTab" class="store-menu"
-                          @on-select="changeActiveTab($event)">
+                    <Menu mode="horizontal" theme="light" :active-name="activeStoreTab" class="store-menu"
+                          @on-select="changeActiveStoreTab($event)">
                         <MenuItem name="overview">
                             <Icon type="ios-stats-outline" :size="20" />
                             Overview
@@ -148,19 +148,19 @@
                         <template v-else>
 
                             <!-- Overview Tab -->
-                            <overviewWidget v-if="activeTab == 'overview'" :store="store"></overviewWidget>
+                            <overviewWidget v-if="activeStoreTab == 'overview'" :store="store"></overviewWidget>
 
                             <!-- Orders Tab -->
-                            <orderWidget v-if="activeTab == 'orders'" :ordersUrl="(store._links['oq:orders'] || {}).href" :store="store"></orderWidget>
+                            <orderWidget v-if="activeStoreTab == 'orders'" :ordersUrl="(store._links['oq:orders'] || {}).href" :store="store"></orderWidget>
 
                             <!-- Customers Tab -->
-                            <customerWidget v-if="activeTab == 'customers'" :customersUrl="(store._links['oq:customer_contacts'] || {}).href"></customerWidget>
+                            <customerWidget v-if="activeStoreTab == 'customers'" :customersUrl="(store._links['oq:customer_contacts'] || {}).href"></customerWidget>
 
                             <!-- USSD Interface Tab -->
-                            <ussdInterfaceWidget v-if="activeTab == 'mobile_store'" :store="store"></ussdInterfaceWidget>
+                            <ussdInterfaceWidget v-if="activeStoreTab == 'mobile_store'" :store="store"></ussdInterfaceWidget>
 
                             <!-- Settings Tab -->
-                            <Card v-if="activeTab == 'settings'" class="pt-3 pb-3">
+                            <Card v-if="activeStoreTab == 'settings'" class="pt-3 pb-3">
                                 <span>Settings Here</span>
                             </Card>
 
@@ -265,8 +265,8 @@
             }
         },
         computed: {
-            activeTab(){
-                return this.$route.query.activeTab || 'overview';
+            activeStoreTab(){
+                return this.$route.query.activeStoreTab || 'overview';
             }
         },
         methods: {
@@ -285,10 +285,18 @@
                 this.$emit('changeStore', ((store._links || {}).self || {}).href);
 
             },
-            changeActiveTab(activeTabName){
+            changeActiveStoreTab(activeStoreTabName){
 
                 //  Update the url query with the active tab name
-                this.$router.replace({ name: 'stores', query: { activeTab: activeTabName } });
+                this.$router.replace({name: 'stores', query: {
+                    
+                    //  Get all the current url queries
+                    ...this.$route.query, 
+
+                    //  Add / Update our query
+                    activeStoreTab: activeStoreTabName
+
+                }});
 
             },
             fetchStore() {

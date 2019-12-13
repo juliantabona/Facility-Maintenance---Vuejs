@@ -5,6 +5,7 @@
     }
 
     .order-card >>> .order-menu {
+        z-index: 1;
         height: 35px;
         line-height: 30px;
         background: transparent;
@@ -24,9 +25,20 @@
         border: none;
     }
 
-    .order-dropdown-item >>> .ivu-select-dropdown {
+    .order-filter-dropdown >>> .ivu-select-dropdown {
         top: 30px !important;
         left: 0px !important;
+    }
+
+    .order-columns-dropdown >>> .ivu-select-dropdown {
+        top: 30px !important;
+        right: 32px !important;
+        left: inherit !important;
+    }
+
+    .filter-tag-box{
+        padding: 10px 5px 0 5px;
+        border-top: 3px solid #e4b52e;
     }
 
     .order-table >>> .breakdown-poptip .ivu-poptip-body{
@@ -42,17 +54,43 @@
         overflow: inherit !important;
     }
 
+    .order-table >>> thead tr th span{
+        font-weight: bold;
+    }
+
+    .order-table >>> .ivu-checkbox-wrapper{
+        margin: 0;
+        padding: 0;
+    }
+
+    .order-table >>> .status-tag{
+        border-radius: 15px;
+        line-height: 25px;
+        min-width: 90px;
+        padding: 0 5px;
+        height: 25px;
+    }
+
+    .order-table >>> .status-tag .ivu-tag-dot-inner {
+        width: 8px;
+        height: 8px;
+        margin-right: 3px;
+        margin-left: 2px;
+        top: -1px;
+    }
+
 </style>
 
 <template>
 
     <div>
 
-        <!-- Manage Columns Button / Add Order Button -->
+        <!-- Order Heading / Add Order Button -->
         <Row class="border-bottom pb-3">
 
             <Col :span="4">
 
+                <!-- Order Heading -->
                 <h2 class="font-weight-bold pl-4">Orders</h2>
 
             </Col>
@@ -71,103 +109,15 @@
 
         </Row>
 
-        <el-tabs v-if="false" value="first">
-            
-            <!-- Search / Filter Tools -->
-            <el-tab-pane label="Search / Filter" name="first">
-        
-                <Card class="mb-3">
-                    <Row :gutter="20">
-                        <Col :span="6">
-                            <Select v-model="selectedOrderStatuses" filterable multiple placeholder="Search customer...">
-                                <Option v-for="customer in localOrders" :value="customer.id" :key="customer.id">
-                                    {{ (customer.billing_info || {}).first_name || (customer.billing_info || {}).name }} {{ (customer.billing_info || {}).last_name }}
-                                </Option>
-                            </Select>
-                        </Col>
-                        <Col :span="6">
-                            <Select v-model="selectedOrderStatuses" filterable multiple placeholder="Filter by status">
-
-                                <OptionGroup label="Payment status">
-                                    <Option v-for="item in ['Pending Payment', 'Verify Payment', 'Failed Payment', 'Paid']" :value="item" :key="item">{{ item }}</Option>
-                                </OptionGroup>
-
-                                <OptionGroup label="Refund status">
-                                    <Option v-for="item in ['Pending Refund', 'Refunded']" :value="item" :key="item">{{ item }}</Option>
-                                </OptionGroup>
-
-                                <OptionGroup label="Delivery status">
-                                    <Option v-for="item in ['Pending Delivery', 'Verify Delivery','Delivered']" :value="item" :key="item">{{ item }}</Option>
-                                </OptionGroup>
-
-                                <OptionGroup label="Final status">
-                                    <Option v-for="item in ['Cancelled', 'Completed']" :value="item" :key="item">{{ item }}</Option>
-                                </OptionGroup>
-
-                            </Select>
-                        </Col>
-                        <Col :span="4">
-                            <DatePicker type="date" placeholder="From"></DatePicker>
-                        </Col>
-                        <Col :span="4">
-                            <DatePicker type="date" placeholder="To"></DatePicker>
-                        </Col>
-                        <Col :span="4">
-                            <!-- Refresh Orders Button -->
-                            <div class="clearfix">
-                                <basicButton @click.native="fetchOrders()" 
-                                            size="default" class="float-right mr-4"
-                                            :disabled="isLoadingOrders">
-                                            <Icon type="ios-refresh" :size="20"/>
-                                            <span>Refresh</span>
-                                </basicButton>
-                            </div>
-                        </Col>
-                    </Row>
-                </Card>
-
-            </el-tab-pane>
-            
-            <!-- Manage Table Columns Tools -->
-            <el-tab-pane label="Manage Columns" name="second">
-
-                <Card class="mb-3">
-                    <Row :gutter="12">
-
-                        <Col :span="24" class="clearfix">
-                            <span class="font-weight-bold pl-4 d-block mt-2 mb-3">Select Columns to show:</span>
-                        </Col>
-
-                        <Col :span="24" class="clearfix">
-                                    
-                            <!-- Table Column Checkboxes -->
-                            <CheckboxGroup  
-                                v-model="tableColumnsToShowByDefault" class="mb-3">
-                                <Checkbox label="Order #"></Checkbox>
-                                <Checkbox label="Customer"></Checkbox>
-                                <Checkbox label="Email"></Checkbox>
-                                <Checkbox label="Phone"></Checkbox>
-                                <Checkbox label="Date"></Checkbox>
-                                <Checkbox label="Grand Total"></Checkbox>
-                            </CheckboxGroup>
-
-                        </Col>
-
-                    </Row>
-                </Card>
-
-            </el-tab-pane>
-
-        </el-tabs>
-
-
         <Card dis-hover class="order-card p-2">
 
+            <!-- Order Status [ All / Open / Archieved / Cancelled ] -->
             <Row slot="title">
+
                 <Col :span="24">
 
-                    <Menu mode="horizontal" theme="light" :active-name="activeTab" class="order-menu"
-                          @on-select="changeActiveTab($event)">
+                    <Menu mode="horizontal" theme="light" :active-name="activeOrderTab" class="order-menu"
+                          @on-select="changeActiveOrderTab($event)">
                         <MenuItem name="all">
                             <span class="font-weight-bold">All</span>
                         </MenuItem>
@@ -186,28 +136,30 @@
                     </Menu>
 
                 </Col>
+
             </Row>
             
-            <Row class="mb-4">
+            <!-- Order Search / Filter By Payment Status / Filter By Fulfillment Status / Sort -->
+            <Row>
 
-                <Col :span="18">
+                <Col :span="16">
 
                     <ButtonGroup>
 
+                        <!-- Search Field -->
                         <Button class="p-0">
                             <Input v-model="searchedOrder" prefix="ios-search" placeholder="Search orders..." 
-                                   class="order-search-bar" style="width: 300px;" />
+                                   clearable class="order-search-bar" style="width: 200px;" />
                         </Button>
 
                         <!-- Payment Status Button -->
                         <Button>
 
                             <!-- Dropdown -->
-                            <Dropdown trigger="custom" class="order-dropdown-item"
-                                      :visible="paymentFilterIsVisible">
+                            <Dropdown trigger="click" class="order-filter-dropdown">
                                 
                                 <!-- Title -->
-                                <span @click="paymentFilterIsVisible = true">
+                                <span>
                                     Payment Status
                                     <Icon type="ios-arrow-down"></Icon>
                                 </span>
@@ -229,13 +181,6 @@
                                             <Checkbox class="d-block" label="Voided"></Checkbox>
                                         </CheckboxGroup>
 
-                                        <div class="mt-4">
-
-                                            <!-- Apply Filter Button -->
-                                            <Button type="primary" @click="paymentFilterIsVisible = false">Apply Filter(s)</Button>
-
-                                        </div>
-
                                     </div>
 
                                 </DropdownMenu>
@@ -248,11 +193,10 @@
                         <Button>
 
                             <!-- Dropdown -->
-                            <Dropdown trigger="custom" class="order-dropdown-item"
-                                      :visible="fulfillmentFilterIsVisible">
+                            <Dropdown trigger="click" class="order-filter-dropdown">
                                 
                                 <!-- Title -->
-                                <span @click="fulfillmentFilterIsVisible = true">
+                                <span>
                                     Fulfillment Status
                                     <Icon type="ios-arrow-down"></Icon>
                                 </span>
@@ -269,13 +213,6 @@
                                             <Checkbox class="d-block" label="Partially Fulfilled"></Checkbox>
                                         </CheckboxGroup>
 
-                                        <div class="mt-4">
-
-                                            <!-- Apply Filter Button -->
-                                            <Button type="primary" @click="fulfillmentFilterIsVisible = false">Apply Filter(s)</Button>
-
-                                        </div>
-
                                     </div>
 
                                 </DropdownMenu>
@@ -284,37 +221,162 @@
 
                         </Button>
 
-                        <!-- Fulfillment Status Button -->
-                        <Button>More Filters</Button>
+                        <!-- More Filters Button -->
+                        <Button>
+                            <Icon type="ios-funnel-outline" :size="18" />
+                            <span>More Filters</span>
+                        </Button>
 
                     </ButtonGroup>
 
                 </Col>
 
-                <Col :span="6">
+                <Col :span="8" class="clearfix">
 
-                    <!-- Save Filter Button -->
-                    <Button class="ml-1">
-                        <Icon type="md-star-outline" :size="20" />
-                        <span>Saved</span>
+                    <!-- Columns Button -->
+                    <Button class="float-right">
+
+                        <!-- Dropdown -->
+                        <Dropdown trigger="click" class="order-columns-dropdown">
+                            
+                            <!-- Title -->
+                            <span>
+                                <span>Columns</span>
+                                <Icon type="ios-arrow-down"></Icon>
+                            </span>
+
+                            <!-- Dropdown Options -->
+                            <DropdownMenu slot="list">
+                                
+                                <div class="p-2 pl-3 pr-5 text-left">
+
+                                    <!-- Status Checkboxes -->
+                                    <CheckboxGroup v-model="tableColumnsToShowByDefault">
+                                        <Checkbox class="d-block" label="Order Selector"></Checkbox>
+                                        <Checkbox class="d-block" label="Show Summary Arrow"></Checkbox>
+                                        <Checkbox class="d-block" label="Payment Indicator"></Checkbox>
+                                        <Checkbox class="d-block" label="Customer"></Checkbox>
+                                        <Checkbox class="d-block" label="Email"></Checkbox>
+                                        <Checkbox class="d-block" label="Phone"></Checkbox>
+                                        <Checkbox class="d-block" label="Payment Status"></Checkbox>
+                                        <Checkbox class="d-block" label="Fulfillment Status"></Checkbox>
+                                        <Checkbox class="d-block" label="Date"></Checkbox>
+                                        <Checkbox class="d-block" label="Sub Total"></Checkbox>
+                                        <Checkbox class="d-block" label="Discount Total"></Checkbox>
+                                        <Checkbox class="d-block" label="Tax Total"></Checkbox>
+                                        <Checkbox class="d-block" label="Grand Total"></Checkbox>
+                                    </CheckboxGroup>
+
+                                </div>
+
+                            </DropdownMenu>
+
+                        </Dropdown>
+
                     </Button>
 
-                    <!-- Sort Button -->
-                    <Button class="ml-2">
-                        <Icon type="ios-shuffle" :size="20" />
-                        <span>Sort</span>
+                    <!-- Save Filters Button -->
+                    <Button class="float-right mr-2">
+                        <Icon type="md-star-outline" :size="20" />
+                        <span>Save Filters</span>
                     </Button>
 
                 </Col>
 
             </Row>
 
-            <!-- Store Orders -->
-            <Table :columns="dynamicColumns" :data="localOrders"
-                no-data-text="No orders found"
-                :loading="isLoadingOrders"
-                class="order-table">
-            </Table>
+            <!-- Filters Displayed As Closable Tags -->
+            <Row v-if="selectedPaymentStatuses.length || selectedFulfillmentStatuses.length" class="filter-tag-box mt-2">
+
+                <Col :span="24">
+
+                    <!-- Tags For Payment Filters -->
+                    <Tag v-for="(status, i) in selectedPaymentStatuses" :key="status" :name="status" closable @on-close="removePaymentStatusTag(i)">
+                        Payment {{ status.toLowerCase() }}
+                    </Tag> 
+
+                    <!-- Tags For Fulfillment Filters -->
+                    <Tag v-for="(status, i) in selectedFulfillmentStatuses" :key="status" :name="status" closable @on-close="removeFulfillmentStatusTag(i)">
+                        {{ status }}
+                    </Tag> 
+
+                </Col>
+
+            </Row>
+
+            <div class="mt-4">
+
+                <!-- Selected Order(s) Actions -->
+                <Row v-if="selectedOrders.length" class="mb-2">
+
+                    <Col :span="16">
+
+                        <ButtonGroup>
+
+                            <!-- Number Of Selected Orders -->
+                            <Button class="pr-4 pl-4">
+                                <Badge :count="selectedOrders.length" type="warning" class="mr-1"></Badge> 
+                                <span>Selected</span>
+                            </Button>
+
+                            <!-- Actions Button -->
+                            <Button>
+
+                                <!-- Dropdown -->
+                                <Dropdown trigger="click" class="order-filter-dropdown">
+                                    
+                                    <!-- Title -->
+                                    <span>
+                                        Actions
+                                        <Icon type="ios-arrow-down"></Icon>
+                                    </span>
+
+                                    <!-- Dropdown Options -->
+                                    <DropdownMenu slot="list" class="text-left">
+
+                                        <DropdownItem>Fulfill orders</DropdownItem>
+                                        <DropdownItem>Capture payments</DropdownItem>
+
+                                        <Divider class="mt-1 mb-1"></Divider>
+
+                                        <DropdownItem>Archive orders</DropdownItem>
+                                        <DropdownItem>Unarchive orders</DropdownItem>
+
+                                        <Divider class="mt-1 mb-1"></Divider>
+
+                                        <DropdownItem>Add tags</DropdownItem>
+                                        <DropdownItem>Remove tags</DropdownItem>
+
+                                    </DropdownMenu>
+
+                                </Dropdown>
+
+                            </Button>
+                        
+                        </ButtonGroup>
+
+                    </Col>
+
+                </Row>
+
+                <!-- Store Orders -->
+                <Table :columns="dynamicColumns" :data="localOrders"
+                    no-data-text="No orders found" :loading="isLoadingOrders"
+                    @on-select-all-cancel="manageSelectedAllOrders"
+                    @on-select-all="manageSelectedAllOrders"
+                    @on-select-cancel="manageSelectedOrder"
+                    @on-select="manageSelectedOrder"
+                    class="order-table">
+                </Table>
+
+                <!-- Pagination -->
+                <div class="clearfix mt-4">
+                    <div style="float: right;">
+                        <Page :total="1000" :current="1" @on-change="true"></Page>
+                    </div>
+                </div>
+
+            </div>
 
         </Card>
 
@@ -352,107 +414,221 @@
         data(){
             return {
                 moment: moment,
-
-                //  Orders
+                //  Current store orders
                 localOrders: [],
+                //  Selected orders
+                selectedOrders: [],
+                //  Searched order value
                 searchedOrder: null,
+                //  LLoading orders status
                 isLoadingOrders: false,
-                showColumnManager: false,
-                selectedPaymentStatuses: [],
-                paymentFilterIsVisible: false,
-                fulfillmentFilterIsVisible: false,
-                selectedFulfillmentStatuses: [],
-                localOrdersUrl: this.ordersUrl || this.$route.params.ordersUrl,
-                tableColumnsToShowByDefault:['Order #', 'Customer', 'Email', 'Phone', 'Date', 'Grand Total'],
-
-                //  Filters
-                selectedOrderStatuses:[],
- 
+                //  Get the url used to fetch the store orders
+                localOrdersUrl: this.ordersUrl,
+                //  Check if we have any payment filters stored on the url query
+                selectedPaymentStatuses: this.getSelectedPaymentStatuses(),
+                //  Check if we have any fulfillment filters stored on the url query
+                selectedFulfillmentStatuses: this.getSelectedFulfillmentStatuses(),
+                //  Set the default columns to show
+                tableColumnsToShowByDefault:[
+                    'Order Selector', 'Show Summary Arrow', 'Order #', 'Customer', 
+                    'Payment Status', 'Fulfillment Status', 'Date'
+                ],
             }
         },
+        watch: {
+            /** Watch for changes on the selected payment statuses. The reason we want to watch for changes 
+             *  on this value is so that we can use the last recorded value to update the url query. This is 
+             *  so that when the user manually refreshes the browser when can always know which payment 
+             *  statuses they last selected. We can use this information to reselect those exact 
+             *  filters they had selected
+             */  
+            selectedPaymentStatuses: {
+                handler: function (val, oldVal) {
+
+                    console.log(...this.$route.query);
+                    console.log(this.$route.query);
+
+                    /** Get the updated value of the selected payment statuses. We can use this value to update the query 
+                     *  on the URL so that we can always know the exact selected payment statuses even after the browser
+                     *  is refreshed since we can catch that query value on the get() method of this computed property.
+                     * 
+                     *  First we need to get the url of the route. To get this value we can generate a new url by revolving 
+                     *  a named route. Resolving means that we build a complete url  resource of a route. We need to make 
+                     *  sure that we incllude the query we want to change on the name route we want to resolve so the the 
+                     *  url we get has the updated query value. Once we resolve the named route e.g "stores" then we can 
+                     *  access its href and get the url we need. After we get the url we can change actual url value of 
+                     *  our browser by using the history.replaceState() method. The problem we have is that when we use:
+                     *  
+                     *  this.$router.replace({name: 'stores', query: { ... }}) or
+                     *  this.$router.push({name: 'stores', query: { ... }})
+                     * 
+                     *  we are able to change the url but the page refreshes which is not a desired result. We want the 
+                     *  page not to refresh but have its url updated. To this this we use history.replaceState() 
+                     *  method which will do exactly that.
+                     *   
+                     */  
+
+                    var url = this.$router.resolve({name: 'stores', query: {
+
+                        //  Get all the current url queries
+                        ...this.$route.query, 
+
+                        //  Add / Update our query
+                        paymentFilters: val.join()
+
+                    }}).href;
+
+                    history.pushState({}, null, url);
+
+                }
+            },
+
+            /** Watch for changes on the selected fulfillment statuses. The reason we want to watch for changes 
+             *  on this value is so that we can use the last recorded value to update the url query. This is 
+             *  so that when the user manually refreshes the browser when can always know which fulfillment 
+             *  statuses they last selected. We can use this information to reselect those exact 
+             *  filters they had selected
+             */  
+            selectedFulfillmentStatuses: {
+                handler: function (val, oldVal) {
+
+                    console.log(...this.$route.query);
+                    console.log(this.$route.query);
+
+                    /** Get the updated value of the selected fulfillment statuses. We can use this value to update the query 
+                     *  on the URL so that we can always know the exact fulfillment payment statuses even after the browser 
+                     *  is refreshed since we can catch that query value on the get() method of this computed property.
+                     *   
+                     *  First we need to get the url of the route. To get this value we can generate a new url by revolving 
+                     *  a named route. Resolving means that we build a complete url  resource of a route. We need to make 
+                     *  sure that we incllude the query we want to change on the name route we want to resolve so the the 
+                     *  url we get has the updated query value. Once we resolve the named route e.g "stores" then we can 
+                     *  access its href and get the url we need. After we get the url we can change actual url value of 
+                     *  our browser by using the history.replaceState() method. The problem we have is that when we use:
+                     *  
+                     *  this.$router.replace({name: 'stores', query: { ... }}) or
+                     *  this.$router.push({name: 'stores', query: { ... }})
+                     * 
+                     *  we are able to change the url but the page refreshes which is not a desired result. We want the 
+                     *  page not to refresh but have its url updated. To this this we use history.replaceState() 
+                     *  method which will do exactly that.
+                     *   
+                     */  
+
+                    var url = this.$router.resolve({name: 'stores', query: {
+
+                        //  Get all the current url queries
+                        ...this.$route.query, 
+
+                        //  Add / Update our query
+                        fulfillmentFilters: val.join()
+                        
+                    }}).href;
+
+                    history.pushState({}, null, url);
+
+                }
+            }
+
+        },
         computed:{
-            activeTab(){
-                return this.$route.query.orderType || 'all';
+            //  Get the active order tab e.g All / Archieved / Cancelled
+            activeOrderTab(){
+                return this.$route.query.activeOrderTab || 'all';
             },
             dynamicColumns(status){ 
                 
                 var allowedColumns = [];
-                
-                //  Expand Arrow
-                allowedColumns.push(
-                {
-                    type: 'expand',
-                    width: 30,
-                    render: (h, params) => {
-                        return h(orderRowDropDown, {
-                            props: {
-                                order: params.row,
-                                store: this.store
-                            },
-                            on: {
-                                updated: (order) => {
 
-                                    //  Update the row data
-                                    this.$set(this.localOrders, params.index, order);
+                //  Order Selector
+                if(this.tableColumnsToShowByDefault.includes('Order Selector')){
+                    allowedColumns.push({
+                        type: 'selection',
+                        align: 'center',
+                        width: 60
+                    });
+                }
 
-                                    for(var x=0; x < this.localOrders.length; x++){
+                //  Show Summary Arrow (Expand Arrow)
+                if(this.tableColumnsToShowByDefault.includes('Show Summary Arrow')){
+                    allowedColumns.push(
+                    {
+                        type: 'expand',
+                        width: 30,
+                        render: (h, params) => {
+                            return h(orderRowDropDown, {
+                                props: {
+                                    order: params.row,
+                                    store: this.store
+                                },
+                                on: {
+                                    updated: (order) => {
 
-                                        if( x == params.index){
+                                        //  Update the row data
+                                        this.$set(this.localOrders, params.index, order);
 
-                                            //  Automatically open the expandable data
-                                            this.$set(this.localOrders[params.index], '_expanded', true);
+                                        for(var x=0; x < this.localOrders.length; x++){
 
-                                        }else{
+                                            if( x == params.index){
 
-                                            //  Automatically close the expandable data
-                                            this.$set(this.localOrders[x], '_expanded', false);
+                                                //  Automatically open the expandable data
+                                                this.$set(this.localOrders[params.index], '_expanded', true);
+
+                                            }else{
+
+                                                //  Automatically close the expandable data
+                                                this.$set(this.localOrders[x], '_expanded', false);
+
+                                            }
 
                                         }
-
+                                        
                                     }
-                                    
                                 }
-                            }
-                        })
-                    }
-                });
-                
-                //  Status Icon
-                allowedColumns.push(
-                {
-                    width: 40,
-                    title: ' ',
-                    align: 'center',
-                    render: (h, params) => {
-                        return h('Poptip', {
-                                    style: {
-                                        width: '100%',
-                                        textAlign:'left'
-                                    },
-                                    props: {
-                                        width: 350,
-                                        wordWrap: true,
-                                        trigger:'hover',
-                                        placement: 'right',
-                                        title: (params.row.status || {}).name,
-                                        content: (params.row.status || {}).description,
-                                    }
-                                }, [
-                                    h('Badge', {
-                                        props: {
-                                            status: this.getOrderStatusColor( (params.row.status || {}).name )
+                            })
+                        }
+                    });
+                }
+                    
+                //  Payment Indicator
+                if(this.tableColumnsToShowByDefault.includes('Payment Indicator')){
+                    allowedColumns.push(
+                    {
+                        width: 40,
+                        title: ' ',
+                        align: 'center',
+                        render: (h, params) => {
+                            return h('Poptip', {
+                                        style: {
+                                            width: '100%',
+                                            textAlign:'left'
                                         },
-                                        class: ['d-flex']
-                                    })
-                                ]);
-                    }
-                });
+                                        props: {
+                                            width: 350,
+                                            wordWrap: true,
+                                            trigger:'hover',
+                                            placement: 'right',
+                                            title: (params.row.status || {}).name,
+                                            content: (params.row.status || {}).description,
+                                        }
+                                    }, [
+                                        h('Badge', {
+                                            props: {
+                                                status: this.getOrderStatusColor( (params.row.status || {}).name )
+                                            },
+                                            class: ['d-flex']
+                                        })
+                                    ]);
+                        }
+                    });
+                }
                 
                 //  Order #
                 if(this.tableColumnsToShowByDefault.includes('Order #')){
                     allowedColumns.push(
                     {
                         title: 'Order #',
+                        sortable: true,
                         render: (h, params) => {
                             return h('span', (params.row.number));
                         }
@@ -540,6 +716,52 @@
                     })
                 }
                 
+                //  Payment Status
+                if(this.tableColumnsToShowByDefault.includes('Payment Status')){
+                    allowedColumns.push(
+                    {
+                        title: 'Payment',
+                        render: (h, params) => {
+                            //  Badge
+                            return h('Tag', {
+                                props: {
+                                    type: 'dot',
+                                    color: 'success'
+                                },
+                                class: ['status-tag']
+                            }, [
+                                //  Fulfillment status text
+                                h('span', {
+                                    class: ['cut-text']
+                                }, 'Paid')
+                            ])
+                        }
+                    })
+                }
+                
+                //  Fulfillment Status
+                if(this.tableColumnsToShowByDefault.includes('Fulfillment Status')){
+                    allowedColumns.push(
+                    {
+                        title: 'Fulfillment',
+                        render: (h, params) => {
+                            //  Badge
+                            return h('Tag', {
+                                props: {
+                                    type: 'dot',
+                                    color: 'warning'
+                                },
+                                class: ['status-tag']
+                            }, [
+                                //  Fulfillment status text
+                                h('span', {
+                                    class: ['cut-text']
+                                }, 'Unfulfilled')
+                            ])
+                        }
+                    })
+                }
+                
                 //  Date
                 if(this.tableColumnsToShowByDefault.includes('Date')){
                     allowedColumns.push(
@@ -568,11 +790,158 @@
                     })
                 }
                 
+                //  Sub Total
+                if(this.tableColumnsToShowByDefault.includes('Sub Total')){
+                    allowedColumns.push(
+                    {
+                        width: 150,
+                        title: 'Sub Total',
+                        sortable: true,
+                        render: (h, params) => {
+                            
+                            var subTotal = (params.row.sub_total || 0);
+                            var taxTotal = (params.row.grand_tax_total || 0);
+                            var discountTotal = (params.row.grand_discount_total || 0);
+                            var grandTotal = (params.row.grand_total || 0); 
+                            var symbol = (params.row.currency || {}).symbol || (params.row.currency || {}).code;
+
+                            return h('Poptip', {
+                                style: {
+                                    width: '100%',
+                                    textAlign:'left'
+                                },
+                                props: {
+                                    width: 280,
+                                    wordWrap: true,
+                                    trigger:'hover',
+                                    placement: 'top-end',
+                                    title: 'Breakdown'
+                                },
+                                class: ['breakdown-poptip']
+                            }, [
+                                h('span', {
+                                    class: ['cut-text']
+                                }, this.formatPrice(subTotal, symbol) ),
+                                h('List', {
+                                        slot: 'content',
+                                        props: {
+                                            slot: 'content',
+                                            size: 'small'
+                                        }
+                                    }, [
+                                        h('ListItem', 'Sub Total: '+this.formatPrice(subTotal, symbol) ),
+                                        h('ListItem', 'Tax Total: '+this.formatPrice(taxTotal, symbol) ),
+                                        h('ListItem', 'Discount Total: '+this.formatPrice(discountTotal, symbol) ),
+                                        h('ListItem', 'Grand Total: '+this.formatPrice(grandTotal, symbol) )
+                                    ])
+                            ])
+                        }
+                    })
+                }
+                
+                //  Discount Total
+                if(this.tableColumnsToShowByDefault.includes('Discount Total')){
+                    allowedColumns.push(
+                    {
+                        width: 180,
+                        title: 'Discount Total',
+                        sortable: true,
+                        render: (h, params) => {
+                            
+                            var subTotal = (params.row.sub_total || 0);
+                            var taxTotal = (params.row.grand_tax_total || 0);
+                            var discountTotal = (params.row.grand_discount_total || 0);
+                            var grandTotal = (params.row.grand_total || 0); 
+                            var symbol = (params.row.currency || {}).symbol || (params.row.currency || {}).code;
+
+                            return h('Poptip', {
+                                style: {
+                                    width: '100%',
+                                    textAlign:'left'
+                                },
+                                props: {
+                                    width: 280,
+                                    wordWrap: true,
+                                    trigger:'hover',
+                                    placement: 'top-end',
+                                    title: 'Breakdown'
+                                },
+                                class: ['breakdown-poptip']
+                            }, [
+                                h('span', {
+                                    class: ['cut-text']
+                                }, this.formatPrice(discountTotal, symbol) ),
+                                h('List', {
+                                        slot: 'content',
+                                        props: {
+                                            slot: 'content',
+                                            size: 'small'
+                                        }
+                                    }, [
+                                        h('ListItem', 'Sub Total: '+this.formatPrice(subTotal, symbol) ),
+                                        h('ListItem', 'Tax Total: '+this.formatPrice(taxTotal, symbol) ),
+                                        h('ListItem', 'Discount Total: '+this.formatPrice(discountTotal, symbol) ),
+                                        h('ListItem', 'Grand Total: '+this.formatPrice(grandTotal, symbol) )
+                                    ])
+                            ])
+                        }
+                    })
+                }
+                
+                //  Tax Total
+                if(this.tableColumnsToShowByDefault.includes('Tax Total')){
+                    allowedColumns.push(
+                    {
+                        title: 'Tax Total',
+                        sortable: true,
+                        render: (h, params) => {
+                            
+                            var subTotal = (params.row.sub_total || 0);
+                            var taxTotal = (params.row.grand_tax_total || 0);
+                            var discountTotal = (params.row.grand_discount_total || 0);
+                            var grandTotal = (params.row.grand_total || 0); 
+                            var symbol = (params.row.currency || {}).symbol || (params.row.currency || {}).code;
+
+                            return h('Poptip', {
+                                style: {
+                                    width: '100%',
+                                    textAlign:'left'
+                                },
+                                props: {
+                                    width: 280,
+                                    wordWrap: true,
+                                    trigger:'hover',
+                                    placement: 'top-end',
+                                    title: 'Breakdown'
+                                },
+                                class: ['breakdown-poptip']
+                            }, [
+                                h('span', {
+                                    class: ['cut-text']
+                                }, this.formatPrice(taxTotal, symbol) ),
+                                h('List', {
+                                        slot: 'content',
+                                        props: {
+                                            slot: 'content',
+                                            size: 'small'
+                                        }
+                                    }, [
+                                        h('ListItem', 'Sub Total: '+this.formatPrice(subTotal, symbol) ),
+                                        h('ListItem', 'Tax Total: '+this.formatPrice(taxTotal, symbol) ),
+                                        h('ListItem', 'Discount Total: '+this.formatPrice(discountTotal, symbol) ),
+                                        h('ListItem', 'Grand Total: '+this.formatPrice(grandTotal, symbol) )
+                                    ])
+                            ])
+                        }
+                    })
+                }
+                
                 //  Grand Total
                 if(this.tableColumnsToShowByDefault.includes('Grand Total')){
                     allowedColumns.push(
                     {
-                        title: 'Total',
+                        title: 'Grand Total',
+                        sortable: true,
                         render: (h, params) => {
                             
                             var subTotal = (params.row.sub_total || 0);
@@ -614,36 +983,71 @@
                         }
                     })
                 }
-                
-                //  Action
-                allowedColumns.push(
-                {
-                    title: 'Action',
-                    align: 'center',
-                    render: (h, params) => {
-                        return h('div', [
-                            h('Button', {
-                                props: {
-                                    type: 'primary',
-                                    size: 'small'
-                                },
-                                style: {
-                                    marginRight: '5px'
-                                },
-                                on: {
-                                    click: () => {
-                                        this.$router.push({ name: 'show-order', params: { id: params.row.id } });
-                                    }
-                                }
-                            }, 'View')
-                        ]);
-                    }
-                });
 
                 return allowedColumns;
             }
         },
         methods: {
+            //  Check if we have any payment filters stored on the url query
+            getSelectedPaymentStatuses(){
+
+                /** Get the query value from the url. If we don't have a value default to an empty string ''. 
+                 *  If we do have a value we expect it to be a comma separated string. We need to explode the 
+                 *  string into an array. If we have nothing to split (its an empty string or equal '') then
+                 *  we finally deafult to an empty array.
+                 */  
+                if( this.$route.query.paymentFilters ){
+                    return (this.$route.query.paymentFilters).split(',');
+                }
+
+                return [];
+            },
+            //  Check if we have any fulfillment filters stored on the url query
+            getSelectedFulfillmentStatuses(){
+
+                /** Get the query value from the url. If we don't have a value default to an empty string ''. 
+                 *  If we do have a value we expect it to be a comma separated string. We need to explode the 
+                 *  string into an array. If we have nothing to split (its an empty string or equal '') then
+                 *  we finally deafult to an empty array.
+                 */  
+                if( this.$route.query.fulfillmentFilters ){
+                    return (this.$route.query.fulfillmentFilters).split(',');
+                }
+
+                return [];
+            },
+            changeActiveOrderTab(activeOrderTabName){
+
+                //  Update the url query with the active tab name
+                this.$router.replace({name: 'stores', query: {
+
+                    //  Get all the current url queries
+                    ...this.$route.query, 
+
+                    //  Add / Update our query
+                    activeOrderTab: activeOrderTabName
+
+                }});
+
+            },
+            removePaymentStatusTag(index){
+
+                //  Remove the payment status
+                this.selectedPaymentStatuses.splice(index, 1);
+
+            },
+            removeFulfillmentStatusTag(index){
+
+                //  Remove the fulfillment status
+                this.selectedFulfillmentStatuses.splice(index, 1);
+
+            },
+            manageSelectedAllOrders(selection){
+                this.selectedOrders = selection;
+            },
+            manageSelectedOrder(selection, row){
+                this.selectedOrders = selection;
+            },
             getOrderStatusColor(status){
                 if (['Open', 'Resumed', 'Undo Cancellation', 
                      'Undo Skip Payment', 'Undo Skip Delivery', 

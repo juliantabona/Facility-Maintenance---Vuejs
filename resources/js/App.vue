@@ -6,9 +6,13 @@
     -webkit-font-smoothing: antialiased !important;
   }
 
-  body{
-    font-family: 'Helvetica', 'Arial', 'sans-serif' !important;
+   body{
     overflow: inherit !important;
+    margin:0
+  }
+
+  html, body, h1, h2, h3, h4, h5, h6, p, span, sup{
+    font-family: 'Helvetica', 'Arial', 'sans-serif' !important;
   }
 
   .main-content-fade-enter-active, .main-content-fade-leave-active {
@@ -25,10 +29,6 @@
   .el-checkbox.el-checkbox {
     margin-left: 0px !important;
     margin-right: 30px !important;
-  }
-  
-  body {
-    margin:0
   }
 
   /*  Cut text exceeding the width limit below */
