@@ -12,7 +12,8 @@ use App\Account;
 use App\Product;                                                                                                        
 use App\Invoice;
 use App\Discount;                                                                                                     
-use App\Quotation;                                                                                                        
+use App\Quotation;                                                                                                     
+use App\Fulfillment;                                                                                                       
 use App\UssdInterface;                                                                                                        
 use App\Policies\TaxPolicy;
 use App\Policies\UserPolicy;
@@ -25,7 +26,8 @@ use App\Policies\AccountPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\InvoicePolicy;
 use App\Policies\DiscountPolicy;
-use App\Policies\QuotationPolicy;
+use App\Policies\QuotationPolicy;                                                                                                 
+use App\Policies\FulfillmentPolicy;     
 use App\Policies\UssdInterfacePolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
@@ -48,6 +50,7 @@ class AuthServiceProvider extends ServiceProvider
         Invoice::class => InvoicePolicy::class,
         Discount::class => DiscountPolicy::class,
         Quotation::class => QuotationPolicy::class,
+        Fulfillment::class => FulfillmentPolicy::class,
         UssdInterface::class => UssdInterfacePolicy::class,
     ];
 

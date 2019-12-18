@@ -2780,7 +2780,7 @@ class UssdController extends Controller
             if ($this->test_mode) {
                 /*  Get the customer information */
                 $customer_info = [
-                    'name' => 'Test Name',
+                    'name' => 'Test Customer',
                     'is_vendor' => false,
                     'is_customer' => true,
                     'is_individual' => true,

@@ -17,6 +17,8 @@ class Order extends Model
     use Dataviewer;
     use OrderTraits;
 
+    protected $with = ['fulfillments'];
+
     /**
      * The table associated with the model.
      *
@@ -52,6 +54,9 @@ class Order extends Model
     protected $fillable = [
         /*  Basic Info  */
         'number', 'currency', 'created_date', 'manual_status', 'allow_lifecycle',
+
+        /*  Status / Payment Status / Fulfillment Status  */
+        'status', 'payment_status', 'fulfillment_status',
 
         /*  Item Info  */
         'item_lines',
@@ -221,6 +226,14 @@ class Order extends Model
     }
 
     /*
+     *  Returns the order fulfillments
+     */
+    public function fulfillments()
+    {
+        return $this->morphMany('App\Fulfillment', 'owner')->orderBy('created_at', 'desc');
+    }
+
+    /*
      *  Returns the lifecycle owned by this order
      */
     public function lifecycle()
@@ -269,8 +282,9 @@ class Order extends Model
     }
 
     protected $appends = [
-        'resource_type', 'transaction_total', 'refund_total', 'outstanding_balance',
-        'created_at_format', 'status', 'lifecycle_history', 'lifecycle_flow',
+        'resource_type', 'unfulfilled_item_lines', 'quantity_of_unfulfilled_item_lines', 'quantity_of_fulfilled_item_lines', 
+        'transaction_total', 'refund_total', 'outstanding_balance', 'created_at_format', 'status', 'lifecycle_history',
+        'lifecycle_flow',
     ];
 
     /*
@@ -279,6 +293,110 @@ class Order extends Model
     public function getResourceTypeAttribute()
     {
         return strtolower(class_basename($this));
+    }
+
+    /*
+     *  Returns the order unfulfilled item lines
+     */
+    public function getUnfulfilledItemLinesAttribute()
+    {
+        $unfulfilled_item_lines = [];        
+
+        //  Foreach order item line
+        foreach( $this->item_lines as $item_line ){
+
+            //  Lets get the current order item line quantity value
+            $item_quantity = intval($item_line['quantity']);
+
+            //  Foreach fulfillment instance [Since we can have multiple fulfillment instances]
+            foreach ($this->fulfillments as $fulfillment) {
+
+                //  Foreach item line of the current fulfillment instance
+                foreach ($fulfillment->item_lines as $fulfillment_item_line) {
+
+                    //  Lets get the current fulfillment item line quantity value
+                    $fulfillment_item_quantity = intval($fulfillment_item_line['quantity']);
+
+                    //  Lets check if the current fulfillment item line matches the current order item line
+                    if( $fulfillment_item_line['id'] == $item_line['id'] ){
+
+                        /** Calculate if we have any remaining quantities of the matching item that are not yet fulfilled.
+                         *  Assumiing that:
+                         * 
+                         *  $item_quantity = 5 and
+                         *  $fulfillment_item_quantity = 2
+                         * 
+                         *  This means that if we subtract $fulfillment_item_quantity (2) from $item_quantity (5) we will get the
+                         *  number of remaining unfilfilled items (3) for the same matching item.
+                         * 
+                         *  $item_quantity (3) = $item_quantity (5) - $fulfillment_item_quantity (2)
+                         */
+                        $item_quantity = $item_quantity - $fulfillment_item_quantity;
+
+                    }
+
+                }
+
+            }
+
+            //  If we have any remaining quantities that haven't yet been fulfilled for this item line
+            if($item_quantity > 0){
+                
+                //  Get the unfulfilled/partially fulfilled item line
+                $unfulfilled_item_line = $item_line;
+
+                //  Update the remaining quantities that require fulfillment for this item line
+                $unfulfilled_item_line['quantity'] = $item_quantity;
+                
+                //  Push the unfulfilled item
+                array_push($unfulfilled_item_lines, $unfulfilled_item_line);
+
+            }
+
+        }
+
+        return $unfulfilled_item_lines;
+    }
+
+    /*
+     *  Returns the order unfulfilled item lines
+     */
+    public function getQuantityOfUnfulfilledItemLinesAttribute()
+    {
+        $quantity = 0;        
+
+        //  Foreach item line
+        foreach( $this->unfulfilled_item_lines as $unfulfilled_item_line ){                    
+            
+            //  Lets get the current fulfillment item line quantity value
+            $quantity = $quantity + intval($unfulfilled_item_line['quantity']);
+
+        }
+
+        return $quantity;
+    }
+
+    /*
+     *  Returns the order unfulfilled item lines
+     */
+    public function getQuantityOfFulfilledItemLinesAttribute()
+    {
+        $quantity = 0;        
+
+        //  Foreach item line
+        foreach ($this->fulfillments as $fulfillment) {                 
+             
+            //  Foreach item line of the current fulfillment instance
+            foreach ($fulfillment->item_lines as $fulfillment_item_line) {              
+            
+                //  Lets get the current fulfillment item line quantity value
+                $quantity = $quantity + intval($fulfillment_item_line['quantity']);
+
+            }
+
+        }
+
+        return $quantity;
     }
 
     /*
@@ -569,7 +687,7 @@ class Order extends Model
                 $activityHistory[$key]['type'] = $currType;
                 $activityHistory[$key]['instance'] = $currInstance;
                 $activityHistory[$key]['user'] = ($currStage->user)
-                    ? $currStage->user->only(['id', 'first_name', 'last_name', 'full_name']) 
+                    ? $currStage->user->only(['id', 'first_name', 'last_name', 'full_name'])
                     : null;
             }
         }
@@ -910,55 +1028,22 @@ class Order extends Model
     }
 
     /*
-     *  Returns the title of the must recent lifecycle history event
+     *  Returns the current status name and description of the order
      */
-    public function getStatusAttribute()
+    public function getStatusAttribute($value)
     {
-        if( $this->allow_lifecycle ){
-
-            //  Get the lifecycle status 
-            return $this->lifecycle_status;
-
-        }else{
-
-            //  Get the manual status
-            return $this->manual_status;
-
-        }
-    }
-
-    public function getLifecycleStatusAttribute($value)
-    {
-        return [
-            'name' => $this->lifecycle_history[0]['title'] ?? null,
-            'description' => $this->lifecycle_history[0]['description'] ?? null,
-        ];
-
-    }
-
-    public function getManualStatusAttribute($value)
-    {
-        switch( ucwords($value) ) {
-            case 'Pending Payment':
-                $status_description = 'The order has not been paid (unpaid)';
+        switch (ucwords($value)) {
+            case 'Open':
+                $status_description = 'The order is open for processing';
                 break;
-            case 'Failed Payment':
-                $status_description = 'The order payment failed or was declined (unpaid).';
-                break;
-            case 'Paid':
-                $status_description = 'The order has been paid';
-                break;
-            case 'Processing':
-                $status_description = 'Payment received (paid) and stock has been reduced. The order is now awaiting fulfillment.';
-                break;
-            case 'On Hold':
-                $status_description = 'Awaiting payment – stock is reduced, but payment requires confirmation.';
+            case 'Archieved':
+                $status_description = 'The order has been archieved';
                 break;
             case 'Cancelled':
-                $status_description = 'Order fulfilled and complete – requires no further action';
+                $status_description = 'The order has been cancelled and no longer available for processing';
                 break;
-            case 'Completed':
-                $status_description = 'Order fulfilled and complete – requires no further action';
+            case 'Draft':
+                $status_description = 'The order is currently a draft and not yet available for processing.';
                 break;
             default:
                 $status_description = 'Status is unknown.';
@@ -966,14 +1051,80 @@ class Order extends Model
 
         return [
             'name' => ucwords($value),
-            'description' => $status_description
+            'description' => $status_description,
         ];
+    }
 
+    /*
+     *  Returns the current payment status name and description of the order
+     */
+    public function getPaymentStatusAttribute($value)
+    {
+        switch (ucwords($value)) {
+            case 'Authorized':
+                $status_description = 'The order has not been authourized';
+                break;
+            case 'Paid':
+                $status_description = 'The order has been paid';
+                break;
+            case 'Partially Paid':
+                $status_description = 'The order has been partially paid';
+                break;
+            case 'Refunded':
+                $status_description = 'The order has been refunded';
+                break;
+            case 'Partially Refunded':
+                $status_description = 'The order has been partially refunded';
+                break;
+            case 'Pending':
+                $status_description = 'The order is awaiting payment – stock is reduced, but payment requires confirmation';
+                break;
+            case 'Failed Payment':
+                $status_description = 'The order payment failed or was declined (unpaid)';
+                break;
+            case 'Unpaid':
+                $status_description = 'The order has not been paid';
+                break;
+            case 'Voided':
+                $status_description = 'Not sure what this means...';
+                break;
+            default:
+                $status_description = 'Status is unknown';
+        }
+
+        return [
+            'name' => ucwords($value),
+            'description' => $status_description,
+        ];
+    }
+
+    /*
+     *  Returns the current fulfillmnt status name and description of the order
+     */
+    public function getFulfillmentStatusAttribute($value)
+    {
+        switch (ucwords($value)) {
+            case 'Unfulfilled':
+                $status_description = 'The order is still awaiting fulfillment';
+                break;
+            case 'Partially Fulfilled':
+                $status_description = 'The order has been partially fulfilled';
+                break;
+            case 'Fulfilled':
+                $status_description = 'The order has been fulfilled';
+                break;
+            default:
+                $status_description = 'Status is unknown';
+        }
+
+        return [
+            'name' => ucwords($value),
+            'description' => $status_description,
+        ];
     }
 
     public function setAllowLifecycleAttribute($value)
     {
         $this->attributes['allow_lifecycle'] = (($value == 'true' || $value == '1') ? 1 : 0);
     }
-
 }

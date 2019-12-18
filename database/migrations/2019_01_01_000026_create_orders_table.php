@@ -12,7 +12,6 @@ class CreateOrdersTable extends Migration
     public function up()
     {
         Schema::create('orders', function (Blueprint $table) {
-        
             $table->increments('id');
 
             /*  Basic Info  */
@@ -21,7 +20,16 @@ class CreateOrdersTable extends Migration
             $table->timestampTz('created_date')->nullable();
             $table->string('manual_status')->nullable();
             $table->boolean('allow_lifecycle')->default(0);
-            
+
+            /*  Status  */
+            $table->string('status')->default('draft');
+
+            /*  Payment Status  */
+            $table->string('payment_status')->default('unpaid');
+
+            /*  Fulfillment Status  */
+            $table->string('fulfillment_status')->default('unfulfilled');
+
             /*  Item Info  */
             $table->json('item_lines')->nullable();
 
@@ -51,7 +59,7 @@ class CreateOrdersTable extends Migration
             $table->string('customer_note')->nullable();
             $table->json('billing_info')->nullable();
             $table->json('shipping_info')->nullable();
-            
+
             /*  Merchant Info  */
             $table->unsignedInteger('merchant_id');
             $table->string('merchant_type');
@@ -62,7 +70,6 @@ class CreateOrdersTable extends Migration
 
             $table->softDeletes();
             $table->timestamps();
-
         });
     }
 

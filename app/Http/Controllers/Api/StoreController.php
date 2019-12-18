@@ -809,13 +809,70 @@ class StoreController extends Controller
      *  ORDER RELATED RESOURCES      *
     *********************************/
 
-    public function getStoreOrders($store_id)
+    public function getStoreOrders(Request $request, $store_id)
     {
         //  Get the store
         $store = Store::findOrFail($store_id);
 
         //  Get the store orders
-        $orders = $store->orders()->paginate() ?? null;
+        $orders = $store->orders();
+
+        //  If we have specified filters
+        if( $request->get('status') || $request->get('paymentStatus') || $request->get('fulfillmentStatus') ){
+
+            if( !empty( $request->get('status') ) ){
+
+                $status = strtolower( trim( $request->get('status') ));
+
+                //  Filter by status e.g open, draft, archieved, cancelled
+                $orders = $orders->where('status', $status);
+
+            }
+
+            if( !empty( $request->get('paymentStatus') ) ){
+
+                $statuses = $request->get('paymentStatus');
+    
+                //  Get statues and separate into an array by comma separator
+                $statuses = explode(',', $statuses);
+    
+                //  Foreach status
+                $statuses = collect($statuses)->map(function($status){
+    
+                    //  Trim the status text and lowercase every word
+                    return strtolower( trim($status) );
+    
+                })->toArray();
+
+                //  Filter by payment status e.g paid, unpaid, pending
+                $orders = $orders->whereIn('payment_status', $statuses);
+
+            }
+
+            if( !empty( $request->get('fulfillmentStatus') ) ){
+
+                $statuses = $request->get('fulfillmentStatus');
+    
+                //  Get statues and separate into an array by comma separator
+                $statuses = explode(',', $statuses);
+
+                //  Foreach status
+                $statuses = collect($statuses)->map(function($status){
+
+                    //  Trim the status text and lowercase every word
+                    return strtolower( trim($status) );
+
+                })->toArray();
+
+                //  Filter by fulfillment status e.g fulfilled, unfulfilled
+                $orders = $orders->whereIn('fulfillment_status', $statuses);
+
+            }
+        
+        }
+                
+        //  Paginate the results
+        $orders = $orders->paginate();
 
         //  Check if the orders exist
         if ($orders) {

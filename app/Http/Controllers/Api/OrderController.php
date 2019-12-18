@@ -16,13 +16,35 @@ class OrderController extends Controller
         $this->user = auth('api')->user();
     }
 
-    public function getOrders()
+    public function getOrders(Request $request)
     {
         //  Check if the user is authourized to view all orders
         if ($this->user->can('viewAll', Order::class)) {
         
-            //  Get the orders
-            $orders = Order::paginate();
+            if( $request->get('status') ){
+
+                //  Get statues and separate into an array by comma separator
+                $statuses = explode(',', $request->get('status'));
+    
+                //  Foreach status
+                $statuses = collect($statuses)->map(function($status){
+
+                    //  Trim the status text and lowercase every word
+                    return strtolower( trim($status) );
+                    
+                })->toArray();
+                
+                //  Get the orders filtered by status
+                $orders = Order::whereIn('status', $statuses)
+                                ->orWhereIn('payment_status', $statuses)
+                                ->orWhereIn('fulfillment_status', $statuses)->paginate();
+            
+            }else{
+    
+                //  Get the orders
+                $orders = Order::paginate();
+    
+            }
 
             //  Check if the orders exist
             if ($orders) {
@@ -72,7 +94,6 @@ class OrderController extends Controller
         }
     }
 
-
     public function updateOrder( Request $request, $order_id )
     {
         //  Get the order
@@ -103,6 +124,42 @@ class OrderController extends Controller
         }
     }
 
+    public function fulfilOrder( Request $request, $order_id )
+    {
+        //  Get the order
+        $order = order::where('id', $order_id)->first() ?? null;
+
+        //  Check if the order exists
+        if ($order) {
+
+            //  Check if the user is authourized to update the order
+            if ($this->user->can('update', $order)) {
+
+                //  Fulfill the order
+                $fulfillmentStatus = $order->initiateFulfillment($orderInfo = $request->all());
+
+                if( $fulfillmentStatus ){
+
+                    return oq_api_notify(null, 200);
+
+                }else{
+
+                    oq_api_notify_error($msg = 'Something went wrong fulfilling the order', $error = [], $status = 400);
+
+                }
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+            }
+        }else{
+            
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
 
     /*********************************
      *  MERCHANT RELATED RESOURCES   *

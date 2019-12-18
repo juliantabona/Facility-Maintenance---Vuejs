@@ -271,6 +271,163 @@ trait OrderTraits
         }
     }
 
+    /*  initiateFulfillment() method
+     *
+     *  This method is used to create order fulfillment
+     *  of the current order items. The $orderInfo holds
+     *  additional order fulfillment details if any.
+     */
+    public function initiateFulfillment( $orderInfo = null )
+    {
+        //  The $template variable represents structure of the order.
+        $template = $orderInfo;
+
+        try {
+
+            $unfulfilled_item_lines = [];
+
+            //  Foreach unfulfilled order item line
+            foreach( $this->unfulfilled_item_lines as $unfulfilled_item_line ){
+
+                //  If we have item lines already provided then this means we want to fulfill specific item lines
+                if( isset($orderInfo['item_lines']) && !empty($orderInfo['item_lines']) ){
+
+                    //  Foreach specified item line
+                    foreach($orderInfo['item_lines'] as $specified_item_line){
+
+                        //  Lets check if the current unfulfilled item line item line matches the current specified item line
+                        if( $unfulfilled_item_line['id'] == $specified_item_line['id'] ){
+
+                            if($specified_item_line['quantity'] != 0){
+
+                                $hasValidQuantity = intval($specified_item_line['quantity']) <= intval($unfulfilled_item_line['quantity']);
+    
+                                $quantity =  $hasValidQuantity ? $specified_item_line['quantity'] : $unfulfilled_item_line['quantity'];
+    
+                                $unfulfilled_item_line['quantity'] = $quantity;
+                                
+                                array_push($unfulfilled_item_lines, $unfulfilled_item_line);
+
+                            }
+
+                        }
+
+                    }
+
+                }else{
+                            
+                    array_push($unfulfilled_item_lines, $unfulfilled_item_line);
+
+                }
+
+            }
+
+            if( !empty($unfulfilled_item_lines) ){
+
+                /*  Create new Fulfillment using the initiateCreate() method from the Fulfillment Model  */
+                $fulfillment = ( new \App\Fulfillment() )->initiateCreate( $fulfillmentInfo = [
+
+                    //  Fulfillment notes 
+                    'notes' => $orderInfo['notes'] ?? null,
+    
+                    //  Fulfillment item lines
+                    'item_lines' => $unfulfilled_item_lines,
+                    
+                    //  Recipient name 
+                    'recipient_name' => $orderInfo['recipient_name'] ?? null,
+                    
+                    //  Recipient contact e.g Phone / Email 
+                    'recipient_contact' => $orderInfo['recipient_contact'] ?? null
+    
+                ]);
+
+                /*  If the fulfillment was created successfully  */
+                if ($fulfillment) {
+
+                    /*  Assign the new fulfillment to the order  */
+                    $orderUpdateStatus = $fulfillment->update([
+                        'owner_id' => $this->id,
+                        'owner_type' => $this->resource_type,
+                    ]);
+
+                    //  Get a fresh instance of this order
+                    $order = $this->fresh();
+
+                    //  Update fulfilment status
+                    $order->updateFulfilmentStatus();
+
+                }
+
+                if($fulfillment && $orderUpdateStatus){
+
+                    return true;
+
+                }else{
+
+                    return false;
+
+                }
+
+            }
+
+        } catch (\Exception $e) {
+            //  Return the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+    }
+
+    public function updateFulfilmentStatus()
+    {
+      
+        try {
+
+            $orderInstance = $this->fresh();
+
+            //  If the quantity of fulfilled item lines is zero (0)
+            if( $orderInstance->quantity_of_fulfilled_item_lines == 0 ){
+
+                //  Mark as unfulfilled
+                $status = 'unfulfilled';
+
+            //  If the quantity of unfulfilled item lines is zero (0)
+            }elseif( $orderInstance->quantity_of_unfulfilled_item_lines == 0 ){
+
+                //  Mark as fully fulfilled
+                $status = 'fulfilled';
+
+            //  Otherwise
+            }else{
+
+                //  Mark as partially fulfilled
+                $status = 'partially fulfilled';
+
+            }
+
+            /*  Update the fulfillment status  */
+            $orderUpdateStatus = $orderInstance->update([
+
+                'fulfillment_status' => $status
+
+            ]);
+
+            if($orderUpdateStatus){
+
+                return true;
+
+            }else{
+
+                return false;
+
+            }
+
+        } catch (\Exception $e) {
+
+            //  Return the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+            
+        }  
+    }
+    
     /*  setOrderNumber()
      *
      *  This method creates a unique order number using the order id.

@@ -430,6 +430,9 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
                 $route->where('order_id', '[0-9]+');
             }
 
+            //  Fulfillment related resources
+            Route::post('/fulfillment', 'Api\OrderController@fulfilOrder')->name('fulfillment');
+
             //  Merchant related resources
             Route::get('/merchant', 'Api\OrderController@getOrderMerchant')->name('merchant');
 
@@ -483,6 +486,30 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             });    
 
         });
+    });
+
+    /*********************************
+    /*********************************
+     *  ORDER RESOURCE ROUTES        *
+    /*********************************
+    *********************************/
+
+    Route::prefix('fulfillments')->group(function () {
+
+        //  Multiple fulfillments
+        Route::get('/', 'Api\FulfillmentController@getFulfillments')->name('fulfillments');
+
+        //  Single fulfillment
+        Route::get('/{fulfillment_id}', 'Api\FulfillmentController@getFulfillment')->name('fulfillment')->where('fulfillment_id', '[0-9]+');
+        Route::post('/{fulfillment_id}', 'Api\FulfillmentController@updateFulfillment')->name('fulfillment-update')->where('fulfillment_id', '[0-9]+');
+        Route::delete('/{fulfillment_id}', 'Api\FulfillmentController@cancelFulfillment')->name('fulfillment-cancel')->where('fulfillment_id', '[0-9]+');
+
+        //  Single fulfillment resources
+        Route::prefix('{fulfillment_id}')->name('fulfillment-')->group(function ($group) {
+
+
+        });
+
     });
 
     /*********************************

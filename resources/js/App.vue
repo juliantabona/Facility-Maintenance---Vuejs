@@ -12,7 +12,7 @@
   }
 
   html, body, h1, h2, h3, h4, h5, h6, p, span, sup{
-    font-family: 'Helvetica', 'Arial', 'sans-serif' !important;
+    font-family: 'Helvetica', 'Arial', 'sans-serif';
   }
 
   .main-content-fade-enter-active, .main-content-fade-leave-active {
@@ -37,6 +37,35 @@
     overflow: hidden !important; 
     width: 235px !important; 
     white-space: nowrap !important;
+  }
+
+  
+  /*  Makes rounded status tags - (Makes the Iview tag look like a Pill shaped tag e.g statuses in orders)  */
+  .rounded-status-tag{
+      padding: 0 10px 0 5px;
+      border-radius: 15px;
+      line-height: 25px;
+      min-width: 90px;
+      height: 25px;
+  }
+
+  /*  Fixes the colour dot by reducing size and provides proper alignment  */
+  .rounded-status-tag >>> .ivu-tag-dot-inner {
+      width: 8px;
+      height: 8px;
+      margin-right: 3px;
+      margin-left: 2px;
+      top: -1px;
+  }
+
+  /*  Removes the blue outline when clicking on any iview text button using ghost=true  */
+  .ivu-btn-ghost{
+    box-shadow: none !important;
+  }
+
+  /*  The badge count shows on top of the loaders so we need to make it move behind the loader   */
+  .ivu-badge .ivu-badge-count{
+    z-index:1 !important;
   }
 
 </style>
