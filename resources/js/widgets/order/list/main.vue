@@ -262,37 +262,92 @@
                         <Button class="p-0 float-right">
 
                             <!-- Dropdown -->
-                            <Dropdown trigger="click" placement="bottom-end">
+                            <Dropdown trigger="hover" placement="bottom-end">
                                 
                                 <!-- Title -->
-                                <span class="pr-2 pl-2">
-                                    <span>Columns</span>
+                                <DropdownItem>
+                                    More
                                     <Icon type="ios-arrow-down"></Icon>
-                                </span>
-
-                                <!-- Dropdown Options -->
+                                </DropdownItem>
                                 <DropdownMenu slot="list">
-                                    
-                                    <div class="p-2 pl-3 pr-5 text-left">
 
-                                        <!-- Status Checkboxes -->
-                                        <CheckboxGroup v-model="tableColumnsToShowByDefault">
-                                            <Checkbox class="d-block" label="Order Selector"></Checkbox>
-                                            <Checkbox class="d-block" label="Show Summary Arrow"></Checkbox>
-                                            <Checkbox class="d-block" label="Payment Indicator"></Checkbox>
-                                            <Checkbox class="d-block" label="Customer"></Checkbox>
-                                            <Checkbox class="d-block" label="Email"></Checkbox>
-                                            <Checkbox class="d-block" label="Phone"></Checkbox>
-                                            <Checkbox class="d-block" label="Payment Status"></Checkbox>
-                                            <Checkbox class="d-block" label="Fulfillment Status"></Checkbox>
-                                            <Checkbox class="d-block" label="Date"></Checkbox>
-                                            <Checkbox class="d-block" label="Sub Total"></Checkbox>
-                                            <Checkbox class="d-block" label="Discount Total"></Checkbox>
-                                            <Checkbox class="d-block" label="Tax Total"></Checkbox>
-                                            <Checkbox class="d-block" label="Grand Total"></Checkbox>
-                                        </CheckboxGroup>
+                                    <!-- Sort Menu Dropdown -->
+                                    <DropdownItem>
 
-                                    </div>
+                                        <!-- Sort Dropdown -->
+                                        <Dropdown trigger="hover" placement="left-start">
+                                            
+                                            <!-- Title -->
+                                            <DropdownItem>
+                                                <Icon type="ios-arrow-back" />
+                                                Sort
+                                            </DropdownItem>
+
+                                            <!-- Sort Options -->
+                                            <DropdownMenu slot="list" style="width: 180px;">
+
+                                                <DropdownItem>Order number (ascending)</DropdownItem>
+                                                <DropdownItem>Order number (descending)</DropdownItem>
+                                                <DropdownItem>Date (oldest first)</DropdownItem>
+                                                <DropdownItem>Date (newest first)</DropdownItem>
+                                                <DropdownItem>Customer name (A-Z)</DropdownItem>
+                                                <DropdownItem>Customer name (Z-A)</DropdownItem>
+                                                <DropdownItem>Payment status (A-Z)</DropdownItem>
+                                                <DropdownItem>Payment status (Z-A)</DropdownItem>
+                                                <DropdownItem>Fulfillment status (A-Z)</DropdownItem>
+                                                <DropdownItem>Fulfillment status (Z-A)</DropdownItem>
+                                                <DropdownItem>Total price (low to high)</DropdownItem>
+                                                <DropdownItem>Total price (high to low)</DropdownItem>
+                                                
+                                            </DropdownMenu>
+
+                                        </Dropdown>
+                                        
+                                        
+                                    </DropdownItem>
+
+                                    <!-- Columns Menu Dropdown -->
+                                    <DropdownItem>
+
+                                        <!-- Columns Dropdown -->
+                                        <Dropdown trigger="hover" placement="left-start">
+                                            
+                                            <!-- Title -->
+                                            <DropdownItem>
+                                                <Icon type="ios-arrow-back" />
+                                                Columns
+                                            </DropdownItem>
+
+                                            <!-- Column Options -->
+                                            <DropdownMenu slot="list" style="width: 180px;">
+
+                                                <div class="p-2 pl-3 pr-5 text-left">
+
+                                                    <!-- Status Checkboxes -->
+                                                    <CheckboxGroup v-model="tableColumnsToShowByDefault">
+                                                        <Checkbox class="d-block" label="Order Selector"></Checkbox>
+                                                        <Checkbox class="d-block" label="Show Summary Arrow"></Checkbox>
+                                                        <Checkbox class="d-block" label="Payment Indicator"></Checkbox>
+                                                        <Checkbox class="d-block" label="Customer"></Checkbox>
+                                                        <Checkbox class="d-block" label="Email"></Checkbox>
+                                                        <Checkbox class="d-block" label="Phone"></Checkbox>
+                                                        <Checkbox class="d-block" label="Payment Status"></Checkbox>
+                                                        <Checkbox class="d-block" label="Fulfillment Status"></Checkbox>
+                                                        <Checkbox class="d-block" label="Date"></Checkbox>
+                                                        <Checkbox class="d-block" label="Sub Total"></Checkbox>
+                                                        <Checkbox class="d-block" label="Discount Total"></Checkbox>
+                                                        <Checkbox class="d-block" label="Tax Total"></Checkbox>
+                                                        <Checkbox class="d-block" label="Grand Total"></Checkbox>
+                                                    </CheckboxGroup>
+
+                                                </div>
+                                                
+                                            </DropdownMenu>
+
+                                        </Dropdown>
+                                        
+                                        
+                                    </DropdownItem>
 
                                 </DropdownMenu>
 
@@ -951,6 +1006,7 @@
                 if(this.tableColumnsToShowByDefault.includes('Grand Total')){
                     allowedColumns.push(
                     {
+                        width: 180,
                         title: 'Grand Total',
                         sortable: true,
                         render: (h, params) => {

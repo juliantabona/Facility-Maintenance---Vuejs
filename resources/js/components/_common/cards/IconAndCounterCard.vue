@@ -32,7 +32,7 @@
         <div :style="innerBoxStyle ? innerBoxStyle : 'padding: 0px 15px;'">
             <Badge :show-zero="showZero" :count="count" :type="type" style="width:100%;">
                 <img v-if="imageSrc" :src="imageSrc" :style="imageStyle ? imageStyle : { width: '60px', margin: '0 auto', display: 'block' }">
-                <Icon v-if="icon" :type="icon" size="45" class="text-center" style="display: block;"/>
+                <Icon v-if="icon" :type="icon" size="45" class="text-center" :style="iconStyle"/>
                 <p class="text-center" :style="titleStyle ? titleStyle : { paddingTop: '5px' }">{{ title }}</p>
             </Badge>
         </div>
@@ -97,6 +97,14 @@
             icon: {
                 type: String,
                 default: null
+            },
+            iconStyle: {
+                type: Object,
+                default: function(){
+                    return {
+                        display: 'block'
+                    }
+                }
             },
             type: {
                 type: String,

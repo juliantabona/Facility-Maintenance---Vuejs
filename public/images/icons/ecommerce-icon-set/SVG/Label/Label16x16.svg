@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 18.1.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
+<g id="Circle_Center" display="none">
+	
+		<rect x="0" display="inline" fill="none" stroke="#E30613" stroke-width="6.250000e-02" stroke-miterlimit="10" width="16" height="16"/>
+	
+		<line display="inline" fill="none" stroke="#E30613" stroke-width="6.250000e-02" stroke-miterlimit="10" x1="0" y1="8" x2="16" y2="8"/>
+	
+		<line display="inline" fill="none" stroke="#E30613" stroke-width="6.250000e-02" stroke-miterlimit="10" x1="8" y1="0" x2="8" y2="16"/>
+	<circle display="inline" fill="none" stroke="#E30613" stroke-width="6.666666e-02" stroke-miterlimit="10" cx="8" cy="8" r="8"/>
+</g>
+<g id="Layer_3" display="none">
+</g>
+<g id="Layer_4" display="none">
+	
+		<rect x="0" y="0" display="inline" fill="none" stroke="#FFED00" stroke-width="0.1" stroke-miterlimit="10" width="16" height="16"/>
+</g>
+<g id="Layer_1">
+	<path fill="#353535" d="M8,16c-4.4,0-8-3.6-8-8s3.6-8,8-8s8,3.6,8,8S12.4,16,8,16z M8,1C4.1,1,1,4.1,1,8s3.1,7,7,7c3.9,0,7-3.1,7-7
+		S11.9,1,8,1z"/>
+</g>
+<g id="Text" display="none">
+</g>
+<g id="Pixel_grid" display="none">
+</g>
+<g id="Layer_5" display="none">
+</g>
+<g id="Layer_8" display="none">
+</g>
+</svg>

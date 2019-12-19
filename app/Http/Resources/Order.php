@@ -69,6 +69,8 @@ class Order extends JsonResource
 
             /*  Additional Attributes   */
             'unfulfilled_item_lines' => $this->unfulfilled_item_lines,
+            'quantity_of_unfulfilled_item_lines' => $this->quantity_of_unfulfilled_item_lines,
+            'quantity_of_fulfilled_item_lines' => $this->quantity_of_fulfilled_item_lines,
             'transaction_total' => $this->transaction_total,
             'refund_total' => $this->refund_total,
             'outstanding_balance' => $this->outstanding_balance,

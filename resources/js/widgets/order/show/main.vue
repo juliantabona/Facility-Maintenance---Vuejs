@@ -190,6 +190,7 @@
                             <!-- Order Fulfillment / Payment / Timeline -->
                             <Col :span="16">
 
+                                <!-- Unfulfilled Items -->
                                 <Card v-if="order.unfulfilled_item_lines.length" dis-hover class="pt-2 pr-2 pl-2 mb-2">
 
                                     <!-- Number Of Unfulfilled Items -->
@@ -249,6 +250,7 @@
 
                                 </Card>
 
+                                <!-- Fulfilled Items -->
                                 <Card v-for="(fulfillment, x) in (((order._embedded || {}).fulfillments || {})._embedded || {}).fulfillments" :key="x" dis-hover class="pt-2 pr-2 pl-2 mb-2">
                                     
                                     <!-- Cancelling order fulfillment spinner  -->
@@ -379,6 +381,117 @@
                                     </List>
 
                                 </Card>
+
+                                <!-- Payment -->
+                                <Card dis-hover class="pt-2 pr-2 pl-2 mb-2">
+
+                                    <!-- Heading -->
+                                    <h5 class="text-dark border-bottom pb-3">
+                                        <Icon type="ios-cash-outline" :size="25" color="#fff" class="p-1" style="background: #f90; border-radius: 100%;"/>
+                                        <span class="font-weight-bold">Payment pending</span>
+                                    </h5>
+
+                                    <List item-layout="vertical">
+                                            
+                                        <!-- Grand Total -->                                        
+                                        <ListItem class="pt-3 pb-2">
+
+                                            <!-- Subtotal -->   
+                                            <Row>
+
+                                                <!-- Sub heading -->
+                                                <Col :span="20">
+                                                    <span>Subtotal</span>
+                                                </Col>
+
+                                                <!-- Amount -->
+                                                <Col :span="4">
+                                                    <span class="d-block text-right">{{ formatPrice(order.sub_total, currency) }}</span>
+                                                </Col>
+
+                                            </Row>
+                                            
+                                            <!-- Taxes -->   
+                                            <Row>
+
+                                                <!-- Sub heading -->
+                                                <Col :span="20">
+                                                    <span>Taxes</span>
+                                                </Col>
+
+                                                <!-- Amount -->
+                                                <Col :span="4">
+                                                    <span class="d-block text-right">{{ formatPrice(order.grand_tax_total, currency) }}</span>
+                                                </Col>
+
+                                            </Row>
+                                            
+                                            <!-- Discounts -->   
+                                            <Row>
+
+                                                <!-- Sub heading -->
+                                                <Col :span="20">
+                                                    <span>Discount</span>
+                                                </Col>
+
+                                                <!-- Amount -->
+                                                <Col :span="4">
+                                                    <span class="d-block text-right">{{ formatPrice(order.grand_discount_total, currency) }}</span>
+                                                </Col>
+
+                                            </Row>
+                                            
+                                            <!-- Grand Total -->    
+                                            <Row class="mt-2">
+
+                                                <!-- Sub heading -->
+                                                <Col :span="20">
+                                                    <span class="d-block font-weight-bold">Grand Total</span>
+                                                </Col>
+
+                                                <!-- Amount -->
+                                                <Col :span="4">
+                                                    <span class="d-block font-weight-bold text-right">{{ formatPrice(order.grand_total, currency) }}</span>
+                                                </Col>
+
+                                            </Row>
+
+                                        </ListItem>  
+
+                                        <!-- Payment by customer -->                                    
+                                        <ListItem class="pt-3 pb-3">
+                                            
+                                            <Row>
+
+                                                <!-- Sub heading -->
+                                                <Col :span="20">
+                                                    <span class="d-block font-weight-bold">Paid by customer</span>
+                                                </Col>
+
+                                                <!-- Amount -->
+                                                <Col :span="4">
+                                                    <span class="d-block font-weight-bold text-right">{{ formatPrice(order.transaction_total, currency) }}</span>
+                                                </Col>
+
+                                            </Row>
+                                            
+                                        
+                                        </ListItem>
+
+                                        <ListItem class="clearfix">
+                                            
+                                            <basicButton 
+                                                @click.native="isOpenPaymentModal = true"
+                                                size="default" type="success" class="float-right">
+                                                <Icon type="md-checkbox-outline" :size="20" class="mr-1" />
+                                                <span>Mark As Paid</span>
+                                            </basicButton>
+                                                
+                                        </ListItem>
+
+                                    </List>
+
+                                </Card>
                                 
                             </Col>
 
@@ -415,12 +528,24 @@
             </Row>
 
         </template>
+        
+        <!-- 
+            MODAL TO MARK ORDER AS PAID
+        -->
+        <markOrderAsPaidModal
+            v-if="isOpenPaymentModal" 
+            @visibility="isOpenPaymentModal = $event"
+            @selected="true">
+        </markOrderAsPaidModal>
 
     </div>
 
 </template>
 
 <script>
+
+    /*  Buttons  */
+    import markOrderAsPaidModal from './../../../components/_common/modals/markOrderAsPaidModal.vue';
 
     /*  Buttons  */
     import basicButton from './../../../components/_common/buttons/basicButton.vue';
@@ -447,7 +572,7 @@
             }
         },
         components: { 
-            basicButton, Loader, orderFulfillmentWidget
+            markOrderAsPaidModal, basicButton, Loader, orderFulfillmentWidget
         },
         data(){
             return {
@@ -455,6 +580,7 @@
                 showOrderFulfillmentWidget: false,
                 isCancellingOrderFulfillment: null,
                 localOrderUrl: this.orderUrl,
+                isOpenPaymentModal: false,
                 isLoadingOrder: false,
                 isSavingOrder: false,
                 order: null
