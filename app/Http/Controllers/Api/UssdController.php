@@ -839,11 +839,7 @@ class UssdController extends Controller
                 /*  Get the cart and make sure the cart is always available from here on */
                 $this->cart = $this->getCart();
 
-                return [
-                    '$this->selected_product' => $this->selected_product,
-                    '$this->selected_products' => $this->selected_products,
-                    '$this->cart' => $this->cart,
-                ];
+                return $this->cart;
 
                 /*  If the user already selected the payment method  */
                 if ($this->hasSelectedOrderSummaryOption()) {
