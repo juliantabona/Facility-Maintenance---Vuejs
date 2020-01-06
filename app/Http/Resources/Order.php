@@ -82,8 +82,6 @@ class Order extends JsonResource
             'outstanding_balance' => $this->outstanding_balance,
             'created_at_format' => $this->created_at_format,
             //  'status' => $this->status,
-            'lifecycle_history' => $this->lifecycle_history,
-            'lifecycle_flow' => $this->lifecycle_flow,
             'resource_type' => $this->resource_type,
 
             'created_at' => $this->created_at,
