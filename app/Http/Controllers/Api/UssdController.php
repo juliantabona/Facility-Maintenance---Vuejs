@@ -888,13 +888,15 @@ class UssdController extends Controller
 
             /*  If the user already selected that they want to pay with Airtime  */
             if ($this->wantsToPayWithAirtime()) {
+
+                /*  Process the order using Airtime  */
+                $this->payment_method = 'Airtime';
+
                 /*  If the user already selected an option from the "Pay With Airtime Confirmation Page"  */
                 if ($this->hasSelectedAirtimeConfirmationOption()) {
+
                     /*  If the user already confirmed that they want to pay with Airtime  */
                     if ($this->hasConfirmedPaymentWithAirtime()) {
-
-                        /*  Process the order using Airtime  */
-                        $this->payment_method = 'Airtime';
 
                         $response = $this->procressOrder();
 
@@ -912,13 +914,14 @@ class UssdController extends Controller
 
                 /*  If the user already selected that they want to pay with Orange Money  */
             } elseif ($this->wantsToPayWithOrangeMoney()) {
+
+                /*  Process the order using Orange Money  */
+                $this->payment_method = 'Orange Money';
+                
                 /*  If the user already confirmed that they want to pay with Orange Money  */
                 if ($this->hasConfirmedPaymentWithOrangeMoney()) {
                     /*  If the user provided a valid Orange Money pin  */
                     if ($this->isValidOrangeMoneyPin()) {
-
-                        /*  Process the order using Orange Money  */
-                        $this->payment_method = 'Orange Money';
 
                         $response = $this->procressOrder();
 

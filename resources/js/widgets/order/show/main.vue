@@ -275,13 +275,13 @@
                                                 <!-- FuLfillment Identification Number -->
                                                 <span class="d-inline-block font-weight-bold"># {{ fulfillment.id }}</span>
 
-                                                <div class="float-right">
-
-                                                    <!-- Clock Icon -->
-                                                    <Icon type="ios-time-outline" :size="20" />
+                                                <div class="float-right mt-2">
 
                                                     <!-- Created Date -->
-                                                    <span class="d-inline-block mr-2 text-dark">{{ formatDate(fulfillment.created_at.date, true) }}</span>
+                                                    <span class="d-inline-block mr-2">{{ formatDate(fulfillment.created_at.date, true) }}</span>
+
+                                                    <!-- Clock Icon -->
+                                                    <Icon type="md-time" :size="20" />
 
                                                 </div>
 

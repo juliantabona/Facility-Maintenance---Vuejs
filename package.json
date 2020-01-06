@@ -25,7 +25,7 @@
     "dependencies": {
         "@intera/vue-zoom-on-hover": "git+https://github.com/Intera/vue-zoom-on-hover.git",
         "@tinymce/tinymce-vue": "^1.1.0",
-        "chart.js": "^2.7.3",
+        "chart.js": "^2.9.3",
         "css-loader": "^3.0.0",
         "element-ui": "^2.4.11",
         "enjoyhint": "^1.0.1",
@@ -40,7 +40,7 @@
         "tooltip.js": "^1.3.1",
         "view-design": "^4.0.2",
         "vue-carousel-3d": "^0.2.0",
-        "vue-chartjs": "^3.4.0",
+        "vue-chartjs": "^3.5.0",
         "vue-clipboard2": "^0.3.0",
         "vue-froala-wysiwyg": "^2.9.1",
         "vue-full-calendar": "^2.7.0",
