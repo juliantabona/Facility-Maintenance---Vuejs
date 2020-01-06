@@ -804,9 +804,9 @@ function oq_jobcardDeadlineArray($model)
         $diff = $deadline->diff($now);
 
         /*  The invert helps us know if the difference is positive or negative
-        *  If the invert is == 1 then it is positive, meaning deadline not reached.
-        *  If the invert is == 0 then it is negative, meaning deadline passed.
-        */
+         *  If the invert is == 1 then it is positive, meaning deadline not reached.
+         *  If the invert is == 0 then it is negative, meaning deadline passed.
+         */
         $invert = $diff->invert;
 
         if ($diff->y != 0) {

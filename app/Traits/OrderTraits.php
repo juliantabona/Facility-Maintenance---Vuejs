@@ -148,8 +148,10 @@ trait OrderTraits
 
         /*  If we have the cart items  */
         if (isset($orderInfo['items']) && !empty($orderInfo['items'])) {
+
             /*  Retrieve the cart details from the items provided  */
-            $cart = ( new \App\MyCart() )->getCartDetails($this->merchant, $orderInfo['items']);
+            $cart = ( new \App\MyCart() )->getCartDetails( $orderInfo['items'], $this->merchant->taxes, $this->merchant->discounts );
+        
         }
 
         /*
@@ -279,9 +281,6 @@ trait OrderTraits
      */
     public function initiateFulfillment( $orderInfo = null )
     {
-        //  The $template variable represents structure of the order.
-        $template = $orderInfo;
-
         try {
 
             $unfulfilled_item_lines = [];
@@ -298,11 +297,11 @@ trait OrderTraits
                         //  Lets check if the current unfulfilled item line item line matches the current specified item line
                         if( $unfulfilled_item_line['id'] == $specified_item_line['id'] ){
 
-                            if($specified_item_line['quantity'] != 0){
+                            if( intval($specified_item_line['quantity']) != 0){
 
                                 $hasValidQuantity = intval($specified_item_line['quantity']) <= intval($unfulfilled_item_line['quantity']);
     
-                                $quantity =  $hasValidQuantity ? $specified_item_line['quantity'] : $unfulfilled_item_line['quantity'];
+                                $quantity =  $hasValidQuantity ? intval($specified_item_line['quantity']) : intval($unfulfilled_item_line['quantity']);
     
                                 $unfulfilled_item_line['quantity'] = $quantity;
                                 
@@ -350,11 +349,8 @@ trait OrderTraits
                         'owner_type' => $this->resource_type,
                     ]);
 
-                    //  Get a fresh instance of this order
-                    $order = $this->fresh();
-
                     //  Update fulfilment status
-                    $order->updateFulfilmentStatus();
+                    $this->updateFulfilmentStatus();
 
                 }
 
@@ -411,6 +407,185 @@ trait OrderTraits
             ]);
 
             if($orderUpdateStatus){
+
+                /*  Record the activity of the new order status  */
+                $orderInstance->recordActivity( $status );
+
+                return true;
+
+            }else{
+
+                return false;
+
+            }
+
+        } catch (\Exception $e) {
+
+            //  Return the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+            
+        }  
+    }
+
+    /*  initiatePayment() method
+     *
+     *  This method is used to create order invoice and payment transation
+     *  of the current order items. The $orderInfo holds additional order 
+     *  payment details if any.
+     */
+    public function initiatePayment( $orderInfo = null )
+    {
+        try {
+
+            $unpaid_item_lines = [];
+
+            //  Foreach unpaid order item line
+            foreach( $this->unpaid_item_lines as $unpaid_item_line ){
+
+                //  If we have item lines already provided then this means we want to pay specific item lines
+                if( isset($orderInfo['item_lines']) && !empty($orderInfo['item_lines']) ){
+
+                    //  Foreach specified item line
+                    foreach($orderInfo['item_lines'] as $specified_item_line){
+
+                        //  Lets check if the current unpaid item line item line matches the current specified item line
+                        if( $unpaid_item_line['id'] == $specified_item_line['id'] ){
+
+                            if( intval($specified_item_line['quantity']) != 0){
+
+                                $hasValidQuantity = intval($specified_item_line['quantity']) <= intval($unpaid_item_line['quantity']);
+    
+                                $quantity =  $hasValidQuantity ? intval($specified_item_line['quantity']) : intval($unpaid_item_line['quantity']);
+    
+                                $unpaid_item_line['quantity'] = $quantity;
+                                
+                                array_push($unpaid_item_lines, $unpaid_item_line);
+
+                            }
+
+                        }
+
+                    }
+
+                }else{
+                            
+                    array_push($unpaid_item_lines, $unpaid_item_line);
+
+                }
+
+            }
+
+            if( !empty($unpaid_item_lines) ){
+
+                //  Re-calculate the cart details using the provided items and order taxes and discounts
+                $cartDetails = ( new \App\MyCart() )->getCartDetails( $unpaid_item_lines, $this->tax_lines, $this->discount_lines );
+
+                
+                $invoiceInfo = array_merge( $this->only( $this->fillable ), 
+
+                    //  Replace current default order cart details with the updated cart details
+                    $cartDetails, 
+
+                    //  Add the order ownership deails (This will assign the invoice to this order)
+                    ['owner_id' => $this->id, 'owner_type' => $this->resource_type],
+
+                    //  Replace the item lines with those that are currently being paid for
+                    ['item_lines' => $unpaid_item_lines]
+                
+                );
+
+                //  Create new Invoice using the initiateCreate() method from the Invoice Model
+                $invoice = ( new \App\Invoice() )->initiateCreate( $invoiceInfo );
+
+                /*  If the invoice was created successfully  */
+                if ($invoice) {
+
+                    //  Mark the order invoice as manually paid
+                    $transaction = $invoice->recordManualPayment( $transaction = [
+                        'payment_type' => $orderInfo['payment_type'],
+                        'payment_amount' => $invoice['grand_total']
+                    ]);
+                    return $transaction;
+
+                }
+
+            }
+                
+            return true;
+
+        } catch (\Exception $e) {
+            //  Return the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+        }
+    }
+
+    public function setStatusToPendingPayment()
+    {
+        /*  Set order status to "Pending Payment"  */
+        $this->updatePaymentStatus( $status = 'pending payment' );
+    }
+
+    public function setStatusToFailedPayment()
+    {
+        /*  Set order status to "Failed Payment"  */
+        $this->updatePaymentStatus( $status = 'failed payment' );
+    }
+
+    public function setStatusToPaid()
+    {
+        /*  Set order status to "Paid"  */
+        $this->updatePaymentStatus( $status = 'paid' );
+    }
+
+    public function updatePaymentStatus( $status = null )
+    {
+        try {
+
+            if( $status == null ){
+
+                //  Get a fresh instance of this order
+                $orderInstance = $this->fresh();
+
+                //  If the quantity of paid item lines is zero (0)
+                if( $orderInstance->quantity_of_paid_item_lines == 0 ){
+
+                    //  Mark as unpaid
+                    $status = 'unpaid';
+
+                //  If the quantity of unpaid item lines is zero (0)
+                }elseif( $orderInstance->quantity_of_unpaid_item_lines == 0 ){
+
+                    //  Mark as fully paid
+                    $status = 'paid';
+
+                //  Otherwise
+                }else{
+
+                    //  Mark as partially paid
+                    $status = 'partially paid';
+
+                }
+
+            }else{
+
+                //  Get the current instance of the order
+                $orderInstance = $this;
+
+                
+            }
+
+            //  Update the payment status
+            $orderUpdateStatus = $orderInstance->update([
+
+                'payment_status' => $status
+
+            ]);
+
+            //  If the payment status was updated successfully
+            if( $orderUpdateStatus ){
+
+                /*  Record the activity of the new order status  */
+                $orderInstance->recordActivity( $status );
 
                 return true;
 
@@ -474,39 +649,6 @@ trait OrderTraits
 
             return $template;
         }
-    }
-
-    public function setStatusToPendingPayment()
-    {
-        /*  Set order status to "Pending Payment"  */
-        $this->update([
-            'manual_status' => 'pending_payment',
-        ]);
-
-        /*  Record the activity of the the order status set to "pending payment"  */
-        $this->recordActivity('pending payment');
-    }
-
-    public function setStatusToFailedPayment()
-    {
-        /*  Set order status to "Failed Payment"  */
-        $this->update([
-            'manual_status' => 'failed_payment',
-        ]);
-
-        /*  Record the activity of the the order status set to "paid"  */
-        $this->recordActivity('failed payment');
-    }
-
-    public function setStatusToPaid()
-    {
-        /*  Set order status to "Paid"  */
-        $this->update([
-            'manual_status' => 'paid',
-        ]);
-
-        /*  Record the activity of the the order status set to "paid"  */
-        $this->recordActivity('paid');
     }
 
     public function convertToInvoice()

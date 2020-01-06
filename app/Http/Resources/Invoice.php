@@ -17,10 +17,11 @@ class Invoice extends JsonResource
     public function toArray($request)
     {
         return [
-
             'id' => $this->id,
+            
+            /*  Basic Info  */
             'number' => $this->number,
-            'currency_type' => $this->currency_type,
+            'currency' => $this->currency,
             'created_date' => $this->created_date,
             'expiry_date' => $this->expiry_date,
             'quotation_id' => $this->quotation_id,
@@ -51,6 +52,27 @@ class Invoice extends JsonResource
             'is_recurring' => $this->is_recurring,
             'recurring_settings' => $this->recurring_settings,
             'meta' => $this->meta,
+
+            //  Attributes
+            'resource_type' => $this->resource_type,
+            'transaction_total' => $this->transaction_total,
+            'failed_transaction_total' => $this->failed_transaction_total,
+            'refund_total' => $this->refund_total,
+            'outstanding_balance' => $this->outstanding_balance,
+            'status' => $this->status,
+            'has_paid' => $this->has_paid,
+            'has_expired' => $this->has_expired,
+            'has_cancelled' => $this->has_cancelled,
+            'has_sent' => $this->has_sent,
+            'has_skipped_sending' => $this->has_skipped_sending,
+            'has_sent_receipt' => $this->has_sent_receipt,
+            'has_approved' => $this->has_approved,
+            'has_set_recurring_schedule_plan' => $this->has_set_recurring_schedule_plan,
+            'has_set_recurring_delivery_plan' => $this->has_set_recurring_delivery_plan,
+            'has_set_recurring_payment_plan' => $this->has_set_recurring_payment_plan,
+            'has_approved_recurring_settings' => $this->has_approved_recurring_settings,
+
+            //  Timestamps
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 
@@ -66,6 +88,7 @@ class Invoice extends JsonResource
                     'href' => url()->full(),
                     'title' => 'This invoice'
                 ]
+                
             ],
 
             /*  Embedded Resources */

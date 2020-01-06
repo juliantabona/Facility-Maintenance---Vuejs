@@ -43,13 +43,13 @@
                     <!-- Order Body -->
                     <Row :gutter="20">
 
+                        <!-- Fulfilling Order Spinner  -->
+                        <Spin v-if="isFulfillingOrder" size="large" fix></Spin>
+
                         <!-- Order Fulfillment / Payment / Timeline -->
                         <Col :span="16">
 
                             <Card dis-hover class="pt-2 pr-2 pl-2 mb-2">
-
-                                <!-- Fulfilling Order Spinner  -->
-                                <Spin v-if="isFulfillingOrder" size="large" fix></Spin>
 
                                 <div>
 

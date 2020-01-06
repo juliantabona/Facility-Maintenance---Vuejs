@@ -49,6 +49,14 @@ class Contact extends JsonResource
                     'title' => 'This contact'
                 ],
 
+
+                //  Link to order invoices
+                'oq:orders' => [
+                    //'href' => route('order-invoices', ['order_id' => $this->id]),
+                    'title' => 'The contact orders',
+                    'total' => $this->orders()->count(),
+                ],
+
                 //  Link to the resource that owns this contact
                 'owner' =>  
                         function(){

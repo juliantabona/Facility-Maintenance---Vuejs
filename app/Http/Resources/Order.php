@@ -3,7 +3,9 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+
 use App\Http\Resources\Fulfillments as FulfillmentsResource;
+use App\Http\Resources\Contact as ContactResource;
 
 class Order extends JsonResource
 {
@@ -18,11 +20,11 @@ class Order extends JsonResource
     {
         return [
             'id' => $this->id,
+            
             /*  Basic Info  */
             'number' => $this->number,
             'currency' => $this->currency,
             'created_date' => $this->created_date,
-            'manual_status' => $this->manual_status,
 
             /*  Status / Payment Status / Fulfillment Status  */
             'status' => $this->status,
@@ -71,6 +73,10 @@ class Order extends JsonResource
             'unfulfilled_item_lines' => $this->unfulfilled_item_lines,
             'quantity_of_unfulfilled_item_lines' => $this->quantity_of_unfulfilled_item_lines,
             'quantity_of_fulfilled_item_lines' => $this->quantity_of_fulfilled_item_lines,
+            'quantity_of_unpaid_item_lines' => $this->quantity_of_unpaid_item_lines,
+            'quantity_of_paid_item_lines' => $this->quantity_of_paid_item_lines,
+            'paid_item_lines' => $this->paid_item_lines,
+            'unpaid_item_lines' => $this->unpaid_item_lines,
             'transaction_total' => $this->transaction_total,
             'refund_total' => $this->refund_total,
             'outstanding_balance' => $this->outstanding_balance,
@@ -95,10 +101,30 @@ class Order extends JsonResource
                     'title' => 'This order',
                 ],
 
+                //  Link to order invoices
+                'oq:invoices' => [
+                    'href' => route('order-invoices', ['order_id' => $this->id]),
+                    'title' => 'The order invoices',
+                    'total' => $this->invoices()->count(),
+                ],
+
+                //  Link to order transactions
+                'oq:transactions' => [
+                    'href' => route('order-transactions', ['order_id' => $this->id]),
+                    'title' => 'The order transactions',
+                    'total' => $this->transactions()->count(),
+                ],
+
                 //  Link to order fulfillment
                 'oq:fulfillment' => [
                     'href' => route('order-fulfillment', ['order_id' => $this->id]),
                     'title' => 'Fulfill this order',
+                ],
+
+                //  Link to order payment
+                'oq:payment' => [
+                    'href' => route('order-payment', ['order_id' => $this->id]),
+                    'title' => 'Pay this order',
                 ]
                 
             ],
@@ -106,7 +132,9 @@ class Order extends JsonResource
             /*  Embedded Resources */
             '_embedded' => [
 
-                'fulfillments' => new FulfillmentsResource( $this->fulfillments()->paginate() ),
+                'customer' => new ContactResource( $this->customer ),
+                'reference' => new ContactResource( $this->reference ),
+                'fulfillments' => new FulfillmentsResource( $this->fulfillments()->paginate() )
 
             ],
         ];

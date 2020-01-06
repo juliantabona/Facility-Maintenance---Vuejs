@@ -20,7 +20,7 @@
         color: #6c7781;
     }
 
-    .summary-card >>> .main-amount {
+    .summary-card >>> .main-figure {
         font-size: 18px;
         font-weight: 500;
         color: #191e23;
@@ -28,7 +28,7 @@
     }
 
     .summary-card >>> .sub-heading, 
-    .summary-card >>> .sub-amount {
+    .summary-card >>> .sub-figure {
         font-size: 13px;
         color: #555d66;
         display: block;
@@ -150,7 +150,7 @@
                                 <Col span="20">
 
                                     <!-- Current Period Amount -->
-                                    <span class="main-amount">{{ formatPrice(stat.amount, currency) }}</span>
+                                    <span class="main-figure">{{ formatPrice(stat.amount, currency) }}</span>
                                 </Col>
                                 <Col span="4">
                                     <Icon type="md-arrow-forward" />
@@ -163,8 +163,19 @@
 
                             <!-- Previous Period Amount -->
                             <span class="sub-heading">Previous Year</span>
-                            <span class="sub-amount">P0.00</span>
+                            <span class="sub-figure">P0.00</span>
                         </Card>
+                    </Col>
+
+                    <!-- Mobile Store Statastics -->
+                    <Col span="8" class="mt-4">
+
+                        <Card class="summary-card active">
+
+                            <mobileStoreStats :stats="mobileStoreStats"></mobileStoreStats>
+
+                        </Card>
+
                     </Col>
                     
                 </Row>
@@ -185,6 +196,8 @@
     /*  Loaders  */
     import Loader from './../../../../components/_common/loaders/Loader.vue';  
 
+    /*  Local Widgets  */
+    import mobileStoreStats from './mobileStoreStats/main.vue';
 
     export default {
         props:{
@@ -194,7 +207,7 @@
             }
         },
         components: { 
-            basicButton, Loader
+            basicButton, Loader, mobileStoreStats
         },
         data(){
             return {
@@ -202,37 +215,45 @@
                 tableColumnsToShowByDefault: [],
                 selectedOrderStatuses: [],
                 isLoadingStats: false,
-                orderStats: [
-                    {
-                        name: '...',
-                        amount: 0
-                    },
-                    {
-                        name: '...',
-                        amount: 0
-                    },
-                    {
-                        name: '...',
-                        amount: 0
-                    },
-                    {
-                        name: '...',
-                        amount: 0
-                    },
-                    {
-                        name: '...',
-                        amount: 0
-                    },
-                    {
-                        name: '...',
-                        amount: 0
-                    },
-                ],
-                activeCard: null
+                activeCard: null,
+                stats: null
             }
         },
         computed: {
-            
+            orderStats(){
+
+                return ((this.stats || {}).order || []).totals || [
+                    {
+                        name: '...',
+                        amount: 0
+                    },
+                    {
+                        name: '...',
+                        amount: 0
+                    },
+                    {
+                        name: '...',
+                        amount: 0
+                    },
+                    {
+                        name: '...',
+                        amount: 0
+                    },
+                    {
+                        name: '...',
+                        amount: 0
+                    },
+                    {
+                        name: '...',
+                        amount: 0
+                    }
+                ];
+            },
+            mobileStoreStats(){
+
+                return (this.stats || {}).mobile_store;
+
+            }
         },
         methods: {
             fetchStoreStats() {
@@ -259,7 +280,7 @@
                             self.isLoadingStats = false;
 
                             //  Store the store data
-                            self.orderStats = (data.order || []).totals || [];
+                            self.stats = data;
 
                         })         
                         .catch(response => { 
@@ -278,7 +299,7 @@
             },
             formatPrice(money, symbol) {
                 let val = (money/1).toFixed(2).replace(',', '.');
-                return symbol + val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                return (symbol ? symbol : '') + val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             }
         },
         created(){

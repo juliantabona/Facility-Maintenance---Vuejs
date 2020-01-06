@@ -433,6 +433,9 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             //  Fulfillment related resources
             Route::post('/fulfillment', 'Api\OrderController@fulfilOrder')->name('fulfillment');
 
+            //  Payment related resources
+            Route::post('/payment', 'Api\OrderController@payOrder')->name('payment');
+
             //  Merchant related resources
             Route::get('/merchant', 'Api\OrderController@getOrderMerchant')->name('merchant');
 
@@ -449,6 +452,11 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             //  Invoice related resources
             Route::get('/invoices', 'Api\OrderController@getOrderInvoices')->name('invoices');
             Route::get('/invoices/{invoice_id}', 'Api\OrderController@getOrderInvoice')->name('invoice')->where('invoice_id', '[0-9]+');
+
+            //  Transaction related resources
+            Route::get('/transactions', 'Api\OrderController@getOrderTransactions')->name('transactions');
+            Route::get('/transaction/{transaction_id}', 'Api\OrderController@getOrderTransaction')->name('transaction')->where('transaction_id', '[0-9]+');
+
 
             //  Tax related resources
             Route::get('/taxes', 'Api\OrderController@getOrderTaxes')->name('taxes');

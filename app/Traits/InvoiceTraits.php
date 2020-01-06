@@ -38,6 +38,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 trait InvoiceTraits
 {
+    private $invoiceInstance;
     private $merchant;
 
     /*  convertToApiFormat() method:
@@ -166,7 +167,7 @@ trait InvoiceTraits
         if( isset($invoiceInfo['items']) && !empty($invoiceInfo['items']) ){
 
             /*  Retrieve the cart details from the items provided  */
-            $cart = ( new \App\MyCart() )->getCartDetails( $this->merchant, $invoiceInfo['items'] );
+            $cart = ( new \App\MyCart() )->getCartDetails( $invoiceInfo['items'], $this->merchant->taxes, $this->merchant->discounts );
 
         }
 
@@ -233,19 +234,19 @@ trait InvoiceTraits
             /*
              *  Create new a invoice, then retrieve a fresh instance
              */
-            $this->invoice = $this->create($template)->fresh();
+            $this->invoiceInstance = $this->create($template)->fresh();
 
             /*  If the invoice was created successfully  */
-            if( $this->invoice ){
+            if( $this->invoiceInstance ){
 
                 /*  Set the invoice number  */
-                $this->invoice->setInvoiceNumber();
+                $this->invoiceInstance->setInvoiceNumber();
 
                 /*  Record the activity of the the invoice creation  */
-                $activity = $this->invoice->recordActivity('created');
+                $activity = $this->invoiceInstance->recordActivity('created');
   
                 /*  Return a fresh instance of the invoice  */
-                return $this->invoice->fresh();
+                return $this->invoiceInstance->fresh();
 
             }
 
@@ -455,7 +456,7 @@ trait InvoiceTraits
             $template = [
                 'type' => 'payment',
                 'automatic' => true,
-                'status' => 'success',
+                'status' => $transaction['status'] ?? 'success',
                 'payment_type' => $transaction['payment_type'] ?? null,
                 'payment_amount' => $transaction['payment_amount'] ?? 0,
             ];
@@ -473,7 +474,7 @@ trait InvoiceTraits
             $template = [
                 'type' => 'payment',
                 'automatic' => false,
-                'status' => 'success',
+                'status' => $transaction['status'] ?? 'success',
                 'payment_type' => $transaction['payment_type'] ?? null,
                 'payment_amount' => $transaction['payment_amount'] ?? 0,
             ];
@@ -489,27 +490,30 @@ trait InvoiceTraits
     {
         $transaction = ( new \App\Transaction() )->initiateCreate($template);
 
-        /*  If the transaction was created successfully  */
+        //  If the transaction was created successfully
         if( $transaction ){
 
-            /*  Assign the new transaction to the invoice  */
+            //  Assign the new transaction to the invoice
             $transaction->update([
                 'owner_id' => $this->id, 
                 'owner_type' => $this->resource_type
             ]);
 
-            /*  If the invoice belongs to an Order  */
+            //  Record the activity of the the invoice payment
+            $activity = $this->recordActivity('paid');
+
+            //  If the invoice belongs to an Order
             if( $this->owner->resource_type == 'order'){
                 
-                /*  If the transaction of status is "success"  */
-                if( $transaction['status'] == 'success' ){
+                //  If the template status is "success"
+                if( $template['status'] == 'success' ){
+                    
+                    //  Update the current order payment status
+                    $this->owner->updatePaymentStatus();
 
-                    /*  Set the order status to "Paid"  */
-                    $this->owner->setStatusToPaid();
+                }elseif( $template['status'] == 'failed' ){
 
-                }elseif( $transaction['status'] == 'failed' ){
-
-                    /*  Set the order status to "Failed Payment"  */
+                    //  Set the order status to "Failed Payment"
                     $this->owner->setStatusToFailedPayment();
 
                 }

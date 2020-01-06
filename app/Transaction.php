@@ -65,6 +65,31 @@ class Transaction extends Model
         'resource_type'
     ];
 
+    /*
+     *  Returns the current status name and description of the transaction
+     */
+    public function getStatusAttribute($value)
+    {
+        switch (ucwords($value)) {
+            case 'Success':
+                $status_description = 'The transaction was successful';
+                break;
+            case 'Failed':
+                $status_description = 'The transaction failed';
+                break;
+            case 'Cancelled':
+                $status_description = 'The transaction was cancelled';
+                break;
+            default:
+                $status_description = 'The transaction status is unknown';
+        }
+
+        return [
+            'name' => ucwords($value),
+            'description' => $status_description,
+        ];
+    }
+
     /* 
      *  Returns the resource type
      */

@@ -29,7 +29,7 @@
         data(){
             return {
                 localSelectedPaymentMethod: this.selectedPaymentMethod,
-                paymentMethods: ['Online Payment', 'Bank Transfer', 'Cheque', 'Cash', 'Other']
+                paymentMethods: ['Online Payment', 'Bank Deposit', 'Bank Transfer', 'Cheque', 'Cash', 'Other']
             }
         },
         watch: {

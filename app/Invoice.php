@@ -368,7 +368,7 @@ class Invoice extends Model
 
 
     protected $appends = [
-        'resource_type', 'transaction_total', 'refund_total', 'outstanding_balance', 'status', 
+        'resource_type', 'transaction_total', 'failed_transaction_total', 'refund_total', 'outstanding_balance', 'status', 
         'has_paid', 'has_expired', 'has_cancelled', 'has_sent', 'has_skipped_sending', 'has_sent_receipt', 
         'has_approved', 'has_set_recurring_schedule_plan', 'has_set_recurring_delivery_plan', 
         'has_set_recurring_payment_plan', 'has_approved_recurring_settings', 
@@ -387,7 +387,15 @@ class Invoice extends Model
      */
     public function getTransactionTotalAttribute()
     {
-        return $this->payments()->sum('payment_amount') ?? 0;
+        return $this->payments()->where('status', 'success')->sum('payment_amount') ?? 0;
+    }
+
+    /* 
+     *  Returns the total payment made to this invoice
+     */
+    public function getFailedTransactionTotalAttribute()
+    {
+        return $this->payments()->where('status', 'failed')->sum('payment_amount') ?? 0;
     }
 
     /* 
@@ -579,34 +587,59 @@ class Invoice extends Model
     }
 
     /*
-     *  Returns the current invoice status
+     *  Returns the current status name and description of the order
      */
     public function getStatusAttribute()
     {
         //  If paid
         if ($this->has_paid) {
-            return 'Paid';
+
+            return [
+                'name' => 'Paid',
+                'description' => 'The invoice has been paid',
+            ];
 
         //  If expired
         } elseif ($this->has_expired) {
-            return 'Expired';
+
+            return [
+                'name' => 'Expired',
+                'description' => 'The invoice has reached its expiry date',
+            ];
 
         //  If cancelled
         } elseif ($this->has_cancelled) {
-            return 'Cancelled';
+
+            return [
+                'name' => 'Cancelled',
+                'description' => 'The invoice has been cancelled',
+            ];
 
         //  If approved
         } elseif ($this->has_sent) {
-            return 'Sent';
+
+            return [
+                'name' => 'Sent',
+                'description' => 'The invoice has been sent to the customer',
+            ];
 
         //  If approved
         } elseif ($this->has_approved) {
-            return 'Approved';
+
+            return [
+                'name' => 'Approved',
+                'description' => 'The invoice has been approved',
+            ];
 
         //  If draft
         } else {
-            return 'Draft';
+
+            return [
+                'name' => 'Draft',
+                'description' => 'The invoice currently a draft',
+            ];
         }
+
     }
 
 }

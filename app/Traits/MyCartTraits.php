@@ -19,16 +19,24 @@ trait MyCartTraits
 
     /*  getCartDetails() method:
      *
-     *  This method is used to get the details of the a cart. It requires the merchant
-     *  details as well as the items in the cart. The items variable is an array of
-     *  individual items with an "id" and "quantity". The method will fetch all the
-     *  items by "id" and get their details as well as calculate the individual 
-     *  items and cart sub-totals, grand-totals, tax-totals and discounts-totals.
-     *  Finally the method will return all the calculations and items.
+     *  This method is used to get the details of the a cart. It requires the items in the cart, 
+     *  the cart discounts and cart tax. The items variable is an array of individual items with 
+     *  an "id" and "quantity". The method will fetch all the items by "id" and get their details 
+     *  as well as calculate the individual items and cart sub-totals, grand-totals, tax-totals 
+     *  and discounts-totals. Finally the method will return all the calculations and items.
      */
-    public function getCartDetails($merchant, $items)
+    public function getCartDetails($items = [], $taxes = [], $discounts = [])
     {
         try {
+
+            //  Incase the items are a null value assign an empty array instead
+            $items = empty($items) ? [] : $items;
+
+            //  Incase the taxes are a null value assign an empty array instead
+            $taxes = empty($taxes) ? [] : $taxes;
+
+            //  Incase the discounts are a null value assign an empty array instead
+            $discounts = empty($discounts) ? [] : $discounts;
 
             //  Get the cart items
             $cart_items = $this->buildItems($items);
@@ -74,15 +82,15 @@ trait MyCartTraits
 
             }
 
-            //  Foreach merchant tax, calculate the total merchant tax
-            foreach ($merchant->taxes as $key => $tax) {
+            //  Foreach cart tax, calculate the total cart tax
+            foreach ($taxes as $key => $tax) {
 
                 $global_tax_total += $tax['rate'] * $sub_total;
 
             }            
 
-            //  Foreach merchant discount, calculate the total merchant discount
-            foreach ($merchant->discounts as $key => $discount) {
+            //  Foreach cart discount, calculate the total cart discount
+            foreach ($discounts as $key => $discount) {
 
                 //  If its a percentage rate based discount
                 if ($discount['type'] == 'rate') {
@@ -109,9 +117,10 @@ trait MyCartTraits
 
             $cartDetails = [
                 'items' => $cart_items,
+                'number_of_items' => count($cart_items),
+                'total_quantity_of_items' => $this->getTotalItemQuantity($cart_items),
                 'items_summarized_array' => $this->getItemsSummarizedInArray($cart_items),
                 'items_summarized_inline' => $this->getItemsSummarizedInline($cart_items),
-                'currency' => $merchant->currency,
                 'sub_total' => $sub_total,
                 'item_tax_total' => $item_tax_total,
                 'global_tax_total' => $global_tax_total,
@@ -214,6 +223,35 @@ trait MyCartTraits
         }
 
         return $cartItems;
+    }
+
+    /*  getTotalItemQuantity()
+     *  
+     * This method returns the total cart item quantity E.g 
+     * 
+     * If we have ["3x(Tomato)", "2x(Anion)", "1x(Garlic)"]
+     * 
+     * Then the total item quantity is "6"
+     * 
+     */
+    public function getTotalItemQuantity($items)
+    {
+
+        $total_quantity = 0;
+
+        if( count( $items ) ){
+
+            foreach($items as $key => $item){
+    
+                //  Get the item quantity and add to the total item quantity
+                $total_quantity = $total_quantity + intval($item['quantity']);
+    
+            }
+
+        }
+
+        return $total_quantity;
+        
     }
 
     /*  getItemsSummarizedInArrayInArray()

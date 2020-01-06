@@ -70,6 +70,32 @@ class OrderPolicy
     }
 
     /**
+     * Determine whether the user can fulfill the order.
+     *
+     * @param  \App\User  $user
+     * @param  \App\Order  $order
+     * @return mixed
+     */
+    public function fulfill(User $user, Order $order)
+    {
+        //  Only an Admin or Staff member of the merchant account can fulfill this order
+        return $order->merchant->isAdminOrStaff($user->id);
+    }
+
+    /**
+     * Determine whether the user can pay the order.
+     *
+     * @param  \App\User  $user
+     * @param  \App\Order  $order
+     * @return mixed
+     */
+    public function pay(User $user, Order $order)
+    {
+        //  Only an Admin or Staff member of the merchant account can pay this order
+        return $order->merchant->isAdminOrStaff($user->id);
+    }
+
+    /**
      * Determine whether the user can delete the order.
      *
      * @param  \App\User  $user

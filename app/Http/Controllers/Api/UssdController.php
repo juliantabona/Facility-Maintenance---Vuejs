@@ -24,10 +24,13 @@ class UssdController extends Controller
     private $session_id;
     private $service_code;
     private $phone_number;
+    private $payment_method;
     private $ussd_interface;
     private $order_per_page;
+    private $shopping_status;
     private $stores_per_page;
     private $text_field_name;
+    private $payment_response;
     private $favourite_stores;
     private $variable_options;
     private $selected_product;
@@ -46,6 +49,7 @@ class UssdController extends Controller
     private $store_categories_per_page;
     private $store_categories_on_display;
     private $variable_options_to_display;
+    private $method_used_to_find_store;
 
     public function __construct(Request $request)
     {
@@ -107,6 +111,9 @@ class UssdController extends Controller
         $this->selected_products = [];
         $this->variable_options = [];
         $this->selected_variable_options = [];
+
+        //  Update the shopping status with the value "0" which means that the shopping is incomplete
+        $this->shopping_status = 0;
     }
 
     /*********************************
@@ -141,6 +148,9 @@ class UssdController extends Controller
                 if ($this->hasProvidedStoreCode()) {
                     /*  Check if a USSD Interface using the store code provided exists  */
                     if ($this->isValidStoreCode()) {
+
+                        $this->method_used_to_find_store = $this->method_used_to_find_store ?? 'store code';
+
                         /*  Allow the user to start shopping (At the specified store)  */
                         $response = $this->visitStore();
 
@@ -169,11 +179,17 @@ class UssdController extends Controller
 
                         /*  If the user already selected a specific store from the "Stores Page"  */
                         if ($this->hasSelectedStore()) {
+
+                            $this->method_used_to_find_store = 'My Favourites';
+
                             /*  Visit the selected store  */
                             return $this->visitSelectedStore();
+
                         } else {
+
                             /*  Display the "Select Category Store Page"  */
                             $response = $this->displayStoresPage();
+
                         }
 
                         /*  If the user wants to search popular stores  */
@@ -186,8 +202,12 @@ class UssdController extends Controller
 
                         /*  If the user already selected a specific store from the "Stores Page"  */
                         if ($this->hasSelectedStore()) {
+
+                            $this->method_used_to_find_store = 'Popular Stores';
+                            
                             /*  Visit the selected store  */
                             return $this->visitSelectedStore();
+
                         } else {
                             /*  Display the "Select Popular Store Page"  */
                             $response = $this->displayStoresPage();
@@ -213,8 +233,12 @@ class UssdController extends Controller
 
                             /*  If the user already selected a specific store from the "Stores Page"  */
                             if ($this->hasSelectedStore()) {
+                                
+                                $this->method_used_to_find_store = 'Search By Category';
+
                                 /*  Visit the selected store  */
                                 return $this->visitSelectedStore($responses_to_remove = 4);
+
                             } else {
                                 /*  Display the "Select Popular Store Page"  */
                                 $response = $this->displayStoresPage();
@@ -238,8 +262,12 @@ class UssdController extends Controller
 
                             /*  If the user already selected a specific store from the "Stores Page"  */
                             if ($this->hasSelectedStore()) {
+                                
+                                $this->method_used_to_find_store = 'Search By Name';
+
                                 /*  Visit the selected store  */
                                 return $this->visitSelectedStore($responses_to_remove = 4);
+
                             } else {
                                 /*  Display the "Select Popular Store Page"  */
                                 $response = $this->displayStoresPage();
@@ -373,6 +401,11 @@ class UssdController extends Controller
     {
         $this->getStoreDetails();
 
+        /** Save the ussd session details as well as the shopping progress of this customer.
+         *  In this case we want to hold a record that the customer has visited the store
+         */
+        $this->updateCustomerJourney();
+
         /*  If the user already selected an option from the "Store Landing Page"  */
         if ($this->hasSelectedStoreLandingPageOption()) {
             /*  If the user already indicated that they want to start shopping  */
@@ -438,27 +471,135 @@ class UssdController extends Controller
          *  was deleted or we could not gain access to it for some reason
          */
         if (!$this->store) {
+
             /*  Notify the user that we have issues connecting to the store  */
             return $this->displayIssueConnectingToStorePage();
+
+        }
+    }
+
+    /** updateCustomerJourney() 
+     *  
+     *  This method saves the current session details as well as the customer shopping
+     *  progress. Its responsible to capture information relating to the shopper e.g:
+     * 
+     *  - How many times the shopper visited the store
+     *  - Has the shopper reached the cart summary page
+     *  - Has the shopper reached the payment method page
+     *  - Has the shopper paid for their order
+     *  ... e.t.c
+     * 
+     */
+    public function updateCustomerJourney()
+    {
+
+        //  Check if we already have a ussd session
+        $ussd_session = $this->store->ussd_sessions()->where('session_id', $this->session_id)->first();
+
+        //  Use the previous start shopping datetime (if any) otherwise default to the current datetime for the start shopping time
+        $start_time = $ussd_session['metadata']['start_datetime'] ?? (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
+
+        //  Use the current datetime for the end shopping time
+        $end_time = (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
+
+        $sessionData = [
+            
+            'session_id' => $this->session_id,
+            'service_code' => $this->service_code,
+            'phone_number' => $this->phone_number,
+            'status' => $this->shopping_status,
+            'text' => $this->text,
+
+            'metadata' => [
+
+                //  How many unique products have been added to the cart
+                'number_of_products_added_to_cart' => $this->cart['number_of_items'] ?? 0,
+
+                //  What is the total quantity of the unique products added to the cart
+                'total_quantity_of_products_added_to_cart' => $this->cart['total_quantity_of_items'] ?? 0,
+
+                //  When did the customer start shopping (the first recorded time)
+                'start_datetime' => $start_time,
+                    
+                //  When did the customer stop shopping (the last recorded time)
+                'end_datetime' => $end_time,
+                    
+                //  Did the customer start shopping
+                'started_shopping' => $this->wantsToStartShopping(),
+                    
+                //  Did the customer view My Orders
+                'viewed_my_orders' => $this->wantsToViewMyOrders(),
+                    
+                //  Did the customer view Contact Us
+                'viewed_contact_us' => $this->wantsToViewContactUs(),
+                    
+                //  Did the customer view About Us
+                'viewed_about_us' => $this->wantsToViewAboutUs(),
+                    
+                //  Did the customer already select a product/service
+                'selected_product' => (count($this->selected_products) ? true : false),
+                                    
+                //  Did the customer select only one product / service
+                'selected_one_product' => (count($this->selected_products) == 1) ? true : false,
+
+                //  Did the customer select more products / services
+                'selected_more_products' => (count($this->selected_products) > 1) ? true : false,
+                    
+                //  Did the customer already select a payment method
+                'selected_payment_method' => $this->hasSelectedPaymentMethod(),
+                    
+                //  Wha payment method did the customer select
+                'payment_method' => $this->payment_method ?? null, 
+                    
+                //  What is the current payment status (Was the payment successful or not)
+                'payment_success' => $this->payment_response['status'] ?? null, 
+                    
+                //  What is the current payment status message if the payment status is a fail
+                'payment_failed_message' => $this->payment_response['error'] ?? null, 
+
+                //  How did the user find the store (E.g via  Enter store code or by Searching)
+                'method_used_to_find_store' => $this->method_used_to_find_store,
+                
+            ]
+
+        ];
+
+        if($ussd_session){
+
+            $ussd_session->update( $sessionData );
+
+        }else{
+
+            $this->store->ussd_sessions()->create( $sessionData );
+
         }
     }
 
     public function startShopping()
     {
+        /** Save the ussd session details as well as the shopping progress of this customer.
+         *  In this case we want to hold a record that the customer has started shopping
+         */
+        $this->updateCustomerJourney();
+
         /*  If the store is not supporting USSD at this time  */
         if (!$this->store->ussdInterface->live_mode) {
+
             /*  Notify the user that the store is not available  */
             return $this->displayCustomGoBackPage("Sorry, the store is currently offline.\n");
+
         }
 
         /*  If the user added more items than is allowed to their cart,
          *  (has exceeded the maximum items allowed)
          */
         if ($this->hasExceededMaximumItems()) {
+            
             $allowed_cart_items = $this->maximum_cart_items.($this->maximum_cart_items == 1 ? ' item' : ' items');
 
             /*  Notify the user that they have exceeded that maximum items allowed in the cart  */
             return $this->displayCustomGoBackPage('Sorry, you are only allowed to add a maximum of '.$allowed_cart_items."\n");
+
         }
 
         return $this->showProductCatalog();
@@ -478,6 +619,7 @@ class UssdController extends Controller
 
         /*  If the user already selected a product  */
         if ($this->hasSelectedProduct()) {
+
             $response = $this->handleSelectedProduct();
 
         /*  If the user has not selected any product  */
@@ -691,6 +833,12 @@ class UssdController extends Controller
                 /*  Get the cart and make sure the cart is always available from here on */
                 $this->cart = $this->getCart();
 
+                /** Save the ussd session details as well as the shopping progress of this customer.
+                 *  In this case we want to hold a record that the customer has selected a specific
+                 *  product 
+                 */
+                $this->updateCustomerJourney();
+
                 /*  If the user already selected the payment method  */
                 if ($this->hasSelectedOrderSummaryOption()) {
                     /*  If the user already selected that they want to add another product  */
@@ -708,6 +856,7 @@ class UssdController extends Controller
                         return $this->displayIncorrectOptionPage();
                     }
                 } else {
+
                     /*  Show the user the cart summary page with options to decide what to do next  */
                     $response = $this->displayCartSummaryPage();
                 }
@@ -730,14 +879,24 @@ class UssdController extends Controller
     {
         /*  If the user already selected the payment method  */
         if ($this->hasSelectedPaymentMethod()) {
+
+            /** Save the ussd session details as well as the shopping progress of this customer.
+             *  In this case we want to hold a record that the customer has selected a payment
+             *  method
+             */
+            $this->updateCustomerJourney();
+
             /*  If the user already selected that they want to pay with Airtime  */
             if ($this->wantsToPayWithAirtime()) {
                 /*  If the user already selected an option from the "Pay With Airtime Confirmation Page"  */
                 if ($this->hasSelectedAirtimeConfirmationOption()) {
                     /*  If the user already confirmed that they want to pay with Airtime  */
                     if ($this->hasConfirmedPaymentWithAirtime()) {
+
                         /*  Process the order using Airtime  */
-                        $response = $this->procressOrder($payment_method = 'airtime');
+                        $this->payment_method = 'Airtime';
+
+                        $response = $this->procressOrder();
 
                     /*  Selected an option that does not exist  */
                     } else {
@@ -751,22 +910,25 @@ class UssdController extends Controller
                     $response = $this->displayAirtimePaymentConfirmationPage();
                 }
 
-                /*  If the user already selected that they want to pay with Smega  */
+                /*  If the user already selected that they want to pay with Orange Money  */
             } elseif ($this->wantsToPayWithOrangeMoney()) {
-                /*  If the user already confirmed that they want to pay with Smega  */
+                /*  If the user already confirmed that they want to pay with Orange Money  */
                 if ($this->hasConfirmedPaymentWithOrangeMoney()) {
-                    /*  If the user provided a valid Smega pin  */
+                    /*  If the user provided a valid Orange Money pin  */
                     if ($this->isValidOrangeMoneyPin()) {
-                        /*  Process the order using Smega  */
-                        $response = $this->procressOrder($payment_method = 'orange_money');
 
-                    /*  If the user's Smega pin was not valid  */
+                        /*  Process the order using Orange Money  */
+                        $this->payment_method = 'Orange Money';
+
+                        $response = $this->procressOrder();
+
+                    /*  If the user's Orange Money pin was not valid  */
                     } else {
                         /*  Notify the user of incorrect pin  */
                         $response = $this->displayCustomGoBackPage("Incorrect pin provided. Please try again.\n");
                     }
                 } else {
-                    /*  Show the user the Smega payment confirmation page  */
+                    /*  Show the user the Orange Money payment confirmation page  */
                     $response = $this->displayOrangeMoneyPaymentConfirmationPage();
                 }
 
@@ -777,6 +939,7 @@ class UssdController extends Controller
 
             /*  If the user has not already selected the payment method  */
         } else {
+            
             /*  Show the user the payment options page  */
             $response = $this->displayPaymentOptionsPage();
         }
@@ -1388,7 +1551,7 @@ class UssdController extends Controller
         $summary_text = $this->summarize('You are paying '.$cart_total.' for '.$cart_items, 100);
         $response = $summary_text.". Select payment method\n";
         $response .= "1. Airtime\n";
-        $response .= '2. Smega';
+        $response .= '2. Orange Money';
 
         return $this->displayCustomGoBackPage($response);
     }
@@ -1410,7 +1573,7 @@ class UssdController extends Controller
     }
 
     /*  displayOrangeMoneyPaymentConfirmationPage()
-     *  This is the page displayed when a user must confirm payment using Smega
+     *  This is the page displayed when a user must confirm payment using Orange Money
      */
     public function displayOrangeMoneyPaymentConfirmationPage()
     {
@@ -1419,7 +1582,7 @@ class UssdController extends Controller
         $service_fee = $this->currency.$this->convertToMoney($this->getServiceFee());
 
         $summary_text = $this->summarize('You are paying '.$cart_total.' for '.$cart_items, 100);
-        $response = $summary_text.' using Smega. You will be charged ('.$service_fee.") as a service fee.\n";
+        $response = $summary_text.' using Orange Money. You will be charged ('.$service_fee.") as a service fee.\n";
         $response .= 'Reply with pin to confirm';
 
         return $this->displayCustomGoBackPage($response);
@@ -2697,7 +2860,7 @@ class UssdController extends Controller
     public function wantsToPayWithOrangeMoney()
     {
         /*  If the user already responded to the Select payment method page (Level 6)
-         *  by selecting option (2) for pay using Smega.
+         *  by selecting option (2) for pay using Orange Money.
          */
         return  $this->completedLevel(6 + $this->offset) && $this->getResponseFromLevel(6 + $this->offset) == '2';
     }
@@ -2720,7 +2883,7 @@ class UssdController extends Controller
 
     public function hasConfirmedPaymentWithOrangeMoney()
     {
-        /*  If the user already responded to the Confirm payment using Smega page (Level 7)
+        /*  If the user already responded to the Confirm payment using Orange Money page (Level 7)
          *  by selecting a specific option.
          */
         return  $this->completedLevel(7 + $this->offset);
@@ -2728,8 +2891,8 @@ class UssdController extends Controller
 
     public function isValidOrangeMoneyPin()
     {
-        /*  If the user already responded to the "Confirm payment using Smega page" (Level 7)
-         *  by selecting a specific option. Then we can capture the Smega pin they provided
+        /*  If the user already responded to the "Confirm payment using Orange Money page" (Level 7)
+         *  by selecting a specific option. Then we can capture the Orange Money pin they provided
          */
         $orange_money_pin = $this->getResponseFromLevel(7 + $this->offset);
 
@@ -2745,108 +2908,152 @@ class UssdController extends Controller
         return false;
     }
 
-    public function procressOrder($payment_method = null)
+    public function procressOrder()
     {
         /***************************************************************************************
          * Include transaction fee to the grand total amount of the cart before making payment
          **************************************************************************************/
 
         /* If the user specified to pay using Airtime  */
-        if ($payment_method == 'airtime') {
-            /*  Attempt to process the payment using Airtime  */
-            $payment_response = $this->processPaymentWithAirtime();
+        if ($this->payment_method == 'Airtime') {
 
-        /* If the user specified to pay using Smega  */
-        } elseif ($payment_method == 'orange_money') {
-            /*  Attempt to process the payment using Smega  */
-            $payment_response = $this->processPaymentWithOrangeMoney();
+            /*  Attempt to process the payment using Airtime  */
+            $this->payment_response = $this->processPaymentWithAirtime();
+
+        /* If the user specified to pay using Orange Money  */
+        } elseif ($this->payment_method == 'Orange Money') {
+
+            /*  Attempt to process the payment using Orange Money  */
+            $this->payment_response = $this->processPaymentWithOrangeMoney();
+
         } else {
-            $payment_response = ['status' => false, 'error' => 'No payment method was specified'];
+
+            //  Notify the user that no payment method was specified
+            return $this->displayPaymentFailedPage('No payment method was specified');
+
+        }
+            
+        /******************************************************************************************************
+         *  Find or create a new contact
+         *  Create a new order for the contact
+         *  Convert the order to a payable invoice
+         * 
+         *  Create a new transation for the invoice
+         *      - Set the transaction success status to "true" if payment was approved
+         *      - Set the transaction success status to "false" if payment was declined
+         * 
+         *  Send a payment confirmation sms with the order and invoice ref # to the customer
+         *  Send a order confirmation sms with the order ref # and customer details to the merchant
+         ******************************************************************************************************/
+
+        //  If we are on TEST MODE use the test mode contact details
+        if ($this->test_mode) {
+
+            //  Get the customer information
+            $customer_info = [
+
+                'name' => 'Test Customer',
+                'is_vendor' => false,
+                'is_customer' => true,
+                'is_individual' => true,
+                'phone' => [
+                    'calling_code' => '267',
+                    'number' => '79999999',
+                    'provider' => 'test provider',
+                    'type' => 'mobile',
+                ],
+                'address' => null,
+                'email' => null
+
+            ];
+
+        //  If we are not on TEST MODE use the actual customer contact details
+        } else {
+
+            //  Get the customer information
+            $customer_info = [
+
+                'name' => 'Julian Tabona',
+                'is_vendor' => false,
+                'is_customer' => true,
+                'is_individual' => true,
+                'phone' => [
+                    'calling_code' => $this->user['phone']['calling_code'],
+                    'number' => $this->user['phone']['number'],
+                    'provider' => 'orange',
+                    'type' => 'mobile',
+                ],
+                'address' => null,
+                'email' => null
+
+            ];
+
         }
 
-        /*  If the payment status was successful  */
-        if ($payment_response['status']) {
-            /******************************************************************
-             *  Find/Create a contact
-             *  Create a new order for contact
-             *  Convert the order to a payable invoice
-             *  Create a transation for the invoice (Status=paid)
-             *  Update the order lifecycle (Paid)
-             *  Update the order lifecycle (Pending Delivery)
-             *  Send a payment confirmation sms with an order ref #
-             ******************************************************************/
+        /** Create a new order using the provided customer information, merchant id and items. 
+         *  The initiateCreate() method will create, a new customer, order and payable invoice
+         *  all linked together.
+         */
+        $this->order = ( new \App\Order() )->initiateCreate([
 
-            //  If we are on TEST MODE use the test mode contact details
-            if ($this->test_mode) {
-                /*  Get the customer information */
-                $customer_info = [
-                    'name' => 'Test Customer',
-                    'is_vendor' => false,
-                    'is_customer' => true,
-                    'is_individual' => true,
-                    'phone' => [
-                        'calling_code' => '267',
-                        'number' => '79999999',
-                        'provider' => 'test provider',
-                        'type' => 'mobile',
-                    ],
-                    'address' => null,
-                    'email' => null,
-                ];
+            'customer_info' => $customer_info,
+            'merchant_id' => $this->store->id,
+            'items' => $this->cart['items']
 
-            //  If we are not on TEST MODE use the actual customer contact details
-            } else {
-                /*  Get the customer information */
-                $customer_info = [
-                    'name' => 'Julian Tabona',
-                    'is_vendor' => false,
-                    'is_customer' => true,
-                    'is_individual' => true,
-                    'phone' => [
-                        'calling_code' => $this->user['phone']['calling_code'],
-                        'number' => $this->user['phone']['number'],
-                        'provider' => 'orange',
-                        'type' => 'mobile',
-                    ],
-                    'address' => null,
-                    'email' => null,
-                ];
-            }
+        ]);
 
-            /*  Create a new order using the provided customer information,
-             *  merchant id and items. The initiateCreate() method will create,
-             *  a new customer, order and payable invoice all linked together.
-             */
-            $this->order = ( new \App\Order() )->initiateCreate([
-                'customer_info' => $customer_info,
-                'merchant_id' => $this->store->id,
-                'items' => $this->cart['items'],
-            ]);
+        //  If we are not on TEST MODE then send SMS to Customer and Merchant
+        if (!$this->test_mode) {
 
-            //  If we are not on TEST MODE then send SMS to Customer and Merchant
-            if (!$this->test_mode) {
-                /*  Send the order as a summarised SMS to the merchant  */
-                $merchantSMS = $this->order->smsOrderToMerchant();
+            /*  Send the order as a summarised SMS to the merchant  */
+            $merchantSMS = $this->order->smsOrderToMerchant();
 
-                /*  Send the invoice receipt as a summarized SMS to the customer  */
-                $customerSMS = $this->order->invoices()->first()->smsInvoiceReceiptToCustomer();
-            }
+            /*  Send the invoice receipt as a summarized SMS to the customer  */
+            $customerSMS = $this->order->invoices()->first()->smsInvoiceReceiptToCustomer();
 
-            /*  Mark the order invoice as paid  */
+        }
+
+        /*  If the payment status was successfull  */
+        if ($this->payment_response['status']) {
+
+            //  Update the shopping status with the value "1" which means that the shopping was completed successfully
+            $this->shopping_status = 1;
+
+            //  Mark the order invoice transaction as a successfull payment
             $payment = $this->order->invoices()->first()->recordAutomaticPayment($transaction = [
-                'payment_type' => $payment_method,
+                'status' => 'success',
+                'payment_type' => $this->payment_method,
                 'payment_amount' => $this->cart['grand_total'],
             ]);
 
             /*  Notify the user of the payment success  */
             $response = $this->displayPaymentSuccessPage();
+            
         } else {
+
+            //  Update the shopping status with the value "2" which means that the shopping was not completed successfully
+            $this->shopping_status = 2;
+
+            //  Mark the order invoice transaction as a failed payment
+            $payment = $this->order->invoices()->first()->recordAutomaticPayment($transaction = [
+                'status' => 'failed',
+                'payment_type' => $payment_method,
+                'payment_amount' => $this->cart['grand_total'],
+            ]);
+
             /*  Fetch the error (Reason why the payment failed)  */
-            $error = $payment_response['error'];
+            $error = $this->payment_response['error'];
 
             /*  Notify the user of the payment failure  */
             $response = $this->displayPaymentFailedPage($error);
+
         }
+
+        /** Save the ussd session details as well as the shopping progress of this customer.
+         *  In this case we want to hold a record that the customer has completed their
+         *  shopping experince
+         */
+        $this->updateCustomerJourney();
 
         return $response;
     }
@@ -2866,7 +3073,7 @@ class UssdController extends Controller
     public function processPaymentWithOrangeMoney()
     {
         /*********************************************
-         *  API TO PAY THE ORDER USING Smega
+         *  API TO PAY THE ORDER USING Orange Money
          ********************************************/
 
         /*  The response we return will be an array holding a status of the
@@ -2898,7 +3105,7 @@ class UssdController extends Controller
         }
 
         /*  Retrieve and return the cart details relating to the merchant and items provided  */
-        return ( new \App\MyCart() )->getCartDetails($this->store, $items);
+        return ( new \App\MyCart() )->getCartDetails( $items, $this->store->taxes, $this->store->discounts );
     }
 
     public function getOrderItemsInArray()

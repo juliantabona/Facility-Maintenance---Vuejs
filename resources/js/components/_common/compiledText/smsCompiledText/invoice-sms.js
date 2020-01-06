@@ -2,7 +2,7 @@ import moment from 'moment';
 
 function formatPrice(money, symbol) {
     let val = (money/1).toFixed(2).replace(',', '.');
-    return symbol + val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return (symbol ? symbol : '') + val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 function truncate(string, limit){

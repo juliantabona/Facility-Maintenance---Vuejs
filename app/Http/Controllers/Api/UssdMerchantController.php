@@ -234,7 +234,8 @@ class UssdMerchantController extends Controller
         $items_count = count($this->order->item_lines) ?? 0;
 
         $response = "CON Order #".$this->order->number.":\n";
-        $response .= "Status: (".ucwords($this->order->manual_status).")\n";
+        $response .= "Payment: (".ucwords($this->order->payment_status).")\n";
+        $response .= "Fulfillment: (".ucwords($this->order->fulfillment_status).")\n";
         $response .= "1. Mark As Completed*\n";
         $response .= "2. More Actions\n";
         $response .= "---\n";
@@ -1692,7 +1693,7 @@ class UssdMerchantController extends Controller
         /*  If we have items */
         if (count($items)) {
             /*  Retrieve and return the cart details relating to the merchant and items provided  */
-            return ( new \App\MyCart() )->getCartDetails($this->store, $items);
+            return ( new \App\MyCart() )->getCartDetails( $items, $this->store->taxes, $this->store->discounts );
         }
     }
 

@@ -133,7 +133,7 @@ class OrderController extends Controller
         if ($order) {
 
             //  Check if the user is authourized to update the order
-            if ($this->user->can('update', $order)) {
+            if ($this->user->can('fulfill', $order)) {
 
                 //  Fulfill the order
                 $fulfillmentStatus = $order->initiateFulfillment($orderInfo = $request->all());
@@ -145,6 +145,45 @@ class OrderController extends Controller
                 }else{
 
                     oq_api_notify_error($msg = 'Something went wrong fulfilling the order', $error = [], $status = 400);
+
+                }
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+            }
+        }else{
+            
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
+    public function payOrder( Request $request, $order_id )
+    {
+        //  Get the order
+        $order = order::where('id', $order_id)->first() ?? null;
+
+        //  Check if the order exists
+        if ($order) {
+
+            //  Check if the user is authourized to update the order
+            if ($this->user->can('pay', $order)) {
+
+                //  Fulfill the order
+                $paymentStatus = $order->initiatePayment($orderInfo = $request->all());
+
+                return $paymentStatus;
+
+                if( $paymentStatus ){
+
+                    return oq_api_notify(null, 200);
+
+                }else{
+
+                    oq_api_notify_error($msg = 'Something went wrong paying the order', $error = [], $status = 400);
 
                 }
 
@@ -383,6 +422,72 @@ class OrderController extends Controller
 
                 //  Return an API Readable Format of the Invoice Instance
                 return $invoice->convertToApiFormat();
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+
+            }
+        }else{
+            
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
+    /************************************
+     *  TRANSACTION RELATED RESOURCES   *
+    ************************************/
+
+    public function getOrderTransactions( $order_id )
+    {
+        //  Get the order
+        $order = Order::findOrFail($order_id);
+
+        //  Get the order transactions
+        $transactions = $order->transactions()->paginate() ?? null;
+
+        //  Check if the transactions exist
+        if ($transactions) {
+
+            //  Check if the user is authourized to view the order transactions
+            if ($this->user->can('view', $order)) {
+
+                //  Return an API Readable Format of the Transaction Instance
+                return ( new \App\Transaction )->convertToApiFormat($transactions);
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+
+            }
+        }else{
+            
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
+    public function getOrderTransaction( $order_id, $transaction_id )
+    {
+        //  Get the order
+        $order = Order::findOrFail($order_id);
+
+        //  Get the order transaction
+        $transaction = $order->transactions()->where('id', $transaction_id)->first() ?? null;
+
+        //  Check if the transaction exists
+        if ($transaction) {
+
+            //  Check if the user is authourized to view the order transaction
+            if ($this->user->can('view', $order)) {
+
+                //  Return an API Readable Format of the Transaction Instance
+                return $transaction->convertToApiFormat();
 
             } else {
 

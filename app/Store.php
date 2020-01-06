@@ -390,6 +390,14 @@ class Store extends Model
     }
 
     /*
+     *  Returns ussd sessions made to this store
+     */
+    public function ussd_sessions()
+    {
+        return $this->morphMany('App\UssdSession', 'owner')->orderBy('created_at', 'desc');
+    }
+
+    /*
      *  Returns the store settings
      */
     public function settings()
@@ -521,6 +529,7 @@ class Store extends Model
             'customers' => [
                 'count' => $this->customerContacts()->count()
             ],
+            'mobile_store' => $this->mobile_store_session_stats,
         ];
     }
 
@@ -652,6 +661,392 @@ class Store extends Model
         }
 
         return $total;
+    }
+
+    /*
+     *  Returns the total discounts made by this store
+     */
+    public function getMobileStoreSessionStatsAttribute()
+    {
+        $sessions = collect( $this->ussd_sessions );
+
+        //  Find the average session time
+        $session_times = $sessions->map(function ($session, $key) {
+    
+            $startTimestamp = (new \Carbon\Carbon( $session['metadata']['start_datetime'] ) )->getTimestamp();
+            $endTimestamp = (new \Carbon\Carbon( $session['metadata']['end_datetime'] ) )->getTimestamp();
+
+            //  Return the session time difference in seconds
+            return $endTimestamp - $startTimestamp;
+
+        });
+
+        //  Find the average session time
+        $average_session_time = $session_times->avg();
+
+        //  Find the minimum session time
+        $min_session_time = $session_times->min();
+
+        //  Find the maximum session time
+        $max_session_time = $session_times->max();
+
+        //  Count the total sessions
+        $total_sessions = $sessions->count();
+
+        //  Get the sessions where customers were shopping
+        $shopping_sessions = $sessions->filter(function ($session, $key) {
+    
+            //  Return the session if the metadata shows that the customer wanted to start shopping
+            return $session['metadata']['started_shopping'] === true;
+
+        });
+
+        //  Get the sessions where customers were viewing their past orders (My Orders)
+        $viewing_my_orders_sessions = $sessions->filter(function ($session, $key) {
+    
+            //  Return the session if the metadata shows that the customer was viewing their past orders (My Orders)
+            return $session['metadata']['viewed_my_orders'] === true;
+
+        });
+
+        //  Get the sessions where customers were viewing the store Contact Us
+        $viewing_contact_us_sessions = $sessions->filter(function ($session, $key) {
+    
+            //  Return the session if the metadata shows that the customer was viewing the store Contact Us
+            return $session['metadata']['viewed_contact_us'] === true;
+
+        });
+
+        //  Get the sessions where customers were viewing the store About Us
+        $viewing_about_us_sessions = $sessions->filter(function ($session, $key) {
+    
+            //  Return the session if the metadata shows that the customer was viewing the store About Us
+            return $session['metadata']['viewed_about_us'] === true;
+
+        });
+
+        //  Count the sessions where customers were shopping
+        $started_shopping = $shopping_sessions->count();
+
+        //  Count the sessions where customers were viewing their past orders (My Orders)
+        $viewing_my_orders = $viewing_my_orders_sessions->count();
+
+        //  Count the sessions where customers were viewing the store Contact Us
+        $viewing_contact_us = $viewing_contact_us_sessions->count();
+
+        //  Count the sessions where customers were viewing the store About Us
+        $viewing_about_us = $viewing_about_us_sessions->count();
+
+        //  Count the sessions where customers only visited without selecting any store options
+        $only_visiting = $total_sessions - $started_shopping - $viewing_my_orders - $viewing_contact_us - $viewing_about_us;
+        
+        //  Get the shopping sessions where customers selected a product
+        $selected_product_sessions = $shopping_sessions->filter(function ($session, $key) {
+            
+            //  Return the session if the metadata shows that the customer had selected a product
+            return $session['metadata']['selected_product'] === true;
+
+        });
+
+        //  Get the shopping sessions where customers selected only one product
+        $selected_one_product_sessions = $shopping_sessions->filter(function ($session, $key) {
+            
+            //  Return the session if the metadata shows that the customer had selected only one product
+            return $session['metadata']['selected_one_product'] === true;
+
+        });
+        
+        //  Count the shopping sessions where customers selected a product
+        $selected_product = $selected_product_sessions->count();
+
+        //  Count the shopping sessions where customers selected only one product
+        $selected_one_product = $selected_one_product_sessions->count();
+
+        //  Count the shopping sessions where customers selected more that one product
+        $selected_more_products = $shopping_sessions->filter(function ($session, $key) {
+    
+            //  Return the session if the metadata shows that the customer had selected more than one product
+            return $session['metadata']['selected_more_products'] === true;
+
+        })->count();
+
+        //  Count the shopping sessions where customers selected a payment method
+        $selected_payment_method = $shopping_sessions->filter(function ($session, $key) {
+    
+            //  Return the session if the metadata shows that the customer selected a payment method
+            return $session['metadata']['selected_payment_method'] === true;
+
+        })->count();
+
+
+        //  Get the shopping sessions where customers abandoned their cart
+        $abandoned_cart_sessions = $shopping_sessions->filter(function ($session, $key) {
+    
+            //  Return the session if the metadata shows that the customer payment passed
+            return $session['metadata']['payment_success'] === null;
+
+        });
+
+        //  Count the shopping sessions where customers abandoned their cart
+        $abandoned_cart = $abandoned_cart_sessions->count();
+
+        //  Count the abandoned cart sessions where customers abandoned their cart before selecting a product
+        $abandoned_cart_before_product_selection = $abandoned_cart_sessions->filter(function ($session, $key) {
+    
+            //  Return the session if the metadata shows that the customer had abandoned their cart before selecting a product
+            return $session['metadata']['selected_product'] === false;
+
+        })->count();
+
+        //  Count the abandoned cart sessions where customers abandoned their cart before selecting a payment method
+        $abandoned_cart_before_payment_method_selection = $abandoned_cart_sessions->filter(function ($session, $key) {
+    
+            //  Return the session if the metadata shows that the customer had abandoned their cart before selecting a payment method
+            return $session['metadata']['selected_product'] === true &&
+                   $session['metadata']['selected_payment_method'] === false;
+
+        })->count();
+
+        //  Count the abandoned cart sessions where customers abandoned their cart after selecting a payment method
+        $abandoned_cart_after_payment_method_selection = $abandoned_cart_sessions->filter(function ($session, $key) {
+    
+            //  Return the session if the metadata shows that the customer had abandoned their cart after selecting a payment method
+            return $session['metadata']['selected_product'] === true &&
+                   $session['metadata']['selected_payment_method'] === true;
+
+        })->count();
+
+        //  Get the popular payment methods used during shopping sessions
+        $popular_payment_methods = $shopping_sessions->groupBy('metadata.payment_method')->map(function ($session, $key) use ($started_shopping) {
+            
+            //  Count the number of sessions using the current payment method e.g Airtime = 3 or Mobile Money = 10
+            $count = collect($session)->count();
+
+            return [
+                
+                'count' => $count ?? 0,
+                'percentage' => $started_shopping != 0 ? round((($count / $started_shopping) * 100)) : 0
+
+            ];
+
+        })->filter(function ($session, $key) {
+    
+            //  Return only data with actual statistics
+            return !empty( $key );
+
+        });
+
+        //  Count the shopping sessions where customers paid successfully
+        $payment_success_sessions = $shopping_sessions->filter(function ($session, $key) {
+    
+            //  Return the session if the metadata shows that the customer payment passed
+            return $session['metadata']['payment_success'] === true;
+
+        });
+
+        //  Count the shopping sessions where customers paid unsuccessfully
+        $payment_failed_sessions = $shopping_sessions->filter(function ($session, $key) {
+    
+            //  Return the session if the metadata shows that the customer payment failed
+            return $session['metadata']['payment_success'] === false;
+
+        });
+
+
+        $payment_success = $payment_success_sessions->count();
+        $payment_failed = $payment_failed_sessions->count();
+
+        //  Get the popular payment methods used during successful payments
+        $popular_successful_payment_methods = $payment_success_sessions->groupBy('metadata.payment_method')->map(function ($session, $key) use ($started_shopping) {
+            
+            //  Count the number of sessions using the current payment method e.g Airtime = 3 or Mobile Money = 10
+            $count = collect($session)->count();
+
+            return [
+                
+                'count' => $count ?? 0,
+                'percentage' => $started_shopping != 0 ? round((($count / $started_shopping) * 100)) : 0
+
+            ];
+
+        })->filter(function ($session, $key) {
+    
+            //  Return only data with actual statistics
+            return !empty( $key );
+
+        });
+
+        //  Get the popular payment methods used during unsuccessful payments
+        $popular_failed_payment_methods = $payment_failed_sessions->groupBy('metadata.payment_method')->map(function ($session, $key) use ($started_shopping) {
+            
+            //  Count the number of sessions using the current payment method e.g Airtime = 3 or Mobile Money = 10
+            $count = collect($session)->count();
+
+            return [
+                
+                'count' => $count ?? 0,
+                'percentage' => $started_shopping != 0 ? round((($count / $started_shopping) * 100)) : 0
+
+            ];
+
+        })->filter(function ($session, $key) {
+    
+            //  Return only data with actual statistics
+            return !empty( $key );
+
+        });
+
+        return [
+
+            'total_sessions' => [
+                'name' => 'Store Visitations',
+                'count' => $total_sessions ?? 0,
+                'details' => [
+
+                    'shopping' => [
+                        'name' => 'Customers Shopping',
+                        'count' => $started_shopping ?? 0,
+                        'percentage' => $total_sessions != 0 ? round((($started_shopping / $total_sessions) * 100)) : 0
+                    ],
+
+                    'viewing_my_orders' => [
+                        'name' => 'Viewing My Orders',
+                        'count' => $viewing_my_orders ?? 0,
+                        'percentage' => $total_sessions != 0 ? round((($viewing_my_orders / $total_sessions) * 100)) : 0
+                    ],
+                    
+                    'viewing_contact_us' => [
+                        'name' => 'Viewing Contact Us',
+                        'count' => $viewing_contact_us ?? 0,
+                        'percentage' => $total_sessions != 0 ? round((($viewing_contact_us / $total_sessions) * 100)) : 0
+                    ],
+                    
+                    'viewing_about_us' => [
+                        'name' => 'Viewing About Us',
+                        'count' => $viewing_about_us ?? 0,
+                        'percentage' => $total_sessions != 0 ? round((($viewing_about_us / $total_sessions) * 100)) : 0
+                    ],
+                    
+                    'only_visiting' => [
+                        'name' => 'Only Visiting',
+                        'count' => $only_visiting ?? 0,
+                        'percentage' => $total_sessions != 0 ? round((($only_visiting / $total_sessions) * 100)) : 0
+                    ]
+
+                ]
+            ],
+
+            'shopping' => [
+                'name' => 'Customers Shopping',
+                'count' => $started_shopping ?? 0
+            ],
+
+            'selected_product' => [
+                'name' => 'Selected Products/Services',
+                'count' => $selected_product ?? 0,
+                'percentage' => $started_shopping != 0 ? round((($selected_product / $started_shopping) * 100)) : 0,
+                'details' => [
+
+                    'selected_one_product' => [
+                        'name' => 'Selected One Product/Service',
+                        'count' => $selected_one_product ?? 0,
+                        'percentage' => $started_shopping != 0 ? round((($selected_one_product / $started_shopping) * 100)) : 0
+                    ],
+        
+                    'selected_more_products' => [
+                        'name' => 'Selected More Products/Services',
+                        'count' => $selected_more_products,
+                        'percentage' => $started_shopping != 0 ? round((($selected_more_products / $started_shopping) * 100)) : 0
+                    ]
+
+                ]
+            ],
+            
+            'abandoned_cart' => [
+                'name' => 'Abandoned Cart',
+                'count' => $abandoned_cart ?? 0,
+                'percentage' => $started_shopping != 0 ? round((($abandoned_cart / $started_shopping) * 100)) : 0,
+                'details' => [
+
+                    'abandoned_cart_before_product_selection' => [
+                        'name' => 'Abandoned Cart Before Product Selection',
+                        'count' => $abandoned_cart_before_product_selection ?? 0,
+                        'percentage' => $started_shopping != 0 ? round((($abandoned_cart_before_product_selection / $started_shopping) * 100)) : 0
+                    ],  
+                    
+                    'abandoned_cart_before_payment_method_selection' => [
+                        'name' => 'Abandoned Cart Before Payment Method Selection',
+                        'count' => $abandoned_cart_before_payment_method_selection ?? 0,
+                        'percentage' => $started_shopping != 0 ? round((($abandoned_cart_before_payment_method_selection / $started_shopping) * 100)) : 0
+                    ],  
+                    
+                    'abandoned_cart_after_payment_method_selection' => [
+                        'name' => 'Abandoned Cart After Payment Method Selection',
+                        'count' => $abandoned_cart_after_payment_method_selection ?? 0,
+                        'percentage' => $started_shopping != 0 ? round((($abandoned_cart_after_payment_method_selection / $started_shopping) * 100)) : 0
+                    ], 
+
+                ]
+            ],   
+
+            'selected_payment_method' => [
+                'name' => 'Selected Payment Method',
+                'count' => $selected_payment_method ?? 0,
+                'percentage' => $started_shopping != 0 ? round((($selected_payment_method / $started_shopping) * 100)) : 0,
+                'details' => [
+
+                    'popular_payment_methods' => $popular_payment_methods, 
+
+                ]
+            ],  
+
+            'payment_success' => [
+                'name' => 'Successful Payments',
+                'count' => $payment_success ?? 0,
+                'percentage' => $started_shopping != 0 ? round((($payment_success / $started_shopping) * 100)) : 0,
+                'details' => [
+
+                    'popular_successful_payment_methods' => $popular_successful_payment_methods, 
+
+                ]
+            ], 
+            
+            'payment_failed' => [
+                'name' => 'Failed Payments',
+                'count' => $payment_failed ?? 0,
+                'percentage' => $started_shopping != 0 ? round((($payment_failed / $started_shopping) * 100)) : 0,
+                'details' => [
+
+                    'popular_failed_payment_methods' => $popular_failed_payment_methods, 
+
+                ]
+            ],
+
+            'session_time' => [
+
+                //  Convert to minutes and seconds and round the average time to one decimal place
+                'minimum_time' => [
+                    'name' => 'Minimum Session Time',
+                    'minutes' => round($min_session_time / 60),
+                    'seconds' => $min_session_time % 60
+                ],
+
+                //  Convert to minutes and seconds and round the average time to one decimal place
+                'maximum_time' => [
+                    'name' => 'Maximum Session Time',
+                    'minutes' => round($max_session_time / 60),
+                    'seconds' => $max_session_time % 60
+                ],
+
+                //  Convert to minutes and seconds and round the average time to one decimal place
+                'average_time' => [
+                    'name' => 'Average Session Time',
+                    'minutes' => round($average_session_time / 60),
+                    'seconds' => $average_session_time % 60
+                ]
+
+            ]
+        ];
     }
 
     /*

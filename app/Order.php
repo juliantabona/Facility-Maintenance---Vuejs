@@ -52,8 +52,9 @@ class Order extends Model
      * @var array
      */
     protected $fillable = [
+
         /*  Basic Info  */
-        'number', 'currency', 'created_date', 'manual_status', 'allow_lifecycle',
+        'number', 'currency', 'created_date', 'allow_lifecycle',
 
         /*  Status / Payment Status / Fulfillment Status  */
         'status', 'payment_status', 'fulfillment_status',
@@ -79,6 +80,7 @@ class Order extends Model
 
         /*  Meta Data  */
         'metadata',
+
     ];
 
     protected $allowedFilters = [];
@@ -88,39 +90,54 @@ class Order extends Model
     /*
      *  Scope orders by status
      */
+    public function scopeDraft($query)
+    {
+        return $query->where('status', 'draft');
+    }
+    
     public function scopeOpen($query)
     {
-        return $query->where('manual_status', 'open');
+        return $query->where('status', 'open');
     }
 
     public function scopeCancelled($query)
     {
-        return $query->where('manual_status', 'cancelled');
-    }
-
-    public function scopePendingPayment($query)
-    {
-        return $query->where('manual_status', 'pending payment');
+        return $query->where('status', 'cancelled');
     }
 
     public function scopePaid($query)
     {
-        return $query->where('manual_status', 'paid');
+        return $query->where('payment_status', 'paid');
     }
 
-    public function scopePendingDelivery($query)
+    public function scopeUnpaid($query)
     {
-        return $query->where('manual_status', 'pending delivery');
+        return $query->where('payment_status', 'unpaid');
     }
 
-    public function scopeDelivered($query)
+    public function scopePendingPayment($query)
     {
-        return $query->where('manual_status', 'delivered');
+        return $query->where('payment_status', 'pending payment');
     }
 
-    public function scopeCompleted($query)
+    public function scopeFailedPayment($query)
     {
-        return $query->where('manual_status', 'closed');
+        return $query->where('payment_status', 'failed payment');
+    }
+
+    public function scopeFulfilled($query)
+    {
+        return $query->where('fulfillment_status', 'fulfilled');
+    }
+
+    public function scopeUnfulfilled($query)
+    {
+        return $query->where('fulfillment_status', 'unfulfilled');
+    }
+
+    public function scopePartiallyFulfilled($query)
+    {
+        return $query->where('fulfillment_status', 'partially fulfilled');
     }
 
     /*
@@ -218,11 +235,51 @@ class Order extends Model
     }
 
     /*
-     *  Returns the invoiceS owned by this order
+     *  Returns the invoices owned by this order
      */
     public function invoices()
     {
         return $this->morphMany('App\Invoice', 'owner');
+    }
+ 
+    /*
+     *  Returns the transactions of invoices owned by this order
+     */
+    public function transactions()
+    {
+        /** Polymorphic hasManyThrough relationships are the same as any others, but 
+         *  with an added constraint on the owner_type, which can be retrieved from
+         *  the Relation::morphMap() array, or by using the class name directly.
+         * 
+         *  Refer to this stackoverflow quetion: 
+         *  https://stackoverflow.com/questions/43285779/laravel-polymorphic-relations-has-many-through
+         * 
+         *  The array_search() function will search an array for a value and returns the key.
+         * 
+         *  static::class = App\Order
+         * 
+         *  Relation::morphMap() = [
+         *      "order"  => "App\Order"
+         *      "store"  => "App\Store"
+         *      "user"   => App\User"
+         *      "account => App\Account"
+         *      "contact => App\Contact"
+         *  ]
+         * 
+         *  Therefore array_search(static::class, Relation::morphMap()) will return "order"
+         */
+        return $this->hasManyThrough(
+                    'App\Transaction',                      //  What we want (transations)
+                    'App\Invoice',                          //  The relationship we have (invoices)
+                    'owner_id',                             //  Foreign key on invoices table
+                    'owner_id'                              //  Foreign key on transactions table
+                )->where('invoices.owner_type', array_search(static::class, Relation::morphMap()) ?: static::class)
+                //  Select all the transation details and make sure the owner id reflects the (invoice id) not the (order id)
+                ->select(
+                    'transactions.type', 'transactions.status', 'transactions.automatic', 'transactions.payment_type',  
+                    'transactions.payment_amount', 'transactions.meta', 'invoices.owner_id as order_id', 'invoices.id as invoice_id',
+                    'transactions.created_at', 'transactions.updated_at'
+                );
     }
 
     /*
@@ -283,8 +340,8 @@ class Order extends Model
 
     protected $appends = [
         'resource_type', 'unfulfilled_item_lines', 'quantity_of_unfulfilled_item_lines', 'quantity_of_fulfilled_item_lines', 
-        'transaction_total', 'refund_total', 'outstanding_balance', 'created_at_format', 'status', 'lifecycle_history',
-        'lifecycle_flow',
+        'quantity_of_unpaid_item_lines', 'quantity_of_paid_item_lines', 'paid_item_lines','unpaid_item_lines', 'transaction_total', 
+        'refund_total', 'outstanding_balance', 'created_at_format', 'status', 'lifecycle_history', 'lifecycle_flow',
     ];
 
     /*
@@ -327,7 +384,7 @@ class Order extends Model
                          *  $fulfillment_item_quantity = 2
                          * 
                          *  This means that if we subtract $fulfillment_item_quantity (2) from $item_quantity (5) we will get the
-                         *  number of remaining unfilfilled items (3) for the same matching item.
+                         *  number of remaining unfulfilled items (3) for the same matching item.
                          * 
                          *  $item_quantity (3) = $item_quantity (5) - $fulfillment_item_quantity (2)
                          */
@@ -356,6 +413,138 @@ class Order extends Model
         }
 
         return $unfulfilled_item_lines;
+    }
+
+    /*
+     *  Returns the order paid item lines
+     */
+    public function getPaidItemLinesAttribute()
+    {
+        $paid_item_lines = [];        
+
+        //  Foreach order item line
+        foreach( $this->item_lines as $item_line ){
+
+            //  Lets get the current order item line quantity value
+            $paid_item_quantity = 0;
+
+            //  Get all the paid invoices of this order
+            $invoices = collect($this->invoices()->get())->where('has_paid.status', true);
+
+            //  Foreach invoice instance [Since we can have multiple invoice instances]
+            foreach ($invoices as $invoice) {
+
+                //  Foreach item line of the current invoice instance
+                foreach ($invoice->item_lines as $invoice_item_line) {
+
+                    //  Lets get the current invoice item line quantity value
+                    $invoice_item_quantity = intval($invoice_item_line['quantity']);
+
+                    //  Lets check if the current invoice item line matches the current order item line
+                    if( $invoice_item_line['id'] == $item_line['id'] ){
+
+                        /** Calculate if we have any additional quantities of the matching item that are paid.
+                         *  Assumiing that:
+                         * 
+                         *  $paid_item_quantity = 0 and
+                         *  $invoice_item_quantity = 2
+                         * 
+                         *  This means that if we add $invoice_item_quantity (2) to the $paid_item_quantity (0) we will get the
+                         *  number of the total item quantity paid (2) for the same matching item.
+                         * 
+                         *  $paid_item_quantity (2) = $paid_item_quantity (0) + $invoice_item_quantity (2)
+                         */
+                        $paid_item_quantity = $paid_item_quantity + $invoice_item_quantity;
+
+                    }
+
+                }
+
+            }
+
+            //  If we have any remaining quantities that haven't yet been paid for this item line
+            if($paid_item_quantity > 0){
+                
+                //  Get the unpaid/partially paid item line
+                $paid_item_line = $item_line;
+
+                //  Update the remaining quantities that require to be paid for this item line
+                $paid_item_line['quantity'] = $paid_item_quantity;
+                
+                //  Push the paid item
+                array_push($paid_item_lines, $paid_item_line);
+
+            }
+
+        }
+
+        return $paid_item_lines;
+    }
+
+    /*
+     *  Returns the order unpaid item lines
+     */
+    public function getUnPaidItemLinesAttribute()
+    {
+        $unpaid_item_lines = [];        
+
+        //  Foreach order item line
+        foreach( $this->item_lines as $item_line ){
+
+            //  Lets get the current order item line quantity value
+            $item_quantity = intval($item_line['quantity']);
+
+            //  Get all the paid invoices of this order
+            $invoices = collect($this->invoices()->get())->where('has_paid.status', true);
+
+            //  Foreach invoice instance [Since we can have multiple invoice instances]
+            foreach ($invoices as $invoice) {
+
+                //  Foreach item line of the current invoice instance
+                foreach ($invoice->item_lines as $invoice_item_line) {
+
+                    //  Lets get the current invoice item line quantity value
+                    $invoice_item_quantity = intval($invoice_item_line['quantity']);
+
+                    //  Lets check if the current invoice item line matches the current order item line
+                    if( $invoice_item_line['id'] == $item_line['id'] ){
+
+                        /** Calculate if we have any remaining quantities of the matching item that are not yet paid.
+                         *  Assumiing that:
+                         * 
+                         *  $item_quantity = 5 and
+                         *  $invoice_item_quantity = 2
+                         * 
+                         *  This means that if we subtract $invoice_item_quantity (2) from $item_quantity (5) we will get the
+                         *  number of remaining unpaid items (3) for the same matching item.
+                         * 
+                         *  $item_quantity (3) = $item_quantity (5) - $invoice_item_quantity (2)
+                         */
+                        $item_quantity = $item_quantity - $invoice_item_quantity;
+
+                    }
+
+                }
+
+            }
+
+            //  If we have any remaining quantities that haven't yet been paid for this item line
+            if($item_quantity > 0){
+                
+                //  Get the unpaid/partially paid item line
+                $unpaid_item_line = $item_line;
+
+                //  Update the remaining quantities that require to be paid for this item line
+                $unpaid_item_line['quantity'] = $item_quantity;
+                
+                //  Push the unpaid/partially paid item
+                array_push($unpaid_item_lines, $unpaid_item_line);
+
+            }
+
+        }
+
+        return $unpaid_item_lines;
     }
 
     /*
@@ -398,7 +587,41 @@ class Order extends Model
 
         return $quantity;
     }
+    /*
+     *  Returns the order unpaid item lines
+     */
+    public function getQuantityOfUnpaidItemLinesAttribute()
+    {
+        $quantity = 0;        
 
+        //  Foreach item line
+        foreach( $this->unpaid_item_lines as $unpaid_item_line ){                    
+            
+            //  Lets get the current unpaid item line quantity value
+            $quantity = $quantity + intval($unpaid_item_line['quantity']);
+
+        }
+
+        return $quantity;
+    }
+
+    /*
+     *  Returns the order paid item lines
+     */
+    public function getQuantityOfPaidItemLinesAttribute()
+    {
+        $quantity = 0;        
+
+        //  Foreach item line
+        foreach ($this->paid_item_lines as $paid_item_line) {                 
+             
+            //  Lets get the current paid item line quantity value
+            $quantity = $quantity + intval($paid_item_line['quantity']);
+
+        }
+
+        return $quantity;
+    }
     /*
      *  Returns the total payment made to this order
      */
@@ -432,10 +655,22 @@ class Order extends Model
      */
     public function getOutstandingBalanceAttribute()
     {
-        $total = 0;
+        $total = $this->grand_total;
 
-        foreach ($this->invoices as $invoice) {
-            $total += $invoice->outstanding_balance;
+        //  Get all the paid invoices of this order
+        $invoices = collect($this->invoices()->get())->where('has_paid.status', true);
+
+        //  If we have any paid invoices
+        if( count( $invoices ) ){
+
+            //  Foreach paid invoice
+            foreach ($this->invoices as $invoice) {
+
+                //  Remove the amount paid by customer from the current outstanding total
+                $total = $total - $invoice->transaction_total;
+
+            }
+
         }
 
         return $total;

@@ -154,7 +154,7 @@ Inv<template>
             },
             formatPrice(money, symbol) {
                 let val = (money/1).toFixed(2).replace(',', '.');
-                return symbol + val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                return (symbol ? symbol : '') + val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             },
             truncate(string, limit){
                 return (string.length > limit) ? string.substring(0, limit - 3)+'...' : string;

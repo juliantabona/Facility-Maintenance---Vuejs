@@ -34,7 +34,7 @@
 
         <Col :span="24">
 
-            <Row class="border-bottom">
+            <Row v-if="!hideStoreMenu" class="border-bottom mb-3">
 
                 <!-- Store header -->
                 <Col :span="10">
@@ -107,7 +107,7 @@
                 <!-- Show when we have store -->
                 <Col v-if="store && !isLoadingStore" :span="24">
 
-                    <div class="mt-3">
+                    <div>
                         
                         <Card v-if="!store.is_mobile_verified" class="p-2">
                             
@@ -151,7 +151,9 @@
                             <overviewWidget v-if="activeStoreTab == 'overview'" :store="store"></overviewWidget>
 
                             <!-- Orders Tab -->
-                            <orderWidget v-if="activeStoreTab == 'orders'" :ordersUrl="(store._links['oq:orders'] || {}).href" :store="store"></orderWidget>
+                            <orderWidget v-if="activeStoreTab == 'orders'" 
+                                :ordersUrl="(store._links['oq:orders'] || {}).href" @hideStoreMenu="hideStoreMenu = $event">
+                            </orderWidget>
 
                             <!-- Customers Tab -->
                             <customerWidget v-if="activeStoreTab == 'customers'" :customersUrl="(store._links['oq:customer_contacts'] || {}).href"></customerWidget>
@@ -165,7 +167,6 @@
                             </Card>
 
                         </template>
-
                         
                     </div>
 
@@ -236,6 +237,7 @@
             return {
 
                 store: null,
+                hideStoreMenu: false,
                 isLoadingStore: false,
                 default_mobile_phone: null,
                 localStoreUrl: this.storeUrl,

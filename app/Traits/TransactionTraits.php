@@ -73,6 +73,9 @@ trait TransactionTraits
             /*  If the transaction was created successfully  */
             if( $transaction ){
 
+                //  Record the activity of the the transaction creation
+                $activity = $transaction->recordActivity('created');
+
                 /*  Return a fresh instance of the transaction  */
                 return $transaction->fresh();
 
@@ -87,4 +90,15 @@ trait TransactionTraits
 
     }
 
+    /*  recordActivity()
+     *
+     *  This method saves the activity of the invoice with a specified status
+     *  as well as activity data and the authenticated user responsible 
+     *  for the activity.
+     */
+    public function recordActivity($status, $data = null)
+    {   
+        return ( new \App\RecentActivity() )->saveActivity($this, $status, $data);
+    }
+    
 }
