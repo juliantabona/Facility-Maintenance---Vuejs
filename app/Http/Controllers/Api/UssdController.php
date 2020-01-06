@@ -294,6 +294,13 @@ class UssdController extends Controller
             }
         }
 
+        /** Save the ussd session details as well as the shopping progress of this customer.
+         *  This will allow us to track all the activities of the current customer so that
+         *  we know if they are shopping, have selected a product, have selected a payment
+         *  method, have paid successfully or experienced a failed payment, e.t.c
+         */
+        $this->updateCustomerJourney();
+
         /*  Return the response to the user  */
         return response($response)->header('Content-Type', 'text/plain');
         //return response($response)->header('Content-Type', 'application/json');
@@ -400,11 +407,6 @@ class UssdController extends Controller
     public function visitStore()
     {
         $this->getStoreDetails();
-
-        /** Save the ussd session details as well as the shopping progress of this customer.
-         *  In this case we want to hold a record that the customer has visited the store
-         */
-        $this->updateCustomerJourney();
 
         /*  If the user already selected an option from the "Store Landing Page"  */
         if ($this->hasSelectedStoreLandingPageOption()) {
@@ -577,10 +579,6 @@ class UssdController extends Controller
 
     public function startShopping()
     {
-        /** Save the ussd session details as well as the shopping progress of this customer.
-         *  In this case we want to hold a record that the customer has started shopping
-         */
-        $this->updateCustomerJourney();
 
         /*  If the store is not supporting USSD at this time  */
         if (!$this->store->ussdInterface->live_mode) {
@@ -833,12 +831,6 @@ class UssdController extends Controller
                 /*  Get the cart and make sure the cart is always available from here on */
                 $this->cart = $this->getCart();
 
-                /** Save the ussd session details as well as the shopping progress of this customer.
-                 *  In this case we want to hold a record that the customer has selected a specific
-                 *  product 
-                 */
-                $this->updateCustomerJourney();
-
                 /*  If the user already selected the payment method  */
                 if ($this->hasSelectedOrderSummaryOption()) {
                     /*  If the user already selected that they want to add another product  */
@@ -879,12 +871,6 @@ class UssdController extends Controller
     {
         /*  If the user already selected the payment method  */
         if ($this->hasSelectedPaymentMethod()) {
-
-            /** Save the ussd session details as well as the shopping progress of this customer.
-             *  In this case we want to hold a record that the customer has selected a payment
-             *  method
-             */
-            $this->updateCustomerJourney();
 
             /*  If the user already selected that they want to pay with Airtime  */
             if ($this->wantsToPayWithAirtime()) {
@@ -3009,10 +2995,10 @@ class UssdController extends Controller
         if (!$this->test_mode) {
 
             /*  Send the order as a summarised SMS to the merchant  */
-            $merchantSMS = $this->order->smsOrderToMerchant();
+            // $merchantSMS = $this->order->smsOrderToMerchant();
 
             /*  Send the invoice receipt as a summarized SMS to the customer  */
-            $customerSMS = $this->order->invoices()->first()->smsInvoiceReceiptToCustomer();
+            // $customerSMS = $this->order->invoices()->first()->smsInvoiceReceiptToCustomer();
 
         }
 
@@ -3051,12 +3037,6 @@ class UssdController extends Controller
             $response = $this->displayPaymentFailedPage($error);
 
         }
-
-        /** Save the ussd session details as well as the shopping progress of this customer.
-         *  In this case we want to hold a record that the customer has completed their
-         *  shopping experince
-         */
-        $this->updateCustomerJourney();
 
         return $response;
     }
