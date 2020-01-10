@@ -25,56 +25,102 @@
 </style>
 
 <template>
-    
-    <div>
+
+    <List>
 
         <!-- Iterate over the first level statistics -->
-        <Row v-for="(main_statistic, key_1) in stats" :key="key_1"
-                class="border-bottom pb-2 mb-3">
-            
-            <!-- Main Title -->
-            <Col :span="24">
-            
-                <span class="main-heading font-weight-bold mb-2">{{ main_statistic.name }}</span>
+        <ListItem v-for="(main_statistic, stat_type) in stats" :key="stat_type">
 
-            </Col>
+            <Row class="w-100">
+                
+                <!-- If the details are statistics about session time --> 
+                <template v-if="isSessionTimeStats(stat_type)">
 
-            <!-- Primary Counting Number -->
-            <Col :span="main_statistic.percentage ? 18 : 24">
+                    <Col :span="24">     
+                    
+                        <List size="small">
+                            
+                            <ListItem v-for="(session_time, session_time_type) in main_statistic" :key="session_time_type">
 
-                <span class="main-figure">{{ main_statistic.count }}</span>
+                                <Row class="w-100">
 
-            </Col>
+                                    <!-- Main Title -->
+                                    <Col span="16">
+                                    
+                                        <span class="main-heading font-weight-bold mb-2">{{ session_time.name }}</span>
 
-            <!-- Percentage -->
-            <Col v-if="main_statistic.percentage" span="6">
+                                    </Col>
 
-                <!-- Percentage Arrow -->
-                <Icon type="md-arrow-forward" :class="
-                    (key_1 == 'abandoned_cart' ? 'text-danger' : '') +
-                    (key_1 == 'payment_success' ? 'text-success' : '')" />
+                                    <Col span="8">
+                                    
+                                        <!-- Time -->
+                                        <span class="text-muted">
+                                            <span v-if="session_time.minutes">{{ session_time.minutes }} mins </span>
+                                            <span v-if="session_time.seconds">{{ session_time.seconds }} sec</span>
+                                        </span>
 
-                <!-- Percentage Amount -->
-                <span :class="'percentage'
-                        +(key_1 == 'abandoned_cart' ? ' text-danger' : '')
-                        +(key_1 == 'payment_success' ? ' text-success' : '')">
-                        
-                    {{ main_statistic.percentage }}%
+                                    </Col>
 
-                </span>
+                                </Row>
 
-            </Col>
+                            </ListItem>
 
-            <!-- Percentage -->
-            <Col v-if="main_statistic.details" span="24">
+                        </List>
 
-                <detailedStats :stats="main_statistic.details"></detailedStats>
+                    </Col>
 
-            </Col>
+                </template>
 
-        </Row>
+                <template v-else>
 
-    </div>
+                    <!-- Main Title -->
+                    <Col :span="24">
+                    
+                        <span class="main-heading font-weight-bold mb-2">{{ main_statistic.name }}</span>
+
+                    </Col>
+
+                    <!-- Primary Counting Number -->
+                    <Col :span="main_statistic.percentage ? 18 : 24">
+
+                        <span class="main-figure">{{ main_statistic.count }}</span>
+
+                    </Col>
+
+                    <!-- Percentage -->
+                    <Col v-if="main_statistic.percentage" span="6">
+
+                        <!-- Percentage Arrow -->
+                        <Icon type="md-arrow-forward" :class="
+                            (stat_type == 'abandoned_cart' ? 'text-danger' : '') +
+                            (stat_type == 'payment_success' ? 'text-success' : '')" />
+
+                        <!-- Percentage Amount -->
+                        <span :class="'percentage'
+                                +(stat_type == 'abandoned_cart' ? ' text-danger' : '')
+                                +(stat_type == 'payment_success' ? ' text-success' : '')">
+                                
+                            {{ main_statistic.percentage }}%
+
+                        </span>
+
+                    </Col>
+
+                    <!-- Percentage -->
+                    <Col v-if="main_statistic.details" span="24">
+
+                        <detailedStats :stats="main_statistic.details"></detailedStats>
+
+                    </Col>
+
+                </template>
+
+            </Row>
+
+
+        </ListItem>
+
+    </List>
 
 </template>
 
@@ -94,6 +140,14 @@
             return {
                 
             }
+        },
+        methods: {
+
+            //  Check if the given statistic is data about session time
+            isSessionTimeStats(type){
+                return ['session_time'].includes(type)
+            }
+
         }
     };
   

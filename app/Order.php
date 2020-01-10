@@ -316,7 +316,7 @@ class Order extends Model
     protected $appends = [
         'resource_type', 'unfulfilled_item_lines', 'quantity_of_unfulfilled_item_lines', 'quantity_of_fulfilled_item_lines', 
         'quantity_of_unpaid_item_lines', 'quantity_of_paid_item_lines', 'paid_item_lines','unpaid_item_lines', 'transaction_total', 
-        'refund_total', 'outstanding_balance', 'created_at_format', 'status'
+        'refund_total', 'outstanding_balance', 'status'
     ];
 
     /*
@@ -334,60 +334,64 @@ class Order extends Model
     {
         $unfulfilled_item_lines = [];        
 
-        //  Foreach order item line
-        foreach( $this->item_lines as $item_line ){
+        if( $this->item_lines ){
 
-            //  Lets get the current order item line quantity value
-            $item_quantity = intval($item_line['quantity']);
-
-            //  Foreach fulfillment instance [Since we can have multiple fulfillment instances]
-            foreach ($this->fulfillments as $fulfillment) {
-
-                //  Foreach item line of the current fulfillment instance
-                foreach ($fulfillment->item_lines as $fulfillment_item_line) {
-
-                    //  Lets get the current fulfillment item line quantity value
-                    $fulfillment_item_quantity = intval($fulfillment_item_line['quantity']);
-
-                    //  Lets check if the current fulfillment item line matches the current order item line
-                    if( $fulfillment_item_line['id'] == $item_line['id'] ){
-
-                        /** Calculate if we have any remaining quantities of the matching item that are not yet fulfilled.
-                         *  Assumiing that:
-                         * 
-                         *  $item_quantity = 5 and
-                         *  $fulfillment_item_quantity = 2
-                         * 
-                         *  This means that if we subtract $fulfillment_item_quantity (2) from $item_quantity (5) we will get the
-                         *  number of remaining unfulfilled items (3) for the same matching item.
-                         * 
-                         *  $item_quantity (3) = $item_quantity (5) - $fulfillment_item_quantity (2)
-                         */
-                        $item_quantity = $item_quantity - $fulfillment_item_quantity;
-
+            //  Foreach order item line
+            foreach( $this->item_lines as $item_line ){
+    
+                //  Lets get the current order item line quantity value
+                $item_quantity = intval($item_line['quantity']);
+    
+                //  Foreach fulfillment instance [Since we can have multiple fulfillment instances]
+                foreach ($this->fulfillments as $fulfillment) {
+    
+                    //  Foreach item line of the current fulfillment instance
+                    foreach ($fulfillment->item_lines as $fulfillment_item_line) {
+    
+                        //  Lets get the current fulfillment item line quantity value
+                        $fulfillment_item_quantity = intval($fulfillment_item_line['quantity']);
+    
+                        //  Lets check if the current fulfillment item line matches the current order item line
+                        if( $fulfillment_item_line['id'] == $item_line['id'] ){
+    
+                            /** Calculate if we have any remaining quantities of the matching item that are not yet fulfilled.
+                             *  Assumiing that:
+                             * 
+                             *  $item_quantity = 5 and
+                             *  $fulfillment_item_quantity = 2
+                             * 
+                             *  This means that if we subtract $fulfillment_item_quantity (2) from $item_quantity (5) we will get the
+                             *  number of remaining unfulfilled items (3) for the same matching item.
+                             * 
+                             *  $item_quantity (3) = $item_quantity (5) - $fulfillment_item_quantity (2)
+                             */
+                            $item_quantity = $item_quantity - $fulfillment_item_quantity;
+    
+                        }
+    
                     }
-
+    
                 }
-
+    
+                //  If we have any remaining quantities that haven't yet been fulfilled for this item line
+                if($item_quantity > 0){
+                    
+                    //  Get the unfulfilled/partially fulfilled item line
+                    $unfulfilled_item_line = $item_line;
+    
+                    //  Update the remaining quantities that require fulfillment for this item line
+                    $unfulfilled_item_line['quantity'] = $item_quantity;
+                    
+                    //  Push the unfulfilled item
+                    array_push($unfulfilled_item_lines, $unfulfilled_item_line);
+    
+                }
+    
             }
-
-            //  If we have any remaining quantities that haven't yet been fulfilled for this item line
-            if($item_quantity > 0){
-                
-                //  Get the unfulfilled/partially fulfilled item line
-                $unfulfilled_item_line = $item_line;
-
-                //  Update the remaining quantities that require fulfillment for this item line
-                $unfulfilled_item_line['quantity'] = $item_quantity;
-                
-                //  Push the unfulfilled item
-                array_push($unfulfilled_item_lines, $unfulfilled_item_line);
-
-            }
+    
+            return $unfulfilled_item_lines;
 
         }
-
-        return $unfulfilled_item_lines;
     }
 
     /*
@@ -397,57 +401,61 @@ class Order extends Model
     {
         $paid_item_lines = [];        
 
-        //  Foreach order item line
-        foreach( $this->item_lines as $item_line ){
+        if($this->item_lines){
 
-            //  Lets get the current order item line quantity value
-            $paid_item_quantity = 0;
+            //  Foreach order item line
+            foreach( $this->item_lines as $item_line ){
 
-            //  Get all the paid invoices of this order
-            $invoices = collect($this->invoices()->get())->where('has_paid.status', true);
+                //  Lets get the current order item line quantity value
+                $paid_item_quantity = 0;
 
-            //  Foreach invoice instance [Since we can have multiple invoice instances]
-            foreach ($invoices as $invoice) {
+                //  Get all the paid invoices of this order
+                $invoices = collect($this->invoices()->get())->where('has_paid.status', true);
 
-                //  Foreach item line of the current invoice instance
-                foreach ($invoice->item_lines as $invoice_item_line) {
+                //  Foreach invoice instance [Since we can have multiple invoice instances]
+                foreach ($invoices as $invoice) {
 
-                    //  Lets get the current invoice item line quantity value
-                    $invoice_item_quantity = intval($invoice_item_line['quantity']);
+                    //  Foreach item line of the current invoice instance
+                    foreach ($invoice->item_lines as $invoice_item_line) {
 
-                    //  Lets check if the current invoice item line matches the current order item line
-                    if( $invoice_item_line['id'] == $item_line['id'] ){
+                        //  Lets get the current invoice item line quantity value
+                        $invoice_item_quantity = intval($invoice_item_line['quantity']);
 
-                        /** Calculate if we have any additional quantities of the matching item that are paid.
-                         *  Assumiing that:
-                         * 
-                         *  $paid_item_quantity = 0 and
-                         *  $invoice_item_quantity = 2
-                         * 
-                         *  This means that if we add $invoice_item_quantity (2) to the $paid_item_quantity (0) we will get the
-                         *  number of the total item quantity paid (2) for the same matching item.
-                         * 
-                         *  $paid_item_quantity (2) = $paid_item_quantity (0) + $invoice_item_quantity (2)
-                         */
-                        $paid_item_quantity = $paid_item_quantity + $invoice_item_quantity;
+                        //  Lets check if the current invoice item line matches the current order item line
+                        if( $invoice_item_line['id'] == $item_line['id'] ){
+
+                            /** Calculate if we have any additional quantities of the matching item that are paid.
+                             *  Assumiing that:
+                             * 
+                             *  $paid_item_quantity = 0 and
+                             *  $invoice_item_quantity = 2
+                             * 
+                             *  This means that if we add $invoice_item_quantity (2) to the $paid_item_quantity (0) we will get the
+                             *  number of the total item quantity paid (2) for the same matching item.
+                             * 
+                             *  $paid_item_quantity (2) = $paid_item_quantity (0) + $invoice_item_quantity (2)
+                             */
+                            $paid_item_quantity = $paid_item_quantity + $invoice_item_quantity;
+
+                        }
 
                     }
 
                 }
 
-            }
+                //  If we have any remaining quantities that haven't yet been paid for this item line
+                if($paid_item_quantity > 0){
+                    
+                    //  Get the unpaid/partially paid item line
+                    $paid_item_line = $item_line;
 
-            //  If we have any remaining quantities that haven't yet been paid for this item line
-            if($paid_item_quantity > 0){
-                
-                //  Get the unpaid/partially paid item line
-                $paid_item_line = $item_line;
+                    //  Update the remaining quantities that require to be paid for this item line
+                    $paid_item_line['quantity'] = $paid_item_quantity;
+                    
+                    //  Push the paid item
+                    array_push($paid_item_lines, $paid_item_line);
 
-                //  Update the remaining quantities that require to be paid for this item line
-                $paid_item_line['quantity'] = $paid_item_quantity;
-                
-                //  Push the paid item
-                array_push($paid_item_lines, $paid_item_line);
+                }
 
             }
 
@@ -463,57 +471,61 @@ class Order extends Model
     {
         $unpaid_item_lines = [];        
 
-        //  Foreach order item line
-        foreach( $this->item_lines as $item_line ){
+        if($this->item_lines){
 
-            //  Lets get the current order item line quantity value
-            $item_quantity = intval($item_line['quantity']);
+            //  Foreach order item line
+            foreach( $this->item_lines as $item_line ){
 
-            //  Get all the paid invoices of this order
-            $invoices = collect($this->invoices()->get())->where('has_paid.status', true);
+                //  Lets get the current order item line quantity value
+                $item_quantity = intval($item_line['quantity']);
 
-            //  Foreach invoice instance [Since we can have multiple invoice instances]
-            foreach ($invoices as $invoice) {
+                //  Get all the paid invoices of this order
+                $invoices = collect($this->invoices()->get())->where('has_paid.status', true);
 
-                //  Foreach item line of the current invoice instance
-                foreach ($invoice->item_lines as $invoice_item_line) {
+                //  Foreach invoice instance [Since we can have multiple invoice instances]
+                foreach ($invoices as $invoice) {
 
-                    //  Lets get the current invoice item line quantity value
-                    $invoice_item_quantity = intval($invoice_item_line['quantity']);
+                    //  Foreach item line of the current invoice instance
+                    foreach ($invoice->item_lines as $invoice_item_line) {
 
-                    //  Lets check if the current invoice item line matches the current order item line
-                    if( $invoice_item_line['id'] == $item_line['id'] ){
+                        //  Lets get the current invoice item line quantity value
+                        $invoice_item_quantity = intval($invoice_item_line['quantity']);
 
-                        /** Calculate if we have any remaining quantities of the matching item that are not yet paid.
-                         *  Assumiing that:
-                         * 
-                         *  $item_quantity = 5 and
-                         *  $invoice_item_quantity = 2
-                         * 
-                         *  This means that if we subtract $invoice_item_quantity (2) from $item_quantity (5) we will get the
-                         *  number of remaining unpaid items (3) for the same matching item.
-                         * 
-                         *  $item_quantity (3) = $item_quantity (5) - $invoice_item_quantity (2)
-                         */
-                        $item_quantity = $item_quantity - $invoice_item_quantity;
+                        //  Lets check if the current invoice item line matches the current order item line
+                        if( $invoice_item_line['id'] == $item_line['id'] ){
+
+                            /** Calculate if we have any remaining quantities of the matching item that are not yet paid.
+                             *  Assumiing that:
+                             * 
+                             *  $item_quantity = 5 and
+                             *  $invoice_item_quantity = 2
+                             * 
+                             *  This means that if we subtract $invoice_item_quantity (2) from $item_quantity (5) we will get the
+                             *  number of remaining unpaid items (3) for the same matching item.
+                             * 
+                             *  $item_quantity (3) = $item_quantity (5) - $invoice_item_quantity (2)
+                             */
+                            $item_quantity = $item_quantity - $invoice_item_quantity;
+
+                        }
 
                     }
 
                 }
 
-            }
+                //  If we have any remaining quantities that haven't yet been paid for this item line
+                if($item_quantity > 0){
+                    
+                    //  Get the unpaid/partially paid item line
+                    $unpaid_item_line = $item_line;
 
-            //  If we have any remaining quantities that haven't yet been paid for this item line
-            if($item_quantity > 0){
-                
-                //  Get the unpaid/partially paid item line
-                $unpaid_item_line = $item_line;
+                    //  Update the remaining quantities that require to be paid for this item line
+                    $unpaid_item_line['quantity'] = $item_quantity;
+                    
+                    //  Push the unpaid/partially paid item
+                    array_push($unpaid_item_lines, $unpaid_item_line);
 
-                //  Update the remaining quantities that require to be paid for this item line
-                $unpaid_item_line['quantity'] = $item_quantity;
-                
-                //  Push the unpaid/partially paid item
-                array_push($unpaid_item_lines, $unpaid_item_line);
+                }
 
             }
 
@@ -529,11 +541,15 @@ class Order extends Model
     {
         $quantity = 0;        
 
-        //  Foreach item line
-        foreach( $this->unfulfilled_item_lines as $unfulfilled_item_line ){                    
-            
-            //  Lets get the current fulfillment item line quantity value
-            $quantity = $quantity + intval($unfulfilled_item_line['quantity']);
+        if($this->unfulfilled_item_lines){
+
+            //  Foreach item line
+            foreach( $this->unfulfilled_item_lines as $unfulfilled_item_line ){                    
+                
+                //  Lets get the current fulfillment item line quantity value
+                $quantity = $quantity + intval($unfulfilled_item_line['quantity']);
+
+            }
 
         }
 
@@ -649,14 +665,6 @@ class Order extends Model
         }
 
         return $total;
-    }
-
-    /*
-     *  Returns the created at formatted for readability
-     */
-    public function getCreatedAtFormatAttribute()
-    {
-        return $this->created_at->format('M d Y @ H:i');
     }
 
     /*

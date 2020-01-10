@@ -2,14 +2,12 @@
 
     .summary-card {
         border-top: 5px solid transparent;
-        background: #f8f9f9;
         padding: 10px 5px;
         border-radius: 0;
     }
 
     .summary-card.active {
         border-top: 5px solid #2d8cf0;
-        background: #ffffff;
     }
 
     .summary-card >>> .main-heading {
@@ -166,18 +164,87 @@
                             <span class="sub-figure">P0.00</span>
                         </Card>
                     </Col>
+                    
+                </Row>
+
+                <Row :gutter="20" class="mt-4">
 
                     <!-- Mobile Store Statastics -->
-                    <Col span="8" class="mt-4">
+                    <Col span="8">
 
-                        <Card class="summary-card active">
+                        <Card v-if="mobileStoreStats" class="summary-card">
 
                             <mobileStoreStats :stats="mobileStoreStats"></mobileStoreStats>
 
                         </Card>
 
                     </Col>
-                    
+
+                    <Col span="16">
+
+                        <Row :gutter="20">
+
+                            <!-- Sales & Refunds -->
+                            <Col span="12" class="mb-2">
+
+                                <Card v-if="salesAndRefundsChartData">
+                                        
+                                    <mainChart chartId="transactions-chart" :chartData="salesAndRefundsChartData"></mainChart>
+
+                                </Card>
+
+                            </Col>
+
+                            <!-- Returning Customer Rate -->
+                            <Col span="12" class="mb-2">
+
+                                <Card v-if="returningCustomerRateChartData">
+                                        
+                                    <mainChart chartId="returning-customer-rate-chart" :chartData="returningCustomerRateChartData"></mainChart>
+
+                                </Card>
+
+                            </Col>
+
+                            <!-- Total Orders -->
+                            <Col span="12" class="mb-2">
+
+                                <Card v-if="totalOrdersChartData">
+                                        
+                                    <mainChart chartId="total-orders-chart" :chartData="totalOrdersChartData"></mainChart>
+
+                                </Card>
+
+                            </Col>
+
+                            <!-- Average Order Value -->
+                            <Col span="12" class="mb-2">
+
+                                <Card v-if="averageOrderValueChartData">
+                                    
+                                    <mainChart chartId="average-order-value-chart" :chartData="averageOrderValueChartData"></mainChart>
+
+                                </Card>
+
+                            </Col>
+
+                            <!-- Popular Payment Methods -->
+                            <Col span="12" class="mb-2">
+
+                                <Card v-if="popularPaymentMethodsChartData">
+                                    
+                                    <mainChart chartId="popular-payment-methods-chart" :chartData="popularPaymentMethodsChartData"></mainChart>
+
+                                </Card>
+
+                            </Col>
+
+                            
+
+                        </Row>
+
+                    </Col>
+
                 </Row>
 
             </Col>
@@ -199,6 +266,24 @@
     /*  Local Widgets  */
     import mobileStoreStats from './mobileStoreStats/main.vue';
 
+    //  Import the total orders template
+    import salesAndRefundsChartTemplate from './charts/salesAndRefundsChartTemplate.js';
+
+    //  Import the total orders template
+    import returningCustomerRateChartTemplate from './charts/returningCustomerRateChartTemplate.js';
+
+    //  Import the total orders template
+    import totalOrdersChartTemplate from './charts/totalOrdersChartTemplate.js';
+
+    //  Import the total orders template
+    import averageOrderValueChartTemplate from './charts/averageOrderValueChartTemplate.js';
+
+    //  Import the total orders template
+    import popularPaymentMethodsChartTemplate from './charts/popularPaymentMethodsChartTemplate.js';
+
+    /*  Local Widgets  */
+    import mainChart from './charts/chart.vue';
+
     export default {
         props:{
             store: {
@@ -207,7 +292,7 @@
             }
         },
         components: { 
-            basicButton, Loader, mobileStoreStats
+            basicButton, Loader, mobileStoreStats,  mainChart
         },
         data(){
             return {
@@ -220,9 +305,147 @@
             }
         },
         computed: {
+            salesAndRefundsChartData(){
+
+                if( this.stats ){
+
+                    //  Get the chart template structure
+                    let chartData = salesAndRefundsChartTemplate;
+
+                    //  Update the data
+                    chartData['data']['datasets'][0]['data'] = this.stats.orders.orders_over_time.data_intervals.map(function(interval){
+                        return { 
+                            //  Return the date on the x-axis
+                            x: interval.date, 
+
+                            //  Return the count on the y-axis
+                            y: interval.count 
+                        }
+                    });
+
+                    //  Update the data
+                    chartData['data']['datasets'][1]['data'] = this.stats.orders.orders_over_time.data_intervals.map(function(interval){
+                        return { 
+                            //  Return the date on the x-axis
+                            x: interval.date, 
+
+                            //  Return the count on the y-axis
+                            y: interval.count * -1
+                        }
+                    });
+
+                    //  Return the chart structure and data
+                    return chartData;
+
+                }
+
+            },
+            returningCustomerRateChartData(){
+
+                if( this.stats ){
+
+                    //  Get the chart template structure
+                    let chartData = returningCustomerRateChartTemplate;
+
+                    //  Update the data
+                    chartData['data']['datasets'][0]['data'] = this.stats.orders.orders_over_time.data_intervals.map(function(interval){
+                        return { 
+                            //  Return the date on the x-axis
+                            x: interval.date, 
+
+                            //  Return the count on the y-axis
+                            y: interval.count 
+                        }
+                    });
+
+                    //  Return the chart structure and data
+                    return chartData;
+
+                }
+
+            },
+            totalOrdersChartData(){
+
+                if( this.stats ){
+
+                    //  Get the chart template structure
+                    let chartData = totalOrdersChartTemplate;
+
+                    //  Update the data
+                    chartData['data']['datasets'][0]['data'] = this.stats.orders.orders_over_time.data_intervals.map(function(interval){
+                        return { 
+                            //  Return the date on the x-axis
+                            x: interval.date, 
+
+                            //  Return the count on the y-axis
+                            y: interval.count 
+                        }
+                    });
+
+                    //  Return the chart structure and data
+                    return chartData;
+
+                }
+
+            },
+            averageOrderValueChartData(){
+
+                if( this.stats ){
+
+                    //  Get the chart template structure
+                    let chartData = averageOrderValueChartTemplate;
+
+                    //  Update the data
+                    chartData['data']['datasets'][0]['data'] = this.stats.orders.orders_over_time.data_intervals.map(function(interval){
+                        return { 
+                            //  Return the date on the x-axis
+                            x: interval.date, 
+
+                            //  Return the count on the y-axis
+                            y: interval.count 
+                        }
+                    });
+
+                    //  Return the chart structure and data
+                    return chartData;
+
+                }
+
+            },
+            popularPaymentMethodsChartData(){
+
+                if( this.stats ){
+
+                    //  Get the chart template structure
+                    let chartData = popularPaymentMethodsChartTemplate;
+
+                    /*
+                    //  Update the data
+                    chartData['data']['datasets'][0]['data'] = this.stats.orders.orders_over_time.data_intervals.map(function(interval){
+                        return { 
+                            //  Return the date on the x-axis
+                            x: interval.date, 
+
+                            //  Return the count on the y-axis
+                            y: interval.count 
+                        }
+                    });
+                    */
+
+                    //  Return the chart structure and data
+                    return chartData;
+
+                }
+
+            },
+
+            
+
+
+
             orderStats(){
 
-                return ((this.stats || {}).order || []).totals || [
+                return ((this.stats || {}).orders || []).financial || [
                     {
                         name: '...',
                         amount: 0
