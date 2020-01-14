@@ -615,7 +615,7 @@ trait OrderTraits
         try {
 
             //  Update the general order status
-            $orderUpdateStatus = $orderInstance->update([
+            $orderUpdateStatus = $this->update([
 
                 'status' => $status
 
@@ -625,7 +625,7 @@ trait OrderTraits
             if( $orderUpdateStatus ){
 
                 //  Record the activity of the new order general status
-                $orderInstance->recordActivity( $status );
+                $this->recordActivity( $status );
 
                 return true;
 
