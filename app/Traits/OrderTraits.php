@@ -587,7 +587,7 @@ trait OrderTraits
                 $orderInstance->recordActivity( $status );
 
                 //  If the current order instance has a general status of draft
-                if( $orderInstance->status->name == 'draft' ){
+                if( $orderInstance->status == 'draft' ){
 
                     //  Update the general status by setting the order status from draft to open status
                     $orderInstance->updateStatus();
