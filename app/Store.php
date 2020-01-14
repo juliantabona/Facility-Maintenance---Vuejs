@@ -836,7 +836,7 @@ class Store extends Model
             $total_amount = $collection->sum('amount');
                 
             //  Calculate the sum of all the amounts that have been grouped together
-            $average_amount = $total_amount / $count;
+            $average_amount = $count ? ($total_amount / $count) : 0;
 
             return [
 
@@ -847,7 +847,7 @@ class Store extends Model
                 'average_amount' => $average_amount,
 
                 'count' => $count
-                
+
             ];
 
         })->sortBy('date')->values()->all();
