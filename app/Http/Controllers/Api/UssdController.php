@@ -3051,10 +3051,10 @@ class UssdController extends Controller
         if (!$this->test_mode) {
 
             /*  Send the order as a summarised SMS to the merchant  */
-            // $merchantSMS = $this->order->smsOrderToMerchant();
+            $merchantSMS = $this->order->smsOrderToMerchant();
 
             /*  Send the invoice receipt as a summarized SMS to the customer  */
-            // $customerSMS = $this->order->invoices()->first()->smsInvoiceReceiptToCustomer();
+            $customerSMS = $this->order->invoices()->first()->smsInvoiceReceiptToCustomer();
 
         }
 
