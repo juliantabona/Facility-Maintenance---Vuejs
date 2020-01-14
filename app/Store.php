@@ -603,7 +603,7 @@ class Store extends Model
 
     public function getReturningCustomerRateStatsAttribute()
     {
-        $start_time = '2019-12-20';
+        $start_time = (\Carbon\Carbon::now())->subMonth()->format('Y-m-d H:i:s');
         $end_time = (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
 
         $sessions = $this->ussd_sessions()->get();
@@ -760,7 +760,7 @@ class Store extends Model
 
     public function getPopularPaymentMethodStatsAttribute()
     {
-        $start_time = '2019-12-20';
+        $start_time = (\Carbon\Carbon::now())->subMonth()->format('Y-m-d H:i:s');
         $end_time = (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
 
         $paymentMethods = $this->transactions()->successful()->payments()
@@ -786,7 +786,7 @@ class Store extends Model
 
     public function getOrdersOverTimeStatsAttribute()
     {
-        $start_time = '2019-12-20';
+        $start_time = (\Carbon\Carbon::now())->subMonth()->format('Y-m-d H:i:s');
         $end_time = (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
 
         $orders = $this->orders()->withPayments()
@@ -857,7 +857,7 @@ class Store extends Model
 
     public function getSaleTransactionStatsAttribute()
     {
-        $start_time = '2019-12-20';
+        $start_time = (\Carbon\Carbon::now())->subMonth()->format('Y-m-d H:i:s');
         $end_time = (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
 
         $records = $this->transactions()->successful()->payments()
@@ -925,7 +925,7 @@ class Store extends Model
 
     public function getRefundTransactionStatsAttribute()
     {
-        $start_time = '2019-12-20';
+        $start_time = (\Carbon\Carbon::now())->subMonth()->format('Y-m-d H:i:s');
         $end_time = (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
 
         $records = $this->transactions()->successful()->refunds()
