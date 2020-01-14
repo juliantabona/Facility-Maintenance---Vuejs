@@ -604,7 +604,7 @@ class Store extends Model
     public function getReturningCustomerRateStatsAttribute()
     {
         $start_time = '2019-12-20';
-        $end_time = '2020-01-09';
+        $end_time = '2020-01-14';
 
         $sessions = $this->ussd_sessions()->get();
 
@@ -761,7 +761,7 @@ class Store extends Model
     public function getPopularPaymentMethodStatsAttribute()
     {
         $start_time = '2019-12-20';
-        $end_time = '2020-01-09';
+        $end_time = '2020-01-14';
 
         $paymentMethods = $this->transactions()->successful()->payments()
                         //->where('created_at', '>=', ( \Carbon\Carbon::now() )->subDays(7))
@@ -787,7 +787,7 @@ class Store extends Model
     public function getOrdersOverTimeStatsAttribute()
     {
         $start_time = '2019-12-20';
-        $end_time = '2020-01-09';
+        $end_time = '2020-01-14';
 
         $orders = $this->orders()->withPayments()
                         //->where('created_at', '>=', ( \Carbon\Carbon::now() )->subDays(7))
@@ -858,7 +858,7 @@ class Store extends Model
     public function getSaleTransactionStatsAttribute()
     {
         $start_time = '2019-12-20';
-        $end_time = '2020-01-09';
+        $end_time = '2020-01-14';
 
         $records = $this->transactions()->successful()->payments()
                         //->where('created_at', '>=', ( \Carbon\Carbon::now() )->subDays(7))
@@ -926,7 +926,7 @@ class Store extends Model
     public function getRefundTransactionStatsAttribute()
     {
         $start_time = '2019-12-20';
-        $end_time = '2020-01-09';
+        $end_time = '2020-01-14';
 
         $records = $this->transactions()->successful()->refunds()
                         //->where('created_at', '>=', ( \Carbon\Carbon::now() )->subDays(7))
