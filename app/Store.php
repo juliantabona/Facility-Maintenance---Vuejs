@@ -574,12 +574,7 @@ class Store extends Model
                         'amount' => $this->total_net_revenue,
                     ],
                 ],
-                'orders_over_time' => $this->orders_over_time_stats,
-                'average_order_value' => [
-                    'name' => 'Average Order Value',
-                    'amount' => null,
-                    'data_intervals' => [],
-                ],
+                'orders_over_time' => $this->orders_over_time_stats
             ],
             'customers' => [
                 'general' => [
@@ -831,19 +826,28 @@ class Store extends Model
 
             $collection = collect($dates);
 
+            //  Get the smallest date e.g "2020-01-04 00:00:00" is smaller than "2020-01-04 01:00:00"
+            $date = $collection->min('date');
+
+            //  Calculate the sum of all the dates that have been grouped together
+            $count = $collection->sum('count');
+                
+            //  Calculate the sum of all the amounts that have been grouped together
+            $total_amount = $collection->sum('amount');
+                
+            //  Calculate the sum of all the amounts that have been grouped together
+            $average_amount = $total_amount / $count;
+
             return [
 
-                //  Get the smallest date e.g "2020-01-04 00:00:00" is smaller than "2020-01-04 01:00:00"
-                'date' => $collection->min('date'),
+                'date' => $date,
                 
-                //  Calculate the sum of all the amounts that have been grouped together
-                'total_amount' => $collection->sum('amount'),
-                
-                //  Calculate the sum of all the amounts that have been grouped together
-                'average_amount' => $collection->sum('amount') / $collection->count(),
+                'total_amount' => $total_amount,
 
-                //  Calculate the sum of all the dates that have been grouped together
-                'count' => $collection->sum('count')
+                'average_amount' => $average_amount,
+
+                'count' => $count
+                
             ];
 
         })->sortBy('date')->values()->all();
