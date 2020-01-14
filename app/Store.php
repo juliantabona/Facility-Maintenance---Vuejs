@@ -836,7 +836,7 @@ class Store extends Model
             $total_amount = $collection->sum('amount');
                 
             //  Calculate the sum of all the amounts that have been grouped together
-            $average_amount = $count ? ($total_amount / $count) : 0;
+            $average_amount = $count ? round($total_amount / $count, 2) : 0;
 
             return [
 
