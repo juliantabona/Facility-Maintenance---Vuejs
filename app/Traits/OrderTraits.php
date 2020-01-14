@@ -583,7 +583,48 @@ trait OrderTraits
             //  If the payment status was updated successfully
             if( $orderUpdateStatus ){
 
-                /*  Record the activity of the new order status  */
+                //  Record the activity of the new order status
+                $orderInstance->recordActivity( $status );
+
+                //  If the current order instance has a general status of draft
+                if( $orderInstance->status->name == 'draft' ){
+
+                    //  Update the general status by setting the order status from draft to open status
+                    $orderInstance->updateStatus();
+
+                }
+
+                return true;
+
+            }else{
+
+                return false;
+
+            }
+
+        } catch (\Exception $e) {
+
+            //  Return the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+            
+        }  
+    }
+
+    public function updateStatus( $status = 'open' )
+    {
+        try {
+
+            //  Update the general order status
+            $orderUpdateStatus = $orderInstance->update([
+
+                'status' => $status
+
+            ]);
+
+            //  If the general status was updated successfully
+            if( $orderUpdateStatus ){
+
+                //  Record the activity of the new order general status
                 $orderInstance->recordActivity( $status );
 
                 return true;
