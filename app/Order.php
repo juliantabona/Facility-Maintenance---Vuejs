@@ -327,7 +327,7 @@ class Order extends Model
     protected $appends = [
         'resource_type', 'unfulfilled_item_lines', 'quantity_of_unfulfilled_item_lines', 'quantity_of_fulfilled_item_lines', 
         'quantity_of_unpaid_item_lines', 'quantity_of_paid_item_lines', 'paid_item_lines','unpaid_item_lines', 'transaction_total', 
-        'refund_total', 'outstanding_balance', 'status'
+        'refund_total', 'outstanding_balance'
     ];
 
     /*
