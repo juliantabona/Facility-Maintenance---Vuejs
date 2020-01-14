@@ -2131,18 +2131,25 @@ class UssdController extends Controller
 
     public function getMyStores()
     {
-        //  Get the current contact
-        $this->getContact();
+        //  Get all the contacts that match the given mobile number and return each contact with its associated stores
+        $contacts = ( new \App\Contact())->withMobilePhone($this->user['phone'])->with('stores')->get();
 
-        //  If we have a contact
-        if ($this->contact) {
+        //  If we have any contacts
+        if ( count($contacts) ) {
+            
+            //  Foreach contact get the stores
+            $stores = collect($contacts)->map(function($contact){
+                
+                return $contact['stores'];
 
-            //  Get the contact stores
-            return $this->contact->stores()->get();
+            })->flatten()->all();
+
+            return $stores;
 
         }
 
         return [];
+
     }
 
     public function getContact(){
@@ -2485,13 +2492,15 @@ class UssdController extends Controller
 
     public function getMyOrders()
     {
-        /*  Check if a contact using the same mobile number exists for the store  */
-        $storeContact = $this->store->contactsWithMobilePhone($this->user['phone'])->first();
+        //  Get the current contact
+        $this->getContact();
 
-        /*  If a contact was found  */
-        if ($storeContact) {
-            /*  Return the store orders where this contact is recognised as the order customer or reference  */
-            return $this->store->contactOrders($storeContact->id)->get() ?? [];
+        //  If we have a contact
+        if ($this->contact) {
+            
+            //  Return the store orders where this contact is recognised as the order customer or reference
+            return $this->store->contactOrders($this->contact->id)->get() ?? [];
+
         }
 
         return [];
