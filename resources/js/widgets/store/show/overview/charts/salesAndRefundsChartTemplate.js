@@ -9,6 +9,7 @@ export const salesAndRefundsChartTemplate = {
             lineTension: 0,
             label: 'Sales',
             borderColor: '#19be6b',
+            borderWidth: 2
         
         },
         {
@@ -18,6 +19,7 @@ export const salesAndRefundsChartTemplate = {
             lineTension: 0,
             label: 'Refunds',
             borderColor: '#ed4014',
+            borderWidth: 2
         
         }
 ]
@@ -26,7 +28,7 @@ export const salesAndRefundsChartTemplate = {
     responsive: true,
     maintainAspectRatio: false,
     title:{
-        text:'Sales & Refunds',
+        text:'SALES OVER TIME',
         display: true
     },
     tooltips: {

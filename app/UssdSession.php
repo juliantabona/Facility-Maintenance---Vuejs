@@ -86,6 +86,6 @@ class UssdSession extends Model
      */
     public function getResourceTypeAttribute()
     {
-        return strtolower(class_basename($this));
+        return strtolower(Str::snake(class_basename($this)));
     }
 }

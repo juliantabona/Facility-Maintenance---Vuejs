@@ -4,6 +4,7 @@ export const popularPaymentMethodsChartTemplate = {
     labels: ['Bar 1', 'Bar 2', 'Bar 3'],
     datasets: [
         {
+            backgroundColor: '#19be6b',
             barPercentage: 0.5,
             barThickness: 15,
             maxBarThickness: 15,
@@ -17,7 +18,7 @@ export const popularPaymentMethodsChartTemplate = {
     maintainAspectRatio: false,
     title:{
         text:'Popular Payment Methods',
-        display: true
+        display: false
     },
     tooltips: {
         mode: 'point'

@@ -8,6 +8,7 @@ export const totalOrdersChartTemplate = {
       lineTension: 0,
       label: 'Total Orders',
       borderColor: '#19be6b',
+      borderWidth: 2
   
   }]
   },
@@ -15,7 +16,7 @@ export const totalOrdersChartTemplate = {
     responsive: true,
     maintainAspectRatio: false,
     title:{
-        text:'Total orders',
+        text:'ORDERS OVER TIME',
         display: true
     },
     tooltips: {

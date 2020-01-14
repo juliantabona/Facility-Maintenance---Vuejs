@@ -1,21 +1,34 @@
 export const returningCustomerRateChartTemplate = {
   type: 'line',
   data: {
-    datasets: [{
-      data: [],
-      fill: true,
-      pointRadius: 1,
-      lineTension: 0,
-      label: 'Customers',
-      borderColor: '#19be6b',
-      backgroundColor: '#19be6b30'
-  }]
+    datasets: [
+        {
+            data: [],
+            fill: false,
+            pointRadius: 1,
+            lineTension: 0,
+            label: 'New Customers',
+            borderColor: '#2d8cf0',
+            borderWidth: 2
+        
+        },
+        {
+            data: [],
+            fill: false,
+            pointRadius: 1,
+            lineTension: 0,
+            label: 'Return Customers',
+            borderColor: '#19be6b',
+            borderWidth: 2
+        
+        }
+    ]
   },
   options: {
     responsive: true,
     maintainAspectRatio: false,
     title:{
-        text:'Returning Customer Rate',
+        text:'CUSTOMERS OVER TIME',
         display: true
     },
     tooltips: {

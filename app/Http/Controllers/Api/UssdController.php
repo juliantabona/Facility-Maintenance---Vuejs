@@ -22,6 +22,7 @@ class UssdController extends Controller
     private $currency;
     private $test_mode;
     private $session_id;
+    private $newCustomer;
     private $service_code;
     private $phone_number;
     private $payment_method;
@@ -112,8 +113,12 @@ class UssdController extends Controller
         $this->variable_options = [];
         $this->selected_variable_options = [];
 
+        //  We always assume (unless verified) that the visitor is a new customer (not an existing customer)
+        $this->newCustomer = true;
+
         //  Update the shopping status with the value "0" which means that the shopping is incomplete
         $this->shopping_status = 0;
+        
     }
 
     /*********************************
@@ -406,7 +411,11 @@ class UssdController extends Controller
 
     public function visitStore()
     {
+        //  Get the store details
         $this->getStoreDetails();
+
+        //  Get the customer details
+        $this->getCustomerDetails();
 
         /*  If the user already selected an option from the "Store Landing Page"  */
         if ($this->hasSelectedStoreLandingPageOption()) {
@@ -478,6 +487,21 @@ class UssdController extends Controller
             return $this->displayIssueConnectingToStorePage();
 
         }
+    }
+
+    public function getCustomerDetails()
+    {
+        //  Get the current contact
+        $this->getContact();
+
+        //  If we have a contact
+        if( $this->contact ){
+            
+            //  Set this contact as a new customer if they have never placed an order on this store before
+            $this->newCustomer = ($this->contact->orders()->count() == 0);
+
+        }
+        
     }
 
     /** updateCustomerJourney() 
@@ -564,6 +588,9 @@ class UssdController extends Controller
 
                     //  How did the user find the store (E.g via  Enter store code or by Searching)
                     'method_used_to_find_store' => $this->method_used_to_find_store,
+                        
+                    //  If this is new customer or an existing customer
+                    'new_customer' => $this->newCustomer
                     
                 ]
 
@@ -2104,13 +2131,25 @@ class UssdController extends Controller
 
     public function getMyStores()
     {
-        $this->contact = ( new \App\Contact())->withMobilePhone($this->user['phone'])->first();
+        //  Get the current contact
+        $this->getContact();
 
+        //  If we have a contact
         if ($this->contact) {
+
+            //  Get the contact stores
             return $this->contact->stores()->get();
+
         }
 
         return [];
+    }
+
+    public function getContact(){
+        
+        /*  Get the contact that owns this phone if they exists  */
+        $this->contact = $this->store->contactsWithMobilePhone($this->user['phone'])->first();
+
     }
 
     public function getPopularStores()

@@ -109,6 +109,11 @@ class Order extends Model
         return $query->where('payment_status', 'paid');
     }
 
+    public function scopePartiallyPaid($query)
+    {
+        return $query->where('payment_status', 'partially paid');
+    }
+
     public function scopeUnpaid($query)
     {
         return $query->where('payment_status', 'unpaid');
@@ -122,6 +127,12 @@ class Order extends Model
     public function scopeFailedPayment($query)
     {
         return $query->where('payment_status', 'failed payment');
+    }
+
+    //  Return only open/archieved orders with payments
+    public function scopeWithPayments($query)
+    {
+        return $query->whereIn('status', ['open', 'archieved'])->whereIn('payment_status', ['paid', 'partially paid']);
     }
 
     public function scopeFulfilled($query)

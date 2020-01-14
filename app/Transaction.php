@@ -42,6 +42,38 @@ class Transaction extends Model
 
     protected $allowedOrderableColumns = [];
 
+    /*
+     *  Scope by successful transactions
+     */
+    public function scopeSuccessful($query)
+    {
+        return $query->where('transactions.status', 'success');
+    }
+
+    /*
+     *  Scope by failed transactions
+     */
+    public function scopeFailed($query)
+    {
+        return $query->where('transactions.status', 'failed');
+    }
+
+    /*
+     *  Scope by payment (sale) transactions
+     */
+    public function scopePayments($query)
+    {
+        return $query->where('transactions.type', 'payment');
+    }
+
+    /*
+     *  Scope by refund transactions
+     */
+    public function scopeRefunds($query)
+    {
+        return $query->where('transactions.type', 'refund');
+    }
+
     /* 
      *  Returns the owner of the transaction
      *  In most cases this returns an invoice

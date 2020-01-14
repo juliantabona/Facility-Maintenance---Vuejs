@@ -417,6 +417,46 @@ class Store extends Model
         return $this->morphMany('App\Invoice', 'owner');
     }
 
+    /*
+     *  Returns the transactions of invoices owned by this order
+     */
+    public function transactions()
+    {
+        /* Polymorphic hasManyThrough relationships are the same as any others, but
+         *  with an added constraint on the owner_type, which can be retrieved from
+         *  the Relation::morphMap() array, or by using the class name directly.
+         *
+         *  Refer to this stackoverflow quetion:
+         *  https://stackoverflow.com/questions/43285779/laravel-polymorphic-relations-has-many-through
+         *
+         *  The array_search() function will search an array for a value and returns the key.
+         *
+         *  static::class = App\Order
+         *
+         *  Relation::morphMap() = [
+         *      "order"  => "App\Order"
+         *      "store"  => "App\Store"
+         *      "user"   => App\User"
+         *      "account => App\Account"
+         *      "contact => App\Contact"
+         *  ]
+         *
+         *  Therefore array_search(static::class, Relation::morphMap()) will return "store"
+         */
+        return $this->hasManyThrough(
+                    'App\Transaction',                      //  What we want (transations)
+                    'App\Order',                            //  The relationship we have (orders)
+                    'merchant_id',                          //  Foreign key on orders table
+                    'owner_id'                              //  Foreign key on transactions table
+                )->where('orders.merchant_type', array_search(static::class, Relation::morphMap()) ?: static::class)
+                //  Select all the transation details and make sure the owner id reflects the (invoice id) not the (order id)
+                ->select(
+                    'transactions.type', 'transactions.status', 'transactions.automatic', 'transactions.payment_type',
+                    'transactions.payment_amount', 'transactions.meta', //'invoices.owner_id as order_id', 'invoices.id as invoice_id',
+                    'transactions.created_at', 'transactions.updated_at'
+                );
+    }
+
     /*************************************/
     /*  MISCELLANEOUS RELATIONSHIPS      */
     /*************************************/
@@ -538,39 +578,209 @@ class Store extends Model
                 'average_order_value' => [
                     'name' => 'Average Order Value',
                     'amount' => null,
-                    'data_intervals' => []
-                ]
+                    'data_intervals' => [],
+                ],
             ],
             'customers' => [
                 'general' => [
                     'name' => 'Customers',
                     'count' => $this->customerContacts()->count(),
                 ],
-                'returning_customer_rate' => [
-                    'name' => 'Returning Customer Rate',
-                    'rate' => null,
-                    'data_intervals' => []
-                ]
+                'returning_customer_rate' => $this->returning_customer_rate_stats
             ],
             'transactions' => [
                 'general' => [
                     'name' => 'Transactions',
                     'count' => null,
                 ],
-                'sale_transactions' => [
-                    'name' => 'Sales',
-                    'count' => null,
-                    'amount' => null,
-                    'data_intervals' => []
-                ],
-                'refund_transactions' => [
-                    'name' => 'Refunds',
-                    'count' => null,
-                    'amount' => null,
-                    'data_intervals' => []
-                ]
+                'sale_transactions' => $this->sale_transaction_stats,
+                'refund_transactions' => $this->refund_transaction_stats,
+                'popular_payment_methods' => $this->popular_payment_method_stats
             ],
             'mobile_store' => $this->mobile_store_stats,
+        ];
+    }
+
+    public function getReturningCustomerRateStatsAttribute()
+    {
+        $start_time = '2019-12-20';
+        $end_time = '2020-01-09';
+
+        $sessions = $this->ussd_sessions()->get();
+
+        //  Count the number of new customer sessions
+        $sessionCount = count($sessions);
+        
+        //  Get the dates between the start and end time
+        $datesBetween = collect(\Carbon\CarbonPeriod::create($start_time, $end_time)->toArray())->map(function ($date, $key) {
+            
+            //  Foreach date return th datetime and set the count to zero (0)
+            return [
+                'date' => $date->toDateTimeString(),
+                'count' => 0
+            ];
+
+        });
+
+        //  Get the new cutomer sessions
+        $newCustomerSessions = $sessions->filter(function ($session, $key) {
+
+            //  Return the session if the metadata shows that the customer is a new customer
+            return $session['metadata']['new_customer'] === true;
+
+        }) ?? [];
+
+        //  Count the number of new customer sessions
+        $newCustomerSessionsCount = count($newCustomerSessions);
+
+        //  Get the return customer sessions
+        $returnCustomerSessions = $sessions->filter(function ($session, $key) {
+
+            //  Return the session if the metadata shows that the customer is a return customer
+            return $session['metadata']['new_customer'] !== true;
+
+        }) ?? [];
+
+        //  Count the number of return customer sessions
+        $returnCustomerSessionsCount = count($returnCustomerSessions);
+
+        /** New Customer Data Intervals
+         * 
+         *  Calculate the date and count intervals of new customer sessions
+         *
+         */
+        $newCustomerDataIntervals = collect($newCustomerSessions)->groupBy(function ($sessions, $key) {
+            
+            //  Group by Year - Month - Day e.g 2020-01-04
+            return substr($sessions['created_at'], 0, 10);
+
+        })->map(function ($group, $key) {
+            
+            //  Foreach session group return the datetime and total count of the sessions in that group
+            return [
+
+                //  Get the date of the first session in the group
+                'date' => \Carbon\Carbon::parse( $group[0]['created_at'] )->toDateTimeString(),
+
+                //  Count the total number of sessions
+                'count' => count($group)
+
+            ];
+
+        //  Merge with the dates in between for a complete set of dates
+        })->merge($datesBetween)
+
+        //  Group by dates to sort the dates between with the session dates
+        ->groupBy(function ($item, $key) {
+            
+            //  Group by Year - Month - Day e.g 2020-01-04
+            return substr($item['date'], 0, 10);
+
+        })->map(function($dates){
+
+            $collection = collect($dates);
+
+            return [
+
+                //  Get the smallest date e.g "2020-01-04 00:00:00" is smaller than "2020-01-04 01:00:00"
+                'date' => $collection->min('date'),
+
+                //  Calculate the sum of all the dates that have been grouped together
+                'count' => $collection->sum('count')
+
+            ];
+
+        })->sortBy('date')->values()->all();
+
+        /** Return Customer Data Intervals
+         * 
+         *  Calculate the date and count intervals of return customer sessions
+         *
+         */
+        $returnCustomerDataIntervals = collect($returnCustomerSessions)->groupBy(function ($sessions, $key) {
+            
+            //  Group by Year - Month - Day e.g 2020-01-04
+            return substr($sessions['created_at'], 0, 10);
+
+        })->map(function ($group, $key) {
+            
+            //  Foreach session group return the datetime and total count of the sessions in that group
+            return [
+
+                //  Get the date of the first session in the group
+                'date' => \Carbon\Carbon::parse( $group[0]['created_at'] )->toDateTimeString(),
+
+                //  Count the total number of sessions
+                'count' => count($group)
+
+            ];
+
+        //  Merge with the dates in between for a complete set of dates
+        })->merge($datesBetween)
+
+        //  Group by dates to sort the dates between with the session dates
+        ->groupBy(function ($item, $key) {
+            
+            //  Group by Year - Month - Day e.g 2020-01-04
+            return substr($item['date'], 0, 10);
+
+        })->map(function($dates){
+
+            $collection = collect($dates);
+
+            return [
+
+                //  Get the smallest date e.g "2020-01-04 00:00:00" is smaller than "2020-01-04 01:00:00"
+                'date' => $collection->min('date'),
+
+                //  Calculate the sum of all the dates that have been grouped together
+                'count' => $collection->sum('count')
+
+            ];
+
+        })->sortBy('date')->values()->all();
+
+        //  Return the data
+        return [
+            'name' => 'Returning Customer Rate',
+            'total_sessions' => $sessionCount,
+            'new_customer_data_intervals' => [
+                'count' => $newCustomerSessionsCount,
+                'rate' => $sessionCount ? round(($newCustomerSessionsCount / $sessionCount) * 100) : 0,
+                'data_intervals' => $newCustomerDataIntervals
+            ],
+            'return_customer_data_intervals' => [
+                'count' => $returnCustomerSessionsCount,
+                'rate' => $sessionCount ? round(($returnCustomerSessionsCount / $sessionCount) * 100) : 0,
+                'data_intervals' => $returnCustomerDataIntervals
+            ]
+        ];
+
+    }
+
+    public function getPopularPaymentMethodStatsAttribute()
+    {
+        $start_time = '2019-12-20';
+        $end_time = '2020-01-09';
+
+        $paymentMethods = $this->transactions()->successful()->payments()
+                        //->where('created_at', '>=', ( \Carbon\Carbon::now() )->subDays(7))
+                        ->groupBy('payment_type')
+                        ->select(DB::raw('payment_type, count(*) as count'))
+                        ->get();
+
+        $paymentMethods = collect($paymentMethods)->map(function ($payment_method, $key) {
+            //  Foreach date return only the payment method type and total count
+            return [
+                'payment_method' => $payment_method['payment_type'],
+                'count' => $payment_method['count'],
+            ];
+        });
+
+        //  Return the data
+        return [
+            'name' => 'Popular Payment Methods',
+            'data' => $paymentMethods,
         ];
     }
 
@@ -579,42 +789,205 @@ class Store extends Model
         $start_time = '2019-12-20';
         $end_time = '2020-01-09';
 
-        $orders = $this->orders()
+        $orders = $this->orders()->withPayments()
                         //->where('created_at', '>=', ( \Carbon\Carbon::now() )->subDays(7))
                         ->groupBy(DB::raw('DATE_FORMAT(created_at, "%d-%m-%Y")'))
-                        ->select(DB::raw('DATE_FORMAT(created_at, "%d-%m-%Y %H:%i:%s") as date, count(*) as count'))
+                        ->select(DB::raw('DATE_FORMAT(created_at, "%d-%m-%Y %H:%i:%s") as date, count(*) as count, sum(grand_total) as total_amount'))
                         ->get();
 
         $intervals = collect($orders)->map(function ($order, $key) {
             return [
-
                 //  Get the grouped order date value
                 'date' => \Carbon\Carbon::parse($order['date'])->toDateTimeString(),
 
-                //  Get the number of grouped orders
-                'count' => $order['count']
+                //  Get the total amount of the grouped records
+                'amount' => $order['total_amount'],
 
+                //  Get the number of grouped orders
+                'count' => $order['count'],
             ];
         });
 
         //  Get the dates between the start and end time
         $datesBetween = collect(\Carbon\CarbonPeriod::create($start_time, $end_time)->toArray())->map(function ($date, $key) {
-            
             //  Foreach date return th datetime and set the count to zero (0)
             return [
                 'date' => $date->toDateTimeString(),
+                'total_amount' => 0,
+                'average_amount' => 0,
                 'count' => 0,
             ];
-
         });
-        
+
         //  Merge the dates datesBetween with the current intervals and order by the date
-        $updatedIntervals = $datesBetween->merge($intervals)->sortBy('date')->values()->all();
+        //    $updatedIntervals = $datesBetween->merge($intervals)->sortBy('date')->values()->all();
+
+        $updatedIntervals = $datesBetween->merge($intervals)->groupBy(function ($item, $key) {
+            
+            //  Group by Year - Month - Day e.g 2020-01-04
+            return substr($item['date'], 0, 10);
+
+        })->map(function($dates){
+
+            $collection = collect($dates);
+
+            return [
+
+                //  Get the smallest date e.g "2020-01-04 00:00:00" is smaller than "2020-01-04 01:00:00"
+                'date' => $collection->min('date'),
+                
+                //  Calculate the sum of all the amounts that have been grouped together
+                'total_amount' => $collection->sum('amount'),
+                
+                //  Calculate the sum of all the amounts that have been grouped together
+                'average_amount' => $collection->sum('amount') / $collection->count(),
+
+                //  Calculate the sum of all the dates that have been grouped together
+                'count' => $collection->sum('count')
+            ];
+
+        })->sortBy('date')->values()->all();
 
         //  Return the data
         return [
             'name' => 'Orders Over Time',
-            'data_intervals' => $updatedIntervals
+            'data_intervals' => $updatedIntervals,
+        ];
+    }
+
+    public function getSaleTransactionStatsAttribute()
+    {
+        $start_time = '2019-12-20';
+        $end_time = '2020-01-09';
+
+        $records = $this->transactions()->successful()->payments()
+                        //->where('created_at', '>=', ( \Carbon\Carbon::now() )->subDays(7))
+                        ->groupBy(DB::raw('DATE_FORMAT(transactions.created_at, "%d-%m-%Y")'))
+                        ->select(DB::raw('DATE_FORMAT(transactions.created_at, "%d-%m-%Y %H:%i:%s") as date, count(*) as count, sum(payment_amount) as total_amount'))
+                        ->get();
+
+        $intervals = collect($records)->map(function ($record, $key) {
+            return [
+                //  Get the grouped record date value
+                'date' => \Carbon\Carbon::parse($record['date'])->toDateTimeString(),
+
+                //  Get the total amount of the grouped records
+                'amount' => $record['total_amount'],
+
+                //  Get the number of grouped records
+                'count' => $record['count'],
+            ];
+        });
+
+        //  Get the dates between the start and end time
+        $datesBetween = collect(\Carbon\CarbonPeriod::create($start_time, $end_time)->toArray())->map(function ($date, $key) {
+            //  Foreach date return th datetime and set the count to zero (0)
+            return [
+                'date' => $date->toDateTimeString(),
+                'amount' => 0,
+                'count' => 0,
+            ];
+        });
+
+        //  Merge the dates datesBetween with the current intervals and order by the date
+        //    $updatedIntervals = $datesBetween->merge($intervals)->sortBy('date')->values()->all();
+
+        $updatedIntervals = $datesBetween->merge($intervals)->groupBy(function ($item, $key) {
+            
+            //  Group by Year - Month - Day e.g 2020-01-04
+            return substr($item['date'], 0, 10);
+
+        })->map(function($dates){
+
+            $collection = collect($dates);
+
+            return [
+
+                //  Get the smallest date e.g "2020-01-04 00:00:00" is smaller than "2020-01-04 01:00:00"
+                'date' => $collection->min('date'),
+                
+                //  Calculate the sum of all the amounts that have been grouped together
+                'amount' => $collection->sum('amount'),
+
+                //  Calculate the sum of all the dates that have been grouped together
+                'count' => $collection->sum('count')
+
+            ];
+
+        })->sortBy('date')->values()->all();
+
+        //  Return the data
+        return [
+            'name' => 'Sales',
+            'data_intervals' => $updatedIntervals,
+        ];
+    }
+
+    public function getRefundTransactionStatsAttribute()
+    {
+        $start_time = '2019-12-20';
+        $end_time = '2020-01-09';
+
+        $records = $this->transactions()->successful()->refunds()
+                        //->where('created_at', '>=', ( \Carbon\Carbon::now() )->subDays(7))
+                        ->groupBy(DB::raw('DATE_FORMAT(transactions.created_at, "%d-%m-%Y")'))
+                        ->select(DB::raw('DATE_FORMAT(transactions.created_at, "%d-%m-%Y %H:%i:%s") as date, count(*) as count, sum(payment_amount) as total_amount'))
+                        ->get();
+
+        $intervals = collect($records)->map(function ($record, $key) {
+            return [
+                //  Get the grouped record date value
+                'date' => \Carbon\Carbon::parse($record['date'])->toDateTimeString(),
+
+                //  Get the total amount of the grouped records
+                'amount' => $record['total_amount'],
+
+                //  Get the number of grouped records
+                'count' => $record['count'],
+            ];
+        });
+
+        //  Get the dates between the start and end time
+        $datesBetween = collect(\Carbon\CarbonPeriod::create($start_time, $end_time)->toArray())->map(function ($date, $key) {
+            //  Foreach date return th datetime and set the count to zero (0)
+            return [
+                'date' => $date->toDateTimeString(),
+                'amount' => 0,
+                'count' => 0,
+            ];
+        });
+
+        //  Merge the dates datesBetween with the current intervals and order by the date
+        //    $updatedIntervals = $datesBetween->merge($intervals)->sortBy('date')->values()->all();
+
+        $updatedIntervals = $datesBetween->merge($intervals)->groupBy(function ($item, $key) {
+            
+            //  Group by Year - Month - Day e.g 2020-01-04
+            return substr($item['date'], 0, 10);
+
+        })->map(function($dates){
+
+            $collection = collect($dates);
+
+            return [
+
+                //  Get the smallest date e.g "2020-01-04 00:00:00" is smaller than "2020-01-04 01:00:00"
+                'date' => $collection->min('date'),
+                
+                //  Calculate the sum of all the amounts that have been grouped together
+                'amount' => $collection->sum('amount'),
+
+                //  Calculate the sum of all the dates that have been grouped together
+                'count' => $collection->sum('count')
+
+            ];
+
+        })->sortBy('date')->values()->all();
+
+        //  Return the data
+        return [
+            'name' => 'Refunds',
+            'data_intervals' => $updatedIntervals,
         ];
     }
 
@@ -649,7 +1022,7 @@ class Store extends Model
             //  Return the session if the metadata shows that the customer was viewing the store About Us
             return $session['metadata']['viewed_about_us'] === true;
         });
-       
+
         //  Get the shopping sessions where customers selected a product
         $selected_product_sessions = $shopping_sessions->filter(function ($session, $key) {
             //  Return the session if the metadata shows that the customer had selected a product
@@ -762,7 +1135,6 @@ class Store extends Model
 
         //  Get the popular payment methods used during shopping sessions
         $popular_payment_method_details = $shopping_sessions->groupBy('metadata.payment_method')->map(function ($session, $key) use ($selected_payment_method_count) {
-            
             //  Count the number of sessions using the current payment method e.g Airtime = 3 or Mobile Money = 10
             $count = collect($session)->count();
 
@@ -770,17 +1142,13 @@ class Store extends Model
                 'count' => $count ?? 0,
                 'percentage' => $selected_payment_method_count != 0 ? round((($count / $selected_payment_method_count) * 100)) : 0,
             ];
-
         })->filter(function ($session, $key) {
-            
             //  Return only data with actual statistics
             return !empty($key);
-
         });
 
         //  Get the popular payment methods used during successful payments
         $popular_successful_payment_methods_details = $payment_success_sessions->groupBy('metadata.payment_method')->map(function ($session, $key) use ($payment_success_count) {
-            
             //  Count the number of sessions using the current payment method e.g Airtime = 3 or Mobile Money = 10
             $count = collect($session)->count();
 
@@ -788,17 +1156,13 @@ class Store extends Model
                 'count' => $count ?? 0,
                 'percentage' => $payment_success_count != 0 ? round((($count / $payment_success_count) * 100)) : 0,
             ];
-
         })->filter(function ($session, $key) {
-
             //  Return only data with actual statistics
             return !empty($key);
-
         });
 
         //  Get the popular payment methods used during unsuccessful payments
         $popular_failed_payment_method_details = $payment_failed_sessions->groupBy('metadata.payment_method')->map(function ($session, $key) use ($payment_failed_count) {
-            
             //  Count the number of sessions using the current payment method e.g Airtime = 3 or Mobile Money = 10
             $count = collect($session)->count();
 
@@ -806,17 +1170,13 @@ class Store extends Model
                 'count' => $count ?? 0,
                 'percentage' => $payment_failed_count != 0 ? round((($count / $payment_failed_count) * 100)) : 0,
             ];
-
         })->filter(function ($session, $key) {
-
             //  Return only data with actual statistics
             return !empty($key);
-
         });
 
         //  Find the average session time
         $session_times = $sessions->map(function ($session, $key) {
-
             //  Get the session start time as a timestamp
             $startTimestamp = (new \Carbon\Carbon($session['metadata']['start_datetime']) )->getTimestamp();
 
@@ -825,7 +1185,6 @@ class Store extends Model
 
             //  Return the session time difference in seconds
             return $endTimestamp - $startTimestamp;
-
         });
 
         //  Find the average session time in seconds
@@ -937,7 +1296,7 @@ class Store extends Model
                 'count' => $payment_success_count ?? 0,
                 'percentage' => $started_shopping_count != 0 ? round((($payment_success_count / $started_shopping_count) * 100)) : 0,
                 'details' => [
-                    'popular_successful_payment_methods' => $popular_successful_payment_methods_details
+                    'popular_successful_payment_methods' => $popular_successful_payment_methods_details,
                 ],
             ],
 
@@ -982,11 +1341,8 @@ class Store extends Model
     {
         $total = 0;
 
-        foreach ($this->orders as $order) {
-            // If the order status is not any of the following statuses
-            if (!collect(['Failed Payment', 'Cancelled', 'Pending Payment'])->contains($order->status['name'])) {
-                $total += $order->grand_total;
-            }
+        foreach ($this->orders()->withPayments()->get() as $order) {
+            $total += $order->grand_total;
         }
 
         return $total;
@@ -999,11 +1355,8 @@ class Store extends Model
     {
         $total = 0;
 
-        foreach ($this->orders as $order) {
-            // If the order status is not any of the following statuses
-            if (!collect(['Failed Payment', 'Cancelled', 'Pending Payment'])->contains($order->status['name'])) {
-                $total += $order->grand_tax_total;
-            }
+        foreach ($this->orders()->withPayments()->get() as $order) {
+            $total += $order->grand_tax_total;
         }
 
         return $total;
@@ -1016,11 +1369,8 @@ class Store extends Model
     {
         $total = 0;
 
-        foreach ($this->orders as $order) {
-            // If the order status is not any of the following statuses
-            if (!collect(['Failed Payment', 'Cancelled', 'Pending Payment'])->contains($order->status['name'])) {
-                $total += $order->grand_discount_total;
-            }
+        foreach ($this->orders()->withPayments()->get() as $order) {
+            $total += $order->grand_discount_total;
         }
 
         return $total;
@@ -1033,12 +1383,9 @@ class Store extends Model
     {
         $total = 0;
 
-        foreach ($this->orders as $order) {
-            // If the order status is not any of the following statuses
-            if (!collect(['Failed Payment', 'Cancelled', 'Pending Payment'])->contains($order->status['name'])) {
-                //  Subtotal = Grand Total - Tax Total - Discount Total
-                $total += $order->sub_total;
-            }
+        foreach ($this->orders()->withPayments()->get() as $order) {
+            //  Subtotal = Grand Total - Tax Total - Discount Total
+            $total += $order->sub_total;
         }
 
         //  Remove Refunds Total

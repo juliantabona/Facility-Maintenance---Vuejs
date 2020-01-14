@@ -49,6 +49,14 @@
     z-index:1 !important;
   }
 
+  .border-top-dashed{
+    border-top: 1px dashed #dee2e6 !important;
+  }
+
+  .border-bottom-dashed{
+    border-bottom: 1px dashed #dee2e6 !important;
+  }
+
 </style>
 
 <template>

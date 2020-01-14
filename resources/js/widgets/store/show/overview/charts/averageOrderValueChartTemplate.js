@@ -1,21 +1,34 @@
 export const averageOrderValueChartTemplate = {
   type: 'line',
   data: {
-    datasets: [{
-      data: [],
-      fill: false,
-      pointRadius: 1,
-      lineTension: 0,
-      label: 'Amount',
-      borderColor: '#19be6b',
-  
-  }]
+    datasets: [
+        {
+            data: [],
+            fill: false,
+            pointRadius: 1,
+            lineTension: 0,
+            label: 'Total Amount',
+            borderColor: '#2d8cf0',
+            borderWidth: 2
+        
+        },
+        {
+            data: [],
+            fill: false,
+            pointRadius: 1,
+            lineTension: 0,
+            label: 'Average Amount',
+            borderColor: '#19be6b',
+            borderWidth: 2
+        
+        }
+    ]
   },
   options: {
     responsive: true,
     maintainAspectRatio: false,
     title:{
-        text:'Average Order Value',
+        text:'ORDER VALUE OVER TIME',
         display: true
     },
     tooltips: {

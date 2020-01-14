@@ -172,9 +172,26 @@
                     <!-- Mobile Store Statastics -->
                     <Col span="8">
 
-                        <Card v-if="mobileStoreStats" class="summary-card">
+                        <Card v-if="mobileStoreStats">
 
-                            <mobileStoreStats :stats="mobileStoreStats"></mobileStoreStats>
+                            <Row :gutter="20">
+                                
+                                <!-- Title -->
+                                <Col span="24" class="border-bottom-dashed mb-3 pb-2">
+
+                                    <span class="d-block font-weight-bold text-dark">
+                                        Mobile Store Conversion Rate
+                                    </span>
+
+                                </Col>
+
+                                <Col span="24">
+
+                                    <mobileStoreStats :stats="mobileStoreStats"></mobileStoreStats>
+
+                                </Col>
+
+                            </Row>
 
                         </Card>
 
@@ -189,7 +206,69 @@
 
                                 <Card v-if="salesAndRefundsChartData">
                                         
-                                    <mainChart chartId="transactions-chart" :chartData="salesAndRefundsChartData"></mainChart>
+                                    <Row :gutter="20">
+                                        
+                                        <!-- Title -->
+                                        <Col span="24" class="border-bottom-dashed mb-3 pb-2">
+
+                                            <span class="d-block font-weight-bold text-dark">
+                                                Sales & Refunds
+                                            </span>
+
+                                        </Col>
+                                        
+                                        <!-- Details -->
+                                        <Col span="24" class="mb-2">
+
+                                            <Row :gutter="20" class="mb-2">
+                                                
+                                                <Col span="12">
+
+                                                    <span class="d-block text-dark">
+                                                        Sales (75%)
+                                                    </span>
+
+                                                </Col>
+                                                
+                                                <Col span="12">
+
+                                                    <span class="d-block text-dark text-right">
+                                                        P7,500.00
+                                                    </span>
+
+                                                </Col>
+
+                                            </Row>
+
+                                            <Row :gutter="20" class="mb-2">
+                                                
+                                                <Col span="12">
+
+                                                    <span class="d-block text-dark">
+                                                        Refunds (25%)
+                                                    </span>
+
+                                                </Col>
+                                                
+                                                <Col span="12">
+
+                                                    <span class="d-block text-dark text-right">
+                                                        P2,100.00
+                                                    </span>
+
+                                                </Col>
+
+                                            </Row>
+                                            
+                                        </Col>
+                                        
+                                        <Col span="24" class="mb-2">
+
+                                            <mainChart chartId="transactions-chart" :chartData="salesAndRefundsChartData"></mainChart>
+
+                                        </Col>
+
+                                    </Row>
 
                                 </Card>
 
@@ -197,49 +276,160 @@
 
                             <!-- Returning Customer Rate -->
                             <Col span="12" class="mb-2">
-
-                                <Card v-if="returningCustomerRateChartData">
                                         
-                                    <mainChart chartId="returning-customer-rate-chart" :chartData="returningCustomerRateChartData"></mainChart>
+                                <Card v-if="returningCustomerRateChartData">
 
+                                    <Row :gutter="20">
+                                        
+                                        <!-- Title -->
+                                        <Col span="24" class="border-bottom-dashed mb-3 pb-2">
+
+                                            <span class="d-block font-weight-bold text-dark">
+                                                Returning Customer Rate
+                                            </span>
+
+                                        </Col>
+                                        
+                                        <!-- Details -->
+                                        <Col span="24" class="mb-2">
+
+                                            <Row :gutter="20" class="mb-2">
+                                                
+                                                <Col span="14">
+
+                                                    <span class="d-block text-dark">
+                                                        New Customers (75%)
+                                                    </span>
+
+                                                </Col>
+                                                
+                                                <Col span="10">
+
+                                                    <span class="d-block text-dark text-right">
+                                                        4500
+                                                    </span>
+
+                                                </Col>
+
+                                            </Row>
+
+                                            <Row :gutter="20" class="mb-2">
+                                                
+                                                <Col span="14">
+
+                                                    <span class="d-block text-dark">
+                                                        Return Customers (25%)
+                                                    </span>
+
+                                                </Col>
+                                                
+                                                <Col span="10">
+
+                                                    <span class="d-block text-dark text-right">
+                                                        1500
+                                                    </span>
+
+                                                </Col>
+
+                                            </Row>
+                                            
+                                        </Col>
+                                        
+                                        <Col span="24" class="mb-2">
+                                                    
+                                            <mainChart chartId="returning-customer-rate-chart" :chartData="returningCustomerRateChartData"></mainChart>
+
+                                        </Col>
+
+                                    </Row>
+                                    
                                 </Card>
 
                             </Col>
 
                             <!-- Total Orders -->
                             <Col span="12" class="mb-2">
-
-                                <Card v-if="totalOrdersChartData">
                                         
-                                    <mainChart chartId="total-orders-chart" :chartData="totalOrdersChartData"></mainChart>
+                                <Card v-if="totalOrdersChartData">
 
+                                    <Row :gutter="20">
+                                        
+                                        <!-- Title -->
+                                        <Col span="24" class="border-bottom-dashed mb-3 pb-2">
+
+                                            <span class="d-block font-weight-bold text-dark">
+                                                Total Orders
+                                            </span>
+
+                                        </Col>
+                                        
+                                        <Col span="24" class="mb-2">
+                                                    
+                                            <mainChart chartId="total-orders-chart" :chartData="totalOrdersChartData"></mainChart>
+
+                                        </Col>
+
+                                    </Row>
+                                    
                                 </Card>
 
                             </Col>
 
                             <!-- Average Order Value -->
                             <Col span="12" class="mb-2">
-
+                                        
                                 <Card v-if="averageOrderValueChartData">
-                                    
-                                    <mainChart chartId="average-order-value-chart" :chartData="averageOrderValueChartData"></mainChart>
 
+                                    <Row :gutter="20">
+                                        
+                                        <!-- Title -->
+                                        <Col span="24" class="border-bottom-dashed mb-3 pb-2">
+
+                                            <span class="d-block font-weight-bold text-dark">
+                                                Average Order Value
+                                            </span>
+
+                                        </Col>
+                                        
+                                        <Col span="24" class="mb-2">
+                                                    
+                                            <mainChart chartId="average-order-value-chart" :chartData="averageOrderValueChartData"></mainChart>
+
+                                        </Col>
+
+                                    </Row>
+                                    
                                 </Card>
 
                             </Col>
 
                             <!-- Popular Payment Methods -->
                             <Col span="12" class="mb-2">
-
+                                        
                                 <Card v-if="popularPaymentMethodsChartData">
-                                    
-                                    <mainChart chartId="popular-payment-methods-chart" :chartData="popularPaymentMethodsChartData"></mainChart>
 
+                                    <Row :gutter="20">
+                                        
+                                        <!-- Title -->
+                                        <Col span="24" class="border-bottom-dashed mb-3 pb-2">
+
+                                            <span class="d-block font-weight-bold text-dark">
+                                                Popular Payment Methods
+                                            </span>
+
+                                        </Col>
+                                        
+                                        <Col span="24" class="mb-2">
+                                                    
+                                            <mainChart chartId="popular-payment-methods-chart" :chartData="popularPaymentMethodsChartData"></mainChart>
+
+                                        </Col>
+
+                                    </Row>
+                                    
                                 </Card>
 
                             </Col>
-
-                            
 
                         </Row>
 
@@ -313,24 +503,24 @@
                     let chartData = salesAndRefundsChartTemplate;
 
                     //  Update the data
-                    chartData['data']['datasets'][0]['data'] = this.stats.orders.orders_over_time.data_intervals.map(function(interval){
+                    chartData['data']['datasets'][0]['data'] = this.stats.transactions.sale_transactions.data_intervals.map(function(interval){
                         return { 
                             //  Return the date on the x-axis
                             x: interval.date, 
 
-                            //  Return the count on the y-axis
-                            y: interval.count 
+                            //  Return the amount on the y-axis
+                            y: interval.amount 
                         }
                     });
 
                     //  Update the data
-                    chartData['data']['datasets'][1]['data'] = this.stats.orders.orders_over_time.data_intervals.map(function(interval){
+                    chartData['data']['datasets'][1]['data'] = this.stats.transactions.refund_transactions.data_intervals.map(function(interval){
                         return { 
                             //  Return the date on the x-axis
                             x: interval.date, 
 
-                            //  Return the count on the y-axis
-                            y: interval.count * -1
+                            //  Return the amount on the y-axis (Multiply by negative 1 so that we move the refunds to the negative y-axis)
+                            y: interval.amount * (-1)
                         }
                     });
 
@@ -348,7 +538,18 @@
                     let chartData = returningCustomerRateChartTemplate;
 
                     //  Update the data
-                    chartData['data']['datasets'][0]['data'] = this.stats.orders.orders_over_time.data_intervals.map(function(interval){
+                    chartData['data']['datasets'][0]['data'] = this.stats.customers.returning_customer_rate.new_customer_data_intervals.data_intervals.map(function(interval){
+                        return { 
+                            //  Return the date on the x-axis
+                            x: interval.date, 
+
+                            //  Return the count on the y-axis
+                            y: interval.count 
+                        }
+                    });
+
+                    //  Update the data
+                    chartData['data']['datasets'][1]['data'] = this.stats.customers.returning_customer_rate.return_customer_data_intervals.data_intervals.map(function(interval){
                         return { 
                             //  Return the date on the x-axis
                             x: interval.date, 
@@ -401,8 +602,19 @@
                             //  Return the date on the x-axis
                             x: interval.date, 
 
-                            //  Return the count on the y-axis
-                            y: interval.count 
+                            //  Return the total amount on the y-axis
+                            y: interval.total_amount 
+                        }
+                    });
+
+                    //  Update the data
+                    chartData['data']['datasets'][1]['data'] = this.stats.orders.orders_over_time.data_intervals.map(function(interval){
+                        return { 
+                            //  Return the date on the x-axis
+                            x: interval.date, 
+
+                            //  Return the average amount on the y-axis
+                            y: interval.average_amount 
                         }
                     });
 
@@ -419,18 +631,17 @@
                     //  Get the chart template structure
                     let chartData = popularPaymentMethodsChartTemplate;
 
-                    /*
                     //  Update the data
-                    chartData['data']['datasets'][0]['data'] = this.stats.orders.orders_over_time.data_intervals.map(function(interval){
-                        return { 
-                            //  Return the date on the x-axis
-                            x: interval.date, 
-
-                            //  Return the count on the y-axis
-                            y: interval.count 
-                        }
+                    chartData['data']['labels'] = this.stats.transactions.popular_payment_methods.data.map(function(record){
+                        //  Get the payment method type e.g Airtime, Mobile Money, e.t.c
+                        return record.payment_method
                     });
-                    */
+
+                    //  Update the data
+                    chartData['data']['datasets'][0]['data'] = this.stats.transactions.popular_payment_methods.data.map(function(record){
+                        //  Get the payment method count (Total) e.g 10, 20, e.t.c
+                        return record.count
+                    });
 
                     //  Return the chart structure and data
                     return chartData;
