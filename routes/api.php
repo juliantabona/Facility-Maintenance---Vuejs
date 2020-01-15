@@ -826,11 +826,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
     });
 
-Route::post('/pusher/auth', function (Request $request) {
-    $pusher = new Pusher\Pusher(env('PUSHER_APP_KEY'), env('PUSHER_APP_SECRET'), env('PUSHER_APP_ID'));
-
-    return $pusher->socket_auth($request->request->get('channel_name'), $request->request->get('socket_id'));
-});
+Route::post('/pusher/auth', 'Auth\PusherController@index');
 
 Route::middleware('auth:api')->group(function () {
     //  Logout for all devices
