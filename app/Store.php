@@ -1268,24 +1268,23 @@ class Store extends Model
                 //  Convert to minutes and seconds and round the average time to one decimal place
                 'minimum_time' => [
                     'name' => 'Minimum Session Time',
-                    'minutes' => gmdate('i', $min_session_time_in_seconds),
-                    'seconds' => gmdate('s', $min_session_time_in_seconds),
+                    'minutes' => gmdate('i', $min_session_time_in_seconds), //  Get in minutes
+                    'seconds' => gmdate('s', $min_session_time_in_seconds), //  Get in seconds
                 ],
 
                 //  Convert to minutes and seconds and round the average time to one decimal place
                 'maximum_time' => [
                     'name' => 'Maximum Session Time',
-                    'minutes' => gmdate('i', $max_session_time_in_seconds),
-                    'seconds' => gmdate('s', $max_session_time_in_seconds),
+                    'minutes' => gmdate('i', $max_session_time_in_seconds), //  Get in minutes
+                    'seconds' => gmdate('s', $max_session_time_in_seconds), //  Get in seconds
                 ],
 
                 //  Convert to minutes and seconds and round the average time to one decimal place
                 'average_time' => [
                     'name' => 'Average Session Time',
-                    'minutes' => gmdate('i', $average_session_time_in_seconds),
-                    'seconds' => gmdate('s', $average_session_time_in_seconds),
-                ],
-                'session_times' => $session_times
+                    'minutes' => gmdate('i', $average_session_time_in_seconds), //  Get in minutes
+                    'seconds' => gmdate('s', $average_session_time_in_seconds), //  Get in seconds
+                ]
             ],
         ];
     }

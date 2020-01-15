@@ -41,8 +41,11 @@
 
     <div :class="chartId+'-container chart-container'">
 
-        <canvas id="cursor"></canvas>
-        <canvas id="tooltip"></canvas>
+        <template v-if="['line'].includes(chartData.type)">
+            <canvas id="cursor"></canvas>
+            <canvas id="tooltip"></canvas>
+        </template>
+        
         <canvas :id="chartId" class="chart-instance" :width="width" :height="height"></canvas>
 
     </div>

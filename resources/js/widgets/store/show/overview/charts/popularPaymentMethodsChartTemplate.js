@@ -45,7 +45,7 @@ export const popularPaymentMethodsChartTemplate = {
     },
     legend:{
         position:'bottom',
-        display: true
+        display: false
     }
   }
 }
