@@ -54,7 +54,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     /*********************************
     *********************************/
     
-    Route::get('/', 'Api\HomeController@home')->name('home');
+    Route::get('/', 'Api\HomeController@home')->name('api-home');
 
     /*********************************
     /*********************************

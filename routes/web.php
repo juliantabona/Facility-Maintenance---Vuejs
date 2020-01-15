@@ -11,14 +11,11 @@
 |
 */
 
+Route::get('/', 'Web\HomeController@home')->name('web-home');
+
+/*
+
 use App\Events\TestEvent;
-
-Route::get('/', function () {
-    //  Simulate user logging In
-    Auth::loginUsingId(1, true);
-
-    return view('welcome');
-});
 
 Route::get('/send', function () {
     //  Simulate user logging In
@@ -33,3 +30,5 @@ Route::get('/send', function () {
     //  Notify success
     return 'success!';
 });
+
+*/
