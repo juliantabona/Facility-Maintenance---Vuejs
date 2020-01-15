@@ -40,6 +40,12 @@
         height: 100%;
     }
 
+    .question-mark >>> i{
+        font-size: 24px;
+        line-height: 28px;
+        margin-left: 0px;
+    }
+
 </style>
 
 <template>
@@ -177,11 +183,18 @@
                             <Row :gutter="20">
                                 
                                 <!-- Title -->
-                                <Col span="24" class="border-bottom-dashed mb-3 pb-2">
+                                <Col span="24" class="border-bottom-dashed clearfix mb-3 pb-2">
 
-                                    <span class="d-block font-weight-bold text-dark">
+                                    <span class="d-block float-left font-weight-bold text-dark">
                                         Mobile Store Conversion Rate
                                     </span>
+
+                                    <Poptip 
+                                        title="Mobile Store Conversion Rate"
+                                        trigger="hover" placement="top-end" word-wrap width="300" class="d-block float-right"
+                                        content="Shows sales and refunds of orders that are open/archieved and have been fully/partially paid">
+                                        <Avatar icon="ios-help" size="small" class="question-mark" />
+                                    </Poptip>
 
                                 </Col>
 
@@ -209,11 +222,18 @@
                                     <Row :gutter="20">
                                         
                                         <!-- Title -->
-                                        <Col span="24" class="border-bottom-dashed mb-3 pb-2">
+                                        <Col span="24" class="border-bottom-dashed clearfix mb-3 pb-2">
 
-                                            <span class="d-block font-weight-bold text-dark">
+                                            <span class="d-block float-left font-weight-bold text-dark">
                                                 Sales & Refunds
                                             </span>
+
+                                            <Poptip 
+                                                title="Sales & Refunds"
+                                                trigger="hover" placement="top-end" word-wrap width="300" class="d-block float-right"
+                                                content="Shows sales and refunds of orders that are open/archieved and have been fully/partially paid">
+                                                <Avatar icon="ios-help" size="small" class="question-mark" />
+                                            </Poptip>
 
                                         </Col>
                                         
@@ -284,9 +304,16 @@
                                         <!-- Title -->
                                         <Col span="24" class="border-bottom-dashed mb-3 pb-2">
 
-                                            <span class="d-block font-weight-bold text-dark">
+                                            <span class="d-block float-left font-weight-bold text-dark">
                                                 Returning Customer Rate
                                             </span>
+
+                                            <Poptip 
+                                                title="Returning Customer Rate"
+                                                trigger="hover" placement="top-end" word-wrap width="300" class="d-block float-right"
+                                                content="Shows sales and refunds of orders that are open/archieved and have been fully/partially paid">
+                                                <Avatar icon="ios-help" size="small" class="question-mark" />
+                                            </Poptip>
 
                                         </Col>
                                         
@@ -347,6 +374,10 @@
 
                             </Col>
 
+                        </Row>
+
+                        <Row :gutter="20">
+
                             <!-- Total Orders -->
                             <Col span="12" class="mb-2">
                                         
@@ -355,11 +386,18 @@
                                     <Row :gutter="20">
                                         
                                         <!-- Title -->
-                                        <Col span="24" class="border-bottom-dashed mb-3 pb-2">
+                                        <Col span="24" class="border-bottom-dashed clearfix mb-3 pb-2">
 
-                                            <span class="d-block font-weight-bold text-dark">
+                                            <span class="d-block float-left font-weight-bold text-dark">
                                                 Total Orders
                                             </span>
+
+                                            <Poptip 
+                                                title="Total Orders"
+                                                trigger="hover" placement="top-end" word-wrap width="300" class="d-block float-right"
+                                                content="Shows sales and refunds of orders that are open/archieved and have been fully/partially paid">
+                                                <Avatar icon="ios-help" size="small" class="question-mark" />
+                                            </Poptip>
 
                                         </Col>
                                         
@@ -383,11 +421,18 @@
                                     <Row :gutter="20">
                                         
                                         <!-- Title -->
-                                        <Col span="24" class="border-bottom-dashed mb-3 pb-2">
+                                        <Col span="24" class="border-bottom-dashed clearix mb-3 pb-2">
 
-                                            <span class="d-block font-weight-bold text-dark">
+                                            <span class="d-block float-left font-weight-bold text-dark">
                                                 Average Order Value
                                             </span>
+
+                                            <Poptip 
+                                                title="Average Order Value"
+                                                trigger="hover" placement="top-end" word-wrap width="300" class="d-block float-right"
+                                                content="Shows sales and refunds of orders that are open/archieved and have been fully/partially paid">
+                                                <Avatar icon="ios-help" size="small" class="question-mark" />
+                                            </Poptip>
 
                                         </Col>
                                         
@@ -403,6 +448,10 @@
 
                             </Col>
 
+                        </Row>
+
+                        <Row :gutter="20">
+
                             <!-- Popular Payment Methods -->
                             <Col span="12" class="mb-2">
                                         
@@ -411,11 +460,18 @@
                                     <Row :gutter="20">
                                         
                                         <!-- Title -->
-                                        <Col span="24" class="border-bottom-dashed mb-3 pb-2">
+                                        <Col span="24" class="border-bottom-dashed clearfix mb-3 pb-2">
 
-                                            <span class="d-block font-weight-bold text-dark">
+                                            <span class="d-block float-left font-weight-bold text-dark">
                                                 Popular Payment Methods
                                             </span>
+
+                                            <Poptip 
+                                                title="Popular Payment Methods"
+                                                trigger="hover" placement="top-end" word-wrap width="300" class="d-block float-right"
+                                                content="Shows sales and refunds of orders that are open/archieved and have been fully/partially paid">
+                                                <Avatar icon="ios-help" size="small" class="question-mark" />
+                                            </Poptip>
 
                                         </Col>
                                         
