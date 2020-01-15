@@ -1192,13 +1192,13 @@ class Store extends Model
         });
 
         //  Find the average session time in seconds
-        $average_session_time = $session_times->avg();
+        $average_session_time_in_seconds = $session_times->avg();
 
         //  Find the minimum session time in seconds
-        $min_session_time = $session_times->min();
+        $min_session_time_in_seconds = $session_times->min();
 
         //  Find the maximum session time in seconds
-        $max_session_time = $session_times->max();
+        $max_session_time_in_seconds = $session_times->max();
 
         return [
             'total_sessions' => [
@@ -1317,22 +1317,22 @@ class Store extends Model
                 //  Convert to minutes and seconds and round the average time to one decimal place
                 'minimum_time' => [
                     'name' => 'Minimum Session Time',
-                    'minutes' => round($min_session_time / 60),
-                    'seconds' => $min_session_time % 60,
+                    'minutes' => gmdate("i", $min_session_time_in_seconds),
+                    'seconds' => gmdate("s", $min_session_time_in_seconds)
                 ],
 
                 //  Convert to minutes and seconds and round the average time to one decimal place
                 'maximum_time' => [
                     'name' => 'Maximum Session Time',
-                    'minutes' => round($max_session_time / 60),
-                    'seconds' => $max_session_time % 60,
+                    'minutes' => gmdate("i", $max_session_time_in_seconds),
+                    'seconds' => gmdate("s", $max_session_time_in_seconds)
                 ],
 
                 //  Convert to minutes and seconds and round the average time to one decimal place
                 'average_time' => [
                     'name' => 'Average Session Time',
-                    'minutes' => round($average_session_time / 60),
-                    'seconds' => $average_session_time % 60,
+                    'minutes' => gmdate("i", $average_session_time_in_seconds),
+                    'seconds' => gmdate("s", $average_session_time_in_seconds)
                 ],
             ],
         ];
