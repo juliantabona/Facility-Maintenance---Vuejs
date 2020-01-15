@@ -574,14 +574,14 @@ class Store extends Model
                         'amount' => $this->total_net_revenue,
                     ],
                 ],
-                'orders_over_time' => $this->orders_over_time_stats
+                'orders_over_time' => $this->orders_over_time_stats,
             ],
             'customers' => [
                 'general' => [
                     'name' => 'Customers',
                     'count' => $this->customerContacts()->count(),
                 ],
-                'returning_customer_rate' => $this->returning_customer_rate_stats
+                'returning_customer_rate' => $this->returning_customer_rate_stats,
             ],
             'transactions' => [
                 'general' => [
@@ -590,7 +590,7 @@ class Store extends Model
                 ],
                 'sale_transactions' => $this->sale_transaction_stats,
                 'refund_transactions' => $this->refund_transaction_stats,
-                'popular_payment_methods' => $this->popular_payment_method_stats
+                'popular_payment_methods' => $this->popular_payment_method_stats,
             ],
             'mobile_store' => $this->mobile_store_stats,
         ];
@@ -605,24 +605,20 @@ class Store extends Model
 
         //  Count the number of new customer sessions
         $sessionCount = count($sessions);
-        
+
         //  Get the dates between the start and end time
         $datesBetween = collect(\Carbon\CarbonPeriod::create($start_time, $end_time)->toArray())->map(function ($date, $key) {
-            
             //  Foreach date return th datetime and set the count to zero (0)
             return [
                 'date' => $date->toDateTimeString(),
-                'count' => 0
+                'count' => 0,
             ];
-
         });
 
         //  Get the new cutomer sessions
         $newCustomerSessions = $sessions->filter(function ($session, $key) {
-
             //  Return the session if the metadata shows that the customer is a new customer
             return $session['metadata']['new_customer'] === true;
-
         }) ?? [];
 
         //  Count the number of new customer sessions
@@ -630,109 +626,83 @@ class Store extends Model
 
         //  Get the return customer sessions
         $returnCustomerSessions = $sessions->filter(function ($session, $key) {
-
             //  Return the session if the metadata shows that the customer is a return customer
             return $session['metadata']['new_customer'] !== true;
-
         }) ?? [];
 
         //  Count the number of return customer sessions
         $returnCustomerSessionsCount = count($returnCustomerSessions);
 
         /** New Customer Data Intervals
-         * 
-         *  Calculate the date and count intervals of new customer sessions
          *
+         *  Calculate the date and count intervals of new customer sessions.
          */
         $newCustomerDataIntervals = collect($newCustomerSessions)->groupBy(function ($sessions, $key) {
-            
             //  Group by Year - Month - Day e.g 2020-01-04
             return substr($sessions['created_at'], 0, 10);
-
         })->map(function ($group, $key) {
-            
             //  Foreach session group return the datetime and total count of the sessions in that group
             return [
-
                 //  Get the date of the first session in the group
-                'date' => \Carbon\Carbon::parse( $group[0]['created_at'] )->toDateTimeString(),
+                'date' => \Carbon\Carbon::parse($group[0]['created_at'])->toDateTimeString(),
 
                 //  Count the total number of sessions
-                'count' => count($group)
-
+                'count' => count($group),
             ];
 
-        //  Merge with the dates in between for a complete set of dates
+            //  Merge with the dates in between for a complete set of dates
         })->merge($datesBetween)
 
         //  Group by dates to sort the dates between with the session dates
         ->groupBy(function ($item, $key) {
-            
             //  Group by Year - Month - Day e.g 2020-01-04
             return substr($item['date'], 0, 10);
-
-        })->map(function($dates){
-
+        })->map(function ($dates) {
             $collection = collect($dates);
 
             return [
-
                 //  Get the smallest date e.g "2020-01-04 00:00:00" is smaller than "2020-01-04 01:00:00"
                 'date' => $collection->min('date'),
 
                 //  Calculate the sum of all the dates that have been grouped together
-                'count' => $collection->sum('count')
-
+                'count' => $collection->sum('count'),
             ];
-
         })->sortBy('date')->values()->all();
 
         /** Return Customer Data Intervals
-         * 
-         *  Calculate the date and count intervals of return customer sessions
          *
+         *  Calculate the date and count intervals of return customer sessions.
          */
         $returnCustomerDataIntervals = collect($returnCustomerSessions)->groupBy(function ($sessions, $key) {
-            
             //  Group by Year - Month - Day e.g 2020-01-04
             return substr($sessions['created_at'], 0, 10);
-
         })->map(function ($group, $key) {
-            
             //  Foreach session group return the datetime and total count of the sessions in that group
             return [
-
                 //  Get the date of the first session in the group
-                'date' => \Carbon\Carbon::parse( $group[0]['created_at'] )->toDateTimeString(),
+                'date' => \Carbon\Carbon::parse($group[0]['created_at'])->toDateTimeString(),
 
                 //  Count the total number of sessions
-                'count' => count($group)
-
+                'count' => count($group),
             ];
 
-        //  Merge with the dates in between for a complete set of dates
+            //  Merge with the dates in between for a complete set of dates
         })->merge($datesBetween)
 
         //  Group by dates to sort the dates between with the session dates
         ->groupBy(function ($item, $key) {
-            
             //  Group by Year - Month - Day e.g 2020-01-04
             return substr($item['date'], 0, 10);
-
-        })->map(function($dates){
-
+        })->map(function ($dates) {
             $collection = collect($dates);
 
             return [
-
                 //  Get the smallest date e.g "2020-01-04 00:00:00" is smaller than "2020-01-04 01:00:00"
                 'date' => $collection->min('date'),
 
                 //  Calculate the sum of all the dates that have been grouped together
-                'count' => $collection->sum('count')
-
+                'count' => $collection->sum('count'),
             ];
-
         })->sortBy('date')->values()->all();
 
         //  Return the data
@@ -742,15 +712,14 @@ class Store extends Model
             'new_customer_data_intervals' => [
                 'count' => $newCustomerSessionsCount,
                 'rate' => $sessionCount ? round(($newCustomerSessionsCount / $sessionCount) * 100) : 0,
-                'data_intervals' => $newCustomerDataIntervals
+                'data_intervals' => $newCustomerDataIntervals,
             ],
             'return_customer_data_intervals' => [
                 'count' => $returnCustomerSessionsCount,
                 'rate' => $sessionCount ? round(($returnCustomerSessionsCount / $sessionCount) * 100) : 0,
-                'data_intervals' => $returnCustomerDataIntervals
-            ]
+                'data_intervals' => $returnCustomerDataIntervals,
+            ],
         ];
-
     }
 
     public function getPopularPaymentMethodStatsAttribute()
@@ -818,12 +787,9 @@ class Store extends Model
         //    $updatedIntervals = $datesBetween->merge($intervals)->sortBy('date')->values()->all();
 
         $updatedIntervals = $datesBetween->merge($intervals)->groupBy(function ($item, $key) {
-            
             //  Group by Year - Month - Day e.g 2020-01-04
             return substr($item['date'], 0, 10);
-
-        })->map(function($dates){
-
+        })->map(function ($dates) {
             $collection = collect($dates);
 
             //  Get the smallest date e.g "2020-01-04 00:00:00" is smaller than "2020-01-04 01:00:00"
@@ -831,25 +797,22 @@ class Store extends Model
 
             //  Calculate the sum of all the dates that have been grouped together
             $count = $collection->sum('count');
-                
+
             //  Calculate the sum of all the amounts that have been grouped together
             $total_amount = $collection->sum('amount');
-                
+
             //  Calculate the sum of all the amounts that have been grouped together
             $average_amount = $count ? round($total_amount / $count, 2) : 0;
 
             return [
-
                 'date' => $date,
-                
+
                 'total_amount' => $total_amount,
 
                 'average_amount' => $average_amount,
 
-                'count' => $count
-
+                'count' => $count,
             ];
-
         })->sortBy('date')->values()->all();
 
         //  Return the data
@@ -897,27 +860,21 @@ class Store extends Model
         //    $updatedIntervals = $datesBetween->merge($intervals)->sortBy('date')->values()->all();
 
         $updatedIntervals = $datesBetween->merge($intervals)->groupBy(function ($item, $key) {
-            
             //  Group by Year - Month - Day e.g 2020-01-04
             return substr($item['date'], 0, 10);
-
-        })->map(function($dates){
-
+        })->map(function ($dates) {
             $collection = collect($dates);
 
             return [
-
                 //  Get the smallest date e.g "2020-01-04 00:00:00" is smaller than "2020-01-04 01:00:00"
                 'date' => $collection->min('date'),
-                
+
                 //  Calculate the sum of all the amounts that have been grouped together
                 'amount' => $collection->sum('amount'),
 
                 //  Calculate the sum of all the dates that have been grouped together
-                'count' => $collection->sum('count')
-
+                'count' => $collection->sum('count'),
             ];
-
         })->sortBy('date')->values()->all();
 
         //  Return the data
@@ -965,27 +922,21 @@ class Store extends Model
         //    $updatedIntervals = $datesBetween->merge($intervals)->sortBy('date')->values()->all();
 
         $updatedIntervals = $datesBetween->merge($intervals)->groupBy(function ($item, $key) {
-            
             //  Group by Year - Month - Day e.g 2020-01-04
             return substr($item['date'], 0, 10);
-
-        })->map(function($dates){
-
+        })->map(function ($dates) {
             $collection = collect($dates);
 
             return [
-
                 //  Get the smallest date e.g "2020-01-04 00:00:00" is smaller than "2020-01-04 01:00:00"
                 'date' => $collection->min('date'),
-                
+
                 //  Calculate the sum of all the amounts that have been grouped together
                 'amount' => $collection->sum('amount'),
 
                 //  Calculate the sum of all the dates that have been grouped together
-                'count' => $collection->sum('count')
-
+                'count' => $collection->sum('count'),
             ];
-
         })->sortBy('date')->values()->all();
 
         //  Return the data
@@ -1317,23 +1268,24 @@ class Store extends Model
                 //  Convert to minutes and seconds and round the average time to one decimal place
                 'minimum_time' => [
                     'name' => 'Minimum Session Time',
-                    'minutes' => gmdate("i", $min_session_time_in_seconds),
-                    'seconds' => gmdate("s", $min_session_time_in_seconds)
+                    'minutes' => gmdate('i', $min_session_time_in_seconds),
+                    'seconds' => gmdate('s', $min_session_time_in_seconds),
                 ],
 
                 //  Convert to minutes and seconds and round the average time to one decimal place
                 'maximum_time' => [
                     'name' => 'Maximum Session Time',
-                    'minutes' => gmdate("i", $max_session_time_in_seconds),
-                    'seconds' => gmdate("s", $max_session_time_in_seconds)
+                    'minutes' => gmdate('i', $max_session_time_in_seconds),
+                    'seconds' => gmdate('s', $max_session_time_in_seconds),
                 ],
 
                 //  Convert to minutes and seconds and round the average time to one decimal place
                 'average_time' => [
                     'name' => 'Average Session Time',
-                    'minutes' => gmdate("i", $average_session_time_in_seconds),
-                    'seconds' => gmdate("s", $average_session_time_in_seconds)
+                    'minutes' => gmdate('i', $average_session_time_in_seconds),
+                    'seconds' => gmdate('s', $average_session_time_in_seconds),
                 ],
+                'session_times' => $session_times
             ],
         ];
     }
