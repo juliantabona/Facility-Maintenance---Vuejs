@@ -256,7 +256,7 @@
                 ussd_reply: '',
                 ussdResponse: '',
                 localUssdInterface: null,
-                phoneNumber: '+26700000000',
+                //  phoneNumber: '+26700000000',
                 showUssdContentModal: false,
                 isSendingUssdResponse: false,
             }
@@ -365,7 +365,7 @@
                 //  Store data
                 let ussdData = {
                     text: this.ussd_text,
-                    phoneNumber: this.phoneNumber,
+                    //  phoneNumber: this.phoneNumber,
                     testMode: true
                 };
 

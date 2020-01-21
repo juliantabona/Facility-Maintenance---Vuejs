@@ -302,7 +302,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             Route::get('/settings', 'Api\StoreController@getStoreSettings')->name('settings');
 
             //  Settings related resources
-            Route::get('/statistics', 'Api\StoreController@getStoreStatistics')->name('statistics');
+            Route::post('/statistics', 'Api\StoreController@getStoreStatistics')->name('statistics');
 
         });
     }); 

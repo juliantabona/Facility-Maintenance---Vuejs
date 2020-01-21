@@ -55,82 +55,49 @@
         <Row>
 
             <Col :span="24">
-
-                <el-tabs value="first">
                     
-                    <!-- Search / Filter Tools -->
-                    <el-tab-pane label="Search / Filter" name="first">
-                
-                        <Card class="mb-3">
-                            <Row :gutter="20">
-                                <Col :span="8">
-                                    <Select v-model="selectedOrderStatuses" filterable multiple placeholder="Filter by status">
+                <!-- Datetime Filters -->
+                <Card class="mb-3">
 
-                                        <OptionGroup label="Payment status">
-                                            <Option v-for="item in ['Pending Payment', 'Verify Payment', 'Failed Payment', 'Paid']" :value="item" :key="item">{{ item }}</Option>
-                                        </OptionGroup>
+                    <Row :gutter="20">
 
-                                        <OptionGroup label="Refund status">
-                                            <Option v-for="item in ['Pending Refund', 'Refunded']" :value="item" :key="item">{{ item }}</Option>
-                                        </OptionGroup>
+                        <Col :span="8">
+                            <Select v-model="selectedDateFilter" filterable placeholder="Filter by date">
 
-                                        <OptionGroup label="Delivery status">
-                                            <Option v-for="item in ['Pending Delivery', 'Verify Delivery','Delivered']" :value="item" :key="item">{{ item }}</Option>
-                                        </OptionGroup>
+                                <Option v-for="item in ['Today', 'Yesterday', 'This Week', 'Last Week', 'This Month', 'Last Month', 'This Year', 'Last Year', 'Custom Date']" :value="item" :key="item">{{ item }}</Option>
 
-                                        <OptionGroup label="Final status">
-                                            <Option v-for="item in ['Cancelled', 'Completed']" :value="item" :key="item">{{ item }}</Option>
-                                        </OptionGroup>
+                            </Select>
+                        </Col>
+                        
+                        <template v-if="selectedDateFilter == 'Custom Date'">
 
-                                    </Select>
-                                </Col>
-                                <Col :span="6">
-                                    <DatePicker type="date" placeholder="From"></DatePicker>
-                                </Col>
-                                <Col :span="6">
-                                    <DatePicker type="date" placeholder="To"></DatePicker>
-                                </Col>
-                                <Col :span="4">
-                                    <!-- Refresh Orders Button -->
-                                    <div class="clearfix">
-                                        <basicButton @click.native="fetchStoreStats()" 
-                                                    size="default" class="float-right mr-4"
-                                                    :disabled="isLoadingStats">
-                                                    <Icon type="ios-refresh" :size="20"/>
-                                                    <span>Refresh</span>
-                                        </basicButton>
-                                    </div>
-                                </Col>
-                            </Row>
-                        </Card>
+                            <Col :span="6">
+                                <DatePicker v-model="custom_start_date" type="date" placeholder="From"></DatePicker>
+                            </Col>
 
-                    </el-tab-pane>
-                    
-                    <!-- Manage Table Columns Tools -->
-                    <el-tab-pane label="Manage Columns" name="second">
+                            <Col :span="6">
+                                <DatePicker v-model="custom_end_date" type="date" placeholder="To"></DatePicker>
+                            </Col>
 
-                        <Card class="mb-3">
-                            <Row :gutter="12">
+                        </template>
 
-                                <Col :span="24" class="clearfix">
-                                    <span class="font-weight-bold d-block mt-2 mb-3">Select stats to show:</span>
-                                </Col>
+                        <Col :span="(selectedDateFilter == 'Custom Date') ? 4 : 16">
+                        
+                            <!-- Refresh Orders Button -->
+                            <div class="clearfix">
+                                <basicButton @click.native="fetchStoreStats()" 
+                                            size="default" class="float-right mr-4"
+                                            :disabled="isLoadingStats">
+                                            <Icon type="ios-refresh" :size="20"/>
+                                            <span>Refresh</span>
+                                </basicButton>
+                            </div>
 
-                                <Col :span="24" class="clearfix">
-                                            
-                                    <!-- Table Stat Checkboxes -->
-                                    <CheckboxGroup v-model="tableColumnsToShowByDefault" class="mb-3">
-                                        <Checkbox v-for="(stat, i) in orderStats" :key="i" :label="stat.name"></Checkbox>
-                                    </CheckboxGroup>
+                        </Col>
 
-                                </Col>
+                    </Row>
 
-                            </Row>
-                        </Card>
-
-                    </el-tab-pane>
-
-                </el-tabs>
+                </Card>
 
             </Col>
             
@@ -245,7 +212,7 @@
                                                 <Col span="12">
 
                                                     <span class="d-block text-dark">
-                                                        Sales (75%)
+                                                        Sales ({{ totalSalesPercentage }}%)
                                                     </span>
 
                                                 </Col>
@@ -253,7 +220,7 @@
                                                 <Col span="12">
 
                                                     <span class="d-block text-dark text-right">
-                                                        P7,500.00
+                                                        {{ currency + formatPrice(totalSalesAmount) }}
                                                     </span>
 
                                                 </Col>
@@ -264,16 +231,16 @@
                                                 
                                                 <Col span="12">
 
-                                                    <span class="d-block text-dark">
-                                                        Refunds (25%)
+                                                    <span class="d-block text-danger">
+                                                        Refunds ({{ totalRefundPercentage }}%)
                                                     </span>
 
                                                 </Col>
                                                 
                                                 <Col span="12">
 
-                                                    <span class="d-block text-dark text-right">
-                                                        P2,100.00
+                                                    <span class="d-block text-danger text-right">
+                                                        {{ currency + formatPrice(totalRefundAmount) }}
                                                     </span>
 
                                                 </Col>
@@ -544,7 +511,9 @@
             return {
                 currency: (this.store.currency || {}).symbol || (this.store.currency || {}).code,
                 tableColumnsToShowByDefault: [],
-                selectedOrderStatuses: [],
+                selectedDateFilter: [],
+                custom_start_date: null,
+                custom_end_date: null,
                 isLoadingStats: false,
                 activeCard: null,
                 stats: null
@@ -585,6 +554,22 @@
 
                 }
 
+            },
+            totalSalesAmount(){
+                return this.stats.transactions.sale_transactions.total_amount;
+            },
+            totalRefundAmount(){
+                return this.stats.transactions.refund_transactions.total_amount;
+            },
+            totalSalesPercentage(){
+                var total = ( this.totalSalesAmount + this.totalRefundAmount );
+
+                return total ? Math.round(this.totalSalesAmount / total * 100) : 0;
+            },
+            totalRefundPercentage(){
+                var total = ( this.totalSalesAmount + this.totalRefundAmount );
+
+                return total ? Math.round(this.totalRefundAmount / total * 100) : 0;
             },
             returningCustomerRateChartData(){
 
@@ -758,9 +743,14 @@
 
                     //  Console log to acknowledge the start of api process
                     console.log('Start getting store statistics...');
+
+                    var postData = {
+                        start_date: this.custom_start_date,
+                        end_date: this.custom_end_date
+                    };
                     
                     //  Use the api call() function located in resources/js/api.js
-                    return api.call('get', this.store._links['oq:statistics'].href )
+                    return api.call('post', this.store._links['oq:statistics'].href, postData)
                         .then(({data}) => {
                             
                             //  Console log the data returned

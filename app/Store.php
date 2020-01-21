@@ -596,6 +596,220 @@ class Store extends Model
         ];
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+/** Return the query start datetime provided in the request payload
+ *  otherwise determine a customer datetime
+ */
+public function getQueryStartDatetimeAttribute()
+{
+    //  Get the start date provided by the request payload otherwise use todays datetime
+    $start_time = request()->input('start_date') ?? (\Carbon\Carbon::now())->subMonth()->format('Y-m-d H:i:s');
+}
+
+/** Return the query end datetime provided in the request payload
+ *  otherwise determine a customer datetime
+ */
+public function getQueryEndDatetimeAttribute()
+{
+    //  Get the end date provided by the request payload otherwise use todays datetime but subtract one month
+    $end_time = request()->input('end_date') ?? (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
+}
+
+/** Scope and return only records that exist between the query start datetime
+ *  and the query end datetime. 
+ */
+public function scopeOnlyQueryWithinDateTime($query)
+{   
+    //  Only query for results where the created_at date is between the start date and end date
+    $query->whereBetween('created_at', [$this->query_start_datetime, $this->query_end_datetime])->get();
+}
+
+public function getDatesBetweenStartAndEndDatetimeAttribute()
+{   
+    //  Get the dates between the query start and end datetime
+    $datesBetween = \Carbon\CarbonPeriod::create($this->query_start_datetime, $this->query_end_datetime)->toArray();
+
+    return $datesBetween;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    public function getSaleTransactionStatsAttribute()
+    {
+        //  Return records within the allowable query datetime
+        $records = $this->transactions()->successful()->payments()->onlyQueryWithinDateTime()
+                        ->groupBy(DB::raw('DATE_FORMAT(transactions.created_at, "%d-%m-%Y")'))
+                        ->select(DB::raw('DATE_FORMAT(transactions.created_at, "%d-%m-%Y %H:%i:%s") as date, count(*) as count, sum(payment_amount) as total_amount'))
+                        ->get();
+
+        $intervals = collect($records)->map(function ($record, $key) {
+
+            return [
+
+                //  Get the grouped record date value
+                'date' => \Carbon\Carbon::parse($record['date'])->toDateTimeString(),
+
+                //  Get the total amount of the grouped records
+                'amount' => $record['total_amount'],
+
+                //  Get the number of grouped records
+                'count' => $record['count']
+
+            ];
+
+        });
+
+        //  Get the dates between the query start and end time
+        $datesBetween = collect($this->dates_between_start_and_end_datetime)->map(function ($date, $key) {
+
+            //  Foreach date return th datetime and set the count to zero (0)
+            return [
+
+                'date' => $date->toDateTimeString(),
+                'amount' => 0,
+                'count' => 0
+
+            ];
+
+        });
+
+        //  Merge the dates datesBetween with the current intervals and order by the date
+        $updatedIntervals = $datesBetween->merge($intervals)->groupBy(function ($item, $key) {
+
+            //  Group by Year - Month - Day e.g 2020-01-04
+            return substr($item['date'], 0, 10);
+
+        })->map(function ($dates) {
+
+            $collection = collect($dates);
+
+            return [
+
+                //  Get the smallest date e.g "2020-01-04 00:00:00" is smaller than "2020-01-04 01:00:00"
+                'date' => $collection->min('date'),
+
+                //  Calculate the sum of all the amounts that have been grouped together
+                'amount' => $collection->sum('amount'),
+
+                //  Calculate the sum of all the dates that have been grouped together
+                'count' => $collection->sum('count')
+
+            ];
+
+        })->sortBy('date')->values()->all();
+
+        $total_count = collect($updatedIntervals)->sum('count');
+        $total_amount = collect($updatedIntervals)->sum('amount');
+
+        //  Return the data
+        return [
+            'name' => 'Sales',
+            'total_count' => $total_count,
+            'total_amount' => $total_amount,
+            'data_intervals' => $updatedIntervals,
+        ];
+    }
+
+    public function getRefundTransactionStatsAttribute()
+    {
+        //  Return records within the allowable query datetime
+        $records = $this->transactions()->successful()->refunds()->onlyQueryWithinDateTime()
+                        ->groupBy(DB::raw('DATE_FORMAT(transactions.created_at, "%d-%m-%Y")'))
+                        ->select(DB::raw('DATE_FORMAT(transactions.created_at, "%d-%m-%Y %H:%i:%s") as date, count(*) as count, sum(payment_amount) as total_amount'))
+                        ->get();
+
+        $intervals = collect($records)->map(function ($record, $key) {
+
+            return [
+
+                //  Get the grouped record date value
+                'date' => \Carbon\Carbon::parse($record['date'])->toDateTimeString(),
+
+                //  Get the total amount of the grouped records
+                'amount' => $record['total_amount'],
+
+                //  Get the number of grouped records
+                'count' => $record['count']
+
+            ];
+
+        });
+
+        //  Get the dates between the start and end time
+        $datesBetween = collect($this->dates_between_start_and_end_datetime)->map(function ($date, $key) {
+
+            //  Foreach date return th datetime and set the count to zero (0)
+            return [
+                'date' => $date->toDateTimeString(),
+                'amount' => 0,
+                'count' => 0
+            ];
+
+        });
+
+        //  Merge the dates datesBetween with the current intervals and order by the date
+        $updatedIntervals = $datesBetween->merge($intervals)->groupBy(function ($item, $key) {
+
+            //  Group by Year - Month - Day e.g 2020-01-04
+            return substr($item['date'], 0, 10);
+
+        })->map(function ($dates) {
+
+            $collection = collect($dates);
+
+            return [
+
+                //  Get the smallest date e.g "2020-01-04 00:00:00" is smaller than "2020-01-04 01:00:00"
+                'date' => $collection->min('date'),
+
+                //  Calculate the sum of all the amounts that have been grouped together
+                'amount' => $collection->sum('amount'),
+
+                //  Calculate the sum of all the dates that have been grouped together
+                'count' => $collection->sum('count')
+
+            ];
+        })->sortBy('date')->values()->all();
+
+        $total_count = collect($updatedIntervals)->sum('count');
+        $total_amount = collect($updatedIntervals)->sum('amount');
+
+        //  Return the data
+        return [
+            'name' => 'Refunds',
+            'total_count' => $total_count,
+            'total_amount' => $total_amount,
+            'data_intervals' => $updatedIntervals,
+        ];
+
+    }
+
     public function getReturningCustomerRateStatsAttribute()
     {
         $start_time = (\Carbon\Carbon::now())->subMonth()->format('Y-m-d H:i:s');
@@ -722,32 +936,6 @@ class Store extends Model
         ];
     }
 
-    public function getPopularPaymentMethodStatsAttribute()
-    {
-        $start_time = (\Carbon\Carbon::now())->subMonth()->format('Y-m-d H:i:s');
-        $end_time = (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
-
-        $paymentMethods = $this->transactions()->successful()->payments()
-                        //->where('created_at', '>=', ( \Carbon\Carbon::now() )->subDays(7))
-                        ->groupBy('payment_type')
-                        ->select(DB::raw('payment_type, count(*) as count'))
-                        ->get();
-
-        $paymentMethods = collect($paymentMethods)->map(function ($payment_method, $key) {
-            //  Foreach date return only the payment method type and total count
-            return [
-                'payment_method' => $payment_method['payment_type'],
-                'count' => $payment_method['count'],
-            ];
-        });
-
-        //  Return the data
-        return [
-            'name' => 'Popular Payment Methods',
-            'data' => $paymentMethods,
-        ];
-    }
-
     public function getOrdersOverTimeStatsAttribute()
     {
         $start_time = (\Carbon\Carbon::now())->subMonth()->format('Y-m-d H:i:s');
@@ -822,127 +1010,29 @@ class Store extends Model
         ];
     }
 
-    public function getSaleTransactionStatsAttribute()
+    public function getPopularPaymentMethodStatsAttribute()
     {
         $start_time = (\Carbon\Carbon::now())->subMonth()->format('Y-m-d H:i:s');
         $end_time = (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
 
-        $records = $this->transactions()->successful()->payments()
+        $paymentMethods = $this->transactions()->successful()->payments()
                         //->where('created_at', '>=', ( \Carbon\Carbon::now() )->subDays(7))
-                        ->groupBy(DB::raw('DATE_FORMAT(transactions.created_at, "%d-%m-%Y")'))
-                        ->select(DB::raw('DATE_FORMAT(transactions.created_at, "%d-%m-%Y %H:%i:%s") as date, count(*) as count, sum(payment_amount) as total_amount'))
+                        ->groupBy('payment_type')
+                        ->select(DB::raw('payment_type, count(*) as count'))
                         ->get();
 
-        $intervals = collect($records)->map(function ($record, $key) {
+        $paymentMethods = collect($paymentMethods)->map(function ($payment_method, $key) {
+            //  Foreach date return only the payment method type and total count
             return [
-                //  Get the grouped record date value
-                'date' => \Carbon\Carbon::parse($record['date'])->toDateTimeString(),
-
-                //  Get the total amount of the grouped records
-                'amount' => $record['total_amount'],
-
-                //  Get the number of grouped records
-                'count' => $record['count'],
+                'payment_method' => $payment_method['payment_type'],
+                'count' => $payment_method['count'],
             ];
         });
-
-        //  Get the dates between the start and end time
-        $datesBetween = collect(\Carbon\CarbonPeriod::create($start_time, $end_time)->toArray())->map(function ($date, $key) {
-            //  Foreach date return th datetime and set the count to zero (0)
-            return [
-                'date' => $date->toDateTimeString(),
-                'amount' => 0,
-                'count' => 0,
-            ];
-        });
-
-        //  Merge the dates datesBetween with the current intervals and order by the date
-        //    $updatedIntervals = $datesBetween->merge($intervals)->sortBy('date')->values()->all();
-
-        $updatedIntervals = $datesBetween->merge($intervals)->groupBy(function ($item, $key) {
-            //  Group by Year - Month - Day e.g 2020-01-04
-            return substr($item['date'], 0, 10);
-        })->map(function ($dates) {
-            $collection = collect($dates);
-
-            return [
-                //  Get the smallest date e.g "2020-01-04 00:00:00" is smaller than "2020-01-04 01:00:00"
-                'date' => $collection->min('date'),
-
-                //  Calculate the sum of all the amounts that have been grouped together
-                'amount' => $collection->sum('amount'),
-
-                //  Calculate the sum of all the dates that have been grouped together
-                'count' => $collection->sum('count'),
-            ];
-        })->sortBy('date')->values()->all();
 
         //  Return the data
         return [
-            'name' => 'Sales',
-            'data_intervals' => $updatedIntervals,
-        ];
-    }
-
-    public function getRefundTransactionStatsAttribute()
-    {
-        $start_time = (\Carbon\Carbon::now())->subMonth()->format('Y-m-d H:i:s');
-        $end_time = (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
-
-        $records = $this->transactions()->successful()->refunds()
-                        //->where('created_at', '>=', ( \Carbon\Carbon::now() )->subDays(7))
-                        ->groupBy(DB::raw('DATE_FORMAT(transactions.created_at, "%d-%m-%Y")'))
-                        ->select(DB::raw('DATE_FORMAT(transactions.created_at, "%d-%m-%Y %H:%i:%s") as date, count(*) as count, sum(payment_amount) as total_amount'))
-                        ->get();
-
-        $intervals = collect($records)->map(function ($record, $key) {
-            return [
-                //  Get the grouped record date value
-                'date' => \Carbon\Carbon::parse($record['date'])->toDateTimeString(),
-
-                //  Get the total amount of the grouped records
-                'amount' => $record['total_amount'],
-
-                //  Get the number of grouped records
-                'count' => $record['count'],
-            ];
-        });
-
-        //  Get the dates between the start and end time
-        $datesBetween = collect(\Carbon\CarbonPeriod::create($start_time, $end_time)->toArray())->map(function ($date, $key) {
-            //  Foreach date return th datetime and set the count to zero (0)
-            return [
-                'date' => $date->toDateTimeString(),
-                'amount' => 0,
-                'count' => 0,
-            ];
-        });
-
-        //  Merge the dates datesBetween with the current intervals and order by the date
-        //    $updatedIntervals = $datesBetween->merge($intervals)->sortBy('date')->values()->all();
-
-        $updatedIntervals = $datesBetween->merge($intervals)->groupBy(function ($item, $key) {
-            //  Group by Year - Month - Day e.g 2020-01-04
-            return substr($item['date'], 0, 10);
-        })->map(function ($dates) {
-            $collection = collect($dates);
-
-            return [
-                //  Get the smallest date e.g "2020-01-04 00:00:00" is smaller than "2020-01-04 01:00:00"
-                'date' => $collection->min('date'),
-
-                //  Calculate the sum of all the amounts that have been grouped together
-                'amount' => $collection->sum('amount'),
-
-                //  Calculate the sum of all the dates that have been grouped together
-                'count' => $collection->sum('count'),
-            ];
-        })->sortBy('date')->values()->all();
-
-        //  Return the data
-        return [
-            'name' => 'Refunds',
-            'data_intervals' => $updatedIntervals,
+            'name' => 'Popular Payment Methods',
+            'data' => $paymentMethods,
         ];
     }
 

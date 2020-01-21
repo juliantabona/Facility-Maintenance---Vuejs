@@ -88,7 +88,7 @@ class Contact extends Model
      */
     public function scopeWithMobilePhone($query, $phone = null)
     {
-        return $query->withPhone($phone)->whereHas('phones', function (Builder $query) use( $phone ){
+        return $query->withPhone($phone)->whereHas('phones', function (Builder $query){
                     $query->where('type', 'mobile');
                 });
     }

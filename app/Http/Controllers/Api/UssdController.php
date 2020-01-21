@@ -69,8 +69,11 @@ class UssdController extends Controller
          *
          *  Before: +26775993221
          *  After:  26775993221
+         *  
+         *  If we don't have a phone number provided default to "26700000000"
          */
-        $this->phone_number = preg_replace('/[^0-9]/', '', $request->get('phoneNumber'));
+        $phone_number = $request->get('phoneNumber') ?? '26700000000';
+        $this->phone_number = preg_replace('/[^0-9]/', '', $phone_number);
 
         /*  Get the Session Id  */
         $this->session_id = $request->get('sessionId');
@@ -81,7 +84,7 @@ class UssdController extends Controller
         /*  Define the user's mobile number  */
         $this->user['phone'] = [
             'calling_code' => substr($this->phone_number, 0, 3),
-            'number' => substr($this->phone_number, 3, 8),
+            'number' => substr($this->phone_number, 3, 8)
         ];
 
         /*  Define the maximum character limit for every USSD response  */
