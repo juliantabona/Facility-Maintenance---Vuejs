@@ -134,8 +134,9 @@ class UssdController extends Controller
             'form_params' => $request->all()
 
         ]);
-        
+
         return $response;
+        
     }
 
     /*********************************
