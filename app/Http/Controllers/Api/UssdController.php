@@ -125,18 +125,14 @@ class UssdController extends Controller
 
     public function redirectToOnline(Request $request)
     {
-        $http = new \GuzzleHttp\Client();
+        $client = new \GuzzleHttp\Client();
+        $params['form_params'] = $request->all();
+        $uri = 'https://oqcloud.co.bw/api/ussd/customer';
 
-        //  $response = $http->post('http://facility.dev2/api/ussd/customer', [
-        $response = $http->post('https://oqcloud.co.bw/api/ussd/customer', [
-
-            //  Get the current request payload
-            'form_params' => $request->all()
-
-        ]);
+        $response = $client->post($uri, $params)->getBody();
 
         return $response;
-        
+
     }
 
     /*********************************
