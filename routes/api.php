@@ -209,14 +209,10 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
         //  Single store resources
         Route::prefix('{store_id}')->name('store-')->group(function ($group) {
-            
             //  Allow only intergers for store_id on all group routes
             foreach ($group->getRoutes() as $route) {
                 $route->where('store_id', '[0-9]+');
             }
-
-            //  Settings related resources
-            Route::post('/statistics', 'Api\StoreController@getStoreStatistics')->name('statistics');
 
             //  Account related resources
             Route::get('/account', 'Api\StoreController@getStoreAccount')->name('account');
@@ -292,6 +288,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             //  Settings related resources
             Route::get('/settings', 'Api\StoreController@getStoreSettings')->name('settings');
 
+            //  Settings related resources
+            Route::post('/statistics', 'Api\StoreController@getStoreStatistics')->name('statistics');
         });
     });
 
