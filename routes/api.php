@@ -290,6 +290,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
             //  Settings related resources
             Route::post('/statistics', 'Api\StoreController@getStoreStatistics')->name('statistics');
+            
         });
     });
 
