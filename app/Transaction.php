@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Traits\CommonTraits;
 use App\Traits\TransactionTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ Relation::morphMap([
 
 class Transaction extends Model
 {
-    use Dataviewer, TransactionTraits;
+    use Dataviewer, CommonTraits, TransactionTraits;
 
     protected $casts = [
         'meta' => 'array',

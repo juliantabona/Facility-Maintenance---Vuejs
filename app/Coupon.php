@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Traits\CommonTraits;
 use App\Traits\CouponTraits;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -17,7 +18,7 @@ Relation::morphMap([
 
 class Coupon extends Model
 {
-    use CouponTraits;
+    use CommonTraits, CouponTraits;
 
     protected $casts = [
         'meta' => 'array',

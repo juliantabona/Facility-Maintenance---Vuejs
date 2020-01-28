@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Traits\CommonTraits;
 use App\Traits\VerificationTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
@@ -14,8 +15,7 @@ Relation::morphMap([
 
 class Verification extends Model
 {
-    use Dataviewer;
-    use VerificationTraits;
+    use Dataviewer, CommonTraits, VerificationTraits;
 
     /**
      * The attributes that are mass assignable.

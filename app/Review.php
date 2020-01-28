@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Traits\CommonTraits;
 use App\Traits\ReviewTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
@@ -15,8 +16,7 @@ Relation::morphMap([
 
 class Review extends Model
 {
-    use Dataviewer;
-    use ReviewTraits;
+    use Dataviewer, CommonTraits, ReviewTraits;
 
     /**
      * The attributes that are mass assignable.

@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Traits\CommonTraits;
 use App\Traits\CategoryTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
@@ -16,8 +17,7 @@ Relation::morphMap([
 
 class Category extends Model
 {
-    use Dataviewer;
-    use CategoryTraits;
+    use Dataviewer, CommonTraits, CategoryTraits;
 
     protected $with = ['sub_categories'];
 

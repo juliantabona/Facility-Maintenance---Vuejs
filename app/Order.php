@@ -4,6 +4,7 @@ namespace App;
 
 use Carbon\Carbon;
 use App\Traits\OrderTraits;
+use App\Traits\CommonTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -14,8 +15,7 @@ Relation::morphMap([
 
 class Order extends Model
 {
-    use Dataviewer;
-    use OrderTraits;
+    use Dataviewer, CommonTraits, OrderTraits;
 
     protected $with = ['fulfillments'];
 

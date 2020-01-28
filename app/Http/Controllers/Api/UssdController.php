@@ -69,7 +69,7 @@ class UssdController extends Controller
          *
          *  Before: +26775993221
          *  After:  26775993221
-         *  
+         *
          *  If we don't have a phone number provided default to "26700000000"
          */
         $phone_number = $request->get('phoneNumber') ?? '26700000000';
@@ -84,7 +84,7 @@ class UssdController extends Controller
         /*  Define the user's mobile number  */
         $this->user['phone'] = [
             'calling_code' => substr($this->phone_number, 0, 3),
-            'number' => substr($this->phone_number, 3, 8)
+            'number' => substr($this->phone_number, 3, 8),
         ];
 
         /*  Define the maximum character limit for every USSD response  */
@@ -121,7 +121,21 @@ class UssdController extends Controller
 
         //  Update the shopping status with the value "0" which means that the shopping is incomplete
         $this->shopping_status = 0;
+    }
+
+    public function redirectToOnline(Request $request)
+    {
+        $http = new \GuzzleHttp\Client();
+
+        //  $response = $http->post('http://facility.dev2/api/ussd/customer', [
+        $response = $http->post('https://oqcloud.co.bw/api/ussd/customer', [
+
+            //  Get the current request payload
+            'form_params' => $request->all()
+
+        ]);
         
+        return $response;
     }
 
     /*********************************
@@ -156,7 +170,6 @@ class UssdController extends Controller
                 if ($this->hasProvidedStoreCode()) {
                     /*  Check if a USSD Interface using the store code provided exists  */
                     if ($this->isValidStoreCode()) {
-
                         $this->method_used_to_find_store = $this->method_used_to_find_store ?? 'store code';
 
                         /*  Allow the user to start shopping (At the specified store)  */
@@ -187,17 +200,13 @@ class UssdController extends Controller
 
                         /*  If the user already selected a specific store from the "Stores Page"  */
                         if ($this->hasSelectedStore()) {
-
                             $this->method_used_to_find_store = 'My Favourites';
 
                             /*  Visit the selected store  */
                             return $this->visitSelectedStore();
-
                         } else {
-
                             /*  Display the "Select Category Store Page"  */
                             $response = $this->displayStoresPage();
-
                         }
 
                         /*  If the user wants to search popular stores  */
@@ -210,12 +219,10 @@ class UssdController extends Controller
 
                         /*  If the user already selected a specific store from the "Stores Page"  */
                         if ($this->hasSelectedStore()) {
-
                             $this->method_used_to_find_store = 'Popular Stores';
-                            
+
                             /*  Visit the selected store  */
                             return $this->visitSelectedStore();
-
                         } else {
                             /*  Display the "Select Popular Store Page"  */
                             $response = $this->displayStoresPage();
@@ -241,12 +248,10 @@ class UssdController extends Controller
 
                             /*  If the user already selected a specific store from the "Stores Page"  */
                             if ($this->hasSelectedStore()) {
-                                
                                 $this->method_used_to_find_store = 'Search By Category';
 
                                 /*  Visit the selected store  */
                                 return $this->visitSelectedStore($responses_to_remove = 4);
-
                             } else {
                                 /*  Display the "Select Popular Store Page"  */
                                 $response = $this->displayStoresPage();
@@ -270,12 +275,10 @@ class UssdController extends Controller
 
                             /*  If the user already selected a specific store from the "Stores Page"  */
                             if ($this->hasSelectedStore()) {
-                                
                                 $this->method_used_to_find_store = 'Search By Name';
 
                                 /*  Visit the selected store  */
                                 return $this->visitSelectedStore($responses_to_remove = 4);
-
                             } else {
                                 /*  Display the "Select Popular Store Page"  */
                                 $response = $this->displayStoresPage();
@@ -302,7 +305,7 @@ class UssdController extends Controller
             }
         }
 
-        /** Save the ussd session details as well as the shopping progress of this customer.
+        /* Save the ussd session details as well as the shopping progress of this customer.
          *  This will allow us to track all the activities of the current customer so that
          *  we know if they are shopping, have selected a product, have selected a payment
          *  method, have paid successfully or experienced a failed payment, e.t.c
@@ -485,10 +488,8 @@ class UssdController extends Controller
          *  was deleted or we could not gain access to it for some reason
          */
         if (!$this->store) {
-
             /*  Notify the user that we have issues connecting to the store  */
             return $this->displayIssueConnectingToStorePage();
-
         }
     }
 
@@ -498,33 +499,27 @@ class UssdController extends Controller
         $this->getContact();
 
         //  If we have a contact
-        if( $this->contact ){
-            
+        if ($this->contact) {
             //  Set this contact as a new customer if they have never placed an order on this store before
             $this->newCustomer = ($this->contact->orders()->count() == 0);
-
         }
-        
     }
 
-    /** updateCustomerJourney() 
-     *  
+    /** updateCustomerJourney()
+     *
      *  This method saves the current session details as well as the customer shopping
-     *  progress. Its responsible to capture information relating to the shopper e.g:
-     * 
+     *  progress. Its responsible to capture information relating to the shopper e.g:.
+     *
      *  - How many times the shopper visited the store
      *  - Has the shopper reached the cart summary page
      *  - Has the shopper reached the payment method page
      *  - Has the shopper paid for their order
      *  ... e.t.c
-     * 
      */
     public function updateCustomerJourney()
     {
-
         //  Check if we have a store
-        if($this->store){
-
+        if ($this->store) {
             //  Check if we already have a ussd session
             $ussd_session = $this->store->ussd_sessions()->where('session_id', $this->session_id)->first();
 
@@ -535,7 +530,6 @@ class UssdController extends Controller
             $end_time = (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
 
             $sessionData = [
-                
                 'session_id' => $this->session_id,
                 'service_code' => $this->service_code,
                 'phone_number' => $this->phone_number,
@@ -543,7 +537,6 @@ class UssdController extends Controller
                 'text' => $this->text,
 
                 'metadata' => [
-
                     //  How many unique products have been added to the cart
                     'number_of_products_added_to_cart' => $this->cart['number_of_items'] ?? 0,
 
@@ -552,90 +545,80 @@ class UssdController extends Controller
 
                     //  When did the customer start shopping (the first recorded time)
                     'start_datetime' => $start_time,
-                        
+
                     //  When did the customer stop shopping (the last recorded time)
                     'end_datetime' => $end_time,
-                        
+
                     //  Did the customer start shopping
                     'started_shopping' => $this->wantsToStartShopping(),
-                        
+
                     //  Did the customer view My Orders
                     'viewed_my_orders' => $this->wantsToViewMyOrders(),
-                        
+
                     //  Did the customer view Contact Us
                     'viewed_contact_us' => $this->wantsToViewContactUs(),
-                        
+
                     //  Did the customer view About Us
                     'viewed_about_us' => $this->wantsToViewAboutUs(),
-                        
+
                     //  Did the customer already select a product/service
                     'selected_product' => (count($this->selected_products) ? true : false),
-                                        
+
                     //  Did the customer select only one product / service
                     'selected_one_product' => (count($this->selected_products) == 1) ? true : false,
 
                     //  Did the customer select more products / services
                     'selected_more_products' => (count($this->selected_products) > 1) ? true : false,
-                        
+
                     //  Did the customer already select a payment method
                     'selected_payment_method' => $this->hasSelectedPaymentMethod(),
-                        
+
                     //  Wha payment method did the customer select
-                    'payment_method' => $this->payment_method ?? null, 
-                        
+                    'payment_method' => $this->payment_method ?? null,
+
                     //  What is the current payment status (Was the payment successful or not)
-                    'payment_success' => $this->payment_response['status'] ?? null, 
-                        
+                    'payment_success' => $this->payment_response['status'] ?? null,
+
                     //  What is the current payment status message if the payment status is a fail
-                    'payment_failed_message' => $this->payment_response['error'] ?? null, 
+                    'payment_failed_message' => $this->payment_response['error'] ?? null,
 
                     //  How did the user find the store (E.g via  Enter store code or by Searching)
                     'method_used_to_find_store' => $this->method_used_to_find_store,
-                        
-                    //  If this is new customer or an existing customer
-                    'new_customer' => $this->newCustomer
-                    
-                ]
 
+                    //  If this is new customer or an existing customer
+                    'new_customer' => $this->newCustomer,
+                ],
             ];
 
             //  If we have a Ussd Session
-            if($ussd_session){
-
+            if ($ussd_session) {
                 //  Update the session
-                $ussd_session->update( $sessionData );
+                $ussd_session->update($sessionData);
 
             //  If we dont't have a Ussd Session
-            }else{
-
+            } else {
                 //  Create a new session
-                $this->store->ussd_sessions()->create( $sessionData );
-
+                $this->store->ussd_sessions()->create($sessionData);
             }
         }
     }
 
     public function startShopping()
     {
-
         /*  If the store is not supporting USSD at this time  */
         if (!$this->store->ussdInterface->live_mode) {
-
             /*  Notify the user that the store is not available  */
             return $this->displayCustomGoBackPage("Sorry, the store is currently offline.\n");
-
         }
 
         /*  If the user added more items than is allowed to their cart,
          *  (has exceeded the maximum items allowed)
          */
         if ($this->hasExceededMaximumItems()) {
-            
             $allowed_cart_items = $this->maximum_cart_items.($this->maximum_cart_items == 1 ? ' item' : ' items');
 
             /*  Notify the user that they have exceeded that maximum items allowed in the cart  */
             return $this->displayCustomGoBackPage('Sorry, you are only allowed to add a maximum of '.$allowed_cart_items."\n");
-
         }
 
         return $this->showProductCatalog();
@@ -655,7 +638,6 @@ class UssdController extends Controller
 
         /*  If the user already selected a product  */
         if ($this->hasSelectedProduct()) {
-
             $response = $this->handleSelectedProduct();
 
         /*  If the user has not selected any product  */
@@ -691,39 +673,30 @@ class UssdController extends Controller
 
         /*  Selected a product that does not have a price  */
         if (!$this->selected_product->has_price) {
-
             /*  Notify user that the product does not have a price  */
-            return $this->displayCustomGoBackPage("Sorry, \"".$this->selected_product['name']."\" does not have a price.\n");
-
+            return $this->displayCustomGoBackPage('Sorry, "'.$this->selected_product['name']."\" does not have a price.\n");
         }
 
         /*  Selected a product that does not have stock  */
         if ($this->selected_product->stock_status['type'] == 'out_of_stock') {
-
             /*  Notify user that the product does not have a price  */
-            return $this->displayCustomGoBackPage("Sorry, \"".$this->selected_product['name']."\" is out of stock.\n");
-
+            return $this->displayCustomGoBackPage('Sorry, "'.$this->selected_product['name']."\" is out of stock.\n");
         }
 
         /*  Selected a product already in cart  */
         if ($this->isProductAddedToCart($this->selected_product->id)) {
-
             /*  Notify user that the product is already in the cart  */
             return $this->displayCustomGoBackPage("This item has already been added.\n");
-            
         }
 
         /*  If the current product requires the user to select a quantity  */
-        if( $this->requiresQuantity() ){
-
+        if ($this->requiresQuantity()) {
             $response = $this->handleProductQuantity();
 
         /*  If the current product does not require the user to select a quantity  */
-        }else{
-            
+        } else {
             /*  Use one (1) as the product quantity selected  */
-            $response = $this->handleProductQuantity( $default_quantity = 1 );
-
+            $response = $this->handleProductQuantity($default_quantity = 1);
         }
 
         return $response;
@@ -806,61 +779,53 @@ class UssdController extends Controller
         }
     }
 
-    public function handleProductQuantity( $default_quantity = null )
+    public function handleProductQuantity($default_quantity = null)
     {
         /** If the $default_quantity variable is not set, as in it is not provided and is still actually null,
-         *  then we need to increment the offset since we want to offer the user a new screen so that 
+         *  then we need to increment the offset since we want to offer the user a new screen so that
          *  they can provided the quantity manually. Since adding a new screen on the fly will change
          *  the expected arrangement of our future responses, the offset helps to re-arrange our
          *  future responses.
-         * 
-         *  e.g If Product 1 (which has no variables) is selected in Level 4, the we expect that the 
+         *
+         *  e.g If Product 1 (which has no variables) is selected in Level 4, the we expect that the
          *  wantsToPay() response is provided by the user in Level 5. However if we launch a screen
          *  for the user to select a specific quantity of their choice, we will get a user response
          *  for quantity in Level 5. This means we need to increase our offset to let the system
-         *  know that it should expect the wantsToPay() response in (Level 5 + offset) which is 
+         *  know that it should expect the wantsToPay() response in (Level 5 + offset) which is
          *  (Level 6 since offset = 1).
          */
-        if( !isset( $default_quantity ) ){
-
+        if (!isset($default_quantity)) {
             //  Increment the offset before providing the user with the "Select Quantity Page"
             $this->offset = $this->offset + 1;
-
         }
 
         /*  If the user already selected the product quantity  */
         if ($this->hasSelectedProductQuantity()) {
-
             /** If we have provided a default quantity e.g $default_quantity = 1, or if the quantity
              *  was provided by the user themselves then check if the product quantity
              *  provided is valid to proceed.
              */
             if ($this->isValidProductQuantity($default_quantity)) {
-
-                /** Update the selected product quantity. First attempt to use the default $default_quantity
+                /* Update the selected product quantity. First attempt to use the default $default_quantity
                  *  value if not equal to (0) otherwise refer to the user provided quantity.
                  */
-                $this->selected_product['quantity'] = isset( $default_quantity ) ? $default_quantity : $this->getSelectedProductQuantity();
+                $this->selected_product['quantity'] = isset($default_quantity) ? $default_quantity : $this->getSelectedProductQuantity();
 
                 //  If the product allows stock management
-                if($this->selected_product->allow_stock_management){
-
-                    //  Get the current available stock quantity of this product 
+                if ($this->selected_product->allow_stock_management) {
+                    //  Get the current available stock quantity of this product
                     $avail_stock_quantity = $this->selected_product->stock_quantity;
 
                     /*  Selected a product quantity that exceeds the stock quantity available  */
-                    if ( $this->selected_product['quantity'] > $avail_stock_quantity) {
-
+                    if ($this->selected_product['quantity'] > $avail_stock_quantity) {
                         /*  Notify user that the selected quantity exceeds the stock available  */
                         return $this->displayCustomGoBackPage(
-                            'Sorry, the quantity selected '. 
-                            'for "' . $this->selected_product['name'].'" '.
+                            'Sorry, the quantity selected '.
+                            'for "'.$this->selected_product['name'].'" '.
                             'is more than the available stock. '.
                             'Only ('.$avail_stock_quantity.') available.'."\n"
                         );
-
                     }
-
                 }
 
                 /* Add the selected product to the rest of the other selected products */
@@ -886,7 +851,6 @@ class UssdController extends Controller
                         return $this->displayIncorrectOptionPage();
                     }
                 } else {
-
                     /*  Show the user the cart summary page with options to decide what to do next  */
                     $response = $this->displayCartSummaryPage();
                 }
@@ -894,14 +858,11 @@ class UssdController extends Controller
                 /*  Notify the user to provide a valid quantity  */
                 return $this->displayCustomGoBackPage("The product quantity you provided is not available.\n");
             }
-
         } else {
-
             /*  Show the user the product quantity selection page  */
             $response = $this->displayProductQuantityPage();
-
         }
-        
+
         return $response;
     }
 
@@ -909,19 +870,15 @@ class UssdController extends Controller
     {
         /*  If the user already selected the payment method  */
         if ($this->hasSelectedPaymentMethod()) {
-
             /*  If the user already selected that they want to pay with Airtime  */
             if ($this->wantsToPayWithAirtime()) {
-
                 /*  Process the order using Airtime  */
                 $this->payment_method = 'Airtime';
 
                 /*  If the user already selected an option from the "Pay With Airtime Confirmation Page"  */
                 if ($this->hasSelectedAirtimeConfirmationOption()) {
-
                     /*  If the user already confirmed that they want to pay with Airtime  */
                     if ($this->hasConfirmedPaymentWithAirtime()) {
-
                         $response = $this->procressOrder();
 
                     /*  Selected an option that does not exist  */
@@ -938,15 +895,13 @@ class UssdController extends Controller
 
                 /*  If the user already selected that they want to pay with Orange Money  */
             } elseif ($this->wantsToPayWithOrangeMoney()) {
-
                 /*  Process the order using Orange Money  */
                 $this->payment_method = 'Orange Money';
-                
+
                 /*  If the user already confirmed that they want to pay with Orange Money  */
                 if ($this->hasConfirmedPaymentWithOrangeMoney()) {
                     /*  If the user provided a valid Orange Money pin  */
                     if ($this->isValidOrangeMoneyPin()) {
-
                         $response = $this->procressOrder();
 
                     /*  If the user's Orange Money pin was not valid  */
@@ -966,7 +921,6 @@ class UssdController extends Controller
 
             /*  If the user has not already selected the payment method  */
         } else {
-            
             /*  Show the user the payment options page  */
             $response = $this->displayPaymentOptionsPage();
         }
@@ -1036,9 +990,9 @@ class UssdController extends Controller
          *  When we want to visit the store again we need to figure out where to start expecting the
          *  next product. Lets assume that Product 1 was selected in Level 3, then in the simplest
          *  scenerio we would expect that Product 2 was selected in Level 4. To indicate that we
-         *  want to target Product 2 we need to offset by (1). However since we need to use the 
+         *  want to target Product 2 we need to offset by (1). However since we need to use the
          *  "#" symbol to indicate that we wanted to add another product we need to offset
-         *  again by (1). This means if we selected Product 1 in Level 3 we need to offset 
+         *  again by (1). This means if we selected Product 1 in Level 3 we need to offset
          *  by a total of (2) to target product 2 in Level 6.
          *
          *  1      *    2      *      #       *     4
@@ -1046,12 +1000,12 @@ class UssdController extends Controller
          *  Lv3          lv4          lv5           lv6          ...so on
          *  Product 1    Product 1    Wants To      Product 2    ...so on
          *  Selected     Quantity     Add Another   Selected
-         *  
+         *
          *  Remember that the offset for the quantity and variable selections is already set
          *  in previous methods e.g handleProductVariables() and handleProductQuantity(),
-         *  therefore we don't have to add them to the offset here. We only have to 
+         *  therefore we don't have to add them to the offset here. We only have to
          *  increment by an additional (2) to target the next product.
-         * 
+         *
          */
 
         $this->offset = $this->offset + 2;
@@ -1345,81 +1299,63 @@ class UssdController extends Controller
         if (count($this->products_on_display)) {
             /*  List the products available  */
             foreach ($this->products_on_display as $key => $product) {
-
                 $option_number = $key + 1;
 
                 /*  Get the product name, currency symbol and price  */
                 $product_id = trim($product['id']);
                 $product_name = trim($product['name']);
                 $product_price = $product['grand_total'];
-                
+
                 /*  Check if the product has variables  */
                 $product_has_variables = $this->hasVariables($product);
-                
+
                 /*  Check if the product is on sale  */
                 $product_on_sale = $this->isOnSale($product);
 
-                /**  First we need to know if this is a simple product or a product with
-                  *  variations. 
+                /*  First we need to know if this is a simple product or a product with
+                  *  variations.
                   */
-                if( $product_has_variables ){
-
+                if ($product_has_variables) {
                     /*  Show the product name only  */
                     $response .= $option_number.'. '.$product_name;
-
-                }else{
-                    
+                } else {
                     //  Check if the product has a price
-                    if( $product->has_price ){
-
+                    if ($product->has_price) {
                         //  Check if the product has stock
-                        if( $product->stock_status['type'] != 'out_of_stock' ){
-
+                        if ($product->stock_status['type'] != 'out_of_stock') {
                             /*  Check if the product has been added to the cart already  */
                             if ($this->isProductAddedToCart($product_id)) {
-
                                 /*  Show the product name, and indicate that the product is in the cart already  */
                                 $response .= $option_number.'. '.$product_name.' (added)';
 
                             /*  If the product hasn't been added to the cart already  */
                             } else {
-
                                 /*  Show the product name, currency and price  */
                                 $response .= $option_number.'. '.$product_name.' -'.$this->currency.$product_price;
 
                                 /*  If the product is on sale then make an indication  */
                                 $response .= ($product_on_sale ? ' (on sale)' : '');
-
                             }
-
-                        }else{
-                            
+                        } else {
                             /*  Show the product name, and indicate that the product has no stock  */
                             $response .= $option_number.'. '.$product_name.' (out of stock)';
-
                         }
-
-                    }else{
-                        
+                    } else {
                         /*  Show the product name, and indicate that the product has no price  */
                         $response .= $option_number.'. '.$product_name.' (no price)';
-
                     }
-
                 }
 
                 $response .= "\n";
-                
             }
 
             //  Check if we have more products to show
             $hasMoreToShow = $this->hasMoreToShow(
-                                $all_items = $this->products, 
+                                $all_items = $this->products,
                                 $items_on_display = $this->products_on_display
                             );
 
-            $response .= $hasMoreToShow ? "99. Show More\n" : "";
-
+            $response .= $hasMoreToShow ? "99. Show More\n" : '';
         } else {
             /*  If we don't have any products to list  */
             $response = count($this->products) ? "\nNo more items to show.\n" : "\nNo items found :(\n";
@@ -1453,68 +1389,51 @@ class UssdController extends Controller
 
                 /*  If we atleast have one variant avaialable  */
                 if ($product_variation) {
-                    
                     $option_number = $key + 1;
                     $product_id = $product_variation['id'];
                     $product_price = $product_variation['grand_total'];
-                
+
                     /*  Check if the product has variables  */
                     $product_has_variables = $this->hasVariables($product_variation);
-                    
+
                     /*  Check if the product is on sale  */
                     $product_on_sale = $this->isOnSale($product_variation);
 
                     $response .= $option_number.'. '.$option;
 
                     if ($is_last_variant_page) {
-
-                        /** First we need to know if this is a simple product or a product with
+                        /* First we need to know if this is a simple product or a product with
                          *  variations. If its not a produt with variations then show the price
                          *  or product details e.g on sale.
                          */
-                        if( !$product_has_variables ){
-                            
+                        if (!$product_has_variables) {
                             //  Check if the product has a price
-                            if( $product_variation->has_price ){
-
+                            if ($product_variation->has_price) {
                                 //  Check if the product has stock
-                                if( $product_variation->stock_status['type'] != 'out_of_stock' ){
-
+                                if ($product_variation->stock_status['type'] != 'out_of_stock') {
                                     /*  Check if the product has been added to the cart already  */
                                     if ($this->isProductAddedToCart($product_id)) {
-
                                         /*  Show the product name, and indicate that the product is in the cart already  */
                                         $response .= ' (added)';
 
                                     /*  If the product hasn't been added to the cart already  */
                                     } else {
-
                                         /*  Show the product name, currency and price  */
                                         $response .= ' -'.$this->currency.$product_price;
 
                                         /*  If the product is on sale then make an indication  */
                                         $response .= ($product_on_sale ? ' (on sale)' : '');
-
                                     }
-
-                                }else{
-                                    
+                                } else {
                                     /*  Show the product name, and indicate that the product has no stock  */
                                     $response .= ' (out of stock)';
-
                                 }
-
-                            }else{
-                                
+                            } else {
                                 /*  Show the product name, and indicate that the product has no price  */
                                 $response .= ' (no price)';
-
                             }
-
                         }
-
                     }
-                    
                 }
 
                 $response .= "\n";
@@ -1522,12 +1441,11 @@ class UssdController extends Controller
 
             //  Check if we have more variable options to show
             $hasMoreToShow = $this->hasMoreToShow(
-                $all_items = $this->variable_options, 
+                $all_items = $this->variable_options,
                 $items_on_display = $this->variable_options_to_display
             );
 
-            $response .= $hasMoreToShow ? "99. Show More\n" : "";
-
+            $response .= $hasMoreToShow ? "99. Show More\n" : '';
         } else {
             /*  If we don't have anymore options to list  */
             $response .= count($this->variable_options) ? "\nNo more options to show.\n" : "\nNo options found :(\n";
@@ -2138,28 +2056,22 @@ class UssdController extends Controller
         $contacts = ( new \App\Contact())->withMobilePhone($this->user['phone'])->with('stores')->get();
 
         //  If we have any contacts
-        if ( count($contacts) ) {
-            
+        if (count($contacts)) {
             //  Foreach contact get the stores
-            $stores = collect($contacts)->map(function($contact){
-                
+            $stores = collect($contacts)->map(function ($contact) {
                 return $contact['stores'];
-
             })->flatten()->all();
 
             return $stores;
-
         }
 
         return [];
-
     }
 
-    public function getContact(){
-        
+    public function getContact()
+    {
         /*  Get the contact that owns this phone if they exists  */
         $this->contact = $this->store->contactsWithMobilePhone($this->user['phone'])->first();
-
     }
 
     public function getPopularStores()
@@ -2500,10 +2412,8 @@ class UssdController extends Controller
 
         //  If we have a contact
         if ($this->contact) {
-            
             //  Return the store orders where this contact is recognised as the order customer or reference
             return $this->store->contactOrders($this->contact->id)->get() ?? [];
-
         }
 
         return [];
@@ -2624,19 +2534,19 @@ class UssdController extends Controller
 
     /*  This method checks if we still have more items to show as we paginate
      *  through a list of items. Lets assume we have a list of items:
-     *  
+     *
      *  $all_items = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-     * 
+     *
      *  and lets assume that only the following items are on display:
-     * 
+     *
      *  $items_on_display = [4, 5, 6, 7]
-     * 
+     *
      *  Since we are only showing items 4 to 7, it is clear that we still have
      *  more items to show e.g 8 to 12. We need to build an algorithm that will
-     *  return true if we have more items to show and false if we don't have 
-     *  anymore items to show. 
-     * 
-     *   
+     *  return true if we have more items to show and false if we don't have
+     *  anymore items to show.
+     *
+     *
      */
     public function hasMoreToShow($all_items = [], $items_on_display = [])
     {
@@ -2647,27 +2557,25 @@ class UssdController extends Controller
         $total_items_on_display = count($items_on_display) ?? 0;
 
         //  If we don't have any items or any items on display
-        if( !$total_items || !$total_items_on_display ){
-            
+        if (!$total_items || !$total_items_on_display) {
             //  Return false to say we don't have more to show
             return false;
-
         }
 
         /** Foreach item on display, lets get its index which is $key in our current case. The $key
-         *  variable holds the index of the current item in each iteration. Once we have the item 
-         *  index we can target the exact item on the $all_items array which has a list of all the 
-         *  items. Once we increment the value by one (1) we then target the next item on the 
-         *  $all_items array. At this point we can run a simple if statement to check if the 
+         *  variable holds the index of the current item in each iteration. Once we have the item
+         *  index we can target the exact item on the $all_items array which has a list of all the
+         *  items. Once we increment the value by one (1) we then target the next item on the
+         *  $all_items array. At this point we can run a simple if statement to check if the
          *  next item exists. If it does we continue the foreach loop, but if no item exists
-         *  we immediately return false. Lets assume:
-         * 
+         *  we immediately return false. Lets assume:.
+         *
          *  $all_items = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-         * 
+         *
          *  and
-         * 
+         *
          *  $items_on_display = [4, 5, 6, 7]
-         * 
+         *
          *  Foreach $items_on_display i.e [4, 5, 6, 7] we want to find the exact item on the
          *  $all_items. In this case if we start with 4 the $key = 3 which will target item
          *  4 on $all_items since it is also $key = 3. Once located we increment the $key by
@@ -2677,15 +2585,11 @@ class UssdController extends Controller
          *  possible items to show.
          */
         foreach ($items_on_display as $key => $item_on_display) {
-
             //  If the next item does not exist
-            if( !isset( $all_items[$key + 1] ) ){
-
+            if (!isset($all_items[$key + 1])) {
                 //  Return false immediately to indicate that the next item does not exists
                 return false;
-
             }
-
         }
 
         return true;
@@ -2964,42 +2868,35 @@ class UssdController extends Controller
 
         /* If the user specified to pay using Airtime  */
         if ($this->payment_method == 'Airtime') {
-
             /*  Attempt to process the payment using Airtime  */
             $this->payment_response = $this->processPaymentWithAirtime();
 
         /* If the user specified to pay using Orange Money  */
         } elseif ($this->payment_method == 'Orange Money') {
-
             /*  Attempt to process the payment using Orange Money  */
             $this->payment_response = $this->processPaymentWithOrangeMoney();
-
         } else {
-
             //  Notify the user that no payment method was specified
             return $this->displayPaymentFailedPage('No payment method was specified');
-
         }
-            
+
         /******************************************************************************************************
          *  Find or create a new contact
          *  Create a new order for the contact
          *  Convert the order to a payable invoice
-         * 
+         *
          *  Create a new transation for the invoice
          *      - Set the transaction success status to "true" if payment was approved
          *      - Set the transaction success status to "false" if payment was declined
-         * 
+         *
          *  Send a payment confirmation sms with the order and invoice ref # to the customer
          *  Send a order confirmation sms with the order ref # and customer details to the merchant
          ******************************************************************************************************/
 
         //  If we are on TEST MODE use the test mode contact details
         if ($this->test_mode) {
-
             //  Get the customer information
             $customer_info = [
-
                 'name' => 'Test Customer',
                 'is_vendor' => false,
                 'is_customer' => true,
@@ -3011,16 +2908,13 @@ class UssdController extends Controller
                     'type' => 'mobile',
                 ],
                 'address' => null,
-                'email' => null
-
+                'email' => null,
             ];
 
         //  If we are not on TEST MODE use the actual customer contact details
         } else {
-
             //  Get the customer information
             $customer_info = [
-
                 'name' => 'Julian Tabona',
                 'is_vendor' => false,
                 'is_customer' => true,
@@ -3032,38 +2926,31 @@ class UssdController extends Controller
                     'type' => 'mobile',
                 ],
                 'address' => null,
-                'email' => null
-
+                'email' => null,
             ];
-
         }
 
-        /** Create a new order using the provided customer information, merchant id and items. 
+        /* Create a new order using the provided customer information, merchant id and items.
          *  The initiateCreate() method will create, a new customer, order and payable invoice
          *  all linked together.
          */
         $this->order = ( new \App\Order() )->initiateCreate([
-
             'customer_info' => $customer_info,
             'merchant_id' => $this->store->id,
-            'items' => $this->cart['items']
-
+            'items' => $this->cart['items'],
         ]);
 
         //  If we are not on TEST MODE then send SMS to Customer and Merchant
         if (!$this->test_mode) {
-
             /*  Send the order as a summarised SMS to the merchant  */
             $merchantSMS = $this->order->smsOrderToMerchant();
 
             /*  Send the invoice receipt as a summarized SMS to the customer  */
             $customerSMS = $this->order->invoices()->first()->smsInvoiceReceiptToCustomer();
-
         }
 
         /*  If the payment status was successfull  */
         if ($this->payment_response['status']) {
-
             //  Update the shopping status with the value "1" which means that the shopping was completed successfully
             $this->shopping_status = 1;
 
@@ -3076,9 +2963,7 @@ class UssdController extends Controller
 
             /*  Notify the user of the payment success  */
             $response = $this->displayPaymentSuccessPage();
-            
         } else {
-
             //  Update the shopping status with the value "2" which means that the shopping was not completed successfully
             $this->shopping_status = 2;
 
@@ -3094,7 +2979,6 @@ class UssdController extends Controller
 
             /*  Notify the user of the payment failure  */
             $response = $this->displayPaymentFailedPage($error);
-
         }
 
         return $response;
@@ -3147,7 +3031,7 @@ class UssdController extends Controller
         }
 
         /*  Retrieve and return the cart details relating to the merchant and items provided  */
-        return ( new \App\MyCart() )->getCartDetails( $items, $this->store->taxes, $this->store->discounts );
+        return ( new \App\MyCart() )->getCartDetails($items, $this->store->taxes, $this->store->discounts);
     }
 
     public function getOrderItemsInArray()
@@ -3361,5 +3245,4 @@ class UssdController extends Controller
     {
         return number_format($amount, 2, '.', ',');
     }
-    
 }

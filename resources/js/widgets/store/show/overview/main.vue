@@ -95,6 +95,25 @@
 
                         </Col>
 
+                                
+
+                        <Col :span="12">
+                            <el-date-picker v-model="custom_start_date" type="date" 
+                                            placeholder="Start date" style="width:100%" 
+                                            format="yyyy-MM-dd" value-format="yyyy-MM-dd">
+                            </el-date-picker>
+                        </Col>
+                        <Col :span="12">
+                            <el-date-picker v-model="custom_end_date" type="date" 
+                                            placeholder="End date" style="width:100%" 
+                                            format="yyyy-MM-dd" value-format="yyyy-MM-dd">
+                            </el-date-picker>
+                        </Col>
+
+
+                        <Col :span="12">Start: {{ custom_start_date }}</Col>
+                        <Col :span="12">End: {{ custom_end_date }}</Col>
+
                     </Row>
 
                 </Card>
@@ -251,7 +270,7 @@
                                         
                                         <Col span="24" class="mb-2">
 
-                                            <mainChart chartId="transactions-chart" :chartData="salesAndRefundsChartData"></mainChart>
+                                            <mainChart chartId="transactions-chart" :chartData="salesAndRefundsChartData" :update="!isLoadingStats"></mainChart>
 
                                         </Col>
 

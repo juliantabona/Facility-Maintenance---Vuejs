@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Traits\CommonTraits;
 use App\Traits\DocumentTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
@@ -17,8 +18,7 @@ Relation::morphMap([
 
 class Document extends Model
 {
-    use Dataviewer;
-    use DocumentTraits;
+    use Dataviewer, CommonTraits, DocumentTraits;
 
     /**
      * The attributes that are mass assignable.

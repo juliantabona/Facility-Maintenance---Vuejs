@@ -4,6 +4,7 @@ namespace App;
 
 use DB;
 use Illuminate\Support\Str;
+use App\Traits\CommonTraits;
 use App\AdvancedFilter\Dataviewer;
 use App\Traits\UssdInterfaceTraits;
 use Illuminate\Database\Eloquent\Model;
@@ -16,8 +17,7 @@ Relation::morphMap([
 
 class UssdInterface extends Model
 {
-    use Dataviewer;
-    use UssdInterfaceTraits;
+    use Dataviewer, CommonTraits, UssdInterfaceTraits;
 
     /**
      * The table associated with the model.

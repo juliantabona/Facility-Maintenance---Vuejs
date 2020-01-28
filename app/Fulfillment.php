@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Traits\CommonTraits;
 use App\Traits\FulfillmentTraits;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -12,7 +13,7 @@ Relation::morphMap([
 
 class Fulfillment extends Model
 {
-    use FulfillmentTraits;
+    use CommonTraits, FulfillmentTraits;
 
     protected $with = ['trackingDetails'];
 

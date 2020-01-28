@@ -4,6 +4,7 @@ namespace App;
 
 use DB;
 use Carbon\Carbon;
+use App\Traits\CommonTraits;
 use App\Traits\QuotationTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
@@ -19,8 +20,7 @@ Relation::morphMap([
 
 class Quotation extends Model
 {
-    use Dataviewer;
-    use QuotationTraits;
+    use Dataviewer, CommonTraits, QuotationTraits;
 
     /**
      * The table associated with the model.

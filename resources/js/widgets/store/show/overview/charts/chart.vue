@@ -71,6 +71,10 @@ export default {
             type: Number,
             default: 300
         },
+        update: {
+            type: Boolean,
+            default: false
+        },
         chartData: {
             type: Object,
             default: function(){
@@ -97,6 +101,25 @@ export default {
             
         }
     },
+    watch: {
+
+        //  Watch for changes on the update
+        update: {
+            handler: function (val, oldVal) {
+
+                //  If the update property is set to true
+                if(val == true){
+
+                    //  Re-Create the chart
+                    this.createChart();
+
+                }
+
+            },
+            deep: true
+        }
+
+    },
     methods: {
         createChart() {
 
@@ -119,6 +142,10 @@ export default {
                 options: self.chartData.options
 
             });
+                
+            this.resizeCanvas();
+
+            this.createVerticalLine();
 
         },
         createVerticalLine(){
@@ -174,8 +201,6 @@ export default {
     mounted() {
 
         this.createChart();
-        this.resizeCanvas();
-        this.createVerticalLine();
 
     }
 }

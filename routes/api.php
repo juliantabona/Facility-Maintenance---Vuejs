@@ -1,6 +1,5 @@
 <?php
 
-use Twilio as Twilio;
 use Illuminate\Http\Request;
 
 /*
@@ -47,13 +46,12 @@ use Illuminate\Http\Request;
  * to control and limit excessive traffic requests.
  */
 Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
-
     /*********************************
     /*********************************
      *  API HOME ROUTES              *
     /*********************************
     *********************************/
-    
+
     Route::get('/', 'Api\HomeController@home')->name('api-home');
 
     /*********************************
@@ -63,7 +61,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     *********************************/
 
     Route::prefix('me')->name('my-')->group(function () {
-
         Route::get('/', 'Api\UserController@getUser')->name('profile');
 
         //  Settings related resources
@@ -85,7 +82,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
         //  Store related resources
         Route::get('/stores', 'Api\UserController@getUserStores')->name('stores');
         Route::get('/stores/{store_id}', 'Api\UserController@getUserStore')->name('store')->where('store_id', '[0-9]+');
-
     });
 
     /*********************************
@@ -95,7 +91,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     *********************************/
 
     Route::prefix('users')->group(function () {
-
         //  Multiple users
         Route::get('/', 'Api\UserController@getUsers')->name('users');
 
@@ -129,7 +124,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             Route::get('/stores', 'Api\UserController@getUserStores')->name('stores');
             Route::get('/stores/{store_id}', 'Api\UserController@getUserStore')->name('store')->where('store_id', '[0-9]+');
         });
-
     });
 
     /*********************************
@@ -139,7 +133,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     *********************************/
 
     Route::prefix('accounts')->group(function () {
-
         //  Multiple accounts
         Route::get('/', 'Api\AccountController@getAccounts')->name('accounts');
 
@@ -148,7 +141,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
         //  Single account resources
         Route::prefix('{account_id}')->name('account-')->group(function ($group) {
-
             //  Allow only intergers for account_id on all group routes
             foreach ($group->getRoutes() as $route) {
                 $route->where('account_id', '[0-9]+');
@@ -193,9 +185,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             //  Store related resources
             Route::get('/stores', 'Api\AccountController@getAccountStores')->name('stores');
             Route::get('/stores/{store_id}', 'Api\AccountController@getAccountStore')->name('store')->where('store_id', '[0-9]+');
-
         });
-
     });
 
     //Route::get('accounts/stats', 'Api\AccountController@getEstimatedStats');
@@ -210,7 +200,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     *********************************/
 
     Route::prefix('stores')->group(function () {
-
         //  Multiple stores
         Route::get('/', 'Api\StoreController@getStores')->name('stores');
         Route::post('/', 'Api\StoreController@createStore')->name('stores-create');
@@ -220,7 +209,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
         //  Single store resources
         Route::prefix('{store_id}')->name('store-')->group(function ($group) {
-
             //  Allow only intergers for store_id on all group routes
             foreach ($group->getRoutes() as $route) {
                 $route->where('store_id', '[0-9]+');
@@ -237,7 +225,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             //  Phone related resources
             Route::get('/phones', 'Api\StoreController@getStorePhones')->name('phones');
 
-            
             Route::get('/phones?type=mobile', 'Api\StoreController@getStorePhones')->name('mobiles');
             Route::get('/phones?type=tel', 'Api\StoreController@getStorePhones')->name('telephones');
             Route::get('/phones?type=fax', 'Api\StoreController@getStorePhones')->name('fax');
@@ -303,9 +290,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
             //  Settings related resources
             Route::post('/statistics', 'Api\StoreController@getStoreStatistics')->name('statistics');
-
         });
-    }); 
+    });
 
     /*************************************
     /*************************************
@@ -314,14 +300,12 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     *************************************/
 
     Route::prefix('ussd-interfaces')->group(function () {
-
         //  Single interface
         Route::get('/{ussd_interface_id}', 'Api\UssdInterfaceController@getUssdInterface')->name('ussd-interface')->where('ussd_interface_id', '[0-9]+');
         Route::post('/{ussd_interface_id}', 'Api\UssdInterfaceController@updateUssdInterface')->name('ussd-interface-update')->where('ussd_interface_id', '[0-9]+');
 
         //  Single interface resources
         Route::prefix('{ussd_interface_id}')->name('ussd-interface-')->group(function ($group) {
-
             //  Allow only intergers for ussd_interface_id on all group routes
             foreach ($group->getRoutes() as $route) {
                 $route->where('ussd_interface_id', '[0-9]+');
@@ -331,7 +315,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             Route::get('/products', 'Api\UssdInterfaceController@getUssdInterfaceProducts')->name('products');
             Route::post('/products', 'Api\UssdInterfaceController@updateUssdInterfaceProducts')->name('products-update');
             Route::get('/products/{product_id}', 'Api\UssdInterfaceController@getUssdInterfaceProduct')->name('product')->where('product_id', '[0-9]+');
-
         });
     });
 
@@ -342,7 +325,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     *********************************/
 
     Route::prefix('products')->group(function () {
-
         //  Multiple products
         Route::get('/', 'Api\ProductController@getProducts')->name('products');
         Route::post('/', 'Api\ProductController@createProduct')->name('products-create');
@@ -352,7 +334,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
         //  Single product resources
         Route::prefix('{product_id}')->name('product-')->group(function ($group) {
-
             //  Allow only intergers for product_id on all group routes
             foreach ($group->getRoutes() as $route) {
                 $route->where('product_id', '[0-9]+');
@@ -378,11 +359,11 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             Route::get('/downloads', 'Api\ProductController@getProductDownloads')->name('downloads');
             Route::get('/documents', 'Api\ProductController@getProductDocuments')->name('documents');
             Route::get('/documents/{document_id}', 'Api\ProductController@getProductDocument')->name('document')->where('document_id', '[0-9]+');
-            
+
             //  Variation related resources
             Route::get('/variations', 'Api\ProductController@getProductVariations')->name('variations');
             Route::post('/variations', 'Api\ProductController@createProductVariations')->name('variations-create');
-            
+
             /*
             //  Order related resources
             Route::get('/orders', 'Api\ProductController@getProductOrders')->name('orders');
@@ -403,7 +384,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             //  Review related resources
             Route::get('/reviews', 'Api\ProductController@getProductReviews')->name('reviews');
             Route::get('/reviews/{review_id}', 'Api\ProductController@getProductReview')->name('review')->where('review_id', '[0-9]+');
-
         });
     });
 
@@ -414,7 +394,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     *********************************/
 
     Route::prefix('orders')->group(function () {
-
         //  Multiple orders
         Route::get('/', 'Api\OrderController@getOrders')->name('orders');
 
@@ -424,7 +403,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
         //  Single order resources
         Route::prefix('{order_id}')->name('order-')->group(function ($group) {
-
             //  Allow only intergers for order_id on all group routes
             foreach ($group->getRoutes() as $route) {
                 $route->where('order_id', '[0-9]+');
@@ -457,7 +435,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             Route::get('/transactions', 'Api\OrderController@getOrderTransactions')->name('transactions');
             Route::get('/transaction/{transaction_id}', 'Api\OrderController@getOrderTransaction')->name('transaction')->where('transaction_id', '[0-9]+');
 
-
             //  Tax related resources
             Route::get('/taxes', 'Api\OrderController@getOrderTaxes')->name('taxes');
             Route::get('/taxes/{tax_id}', 'Api\OrderController@getOrderTax')->name('tax')->where('tax_id', '[0-9]+');
@@ -482,17 +459,12 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
             //  Lifecycle related resources
             Route::prefix('lifecycle')->name('lifecycle-')->group(function ($group) {
-
                 $endpoints = ['resume', 'approve', 'decline', 'proceed', 'undo', 'update', 'pending', 'skip', 'cancel', 'notify'];
 
                 foreach ($endpoints as $endpoint) {
-
                     Route::post('/'.$endpoint, 'Api\LifecycleController@'.$endpoint)->name($endpoint);
-
-                }     
-
-            });    
-
+                }
+            });
         });
     });
 
@@ -503,7 +475,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     *********************************/
 
     Route::prefix('fulfillments')->group(function () {
-
         //  Multiple fulfillments
         Route::get('/', 'Api\FulfillmentController@getFulfillments')->name('fulfillments');
 
@@ -514,10 +485,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
         //  Single fulfillment resources
         Route::prefix('{fulfillment_id}')->name('fulfillment-')->group(function ($group) {
-
-
         });
-
     });
 
     /*********************************
@@ -527,7 +495,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     *********************************/
 
     Route::prefix('invoices')->group(function () {
-
         //  Multiple invoices
         Route::get('/', 'Api\InvoiceController@getInvoices')->name('invoices');
 
@@ -536,7 +503,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
         //  Single invoice resources
         Route::prefix('{invoice_id}')->name('invoice-')->group(function ($group) {
-
             //  Allow only intergers for invoice_id on all group routes
             foreach ($group->getRoutes() as $route) {
                 $route->where('invoice_id', '[0-9]+');
@@ -559,7 +525,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
             //  Child invoice(s) related resources
             Route::get('/child-invoices', 'Api\InvoiceController@getChildInvoices')->name('child-invoices');
-            
+
             //  Parent invoice related resources
             Route::get('/parent-invoice', 'Api\InvoiceController@getParentInvoice')->name('parent-invoice');
 
@@ -567,7 +533,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             Route::get('/proof-of-payment', 'Api\InvoiceController@getInvoiceProofOfPayment')->name('proof-of-payment');
             Route::get('/documents', 'Api\InvoiceController@getInvoiceDocuments')->name('documents');
             Route::get('/documents/{document_id}', 'Api\InvoiceController@getInvoiceDocument')->name('document')->where('document_id', '[0-9]+');
-            
+
             //  Transaction related resources
             Route::get('/transactions', 'Api\InvoiceController@getInvoiceTransactions')->name('transactions');
             Route::get('/transactions/{transaction_id}', 'Api\InvoiceController@getInvoiceTransaction')->name('transaction')->where('transaction_id', '[0-9]+');
@@ -590,11 +556,9 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
             //  Coupon related resources
             Route::get('/coupons', 'Api\InvoiceController@getInvoiceCoupons')->name('coupons');
-            Route::get('/coupons/{coupon_id}', 'Api\InvoiceController@getInvoiceCoupon')->name('coupon')->where('coupon_id', '[0-9]+');    
-
+            Route::get('/coupons/{coupon_id}', 'Api\InvoiceController@getInvoiceCoupon')->name('coupon')->where('coupon_id', '[0-9]+');
         });
     });
-
 
     /*********************************
     /*********************************
@@ -603,7 +567,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     *********************************/
 
     Route::prefix('quotations')->group(function () {
-
         //  Multiple quotations
         Route::get('/', 'Api\QuotationController@getQuotations')->name('quotations');
 
@@ -612,7 +575,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
         //  Single quotation resources
         Route::prefix('{quotation_id}')->name('quotation-')->group(function ($group) {
-
             //  Allow only intergers for quotation_id on all group routes
             foreach ($group->getRoutes() as $route) {
                 $route->where('quotation_id', '[0-9]+');
@@ -636,7 +598,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             //  Document related resources
             Route::get('/documents', 'Api\QuotationController@getQuotationDocuments')->name('documents');
             Route::get('/documents/{document_id}', 'Api\QuotationController@getQuotationDocument')->name('document')->where('document_id', '[0-9]+');
-            
+
             //  Tax related resources
             Route::get('/taxes', 'Api\QuotationController@getQuotationTaxes')->name('taxes');
             Route::get('/taxes/{tax_id}', 'Api\QuotationController@getQuotationTax')->name('tax')->where('tax_id', '[0-9]+');
@@ -647,8 +609,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
             //  Coupon related resources
             Route::get('/coupons', 'Api\QuotationController@getQuotationCoupons')->name('coupons');
-            Route::get('/coupons/{coupon_id}', 'Api\QuotationController@getQuotationCoupon')->name('coupon')->where('coupon_id', '[0-9]+');    
-
+            Route::get('/coupons/{coupon_id}', 'Api\QuotationController@getQuotationCoupon')->name('coupon')->where('coupon_id', '[0-9]+');
         });
     });
 
@@ -659,7 +620,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     *********************************/
 
     Route::prefix('taxes')->group(function () {
-
         //  Multiple taxes
         Route::get('/', 'Api\TaxController@getTaxes')->name('taxes');
 
@@ -668,7 +628,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
         //  Single tax resources
         Route::prefix('{tax_id}')->name('tax-')->group(function ($group) {
-
             //  Allow only intergers for tax_id on all group routes
             foreach ($group->getRoutes() as $route) {
                 $route->where('tax_id', '[0-9]+');
@@ -680,7 +639,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             //  Product related resources
             Route::get('/products', 'Api\TaxController@getTaxProducts')->name('products');
             Route::get('/products/{product_id}', 'Api\TaxController@getTaxProduct')->name('product')->where('product_id', '[0-9]+');
-
         });
     });
 
@@ -691,7 +649,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     *********************************/
 
     Route::prefix('discounts')->group(function () {
-
         //  Multiple discounts
         Route::get('/', 'Api\DiscountController@getDiscounts')->name('discounts');
 
@@ -700,7 +657,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
         //  Single discount resources
         Route::prefix('{discount_id}')->name('discount-')->group(function ($group) {
-
             //  Allow only intergers for discount_id on all group routes
             foreach ($group->getRoutes() as $route) {
                 $route->where('discount_id', '[0-9]+');
@@ -712,7 +668,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             //  Product related resources
             Route::get('/products', 'Api\DiscountController@getDiscountProducts')->name('products');
             Route::get('/products/{product_id}', 'Api\DiscountController@getDiscountProduct')->name('product')->where('product_id', '[0-9]+');
-
         });
     });
 
@@ -723,7 +678,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     *********************************/
 
     Route::prefix('coupons')->group(function () {
-
         //  Multiple coupons
         Route::get('/', 'Api\CouponController@getCoupons')->name('coupons');
 
@@ -732,7 +686,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
         //  Single coupon resources
         Route::prefix('{coupon_id}')->name('coupon-')->group(function ($group) {
-
             //  Allow only intergers for coupon_id on all group routes
             foreach ($group->getRoutes() as $route) {
                 $route->where('coupon_id', '[0-9]+');
@@ -744,7 +697,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             //  Product related resources
             Route::get('/products', 'Api\CouponController@getCouponProducts')->name('products');
             Route::get('/products/{product_id}', 'Api\CouponController@getCouponProduct')->name('product')->where('product_id', '[0-9]+');
-
         });
     });
 
@@ -755,7 +707,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     *********************************/
 
     Route::prefix('phones')->group(function () {
-
         //  Multiple phones
         Route::get('/', 'Api\PhoneController@getPhones')->name('phones');
 
@@ -764,7 +715,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
         //  Single phone resources and actions
         Route::prefix('{phone_id}')->name('phone-')->group(function ($group) {
-
             //  Allow only intergers for phone_id on all group routes
             foreach ($group->getRoutes() as $route) {
                 $route->where('phone_id', '[0-9]+');
@@ -778,14 +728,9 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
             //  Verify phone
             Route::post('/verify', 'Api\PhoneController@verifyPhone')->name('verification');
-
         });
-
     });
-
 });
-
-
 
     /*********************************
     /*********************************
@@ -794,12 +739,11 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     *********************************/
 
     Route::prefix('ussd')->group(function () {
-
         Route::post('/customer', 'Api\UssdController@home')->name('ussd-customer-home');
         Route::post('/merchant', 'Api\UssdMerchantController@merchantHome')->name('ussd-merchant-home');
+        Route::post('/customer/online', 'Api\UssdController@redirectToOnline')->name('ussd-customer-online');
 
         Route::prefix('stores')->group(function () {
-
             //  Multiple USSD Stores
             Route::get('/', 'Api\UssdController@getStores')->name('ussd-stores');
 
@@ -808,7 +752,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
             //  Single Store resources
             Route::prefix('{store_code}')->name('ussd-store-')->group(function ($group) {
-
                 //  Allow only intergers for store_code on all group routes
                 foreach ($group->getRoutes() as $route) {
                     $route->where('store_code', '[0-9]+');
@@ -820,10 +763,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
                 //  Product related resources
                 Route::get('/products', 'Api\UssdController@getUssdStoreProducts')->name('products');
                 Route::get('/products/{product_id}', 'Api\UssdController@getUssdStoreProduct')->name('products')->where('product_id', '[0-9]+');
-
             });
         });
-
     });
 
 Route::post('/pusher/auth', 'Auth\PusherController@index');

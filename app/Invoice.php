@@ -4,6 +4,7 @@ namespace App;
 
 use DB;
 use Carbon\Carbon;
+use App\Traits\CommonTraits;
 use App\Traits\InvoiceTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
@@ -19,8 +20,7 @@ Relation::morphMap([
 
 class Invoice extends Model
 {
-    use Dataviewer;
-    use InvoiceTraits;
+    use Dataviewer, CommonTraits, InvoiceTraits;
 
     /**
      * The table associated with the model.

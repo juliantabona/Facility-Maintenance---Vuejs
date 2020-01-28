@@ -3,6 +3,7 @@
 namespace App;
 
 use App\Traits\PhoneTraits;
+use App\Traits\CommonTraits;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
@@ -15,7 +16,7 @@ Relation::morphMap([
 
 class Phone extends Model
 {
-    use PhoneTraits;
+    use CommonTraits, PhoneTraits;
 
     protected $casts = [
         

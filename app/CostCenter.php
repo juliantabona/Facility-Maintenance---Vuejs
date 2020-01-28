@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Traits\CommonTraits;
 use App\Traits\CostCenterTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
@@ -13,8 +14,7 @@ Relation::morphMap([
 
 class CostCenter extends Model
 {
-    use Dataviewer;
-    use CostCenterTraits;
+    use Dataviewer, CostCenterTraits, CommonTraits;
 
     /**
      * The attributes that are mass assignable.

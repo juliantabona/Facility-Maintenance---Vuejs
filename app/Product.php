@@ -3,6 +3,7 @@
 namespace App;
 
 use DB;
+use App\Traits\CommonTraits;
 use App\Traits\ProductTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
@@ -16,8 +17,7 @@ Relation::morphMap([
 
 class Product extends Model
 {
-    use Dataviewer;
-    use ProductTraits;
+    use Dataviewer, CommonTraits, ProductTraits;
 
     /*
      * The table associated with the model.
@@ -520,6 +520,64 @@ class Product extends Model
                 return false;
 
             }
+         }
+    }
+
+    /*  NOTE THIS FUNCTION IS INCOMPLETE - I REPEAT IT'S INCOMPLETE - NEEEDS TO BE CHECKED
+     *
+     *  Returns the product variation price range
+     *  including the minimum and maximum price
+     */
+    public function getPriceRangeAttribute()
+    {
+        //  If this product supports variations
+        if ($this->allow_variants) {
+
+            //  Get the product variations
+            $variations = $this->variations()->get() ?? [];
+
+            //  If this product has variations
+            if (count($variations)) {
+
+                //  Foreach variation
+                foreach ($variations as $variation) {
+
+                    /** Since the current variation has nested variations, we need to check the price
+                     *  range of each variation
+                     */
+                    if( $variation->price_range === false ){
+                     
+                        /** If the nested variation returned false then it means that the stock is not
+                         *  enough, in this case we return false here to indicated that one of the variations
+                         *  stock is low or has no stock at all
+                         * 
+                         */
+                        return false;
+
+                    }
+
+                }
+
+                /** If after going through each variation and have confirmed that each and every variation
+                 *  did not return false, which means that each and every variation has enough stock, we 
+                 *  return true to indicate that all variations have enough stock.
+                 */
+                return true;
+                
+            } else {
+
+                /** We return false since the product supports variations but no variations were found
+                 *  This means that the variations stock does not exists therefore we return false to
+                 *  indicate that this product does not have stock for its variations.
+                 */
+                return 0;
+
+            }
+        }else{
+            
+            //  If the current product price
+            return $this->grand_price;
+
          }
     }
 

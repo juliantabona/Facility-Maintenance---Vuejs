@@ -2,8 +2,8 @@
 
 namespace App;
 
-
 use App\Traits\EmailTraits;
+use App\Traits\CommonTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -17,8 +17,7 @@ Relation::morphMap([
 
 class Email extends Model
 {
-    use Dataviewer;
-    use EmailTraits;
+    use Dataviewer, CommonTraits, EmailTraits;
     
     protected $casts = [
         

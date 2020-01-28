@@ -3,6 +3,7 @@
 namespace App;
 
 use Illuminate\Support\Str;
+use App\Traits\CommonTraits;
 use App\Traits\UssdSessionTraits;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -13,7 +14,7 @@ Relation::morphMap([
 
 class UssdSession extends Model
 {
-    use UssdSessionTraits;
+    use UssdSessionTraits, CommonTraits;
 
     /**
      * The table associated with the model.

@@ -1387,22 +1387,5 @@ trait OrderTraits
         //  Return the replaced data - All shortcodes have been replaced with actual content
         return str_replace($search, $replace, $data);
     }
-
-    /*  summarize() method:
-     *
-     *  This is used to limit the information of the resource to very specific
-     *  columns that can then be used for storage. We may only want to summarize
-     *  the data to very important information, rather than storing everything along
-     *  with useless information. In this instance we specify table columns
-     *  that we want (we access the fillable columns of the model), while also
-     *  removing any custom attributes we do not want to order
-     *  (we access the appends columns of the model),
-     */
-    public function summarize()
-    {
-        //  Collect and select table columns
-        return collect($this->fillable)
-                //  Remove all custom attributes since the are all based on recent activities
-                ->forget($this->appends);
-    }
+    
 }

@@ -2,10 +2,13 @@
 
 namespace App;
 
+use App\Traits\CommonTraits;
 use Illuminate\Database\Eloquent\Model;
 
 class Variable extends Model
 {
+    use CommonTraits;
+
     /**
      * The attributes that are mass assignable.
      *

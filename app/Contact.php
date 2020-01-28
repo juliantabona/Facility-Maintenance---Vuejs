@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Traits\CommonTraits;
 use App\Traits\ContactTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,7 @@ Relation::morphMap([
 
 class Contact extends Model
 {
-    use Dataviewer, ContactTraits;
+    use Dataviewer, ContactTraits, CommonTraits;
     
     protected $casts = [
         'is_vendor' => 'boolean', //  Return the following 1/0 as true/false

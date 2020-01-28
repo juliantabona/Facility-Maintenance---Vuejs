@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Traits\CommonTraits;
 use App\Traits\SettingTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
@@ -15,8 +16,7 @@ Relation::morphMap([
 
 class Setting extends Model
 {
-    use Dataviewer;
-    use SettingTraits;
+    use Dataviewer, CommonTraits, SettingTraits;
 
     protected $casts = [
         'details' => 'array',

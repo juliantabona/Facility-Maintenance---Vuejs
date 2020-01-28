@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Traits\CommonTraits;
 use App\Traits\TrackingDetailTraits;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -12,7 +13,7 @@ Relation::morphMap([
 
 class TrackingDetail extends Model
 {
-    use TrackingDetailTraits;
+    use CommonTraits, TrackingDetailTraits;
 
     /**
      * The attributes that are mass assignable.

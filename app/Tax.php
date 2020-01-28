@@ -3,6 +3,7 @@
 namespace App;
 
 use App\Traits\TaxTraits;
+use App\Traits\CommonTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -18,7 +19,7 @@ Relation::morphMap([
 
 class Tax extends Model
 {
-    use Dataviewer, TaxTraits;
+    use Dataviewer, CommonTraits, TaxTraits;
 
     /**
      * The attributes that are mass assignable.

@@ -3,6 +3,7 @@
 namespace App;
 
 use Illuminate\Support\Str;
+use App\Traits\CommonTraits;
 use App\AdvancedFilter\Dataviewer;
 use App\Traits\RecentActivityTraits;
 use Illuminate\Database\Eloquent\Model;
@@ -35,7 +36,7 @@ Relation::morphMap([
 
 class RecentActivity extends Model
 {
-    use Dataviewer, RecentActivityTraits;
+    use Dataviewer, CommonTraits, RecentActivityTraits;
 
     protected $table = 'recent_activities';
 

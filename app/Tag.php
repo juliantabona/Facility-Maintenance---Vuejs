@@ -3,6 +3,7 @@
 namespace App;
 
 use App\Traits\TagTraits;
+use App\Traits\CommonTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -13,8 +14,7 @@ Relation::morphMap([
 
 class Tag extends Model
 {
-    use Dataviewer;
-    use TagTraits;
+    use Dataviewer, CommonTraits, TagTraits;
 
     /**
      * The attributes that are mass assignable.

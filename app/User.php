@@ -3,6 +3,7 @@
 namespace App;
 
 use App\Traits\UserTraits;
+use App\Traits\CommonTraits;
 use Laravel\Passport\HasApiTokens;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Notifications\Notifiable;
@@ -11,7 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, Notifiable, Dataviewer, UserTraits;
+    use HasApiTokens, Notifiable, Dataviewer, CommonTraits, UserTraits;
 
     /**
      * The attributes that should be mutated to dates.

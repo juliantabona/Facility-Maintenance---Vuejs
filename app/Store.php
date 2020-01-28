@@ -4,6 +4,7 @@ namespace App;
 
 use DB;
 use App\Traits\StoreTraits;
+use App\Traits\CommonTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,8 +16,7 @@ Relation::morphMap([
 
 class Store extends Model
 {
-    use Dataviewer;
-    use StoreTraits;
+    use Dataviewer, CommonTraits, StoreTraits;
 
     /*  Custom variables
      *  The variables below are custom variables not related to Laravel
@@ -596,82 +596,19 @@ class Store extends Model
         ];
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-/** Return the query start datetime provided in the request payload
- *  otherwise determine a customer datetime
- */
-public function getQueryStartDatetimeAttribute()
-{
-    //  Get the start date provided by the request payload otherwise use todays datetime
-    $start_time = request()->input('start_date') ?? (\Carbon\Carbon::now())->subMonth()->format('Y-m-d H:i:s');
-}
-
-/** Return the query end datetime provided in the request payload
- *  otherwise determine a customer datetime
- */
-public function getQueryEndDatetimeAttribute()
-{
-    //  Get the end date provided by the request payload otherwise use todays datetime but subtract one month
-    $end_time = request()->input('end_date') ?? (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
-}
-
-/** Scope and return only records that exist between the query start datetime
- *  and the query end datetime. 
- */
-public function scopeOnlyQueryWithinDateTime($query)
-{   
-    //  Only query for results where the created_at date is between the start date and end date
-    $query->whereBetween('created_at', [$this->query_start_datetime, $this->query_end_datetime])->get();
-}
-
-public function getDatesBetweenStartAndEndDatetimeAttribute()
-{   
-    //  Get the dates between the query start and end datetime
-    $datesBetween = \Carbon\CarbonPeriod::create($this->query_start_datetime, $this->query_end_datetime)->toArray();
-
-    return $datesBetween;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     public function getSaleTransactionStatsAttribute()
     {
-        //  Return records within the allowable query datetime
-        $records = $this->transactions()->successful()->payments()->onlyQueryWithinDateTime()
+        /** Make sure to only return records within the specified start and end datetime. To do this
+         *  we use the onlyQueryWithinDateTime() scope method from the CommonTraits.php file. This
+         *  will ensure that our records are only returned from a strict timeline. 
+         */
+        $records = $this->transactions()->successful()->payments()->onlyQueryWithinDateTime('transactions')
                         ->groupBy(DB::raw('DATE_FORMAT(transactions.created_at, "%d-%m-%Y")'))
                         ->select(DB::raw('DATE_FORMAT(transactions.created_at, "%d-%m-%Y %H:%i:%s") as date, count(*) as count, sum(payment_amount) as total_amount'))
                         ->get();
 
         $intervals = collect($records)->map(function ($record, $key) {
-
             return [
-
                 //  Get the grouped record date value
                 'date' => \Carbon\Carbon::parse($record['date'])->toDateTimeString(),
 
@@ -679,38 +616,28 @@ public function getDatesBetweenStartAndEndDatetimeAttribute()
                 'amount' => $record['total_amount'],
 
                 //  Get the number of grouped records
-                'count' => $record['count']
-
+                'count' => $record['count'],
             ];
-
         });
 
         //  Get the dates between the query start and end time
         $datesBetween = collect($this->dates_between_start_and_end_datetime)->map(function ($date, $key) {
-
             //  Foreach date return th datetime and set the count to zero (0)
             return [
-
                 'date' => $date->toDateTimeString(),
                 'amount' => 0,
-                'count' => 0
-
+                'count' => 0,
             ];
-
         });
 
         //  Merge the dates datesBetween with the current intervals and order by the date
         $updatedIntervals = $datesBetween->merge($intervals)->groupBy(function ($item, $key) {
-
             //  Group by Year - Month - Day e.g 2020-01-04
             return substr($item['date'], 0, 10);
-
         })->map(function ($dates) {
-
             $collection = collect($dates);
 
             return [
-
                 //  Get the smallest date e.g "2020-01-04 00:00:00" is smaller than "2020-01-04 01:00:00"
                 'date' => $collection->min('date'),
 
@@ -718,10 +645,8 @@ public function getDatesBetweenStartAndEndDatetimeAttribute()
                 'amount' => $collection->sum('amount'),
 
                 //  Calculate the sum of all the dates that have been grouped together
-                'count' => $collection->sum('count')
-
+                'count' => $collection->sum('count'),
             ];
-
         })->sortBy('date')->values()->all();
 
         $total_count = collect($updatedIntervals)->sum('count');
@@ -739,15 +664,13 @@ public function getDatesBetweenStartAndEndDatetimeAttribute()
     public function getRefundTransactionStatsAttribute()
     {
         //  Return records within the allowable query datetime
-        $records = $this->transactions()->successful()->refunds()->onlyQueryWithinDateTime()
+        $records = $this->transactions()->successful()->refunds()->onlyQueryWithinDateTime('transactions')
                         ->groupBy(DB::raw('DATE_FORMAT(transactions.created_at, "%d-%m-%Y")'))
                         ->select(DB::raw('DATE_FORMAT(transactions.created_at, "%d-%m-%Y %H:%i:%s") as date, count(*) as count, sum(payment_amount) as total_amount'))
                         ->get();
 
         $intervals = collect($records)->map(function ($record, $key) {
-
             return [
-
                 //  Get the grouped record date value
                 'date' => \Carbon\Carbon::parse($record['date'])->toDateTimeString(),
 
@@ -755,36 +678,28 @@ public function getDatesBetweenStartAndEndDatetimeAttribute()
                 'amount' => $record['total_amount'],
 
                 //  Get the number of grouped records
-                'count' => $record['count']
-
+                'count' => $record['count'],
             ];
-
         });
 
         //  Get the dates between the start and end time
         $datesBetween = collect($this->dates_between_start_and_end_datetime)->map(function ($date, $key) {
-
             //  Foreach date return th datetime and set the count to zero (0)
             return [
                 'date' => $date->toDateTimeString(),
                 'amount' => 0,
-                'count' => 0
+                'count' => 0,
             ];
-
         });
 
         //  Merge the dates datesBetween with the current intervals and order by the date
         $updatedIntervals = $datesBetween->merge($intervals)->groupBy(function ($item, $key) {
-
             //  Group by Year - Month - Day e.g 2020-01-04
             return substr($item['date'], 0, 10);
-
         })->map(function ($dates) {
-
             $collection = collect($dates);
 
             return [
-
                 //  Get the smallest date e.g "2020-01-04 00:00:00" is smaller than "2020-01-04 01:00:00"
                 'date' => $collection->min('date'),
 
@@ -792,8 +707,7 @@ public function getDatesBetweenStartAndEndDatetimeAttribute()
                 'amount' => $collection->sum('amount'),
 
                 //  Calculate the sum of all the dates that have been grouped together
-                'count' => $collection->sum('count')
-
+                'count' => $collection->sum('count'),
             ];
         })->sortBy('date')->values()->all();
 
@@ -807,7 +721,6 @@ public function getDatesBetweenStartAndEndDatetimeAttribute()
             'total_amount' => $total_amount,
             'data_intervals' => $updatedIntervals,
         ];
-
     }
 
     public function getReturningCustomerRateStatsAttribute()
@@ -1374,7 +1287,7 @@ public function getDatesBetweenStartAndEndDatetimeAttribute()
                     'name' => 'Average Session Time',
                     'minutes' => gmdate('i', $average_session_time_in_seconds), //  Get in minutes
                     'seconds' => gmdate('s', $average_session_time_in_seconds), //  Get in seconds
-                ]
+                ],
             ],
         ];
     }

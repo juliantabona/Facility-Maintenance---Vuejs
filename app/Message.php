@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Traits\CommonTraits;
 use App\Traits\MessageTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
@@ -15,8 +16,7 @@ Relation::morphMap([
 
 class Message extends Model
 {
-    use Dataviewer;
-    use MessageTraits;
+    use Dataviewer, CommonTraits, MessageTraits;
 
     protected $casts = [
         'meta' => 'array',

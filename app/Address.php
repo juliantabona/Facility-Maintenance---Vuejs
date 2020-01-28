@@ -2,7 +2,7 @@
 
 namespace App;
 
-
+use App\Traits\CommonTraits;
 use App\Traits\AddressTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
@@ -17,8 +17,7 @@ Relation::morphMap([
 
 class Address extends Model
 {
-    use Dataviewer;
-    use AddressTraits;
+    use Dataviewer, CommonTraits, AddressTraits;
     
     protected $casts = [
         'meta' => 'array',

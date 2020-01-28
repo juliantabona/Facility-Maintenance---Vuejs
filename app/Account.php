@@ -3,6 +3,7 @@
 namespace App;
 
 use DB;
+use App\Traits\CommonTraits;
 use App\Traits\AccountTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
@@ -11,9 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Account extends Model
 {
-    use Dataviewer;
-    use SoftDeletes;
-    use AccountTraits;
+    use Dataviewer, SoftDeletes, CommonTraits, AccountTraits;
 
     /**
      * The table associated with the model.

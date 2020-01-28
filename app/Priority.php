@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Traits\CommonTraits;
 use App\Traits\PriorityTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
@@ -13,8 +14,7 @@ Relation::morphMap([
 
 class Priority extends Model
 {
-    use Dataviewer;
-    use PriorityTraits;
+    use Dataviewer, CommonTraits, PriorityTraits;
 
     /**
      * The attributes that are mass assignable.
