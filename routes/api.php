@@ -774,7 +774,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/logout', 'Auth\LoginController@logout');
 });
 
-Route::post('/login', 'Auth\LoginController@login');
+Route::post('/login', 'Auth\LoginController@login')->name('login');
 Route::post('/register', 'Auth\RegisterController@register');
 Route::post('/activate-account', 'Auth\AccountActivation@activate');
 Route::post('/resend-activation', 'Auth\AccountActivation@resend');
