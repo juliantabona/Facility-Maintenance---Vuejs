@@ -131,7 +131,7 @@ class UssdController extends Controller
 
         $response = $client->post($uri, $params)->getBody();
 
-        return $response;
+        return response($response)->header('Content-Type', 'text/plain');
 
     }
 

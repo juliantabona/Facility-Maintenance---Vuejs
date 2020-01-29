@@ -98,7 +98,7 @@ export default {
     },
     data(){
         return {
-            
+            chartInstance: null
         }
     },
     watch: {
@@ -110,8 +110,8 @@ export default {
                 //  If the update property is set to true
                 if(val == true){
 
-                    //  Re-Create the chart
-                    this.createChart();
+                    //  Update the current chart
+                    this.updateChart();
 
                 }
 
@@ -121,6 +121,21 @@ export default {
 
     },
     methods: {
+        updateChart(){
+
+            console.log('this.chartData.type');
+            console.log(this.chartData.type);
+            console.log('this.chartData.data');
+            console.log(this.chartData.data);
+
+            //  Update the chart
+            this.chartInstance['type'] = this.chartData.type;
+            this.chartInstance['data'] = this.chartData.data;
+            this.chartInstance['options'] = this.chartData.options;
+
+            this.chartInstance.update();
+
+        },
         createChart() {
 
             //  Current vu instance
@@ -130,7 +145,7 @@ export default {
             const ctx = $('#'+self.chartId);
 
             //  Create the chart
-            let chart = new Chart(ctx, {
+            this.chartInstance = new Chart(ctx, {
 
                 //  Set the chart type
                 type: self.chartData.type,

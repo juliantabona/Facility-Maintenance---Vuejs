@@ -72,11 +72,11 @@
                         <template v-if="selectedDateFilter == 'Custom Date'">
 
                             <Col :span="6">
-                                <DatePicker v-model="custom_start_date" type="date" placeholder="From"></DatePicker>
+                                <DatePicker v-model="custom_start_date" format="dd MMM yyyy" type="date" placeholder="From"></DatePicker>
                             </Col>
 
                             <Col :span="6">
-                                <DatePicker v-model="custom_end_date" type="date" placeholder="To"></DatePicker>
+                                <DatePicker v-model="custom_end_date" format="dd MMM yyyy" type="date" placeholder="To"></DatePicker>
                             </Col>
 
                         </template>
@@ -94,25 +94,6 @@
                             </div>
 
                         </Col>
-
-                                
-
-                        <Col :span="12">
-                            <el-date-picker v-model="custom_start_date" type="date" 
-                                            placeholder="Start date" style="width:100%" 
-                                            format="yyyy-MM-dd" value-format="yyyy-MM-dd">
-                            </el-date-picker>
-                        </Col>
-                        <Col :span="12">
-                            <el-date-picker v-model="custom_end_date" type="date" 
-                                            placeholder="End date" style="width:100%" 
-                                            format="yyyy-MM-dd" value-format="yyyy-MM-dd">
-                            </el-date-picker>
-                        </Col>
-
-
-                        <Col :span="12">Start: {{ custom_start_date }}</Col>
-                        <Col :span="12">End: {{ custom_end_date }}</Col>
 
                     </Row>
 
@@ -350,7 +331,7 @@
                                         
                                         <Col span="24" class="mb-2">
                                                     
-                                            <mainChart chartId="returning-customer-rate-chart" :chartData="returningCustomerRateChartData"></mainChart>
+                                            <mainChart chartId="returning-customer-rate-chart" :chartData="returningCustomerRateChartData" :update="!isLoadingStats"></mainChart>
 
                                         </Col>
 
@@ -389,7 +370,7 @@
                                         
                                         <Col span="24" class="mb-2">
                                                     
-                                            <mainChart chartId="total-orders-chart" :chartData="totalOrdersChartData"></mainChart>
+                                            <mainChart chartId="total-orders-chart" :chartData="totalOrdersChartData" :update="!isLoadingStats"></mainChart>
 
                                         </Col>
 
@@ -424,7 +405,7 @@
                                         
                                         <Col span="24" class="mb-2">
                                                     
-                                            <mainChart chartId="average-order-value-chart" :chartData="averageOrderValueChartData"></mainChart>
+                                            <mainChart chartId="average-order-value-chart" :chartData="averageOrderValueChartData" :update="!isLoadingStats"></mainChart>
 
                                         </Col>
 
@@ -463,7 +444,7 @@
                                         
                                         <Col span="24" class="mb-2">
                                                     
-                                            <mainChart chartId="popular-payment-methods-chart" :chartData="popularPaymentMethodsChartData"></mainChart>
+                                            <mainChart chartId="popular-payment-methods-chart" :chartData="popularPaymentMethodsChartData" :update="!isLoadingStats"></mainChart>
 
                                         </Col>
 
@@ -488,6 +469,8 @@
 </template>
 
 <script>
+
+    import moment from 'moment';
 
     /*  Buttons  */
     import basicButton from './../../../../components/_common/buttons/basicButton.vue';
@@ -764,8 +747,8 @@
                     console.log('Start getting store statistics...');
 
                     var postData = {
-                        start_date: this.custom_start_date,
-                        end_date: this.custom_end_date
+                        start_date: this.custom_start_date ? moment( this.custom_start_date ).format('DD-MM-YYYY') : null,
+                        end_date: this.custom_start_date ? moment( this.custom_end_date ).format('DD-MM-YYYY') : null
                     };
                     
                     //  Use the api call() function located in resources/js/api.js

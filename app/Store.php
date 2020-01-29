@@ -602,7 +602,7 @@ class Store extends Model
          *  we use the onlyQueryWithinDateTime() scope method from the CommonTraits.php file. This
          *  will ensure that our records are only returned from a strict timeline. 
          */
-        $records = $this->transactions()->successful()->payments()->onlyQueryWithinDateTime('transactions')
+        $records = $this->transactions()->successful()->payments()->onlyQueryWithinDateTime()
                         ->groupBy(DB::raw('DATE_FORMAT(transactions.created_at, "%d-%m-%Y")'))
                         ->select(DB::raw('DATE_FORMAT(transactions.created_at, "%d-%m-%Y %H:%i:%s") as date, count(*) as count, sum(payment_amount) as total_amount'))
                         ->get();
@@ -664,7 +664,7 @@ class Store extends Model
     public function getRefundTransactionStatsAttribute()
     {
         //  Return records within the allowable query datetime
-        $records = $this->transactions()->successful()->refunds()->onlyQueryWithinDateTime('transactions')
+        $records = $this->transactions()->successful()->refunds()->onlyQueryWithinDateTime()
                         ->groupBy(DB::raw('DATE_FORMAT(transactions.created_at, "%d-%m-%Y")'))
                         ->select(DB::raw('DATE_FORMAT(transactions.created_at, "%d-%m-%Y %H:%i:%s") as date, count(*) as count, sum(payment_amount) as total_amount'))
                         ->get();
@@ -728,13 +728,13 @@ class Store extends Model
         $start_time = (\Carbon\Carbon::now())->subMonth()->format('Y-m-d H:i:s');
         $end_time = (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
 
-        $sessions = $this->ussd_sessions()->get();
+        $sessions = $this->ussd_sessions()->onlyQueryWithinDateTime()->get();
 
         //  Count the number of new customer sessions
         $sessionCount = count($sessions);
 
         //  Get the dates between the start and end time
-        $datesBetween = collect(\Carbon\CarbonPeriod::create($start_time, $end_time)->toArray())->map(function ($date, $key) {
+        $datesBetween = collect($this->dates_between_start_and_end_datetime)->map(function ($date, $key) {
             //  Foreach date return th datetime and set the count to zero (0)
             return [
                 'date' => $date->toDateTimeString(),
@@ -851,11 +851,11 @@ class Store extends Model
 
     public function getOrdersOverTimeStatsAttribute()
     {
-        $start_time = (\Carbon\Carbon::now())->subMonth()->format('Y-m-d H:i:s');
-        $end_time = (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
-
-        $orders = $this->orders()->withPayments()
-                        //->where('created_at', '>=', ( \Carbon\Carbon::now() )->subDays(7))
+        /** Make sure to only return records within the specified start and end datetime. To do this
+         *  we use the onlyQueryWithinDateTime() scope method from the CommonTraits.php file. This
+         *  will ensure that our records are only returned from a strict timeline. 
+         */
+        $orders = $this->orders()->withPayments()->onlyQueryWithinDateTime()
                         ->groupBy(DB::raw('DATE_FORMAT(created_at, "%d-%m-%Y")'))
                         ->select(DB::raw('DATE_FORMAT(created_at, "%d-%m-%Y %H:%i:%s") as date, count(*) as count, sum(grand_total) as total_amount'))
                         ->get();
@@ -874,7 +874,7 @@ class Store extends Model
         });
 
         //  Get the dates between the start and end time
-        $datesBetween = collect(\Carbon\CarbonPeriod::create($start_time, $end_time)->toArray())->map(function ($date, $key) {
+        $datesBetween = collect($this->dates_between_start_and_end_datetime)->map(function ($date, $key) {
             //  Foreach date return th datetime and set the count to zero (0)
             return [
                 'date' => $date->toDateTimeString(),
@@ -885,8 +885,6 @@ class Store extends Model
         });
 
         //  Merge the dates datesBetween with the current intervals and order by the date
-        //    $updatedIntervals = $datesBetween->merge($intervals)->sortBy('date')->values()->all();
-
         $updatedIntervals = $datesBetween->merge($intervals)->groupBy(function ($item, $key) {
             //  Group by Year - Month - Day e.g 2020-01-04
             return substr($item['date'], 0, 10);
@@ -925,11 +923,11 @@ class Store extends Model
 
     public function getPopularPaymentMethodStatsAttribute()
     {
-        $start_time = (\Carbon\Carbon::now())->subMonth()->format('Y-m-d H:i:s');
-        $end_time = (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
-
-        $paymentMethods = $this->transactions()->successful()->payments()
-                        //->where('created_at', '>=', ( \Carbon\Carbon::now() )->subDays(7))
+        /** Make sure to only return records within the specified start and end datetime. To do this
+         *  we use the onlyQueryWithinDateTime() scope method from the CommonTraits.php file. This
+         *  will ensure that our records are only returned from a strict timeline. 
+         */
+        $paymentMethods = $this->transactions()->successful()->payments()->onlyQueryWithinDateTime()
                         ->groupBy('payment_type')
                         ->select(DB::raw('payment_type, count(*) as count'))
                         ->get();
