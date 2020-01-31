@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "28f7f180e874bb4b9717c342156cf39b",
+    "content-hash": "b37847651a7d21795832ebeaff204112",
     "packages": [
         {
             "name": "aloha/twilio",
@@ -2448,6 +2448,65 @@
             "time": "2019-12-30T18:03:34+00:00"
         },
         {
+            "name": "mtownsend/response-xml",
+            "version": "1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/mtownsend5512/response-xml.git",
+                "reference": "c9d9ab8f26db95df44379f5bd725fb8c80a99ad4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/mtownsend5512/response-xml/zipball/c9d9ab8f26db95df44379f5bd725fb8c80a99ad4",
+                "reference": "c9d9ab8f26db95df44379f5bd725fb8c80a99ad4",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/container": "~5.5.0|~5.6.0|~5.7.0|~5.8.0|^6.0",
+                "illuminate/http": "~5.5.0|~5.6.0|~5.7.0|~5.8.0|^6.0",
+                "illuminate/routing": "~5.5.0|~5.6.0|~5.7.0|~5.8.0|^6.0",
+                "illuminate/support": "~5.5.0|~5.6.0|~5.7.0|~5.8.0|^6.0",
+                "php": "~7.0",
+                "spatie/array-to-xml": "^2.6"
+            },
+            "require-dev": {
+                "laravel/framework": "~5.5.0|~5.6.0|~5.7.0|~5.8.0|^6.0",
+                "phpunit/phpunit": "^6.4"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Mtownsend\\ResponseXml\\Providers\\ResponseXmlServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Mtownsend\\ResponseXml\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Mark Townsend",
+                    "email": "mtownsend5512@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "The missing XML support for Laravel's Response class.",
+            "keywords": [
+                "api",
+                "laravel",
+                "response",
+                "xml"
+            ],
+            "time": "2019-09-18T16:48:09+00:00"
+        },
+        {
             "name": "nesbot/carbon",
             "version": "1.39.1",
             "source": {
@@ -4492,6 +4551,56 @@
                 "stylesheet"
             ],
             "time": "2019-02-22T07:42:52+00:00"
+        },
+        {
+            "name": "spatie/array-to-xml",
+            "version": "2.10.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/spatie/array-to-xml.git",
+                "reference": "eb035710f44400ec820c664426a92753b6e19c17"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/spatie/array-to-xml/zipball/eb035710f44400ec820c664426a92753b6e19c17",
+                "reference": "eb035710f44400ec820c664426a92753b6e19c17",
+                "shasum": ""
+            },
+            "require": {
+                "ext-dom": "*",
+                "php": "^7.1"
+            },
+            "require-dev": {
+                "mockery/mockery": "^1.0",
+                "phpunit/phpunit": "^7.0",
+                "spatie/phpunit-snapshot-assertions": "^2.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Spatie\\ArrayToXml\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Freek Van der Herten",
+                    "email": "freek@spatie.be",
+                    "homepage": "https://murze.be",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Convert an array to xml",
+            "homepage": "https://github.com/spatie/array-to-xml",
+            "keywords": [
+                "array",
+                "convert",
+                "xml"
+            ],
+            "time": "2019-06-26T21:53:11+00:00"
         },
         {
             "name": "swiftmailer/swiftmailer",

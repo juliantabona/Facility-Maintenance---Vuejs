@@ -123,11 +123,6 @@ export default {
     methods: {
         updateChart(){
 
-            console.log('this.chartData.type');
-            console.log(this.chartData.type);
-            console.log('this.chartData.data');
-            console.log(this.chartData.data);
-
             //  Update the chart
             this.chartInstance['type'] = this.chartData.type;
             this.chartInstance['data'] = this.chartData.data;
@@ -160,7 +155,13 @@ export default {
                 
             this.resizeCanvas();
 
-            this.createVerticalLine();
+            //  If the chart is a line chart
+            if( this.chartData.type == 'line' ){
+
+                //  Display the vertical line
+                this.createVerticalLine();
+
+            }
 
         },
         createVerticalLine(){

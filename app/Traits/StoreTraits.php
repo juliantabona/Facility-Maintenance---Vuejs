@@ -74,33 +74,33 @@ trait StoreTraits
             /*
              *  Create a new store, then retrieve a fresh instance
              */
-            $this->store = $this->create($template)->fresh();
+            $this->storeInstance = $this->create($template)->fresh();
 
             /*  If the store was created successfully  */
-            if( $this->store ){
+            if( $this->storeInstance ){
 
                 //  If the store does not have a currency
-                if( !$this->store->currency ){
+                if( !$this->storeInstance->currency ){
 
                     /*  Add the default current if non was specified  */
-                    $this->store->addDefaultCurrency();
+                    $this->storeInstance->addDefaultCurrency();
 
                 }
 
                 /*  Add the store settings  */
-                $this->store->addSettings();
+                $this->storeInstance->addSettings();
 
                 /*  Create a new Ussd Interface  */
-                $this->store->createUssdInterface();
+                $this->storeInstance->createUssdInterface();
 
                 /*  Add the user to the store as an admin  */
-                $this->store->addAdmin( $user = auth('api')->user() );
+                $this->storeInstance->addAdmin( $user = auth('api')->user() );
 
                 /*  If we have only one address  */
                 if( isset($storeInfo['address']) ){
 
                     /*  Create a new address  */
-                    $this->store->createAddress( $storeInfo['address'] );
+                    $this->storeInstance->createAddress( $storeInfo['address'] );
 
                 /*  If we have many addresses  */
                 }elseif( isset($storeInfo['addresses']) ){
@@ -109,7 +109,7 @@ trait StoreTraits
                     foreach( $storeInfo['addresses'] as $address){
 
                         /*  Create a new address  */
-                        $this->store->createAddress( $address );
+                        $this->storeInstance->createAddress( $address );
 
                     }
 
@@ -119,7 +119,7 @@ trait StoreTraits
                 if( isset($storeInfo['phone']) ){
                     
                     /*  Create a new phone  */
-                    $this->store->createPhone( $storeInfo['phone'], $requires_verification = true );
+                    $this->storeInstance->createPhone( $storeInfo['phone'], $requires_verification = true );
 
                 /*  If we have many phones  */
                 }elseif( isset($storeInfo['phones']) ){
@@ -128,7 +128,7 @@ trait StoreTraits
                     foreach( $storeInfo['phones'] as $phone){
 
                         /*  Create a new phone  */
-                        $this->store->createPhone( $phone, $requires_verification = true );
+                        $this->storeInstance->createPhone( $phone, $requires_verification = true );
 
                     }
 
@@ -138,7 +138,7 @@ trait StoreTraits
                 if( isset($storeInfo['email']) ){
 
                     /*  Create a new email  */
-                    $this->store->createEmail( $storeInfo['email'] );
+                    $this->storeInstance->createEmail( $storeInfo['email'] );
 
                 /*  If we have many emails  */
                 }elseif( isset($storeInfo['emails']) ){
@@ -147,14 +147,14 @@ trait StoreTraits
                     foreach( $storeInfo['emails'] as $email){
 
                         /*  Create a new email  */
-                        $this->store->createEmail( $email );
+                        $this->storeInstance->createEmail( $email );
 
                     }
 
                 }   
 
                 /*  Return a fresh instance of the store  */
-                return $this->store->fresh();
+                return $this->storeInstance->fresh();
 
             }
 

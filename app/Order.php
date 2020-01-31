@@ -130,9 +130,21 @@ class Order extends Model
     }
 
     //  Return only open/archieved orders with payments
+    public function scopeExcludeDrafts($query)
+    {
+        return $query->whereNotIn('status', ['draft']);
+    }
+
+    //  Return only open/archieved orders with payments
     public function scopeWithPayments($query)
     {
-        return $query->whereIn('status', ['open', 'archieved'])->whereIn('payment_status', ['paid', 'partially paid']);
+        return $query->excludeDrafts()->whereIn('payment_status', ['paid', 'partially paid']);
+    }
+
+    //  Return only open/archieved orders with payments
+    public function scopeWithoutPayments($query)
+    {
+        return $query->excludeDrafts()->whereNotIn('payment_status', ['paid', 'partially paid']);
     }
 
     public function scopeFulfilled($query)

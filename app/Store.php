@@ -434,7 +434,7 @@ class Store extends Model
          *  static::class = App\Order
          *
          *  Relation::morphMap() = [
-         *      "order"  => "App\Order"
+         *      "invoice"  => "App\Invoice"
          *      "store"  => "App\Store"
          *      "user"   => App\User"
          *      "account => App\Account"
@@ -445,10 +445,10 @@ class Store extends Model
          */
         return $this->hasManyThrough(
                     'App\Transaction',                      //  What we want (transations)
-                    'App\Order',                            //  The relationship we have (orders)
-                    'merchant_id',                          //  Foreign key on orders table
+                    'App\Invoice',                          //  The relationship we have (invoices)
+                    'merchant_id',                          //  Foreign key on invoices table
                     'owner_id'                              //  Foreign key on transactions table
-                )->where('orders.merchant_type', array_search(static::class, Relation::morphMap()) ?: static::class)
+                )->where('invoices.merchant_type', array_search(static::class, Relation::morphMap()) ?: static::class)
                 //  Select all the transation details and make sure the owner id reflects the (invoice id) not the (order id)
                 ->select(
                     'transactions.type', 'transactions.status', 'transactions.automatic', 'transactions.payment_type',
@@ -546,7 +546,7 @@ class Store extends Model
             'orders' => [
                 'general' => [
                     'name' => 'Orders',
-                    'count' => $this->orders()->count(),
+                    'total_orders_count' => $this->orders()->excludeDrafts()->onlyQueryWithinDateTime()->count()
                 ],
                 'financial' => [
                     'total_gross_revenue' => [
@@ -575,6 +575,8 @@ class Store extends Model
                     ],
                 ],
                 'orders_over_time' => $this->orders_over_time_stats,
+                'paid_orders_over_time' => $this->paid_orders_over_time_stats,
+                'unpaid_orders_over_time' => $this->unpaid_orders_over_time_stats,
             ],
             'customers' => [
                 'general' => [
@@ -622,7 +624,7 @@ class Store extends Model
 
         //  Get the dates between the query start and end time
         $datesBetween = collect($this->dates_between_start_and_end_datetime)->map(function ($date, $key) {
-            //  Foreach date return th datetime and set the count to zero (0)
+            //  Foreach date return the datetime and set the count to zero (0)
             return [
                 'date' => $date->toDateTimeString(),
                 'amount' => 0,
@@ -684,7 +686,7 @@ class Store extends Model
 
         //  Get the dates between the start and end time
         $datesBetween = collect($this->dates_between_start_and_end_datetime)->map(function ($date, $key) {
-            //  Foreach date return th datetime and set the count to zero (0)
+            //  Foreach date return the datetime and set the count to zero (0)
             return [
                 'date' => $date->toDateTimeString(),
                 'amount' => 0,
@@ -725,9 +727,6 @@ class Store extends Model
 
     public function getReturningCustomerRateStatsAttribute()
     {
-        $start_time = (\Carbon\Carbon::now())->subMonth()->format('Y-m-d H:i:s');
-        $end_time = (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
-
         $sessions = $this->ussd_sessions()->onlyQueryWithinDateTime()->get();
 
         //  Count the number of new customer sessions
@@ -735,7 +734,7 @@ class Store extends Model
 
         //  Get the dates between the start and end time
         $datesBetween = collect($this->dates_between_start_and_end_datetime)->map(function ($date, $key) {
-            //  Foreach date return th datetime and set the count to zero (0)
+            //  Foreach date return the datetime and set the count to zero (0)
             return [
                 'date' => $date->toDateTimeString(),
                 'count' => 0,
@@ -875,7 +874,7 @@ class Store extends Model
 
         //  Get the dates between the start and end time
         $datesBetween = collect($this->dates_between_start_and_end_datetime)->map(function ($date, $key) {
-            //  Foreach date return th datetime and set the count to zero (0)
+            //  Foreach date return the datetime and set the count to zero (0)
             return [
                 'date' => $date->toDateTimeString(),
                 'total_amount' => 0,
@@ -914,9 +913,189 @@ class Store extends Model
             ];
         })->sortBy('date')->values()->all();
 
+        //  Calculate the sum of all the order total amounts
+        $total_order_value = collect($updatedIntervals)->sum('total_amount');
+
+        //  Calculate the sum of all the order average amounts
+        $average_order_value = collect($updatedIntervals)->sum('average_amount');
+
+        //  Calculate the sum of all the orders
+        $total_count = collect($updatedIntervals)->sum('count');
+
         //  Return the data
         return [
             'name' => 'Orders Over Time',
+            'count' => $total_count,
+            'total_order_value' => $total_order_value,
+            'average_order_value' => $average_order_value,
+            'data_intervals' => $updatedIntervals,
+        ];
+    }
+
+    public function getPaidOrdersOverTimeStatsAttribute()
+    {
+        /** Make sure to only return records within the specified start and end datetime. To do this
+         *  we use the onlyQueryWithinDateTime() scope method from the CommonTraits.php file. This
+         *  will ensure that our records are only returned from a strict timeline. 
+         */
+        $orders = $this->orders()->withPayments()->onlyQueryWithinDateTime()
+                        ->groupBy(DB::raw('DATE_FORMAT(created_at, "%d-%m-%Y")'))
+                        ->select(DB::raw('DATE_FORMAT(created_at, "%d-%m-%Y %H:%i:%s") as date, count(*) as count, sum(grand_total) as total_amount'))
+                        ->get();
+
+        $intervals = collect($orders)->map(function ($order, $key) {
+            return [
+                //  Get the grouped order date value
+                'date' => \Carbon\Carbon::parse($order['date'])->toDateTimeString(),
+
+                //  Get the total amount of the grouped records
+                'amount' => $order['total_amount'],
+
+                //  Get the number of grouped orders
+                'count' => $order['count'],
+            ];
+        });
+
+        //  Get the dates between the start and end time
+        $datesBetween = collect($this->dates_between_start_and_end_datetime)->map(function ($date, $key) {
+            //  Foreach date return the datetime and set the count to zero (0)
+            return [
+                'date' => $date->toDateTimeString(),
+                'total_amount' => 0,
+                'average_amount' => 0,
+                'count' => 0,
+            ];
+        });
+
+        //  Merge the dates datesBetween with the current intervals and order by the date
+        $updatedIntervals = $datesBetween->merge($intervals)->groupBy(function ($item, $key) {
+            //  Group by Year - Month - Day e.g 2020-01-04
+            return substr($item['date'], 0, 10);
+        })->map(function ($dates) {
+            $collection = collect($dates);
+
+            //  Get the smallest date e.g "2020-01-04 00:00:00" is smaller than "2020-01-04 01:00:00"
+            $date = $collection->min('date');
+
+            //  Calculate the sum of all the dates that have been grouped together
+            $count = $collection->sum('count');
+
+            //  Calculate the sum of all the amounts that have been grouped together
+            $total_amount = $collection->sum('amount');
+
+            //  Calculate the sum of all the amounts that have been grouped together
+            $average_amount = $count ? round($total_amount / $count, 2) : 0;
+
+            return [
+                'date' => $date,
+
+                'total_amount' => $total_amount,
+
+                'average_amount' => $average_amount,
+
+                'count' => $count,
+            ];
+        })->sortBy('date')->values()->all();
+
+        //  Calculate the sum of all the order total amounts
+        $total_order_value = collect($updatedIntervals)->sum('total_amount');
+
+        //  Calculate the sum of all the order average amounts
+        $average_order_value = collect($updatedIntervals)->sum('average_amount');
+
+        //  Calculate the sum of all the orders
+        $total_count = collect($updatedIntervals)->sum('count');
+
+        //  Return the data
+        return [
+            'name' => 'Paid Orders Over Time',
+            'count' => $total_count,
+            'total_order_value' => $total_order_value,
+            'average_order_value' => $average_order_value,
+            'data_intervals' => $updatedIntervals,
+        ];
+    }
+
+    public function getUnPaidOrdersOverTimeStatsAttribute()
+    {
+        /** Make sure to only return records within the specified start and end datetime. To do this
+         *  we use the onlyQueryWithinDateTime() scope method from the CommonTraits.php file. This
+         *  will ensure that our records are only returned from a strict timeline. 
+         */
+        $orders = $this->orders()->withoutPayments()->onlyQueryWithinDateTime()
+                        ->groupBy(DB::raw('DATE_FORMAT(created_at, "%d-%m-%Y")'))
+                        ->select(DB::raw('DATE_FORMAT(created_at, "%d-%m-%Y %H:%i:%s") as date, count(*) as count, sum(grand_total) as total_amount'))
+                        ->get();
+
+        $intervals = collect($orders)->map(function ($order, $key) {
+            return [
+                //  Get the grouped order date value
+                'date' => \Carbon\Carbon::parse($order['date'])->toDateTimeString(),
+
+                //  Get the total amount of the grouped records
+                'amount' => $order['total_amount'],
+
+                //  Get the number of grouped orders
+                'count' => $order['count'],
+            ];
+        });
+
+        //  Get the dates between the start and end time
+        $datesBetween = collect($this->dates_between_start_and_end_datetime)->map(function ($date, $key) {
+            //  Foreach date return the datetime and set the count to zero (0)
+            return [
+                'date' => $date->toDateTimeString(),
+                'total_amount' => 0,
+                'average_amount' => 0,
+                'count' => 0,
+            ];
+        });
+
+        //  Merge the dates datesBetween with the current intervals and order by the date
+        $updatedIntervals = $datesBetween->merge($intervals)->groupBy(function ($item, $key) {
+            //  Group by Year - Month - Day e.g 2020-01-04
+            return substr($item['date'], 0, 10);
+        })->map(function ($dates) {
+            $collection = collect($dates);
+
+            //  Get the smallest date e.g "2020-01-04 00:00:00" is smaller than "2020-01-04 01:00:00"
+            $date = $collection->min('date');
+
+            //  Calculate the sum of all the dates that have been grouped together
+            $count = $collection->sum('count');
+
+            //  Calculate the sum of all the amounts that have been grouped together
+            $total_amount = $collection->sum('amount');
+
+            //  Calculate the sum of all the amounts that have been grouped together
+            $average_amount = $count ? round($total_amount / $count, 2) : 0;
+
+            return [
+                'date' => $date,
+
+                'total_amount' => $total_amount,
+
+                'average_amount' => $average_amount,
+
+                'count' => $count,
+            ];
+        })->sortBy('date')->values()->all();
+
+        //  Calculate the sum of all the order total amounts
+        $total_order_value = collect($updatedIntervals)->sum('total_amount');
+
+        //  Calculate the sum of all the order average amounts
+        $average_order_value = collect($updatedIntervals)->sum('average_amount');
+
+        //  Calculate the sum of all the orders
+        $total_count = collect($updatedIntervals)->sum('count');
+
+        //  Return the data
+        return [
+            'name' => 'Unpaid Orders Over Time',
+            'count' => $total_count,
+            'total_order_value' => $total_order_value,
+            'average_order_value' => $average_order_value,
             'data_intervals' => $updatedIntervals,
         ];
     }

@@ -132,8 +132,17 @@ trait PhoneTraits
      */
     public function sendVerificationSMS()
     {
-        /*  Send verification sms to current phone number  */
-        return Twilio::message('+'.$this->calling_code.$this->number, $this->createVerificationSms());
+        try{
+                
+            /*  Send verification sms to current phone number  */
+            return Twilio::message('+'.$this->calling_code.$this->number, $this->createVerificationSms());
+
+        } catch (\Exception $e) {
+
+            //  Return the error
+            return oq_api_notify_error('Query Error', $e->getMessage(), 404);
+
+        }
     }
 
     public function createVerificationSms()

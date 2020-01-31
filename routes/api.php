@@ -290,7 +290,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
             //  Settings related resources
             Route::post('/statistics', 'Api\StoreController@getStoreStatistics')->name('statistics');
-
+            
         });
     });
 
@@ -740,10 +740,9 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     *********************************/
 
     Route::prefix('ussd')->group(function () {
-        
         Route::post('/customer', 'Api\UssdController@home')->name('ussd-customer-home');
         Route::post('/merchant', 'Api\UssdMerchantController@merchantHome')->name('ussd-merchant-home');
-        Route::post('/customer/online', 'Api\UssdController@home')->name('ussd-customer-home-online');
+        Route::post('/customer/online', 'Api\UssdController@redirectToOnline')->name('ussd-customer-home-online');
 
         Route::prefix('stores')->group(function () {
             //  Multiple USSD Stores

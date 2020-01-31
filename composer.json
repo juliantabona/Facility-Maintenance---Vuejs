@@ -16,6 +16,7 @@
         "laravel/tinker": "^1.0",
         "league/flysystem-aws-s3-v3": "~1.0",
         "league/flysystem-cached-adapter": "~1.0",
+        "mtownsend/response-xml": "^1.1",
         "php-http/guzzle6-adapter": "1.0",
         "php-http/message": "^1.7",
         "pragmarx/countries": "^0.5.9",

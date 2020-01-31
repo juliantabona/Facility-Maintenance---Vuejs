@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use DB;
+use Log;
 use App\UssdInterface;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -25,6 +27,7 @@ class UssdController extends Controller
     private $newCustomer;
     private $service_code;
     private $phone_number;
+    private $original_text;
     private $payment_method;
     private $ussd_interface;
     private $order_per_page;
@@ -57,12 +60,6 @@ class UssdController extends Controller
         /*  Check if we are on TEST MODE  */
         $this->test_mode = ($request->get('testMode') == 'true' || $request->get('testMode') == '1') ? true : false;
 
-        /*  Get the name of "TEXT" field used to save the user responses  */
-        $this->text_field_name = 'text';
-
-        /*  Get the USSD TEXT value (User Response)  */
-        $this->text = $request->get($this->text_field_name);
-
         /*  Get the USSD Phone Number value. We use the "preg_replace" method
          *  to remove "+" symbol that comes with the phone number. This way
          *  we only keep the numbers.
@@ -80,6 +77,27 @@ class UssdController extends Controller
 
         /*  Get the Service Code  */
         $this->service_code = $request->get('serviceCode');
+
+        /*  Get the USSD TEXT value (User Response)  */
+        $this->text = $request->get('text');
+
+        /*  If we have a session id  */
+        if ($this->session_id) {
+            //  Get the session of the current session ID
+            $session = DB::table('ussd_sessions')->where('session_id', $this->session_id)->first();
+
+            //  If we have an existing session returned
+            if ($session) {
+                //  If the session has a text value
+                if (!empty($session->text)) {
+                    //  Update the current text with the previous session text value and the current text value
+                    $this->text = $session->text.($this->text != '' ? '*'.$this->text : '');
+                }
+            }
+        }
+
+        /*  Get the original text before its formatted */
+        $this->original_text = $this->text;
 
         /*  Define the user's mobile number  */
         $this->user['phone'] = [
@@ -125,14 +143,71 @@ class UssdController extends Controller
 
     public function redirectToOnline(Request $request)
     {
+        $serviceCode = '*253*179#';
         $client = new \GuzzleHttp\Client();
         $params['form_params'] = $request->all();
-        $uri = 'https://oqcloud.co.bw/api/ussd/customer';
+        $uri = 'http://oqcloud.local/api/ussd/customer';
+        //  $uri = 'https://oqcloud.co.bw/api/ussd/customer';
 
-        $response = $client->post($uri, $params)->getBody();
+        try {
+            //  Get the xml content from the request
+            $xml = $request->getContent();
 
-        return response($response)->header('Content-Type', 'text/plain');
+            //  Convert the XML string into an SimpleXMLElement object.
+            $xmlObject = simplexml_load_string($xml);
 
+            //  Encode the SimpleXMLElement object into a JSON string.
+            $jsonString = json_encode($xmlObject);
+
+            //  Convert it back into an associative array for the purposes of testing.
+            $jsonArray = json_decode($jsonString, true);
+
+            $params = [
+                'text' => ($jsonArray['msg'] == $serviceCode) ? '' : $jsonArray['msg'],
+                'sessionId' => $jsonArray['sessionid'],
+                'phoneNumber' => $jsonArray['msisdn'],
+                'serviceCode' => $serviceCode,
+                'type' => $jsonArray['type'],
+            ];
+
+            $response = $client->post($uri, ['form_params' => $params])->getBody();
+
+            //  Get the first 3 characters of the response to determine the response type
+            $response_type = substr($response, 0, 3);
+
+            switch ($response_type) {
+                case 'CON':
+                    //  2 Means RESPONSE (Response in already existing session)
+                    $type = 2;
+                    break;
+                default:
+                    //  3 Means RELEASE (End of session)
+                    $type = 3;
+            }
+
+            $data = [
+                'ussd' => [
+                    'type' => $type,
+                    'msg' => substr($response, 4),
+                ],
+            ];
+
+            return response()->xml($data);
+        } catch (\Exception $e) {
+            //  Display the error in the logs
+            Log::info($e);
+
+            DB::table('ussd_sessions')->insert(
+                [
+                    'session_id' => 'ERROR',
+                    'service_code' => 'ERROR',
+                    'phone_number' => 'ERROR',
+                    'status' => 'ERROR',
+                    'text' => 'ERROR',
+                    'metadata' => $e->getMessage(),
+                ]
+            );
+        }
     }
 
     /*********************************
@@ -303,10 +378,10 @@ class UssdController extends Controller
         }
 
         /* Save the ussd session details as well as the shopping progress of this customer.
-         *  This will allow us to track all the activities of the current customer so that
-         *  we know if they are shopping, have selected a product, have selected a payment
-         *  method, have paid successfully or experienced a failed payment, e.t.c
-         */
+        *  This will allow us to track all the activities of the current customer so that
+        *  we know if they are shopping, have selected a product, have selected a payment
+        *  method, have paid successfully or experienced a failed payment, e.t.c
+        */
         $this->updateCustomerJourney();
 
         /*  Return the response to the user  */
@@ -515,88 +590,94 @@ class UssdController extends Controller
      */
     public function updateCustomerJourney()
     {
-        //  Check if we have a store
-        if ($this->store) {
-            //  Check if we already have a ussd session
-            $ussd_session = $this->store->ussd_sessions()->where('session_id', $this->session_id)->first();
+        //  Check if we already have a ussd session
+        $ussd_session = DB::table('ussd_sessions')->where('session_id', $this->session_id)->first();
 
-            //  Use the previous start shopping datetime (if any) otherwise default to the current datetime for the start shopping time
-            $start_time = $ussd_session['metadata']['start_datetime'] ?? (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
+        //  Use the previous start shopping datetime (if any) otherwise default to the current datetime for the start shopping time
+        $start_time = $ussd_session->metadata['start_datetime'] ?? (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
 
-            //  Use the current datetime for the end shopping time
-            $end_time = (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
+        //  Use the current datetime for the end shopping time
+        $end_time = (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
 
-            $sessionData = [
-                'session_id' => $this->session_id,
-                'service_code' => $this->service_code,
-                'phone_number' => $this->phone_number,
-                'status' => $this->shopping_status,
-                'text' => $this->text,
+        $sessionData = [
+            'session_id' => $this->session_id,
+            'service_code' => $this->service_code,
+            'phone_number' => $this->phone_number,
+            'status' => $this->shopping_status,
+            'text' => $this->original_text,
+            'owner_id' => ($this->store) ? $this->store->id : null,
+            'owner_type' => ($this->store) ? $this->store->resource_type : null,
+            'created_at' => DB::raw('now()'),                       
+            'updated_at' => DB::raw('now()'),
+            'metadata' => json_encode([
+                //  How many unique products have been added to the cart
+                'number_of_products_added_to_cart' => $this->cart['number_of_items'] ?? 0,
 
-                'metadata' => [
-                    //  How many unique products have been added to the cart
-                    'number_of_products_added_to_cart' => $this->cart['number_of_items'] ?? 0,
+                //  What is the total quantity of the unique products added to the cart
+                'total_quantity_of_products_added_to_cart' => $this->cart['total_quantity_of_items'] ?? 0,
 
-                    //  What is the total quantity of the unique products added to the cart
-                    'total_quantity_of_products_added_to_cart' => $this->cart['total_quantity_of_items'] ?? 0,
+                //  When did the customer start shopping (the first recorded time)
+                'start_datetime' => $start_time,
 
-                    //  When did the customer start shopping (the first recorded time)
-                    'start_datetime' => $start_time,
+                //  When did the customer stop shopping (the last recorded time)
+                'end_datetime' => $end_time,
 
-                    //  When did the customer stop shopping (the last recorded time)
-                    'end_datetime' => $end_time,
+                //  Did the customer start shopping
+                'started_shopping' => $this->wantsToStartShopping(),
 
-                    //  Did the customer start shopping
-                    'started_shopping' => $this->wantsToStartShopping(),
+                //  Did the customer view My Orders
+                'viewed_my_orders' => $this->wantsToViewMyOrders(),
 
-                    //  Did the customer view My Orders
-                    'viewed_my_orders' => $this->wantsToViewMyOrders(),
+                //  Did the customer view Contact Us
+                'viewed_contact_us' => $this->wantsToViewContactUs(),
 
-                    //  Did the customer view Contact Us
-                    'viewed_contact_us' => $this->wantsToViewContactUs(),
+                //  Did the customer view About Us
+                'viewed_about_us' => $this->wantsToViewAboutUs(),
 
-                    //  Did the customer view About Us
-                    'viewed_about_us' => $this->wantsToViewAboutUs(),
+                //  Did the customer already select a product/service
+                'selected_product' => (count($this->selected_products) ? true : false),
 
-                    //  Did the customer already select a product/service
-                    'selected_product' => (count($this->selected_products) ? true : false),
+                //  Did the customer select only one product / service
+                'selected_one_product' => (count($this->selected_products) == 1) ? true : false,
 
-                    //  Did the customer select only one product / service
-                    'selected_one_product' => (count($this->selected_products) == 1) ? true : false,
+                //  Did the customer select more products / services
+                'selected_more_products' => (count($this->selected_products) > 1) ? true : false,
 
-                    //  Did the customer select more products / services
-                    'selected_more_products' => (count($this->selected_products) > 1) ? true : false,
+                //  Did the customer already select a payment method
+                'selected_payment_method' => $this->hasSelectedPaymentMethod(),
 
-                    //  Did the customer already select a payment method
-                    'selected_payment_method' => $this->hasSelectedPaymentMethod(),
+                //  Wha payment method did the customer select
+                'payment_method' => $this->payment_method ?? null,
 
-                    //  Wha payment method did the customer select
-                    'payment_method' => $this->payment_method ?? null,
+                //  What is the current payment status (Was the payment successful or not)
+                'payment_success' => $this->payment_response['status'] ?? null,
 
-                    //  What is the current payment status (Was the payment successful or not)
-                    'payment_success' => $this->payment_response['status'] ?? null,
+                //  What is the current payment status message if the payment status is a fail
+                'payment_failed_message' => $this->payment_response['error'] ?? null,
 
-                    //  What is the current payment status message if the payment status is a fail
-                    'payment_failed_message' => $this->payment_response['error'] ?? null,
+                //  How did the user find the store (E.g via  Enter store code or by Searching)
+                'method_used_to_find_store' => $this->method_used_to_find_store ?? null,
 
-                    //  How did the user find the store (E.g via  Enter store code or by Searching)
-                    'method_used_to_find_store' => $this->method_used_to_find_store,
+                //  If this is new customer or an existing customer
+                'new_customer' => $this->newCustomer,
+            ]),
+        ];
 
-                    //  If this is new customer or an existing customer
-                    'new_customer' => $this->newCustomer,
-                ],
-            ];
+        //  If we have a Ussd Session
+        if ($ussd_session) {
 
-            //  If we have a Ussd Session
-            if ($ussd_session) {
-                //  Update the session
-                $ussd_session->update($sessionData);
+            //  Remove the created_at field from the session data so that we do not overide the already existing value
+            unset($sessionData['created_at']);
 
-            //  If we dont't have a Ussd Session
-            } else {
-                //  Create a new session
-                $this->store->ussd_sessions()->create($sessionData);
-            }
+            //  Update the session
+            DB::table('ussd_sessions')->where('session_id', $this->session_id)->update($sessionData);
+
+        //  If we dont't have a Ussd Session
+        } else {
+            
+            //  Create a new session
+            DB::table('ussd_sessions')->insert($sessionData);
+
         }
     }
 

@@ -1,16 +1,26 @@
 export const totalOrdersChartTemplate = {
   type: 'line',
   data: {
-    datasets: [{
-      data: [],
-      fill: false,
-      pointRadius: 1,
-      lineTension: 0,
-      label: 'Total Orders',
-      borderColor: '#19be6b',
-      borderWidth: 2
-  
-  }]
+    datasets: [
+        {
+            data: [],
+            fill: false,
+            pointRadius: 1,
+            lineTension: 0,
+            label: 'Paid Orders',
+            borderColor: '#19be6b',
+            borderWidth: 2
+        },
+        {
+            data: [],
+            fill: false,
+            pointRadius: 1,
+            lineTension: 0,
+            label: 'Unpaid Orders',
+            borderColor: '#ff9900',
+            borderWidth: 2
+        },
+    ]
   },
   options: {
     responsive: true,

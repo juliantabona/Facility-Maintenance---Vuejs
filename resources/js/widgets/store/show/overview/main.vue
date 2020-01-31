@@ -105,7 +105,7 @@
 
                 <Row>
                     
-                    <!-- Saving Spinner  -->
+                    <!-- Loading Spinner  -->
                     <Spin v-if="isLoadingStats" size="large" fix></Spin>
 
                     <!-- Statastics -->
@@ -141,6 +141,9 @@
                 </Row>
 
                 <Row :gutter="20" class="mt-4">
+                    
+                    <!-- Loading Spinner  -->
+                    <Spin v-if="isLoadingStats" size="large" class="py-3" fix></Spin>
 
                     <!-- Mobile Store Statastics -->
                     <Col span="8">
@@ -292,7 +295,7 @@
                                                 <Col span="14">
 
                                                     <span class="d-block text-dark">
-                                                        New Customers (75%)
+                                                        New Customers ({{ totalNewCustomersPercentage }}%)
                                                     </span>
 
                                                 </Col>
@@ -300,7 +303,7 @@
                                                 <Col span="10">
 
                                                     <span class="d-block text-dark text-right">
-                                                        4500
+                                                        {{ totalNewCustomersCount }}
                                                     </span>
 
                                                 </Col>
@@ -312,7 +315,7 @@
                                                 <Col span="14">
 
                                                     <span class="d-block text-dark">
-                                                        Return Customers (25%)
+                                                        Return Customers ({{ totalReturningCustomersPercentage }}%)
                                                     </span>
 
                                                 </Col>
@@ -320,7 +323,7 @@
                                                 <Col span="10">
 
                                                     <span class="d-block text-dark text-right">
-                                                        1500
+                                                        {{ totalReturningCustomersCount }}
                                                     </span>
 
                                                 </Col>
@@ -368,6 +371,51 @@
 
                                         </Col>
                                         
+                                        <!-- Details -->
+                                        <Col span="24" class="mb-2">
+
+                                            <Row :gutter="20" class="mb-2">
+                                                
+                                                <Col span="14">
+
+                                                    <span class="d-block text-dark">
+                                                        Total Paid Orders
+                                                    </span>
+
+                                                </Col>
+                                                
+                                                <Col span="10">
+
+                                                    <span class="d-block text-dark text-right">
+                                                        {{ totalPaidOrdersCount }}
+                                                    </span>
+
+                                                </Col>
+
+                                            </Row>
+
+                                            <Row :gutter="20" class="mb-2">
+                                                
+                                                <Col span="14">
+
+                                                    <span class="d-block text-dark">
+                                                        Total Unpaid Orders
+                                                    </span>
+
+                                                </Col>
+                                                
+                                                <Col span="10">
+
+                                                    <span class="d-block text-dark text-right">
+                                                        {{ totalUnpaidOrdersCount }}
+                                                    </span>
+
+                                                </Col>
+
+                                            </Row>
+                                            
+                                        </Col>
+                                        
                                         <Col span="24" class="mb-2">
                                                     
                                             <mainChart chartId="total-orders-chart" :chartData="totalOrdersChartData" :update="!isLoadingStats"></mainChart>
@@ -403,6 +451,52 @@
 
                                         </Col>
                                         
+                                        
+                                        <!-- Details -->
+                                        <Col span="24" class="mb-2">
+
+                                            <Row :gutter="20" class="mb-2">
+                                                
+                                                <Col span="14">
+
+                                                    <span class="d-block text-dark">
+                                                        Total Order Value
+                                                    </span>
+
+                                                </Col>
+                                                
+                                                <Col span="10">
+
+                                                    <span class="d-block text-dark text-right">
+                                                        {{ currency + formatPrice(totalOrderValueAmount) }}
+                                                    </span>
+
+                                                </Col>
+
+                                            </Row>
+
+                                            <Row :gutter="20" class="mb-2">
+                                                
+                                                <Col span="14">
+
+                                                    <span class="d-block text-dark">
+                                                        Average Order Value
+                                                    </span>
+
+                                                </Col>
+                                                
+                                                <Col span="10">
+
+                                                    <span class="d-block text-dark text-right">
+                                                        {{ currency + formatPrice(averageOrderValueAmount) }}
+                                                    </span>
+
+                                                </Col>
+
+                                            </Row>
+                                            
+                                        </Col>
+
                                         <Col span="24" class="mb-2">
                                                     
                                             <mainChart chartId="average-order-value-chart" :chartData="averageOrderValueChartData" :update="!isLoadingStats"></mainChart>
@@ -608,6 +702,18 @@
                 }
 
             },
+            totalNewCustomersCount(){
+                return this.stats.customers.returning_customer_rate.new_customer_data_intervals.count;
+            },
+            totalNewCustomersPercentage(){
+                return this.stats.customers.returning_customer_rate.new_customer_data_intervals.rate;
+            },
+            totalReturningCustomersCount(){
+                return this.stats.customers.returning_customer_rate.return_customer_data_intervals.count;
+            },
+            totalReturningCustomersPercentage(){
+                return this.stats.customers.returning_customer_rate.return_customer_data_intervals.rate;
+            },
             totalOrdersChartData(){
 
                 if( this.stats ){
@@ -615,8 +721,19 @@
                     //  Get the chart template structure
                     let chartData = totalOrdersChartTemplate;
 
-                    //  Update the data
-                    chartData['data']['datasets'][0]['data'] = this.stats.orders.orders_over_time.data_intervals.map(function(interval){
+                    //  Update the paid orders data
+                    chartData['data']['datasets'][0]['data'] = this.stats.orders.paid_orders_over_time.data_intervals.map(function(interval){
+                        return { 
+                            //  Return the date on the x-axis
+                            x: interval.date, 
+
+                            //  Return the count on the y-axis
+                            y: interval.count 
+                        }
+                    });
+
+                    //  Update the unpaid orders data
+                    chartData['data']['datasets'][1]['data'] = this.stats.orders.unpaid_orders_over_time.data_intervals.map(function(interval){
                         return { 
                             //  Return the date on the x-axis
                             x: interval.date, 
@@ -631,6 +748,12 @@
 
                 }
 
+            },
+            totalPaidOrdersCount(){
+                return this.stats.orders.paid_orders_over_time.count;
+            },
+            totalUnpaidOrdersCount(){
+                return this.stats.orders.unpaid_orders_over_time.count;
             },
             averageOrderValueChartData(){
 
@@ -666,6 +789,12 @@
 
                 }
 
+            },
+            totalOrderValueAmount(){
+                return this.stats.orders.orders_over_time.total_order_value;
+            },
+            averageOrderValueAmount(){
+                return this.stats.orders.orders_over_time.average_order_value;
             },
             popularPaymentMethodsChartData(){
 
