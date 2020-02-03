@@ -69,7 +69,7 @@ class UssdController extends Controller
          *
          *  If we don't have a phone number provided default to "26700000000"
          */
-        $phone_number = $request->get('phoneNumber') ?? '26700000000';
+        $phone_number = $request->get('phoneNumber') ?? '26772882239';
         $this->phone_number = preg_replace('/[^0-9]/', '', $phone_number);
 
         /*  Get the Session Id  */
@@ -607,7 +607,7 @@ class UssdController extends Controller
             'text' => $this->original_text,
             'owner_id' => ($this->store) ? $this->store->id : null,
             'owner_type' => ($this->store) ? $this->store->resource_type : null,
-            'created_at' => DB::raw('now()'),                       
+            'created_at' => DB::raw('now()'),
             'updated_at' => DB::raw('now()'),
             'metadata' => json_encode([
                 //  How many unique products have been added to the cart
@@ -665,7 +665,6 @@ class UssdController extends Controller
 
         //  If we have a Ussd Session
         if ($ussd_session) {
-
             //  Remove the created_at field from the session data so that we do not overide the already existing value
             unset($sessionData['created_at']);
 
@@ -674,10 +673,8 @@ class UssdController extends Controller
 
         //  If we dont't have a Ussd Session
         } else {
-            
             //  Create a new session
             DB::table('ussd_sessions')->insert($sessionData);
-
         }
     }
 
@@ -1409,7 +1406,7 @@ class UssdController extends Controller
                             /*  If the product hasn't been added to the cart already  */
                             } else {
                                 /*  Show the product name, currency and price  */
-                                $response .= $option_number.'. '.$product_name.' -'.$this->currency.$product_price;
+                                $response .= $option_number.'. '.$product_name.' -'.$this->currency.$this->convertToMoney($product_price);
 
                                 /*  If the product is on sale then make an indication  */
                                 $response .= ($product_on_sale ? ' (on sale)' : '');
@@ -1497,7 +1494,7 @@ class UssdController extends Controller
                                     /*  If the product hasn't been added to the cart already  */
                                     } else {
                                         /*  Show the product name, currency and price  */
-                                        $response .= ' -'.$this->currency.$product_price;
+                                        $response .= ' -'.$this->currency.$this->convertToMoney($product_price);
 
                                         /*  If the product is on sale then make an indication  */
                                         $response .= ($product_on_sale ? ' (on sale)' : '');
@@ -2975,14 +2972,14 @@ class UssdController extends Controller
         if ($this->test_mode) {
             //  Get the customer information
             $customer_info = [
-                'name' => 'Test Customer',
+                'name' => 'Julian Tabona',
                 'is_vendor' => false,
                 'is_customer' => true,
                 'is_individual' => true,
                 'phone' => [
-                    'calling_code' => '267',
-                    'number' => '79999999',
-                    'provider' => 'test provider',
+                    'calling_code' => $this->user['phone']['calling_code'],
+                    'number' => $this->user['phone']['number'],
+                    'provider' => 'orange',
                     'type' => 'mobile',
                 ],
                 'address' => null,
@@ -3019,13 +3016,13 @@ class UssdController extends Controller
         ]);
 
         //  If we are not on TEST MODE then send SMS to Customer and Merchant
-        if (!$this->test_mode) {
+        //if (!$this->test_mode) {
             /*  Send the order as a summarised SMS to the merchant  */
             $merchantSMS = $this->order->smsOrderToMerchant();
 
             /*  Send the invoice receipt as a summarized SMS to the customer  */
             $customerSMS = $this->order->invoices()->first()->smsInvoiceReceiptToCustomer();
-        }
+        //}
 
         /*  If the payment status was successfull  */
         if ($this->payment_response['status']) {
