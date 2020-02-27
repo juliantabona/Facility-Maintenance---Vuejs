@@ -14,15 +14,15 @@ trait UssdInterfaceTraits
      *  Converts to the appropriate Api Response Format
      *
      */
-    public function convertToApiFormat($ussd_stores = null)
+    public function convertToApiFormat($ussd_interfaces = null)
     {
 
         try {
 
-            if( $ussd_stores ){
+            if( $ussd_interfaces ){
 
                 //  Transform the ussd stores
-                return new UssdInterfacesResource($ussd_stores);
+                return new UssdInterfacesResource($ussd_interfaces);
 
             }else{
 

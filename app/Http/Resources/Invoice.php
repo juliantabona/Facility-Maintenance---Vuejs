@@ -51,7 +51,7 @@ class Invoice extends JsonResource
             'invoice_parent_id' => $this->invoice_parent_id,
             'is_recurring' => $this->is_recurring,
             'recurring_settings' => $this->recurring_settings,
-            'meta' => $this->meta,
+            'metadata' => $this->metadata,
 
             //  Attributes
             'resource_type' => $this->resource_type,

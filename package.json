@@ -42,6 +42,7 @@
         "vue-carousel-3d": "^0.2.0",
         "vue-chartjs": "^3.5.0",
         "vue-clipboard2": "^0.3.0",
+        "vue-codemirror": "^4.0.6",
         "vue-froala-wysiwyg": "^2.9.1",
         "vue-full-calendar": "^2.7.0",
         "vue-lodash": "^2.0.0",

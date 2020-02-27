@@ -6,18 +6,13 @@ use App\Traits\CommonTraits;
 use App\Traits\TransactionTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'invoice' => 'App\Invoice',
-]);
 
 class Transaction extends Model
 {
     use Dataviewer, CommonTraits, TransactionTraits;
 
     protected $casts = [
-        'meta' => 'array',
+        'metadata' => 'array',
         'automatic' => 'boolean', //  Return the following 1/0 as true/false
     ];
 
@@ -35,7 +30,7 @@ class Transaction extends Model
         'owner_id', 'owner_type',
 
         /*  Meta Data  */
-        'meta'
+        'metadata'
 
     ];
 

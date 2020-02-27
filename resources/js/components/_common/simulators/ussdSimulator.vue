@@ -102,7 +102,7 @@
                     <Col :span="24" class="pr-2 pl-2 pb-2">
 
                         <Card>
-
+                            
                             <span class="font-weight-bold d-block">Customer Simulator</span>
 
                             <p class="mt-2">
@@ -292,6 +292,11 @@
             },
             hideUssdPopup(){
                 this.showUssdContentModal = false;
+            },
+            launchCreatorUssdSimulator(){
+                this.resetUssdSimulator();
+                this.handleUssdReply();
+                this.showUssdPopup();
             },
             launchCustomerUssdSimulator(){
                 this.resetUssdSimulator();

@@ -82,6 +82,10 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
         //  Store related resources
         Route::get('/stores', 'Api\UserController@getUserStores')->name('stores');
         Route::get('/stores/{store_id}', 'Api\UserController@getUserStore')->name('store')->where('store_id', '[0-9]+');
+
+        //  USSD Creator related resources
+        Route::get('/ussd-creators', 'Api\UserController@getUserUssdCreators')->name('ussd-creators');
+        Route::get('/ussd-creators/{ussd_creator_id}', 'Api\UserController@getUserUssdCreator')->name('ussd-creator')->where('ussd_creator_id', '[0-9]+');
     });
 
     /*********************************
@@ -123,6 +127,10 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             //  Store related resources
             Route::get('/stores', 'Api\UserController@getUserStores')->name('stores');
             Route::get('/stores/{store_id}', 'Api\UserController@getUserStore')->name('store')->where('store_id', '[0-9]+');
+
+            //  USSD Creator related resources
+            Route::get('/ussd-creators', 'Api\UserController@getUserUssdCreators')->name('ussd-creators');
+            Route::get('/ussd-creators/{ussd_creator_id}', 'Api\UserController@getUserUssdCreator')->name('ussd-creator')->where('ussd_creator_id', '[0-9]+');
         });
     });
 
@@ -740,6 +748,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     *********************************/
 
     Route::prefix('ussd')->group(function () {
+        Route::post('/creator', 'Api\UssdCreatorController@home')->name('ussd-creator-home');
         Route::post('/customer', 'Api\UssdController@home')->name('ussd-customer-home');
         Route::post('/merchant', 'Api\UssdMerchantController@merchantHome')->name('ussd-merchant-home');
         Route::post('/customer/online', 'Api\UssdController@redirectToOnline')->name('ussd-customer-home-online');
@@ -978,3 +987,42 @@ Route::get('downloadFile', 'Api\DownloadController@download');
 
 Route::get('download/invoices/{invoice_id}', 'Api\DownloadController@downloadInvoice');
 Route::get('download/quotations/{quotation_id}', 'Api\DownloadController@downloadQuotation');
+
+//  DELETEE EVERYTHING DOWN HERE THIS IS A TESTING SEECTION
+//  DELETEE EVERYTHING DOWN HERE THIS IS A TESTING SEECTION
+//  DELETEE EVERYTHING DOWN HERE THIS IS A TESTING SEECTION
+//  DELETEE EVERYTHING DOWN HERE THIS IS A TESTING SEECTION
+
+Route::get('/test/products', function(){
+
+    $products = [
+        [
+            "ID" => "1",
+            "Name" => "Product 1",
+            "Quantity" => "5",
+            "Price" => "250"
+        ],
+        [
+            "ID" => "2",
+            "Name" => "Product 2",
+            "Quantity" => "10",
+            "Price" => "350"
+        ],
+        [
+            "ID" => "3",
+            "Name" => "Product 3",
+            "Quantity" => "15",
+            "Price" => "550"
+        ]
+    ];
+
+    $data = [
+        'total' => 3,
+        'products' => $products
+    ];
+
+    $status = 200;
+
+    return response()->json($data, $status);
+    
+});

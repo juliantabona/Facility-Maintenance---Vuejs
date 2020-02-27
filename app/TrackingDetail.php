@@ -5,11 +5,6 @@ namespace App;
 use App\Traits\CommonTraits;
 use App\Traits\TrackingDetailTraits;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'fulfillment' => 'App\Fulfillment',
-]);
 
 class TrackingDetail extends Model
 {

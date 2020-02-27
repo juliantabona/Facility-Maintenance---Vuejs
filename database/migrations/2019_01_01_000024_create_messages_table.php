@@ -17,7 +17,7 @@ class CreateMessagesTable extends Migration
 
             /*  Message Details  */
             $table->string('text');
-            $table->json('meta');
+            $table->json('metadata');
             $table->unsignedInteger('user_id');
 
             /*  Ownership Information  */

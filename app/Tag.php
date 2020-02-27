@@ -6,11 +6,6 @@ use App\Traits\TagTraits;
 use App\Traits\CommonTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'product' => 'App\Product',
-]);
 
 class Tag extends Model
 {

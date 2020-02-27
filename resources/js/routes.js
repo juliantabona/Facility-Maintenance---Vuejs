@@ -26,9 +26,15 @@ let routes = [
         meta: { layout: 'Dashboard', middlewareAuth: true },
         component: require('./views/dashboard/overview/main.vue')
     },
-        /**************************************
-        *  INVOICES
-        **************************************/  
+    //  Ussd Creator
+    {
+        path: '/ussd-creators', name: 'ussd-creators',
+        meta: { layout: 'Dashboard', middlewareAuth: true },
+        component: require('./views/dashboard/ussd-creator/list/main.vue')
+    },
+    /**************************************
+    *  INVOICES
+    **************************************/  
     {
         //  Invoices
         path: '/invoices', name: 'invoices',

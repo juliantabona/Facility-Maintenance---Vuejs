@@ -7,12 +7,6 @@ use App\Traits\ContactTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'store' => 'App\Store',
-    'account' => 'App\Account',
-]);
 
 class Contact extends Model
 {

@@ -6,14 +6,6 @@ use App\Traits\EmailTraits;
 use App\Traits\CommonTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'user' => 'App\User',
-    'store' => 'App\Store',
-    'account' => 'App\Account',
-    'contact' => 'App\Contact',
-]);
 
 class Email extends Model
 {

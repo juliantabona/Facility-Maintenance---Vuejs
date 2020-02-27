@@ -166,6 +166,15 @@ class user extends JsonResource
                     'title' => 'Stores that this user has created or been added to as admin, staff, e.t.c',
                     'total' => $this->stores()->count(),
                 ],
+
+                //  Link to the users accounts
+                'oq:ussd_creators' => [
+                    'href' => ($this->id == auth('api')->user()->id)
+                                ? route('my-ussd-creators')
+                                    : route('ussd-creators', ['user_id' => $this->id]),
+                    'title' => 'Ussd creators that this user has created or been added to as admin, staff, e.t.c',
+                    'total' => $this->ussdCreators()->count(),
+                ],
                 
                 //  Link to the users recent activities
                 'oq:activities' => [

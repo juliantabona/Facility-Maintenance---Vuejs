@@ -8,15 +8,6 @@ use App\Traits\CommonTraits;
 use App\Traits\QuotationTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'user' => 'App\User',
-    'order' => 'App\Order',
-    'store' => 'App\Store',
-    'company' => 'App\Company',
-    'jobcard' => 'App\Jobcard',
-]);
 
 class Quotation extends Model
 {
@@ -78,7 +69,7 @@ class Quotation extends Model
         'merchant_id', 'merchant_type', 'merchant_info',
 
         /*  Meta Data  */
-        'meta',
+        'metadata',
 
         /*  Ownership Information  */
         'owner_id', 'owner_type',

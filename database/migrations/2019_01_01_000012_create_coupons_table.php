@@ -21,7 +21,7 @@ class CreateCouponsTable extends Migration
              $table->string('code');
              $table->string('type');
              $table->float('rate');
-             $table->json('meta');
+             $table->json('metadata');
              $table->timestampTz('start_date')->nullable();
              $table->timestampTz('end_date')->nullable();
 

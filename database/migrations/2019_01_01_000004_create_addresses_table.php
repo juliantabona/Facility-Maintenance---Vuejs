@@ -29,7 +29,7 @@ class CreateAddressesTable extends Migration
             $table->string('owner_type')->nullable();
 
             /*  Meta Data  */
-            $table->json('meta')->nullable();
+            $table->json('metadata')->nullable();
             
             /*  Timestamps  */
             $table->timestamps();

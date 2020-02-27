@@ -6,21 +6,13 @@ use App\Traits\CommonTraits;
 use App\Traits\AddressTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'user' => 'App\User',
-    'store' => 'App\Store',
-    'account' => 'App\Account',
-    'contact' => 'App\Contact',
-]);
 
 class Address extends Model
 {
     use Dataviewer, CommonTraits, AddressTraits;
     
     protected $casts = [
-        'meta' => 'array',
+        'metadata' => 'array',
         'default' => 'boolean', //  Return the following 1/0 as true/false
     ];
 
@@ -38,7 +30,7 @@ class Address extends Model
         'owner_id', 'owner_type',
 
         /*  Meta Data  */
-        'meta'
+        'metadata'
 
     ];
 

@@ -23,6 +23,7 @@ class UssdInterface extends JsonResource
             'call_to_action' => $this->call_to_action,
             'code' => $this->code,
             'live_mode' => $this->live_mode,
+            'metadata' => $this->metadata,
             
             /*  Attributes */
             'customer_access_code' => $this->customer_access_code,

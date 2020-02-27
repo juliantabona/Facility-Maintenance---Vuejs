@@ -25,6 +25,7 @@ class UssdInterface extends Model
      * @var string
      */
     protected $casts = [
+        'metadata' => 'array',
         'live_mode' => 'boolean', //  Return the following 1/0 as true/false
     ];
 
@@ -36,7 +37,9 @@ class UssdInterface extends Model
     protected $fillable = [
 
         /*  Basic Info  */
-        'name', 'about_us', 'contact_us', 'call_to_action', 'code', 'live_mode',
+        'name', 'about_us', 'contact_us', 'call_to_action', 'code', 'live_mode', 
+        
+        'metadata',
 
         /*  Ownership Info  */
         'owner_id', 'owner_type'

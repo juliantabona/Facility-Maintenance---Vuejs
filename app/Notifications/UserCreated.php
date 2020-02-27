@@ -5,11 +5,6 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\BroadcastMessage;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'App\User' => 'App\User',
-]);
 
 class UserCreated extends Notification
 {

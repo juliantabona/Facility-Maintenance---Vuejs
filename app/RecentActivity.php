@@ -7,32 +7,6 @@ use App\Traits\CommonTraits;
 use App\AdvancedFilter\Dataviewer;
 use App\Traits\RecentActivityTraits;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'tax' => 'App\Tax',
-    'tag' => 'App\Tag',
-    'user' => 'App\User',
-    'order' => 'App\Order',
-    'phone' => 'App\Phone',
-    'store' => 'App\Store',
-    'refund' => 'App\Review',
-    'coupon' => 'App\Coupon',
-    'review' => 'App\Rating',
-    'comment' => 'App\Comment',
-    'invoice' => 'App\Invoice',
-    'jobcard' => 'App\Jobcard',
-    'company' => 'App\Company',
-    'product' => 'App\Product',
-    'discount' => 'App\Discount',
-    'category' => 'App\Category',
-    'priority' => 'App\Priority',
-    'document' => 'App\Document',
-    'quotation' => 'App\Quotation',
-    'costcenter' => 'App\CostCenter',
-    'appointment' => 'App\Appointment',
-    'transaction' => 'App\Transaction',
-]);
 
 class RecentActivity extends Model
 {

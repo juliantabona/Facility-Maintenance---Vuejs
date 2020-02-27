@@ -23,7 +23,7 @@ class CreateTransactionsTable extends Migration
             $table->float('payment_amount')->default(0);
 
             /*  Meta Data  */
-            $table->json('meta')->nullable();
+            $table->json('metadata')->nullable();
 
             /*  Ownership Information  */
             $table->unsignedInteger('owner_id')->nullable();

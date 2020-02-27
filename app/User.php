@@ -348,6 +348,15 @@ class User extends Authenticatable
     }
 
     /*
+     *  Returns all the Ussd Interfaces the user has been allocated to. Any allocation will 
+     *  pass as a valid Ussd Interface to retrieve on this instance.
+     */
+    public function ussdCreators()
+    {
+        return $this->morphedByMany('App\UssdInterface', 'owner', 'user_allocations')->withTimestamps();
+    }
+
+    /*
      *  Checks if a given user id matches the current user model id. This check
      *  confirms if that user id provided owns the user model resource.
      */

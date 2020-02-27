@@ -10,10 +10,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
-Relation::morphMap([
-    'account' => 'App\Account',
-]);
-
 class Store extends Model
 {
     use Dataviewer, CommonTraits, StoreTraits;
@@ -452,7 +448,7 @@ class Store extends Model
                 //  Select all the transation details and make sure the owner id reflects the (invoice id) not the (order id)
                 ->select(
                     'transactions.type', 'transactions.status', 'transactions.automatic', 'transactions.payment_type',
-                    'transactions.payment_amount', 'transactions.meta', //'invoices.owner_id as order_id', 'invoices.id as invoice_id',
+                    'transactions.payment_amount', 'transactions.metadata', //'invoices.owner_id as order_id', 'invoices.id as invoice_id',
                     'transactions.created_at', 'transactions.updated_at'
                 );
     }

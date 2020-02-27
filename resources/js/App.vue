@@ -56,6 +56,40 @@
   .border-bottom-dashed{
     border-bottom: 1px dashed #dee2e6 !important;
   }
+  
+  .editable-content-field{
+    width: 100%;
+    display: block;
+    overflow-y:auto;
+    min-height:33px;
+    resize: vertical;
+    line-height: 1.5;
+    color: #606266;
+    padding: 5px 15px;
+    font-size: inherit;
+    border-radius: 4px;
+    background-image: none;
+    box-sizing: border-box;
+    background-color: #fff;
+    border: 1px solid #dcdfe6;
+    -webkit-box-sizing: border-box;
+    -webkit-transition: border-color .2s cubic-bezier(.645,.045,.355,1);
+    transition: border-color .2s cubic-bezier(.645,.045,.355,1);
+  }
+
+  .editable-content-field.medium-height{
+    min-height: 90px;
+  }
+
+  .editable-content-field > .dynamic-content-label{
+    width: auto;
+    height: 20px;
+    margin: 0px 4px;
+    padding: 4px 8px;
+    border-radius: 2px;
+    color: rgb(45, 140, 240);
+    background-color: rgb(220, 237, 255);
+  }
 
 </style>
 

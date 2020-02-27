@@ -6,15 +6,6 @@ use App\Traits\CommonTraits;
 use App\Traits\DocumentTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'user' => 'App\User',
-    'order' => 'App\Order',
-    'store' => 'App\Store',
-    'product' => 'App\Product',
-    'company' => 'App\Company',
-]);
 
 class Document extends Model
 {

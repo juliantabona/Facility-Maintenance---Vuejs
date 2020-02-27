@@ -37,7 +37,11 @@ class Api {
                 .then(response => {
                     resolve(response);
                 })
-                .catch(({response}) => {
+                .catch(response => {
+
+                    console.log('Error 1 Response!!!!');
+                    console.log(response);
+                    
                     if (response.status === 401) {
                         console.log('Api.js - User not authenticated, preparing to logout. url: '+url);
                         auth.logout();
@@ -58,8 +62,9 @@ class Api {
                             desc: response.data.message || 'Check your console for more information'
                         });
                       }
-    
+                      
                     reject(response);
+
                 });
         });
     }

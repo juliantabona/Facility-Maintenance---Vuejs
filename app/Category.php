@@ -6,14 +6,6 @@ use App\Traits\CommonTraits;
 use App\Traits\CategoryTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'store' => 'App\Store',
-    'product' => 'App\Product',
-    'jobcard' => 'App\Jobcard',
-    'appointment' => 'App\Appointment',
-]);
 
 class Category extends Model
 {

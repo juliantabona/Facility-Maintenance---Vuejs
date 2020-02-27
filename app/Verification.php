@@ -6,12 +6,6 @@ use App\Traits\CommonTraits;
 use App\Traits\VerificationTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'phone' => 'App\Phone',
-    'email' => 'App\Email',
-]);
 
 class Verification extends Model
 {

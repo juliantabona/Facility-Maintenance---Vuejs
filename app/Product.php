@@ -7,13 +7,6 @@ use App\Traits\CommonTraits;
 use App\Traits\ProductTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'store' => 'App\Store',
-    'account' => 'App\Account',
-    'ussd_interface' => 'App\UssdInterface',
-]);
 
 class Product extends Model
 {

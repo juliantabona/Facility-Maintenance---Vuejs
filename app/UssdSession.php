@@ -6,11 +6,6 @@ use Illuminate\Support\Str;
 use App\Traits\CommonTraits;
 use App\Traits\UssdSessionTraits;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'store' => 'App\Store'
-]);
 
 class UssdSession extends Model
 {

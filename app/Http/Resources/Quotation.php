@@ -46,7 +46,7 @@ class Quotation extends JsonResource
             'merchant_id' => $this->merchant_id,
             'merchant_type' => $this->merchant_type,
             'merchant_info' => $this->merchant_info,
-            'meta' => $this->meta,
+            'metadata' => $this->metadata,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 

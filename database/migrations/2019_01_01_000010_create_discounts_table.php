@@ -20,7 +20,7 @@ class CreateDiscountsTable extends Migration
             $table->string('description');
             $table->string('type');
             $table->float('rate');
-            $table->json('meta');
+            $table->json('metadata');
 
             /*  Ownership Information  */
             $table->unsignedInteger('owner_id')->nullable();

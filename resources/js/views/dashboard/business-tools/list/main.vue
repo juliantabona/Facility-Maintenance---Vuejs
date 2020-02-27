@@ -35,6 +35,11 @@
         border: 1px solid #946100;
     }
 
+    .business-tool-card >>> .image-box.sky-blue-bg{
+        background: #24aaf9;
+        border: 1px solid #006fb1;
+    }
+
     .business-tool-card >>> .image-box.light-blue-bg{
         background: #07b7c1;
         border: 1px solid #00828a;
@@ -156,6 +161,18 @@
                         <div>
                             <span class="d-block font-weight-bold mt-2 heading" style=" font-size: 18px; ">Jobcards</span>
                             <span class="d-block mt-2 body" style="font-size:12px;">Track jobs and keep customers conveniently informed via sms/email</span>
+                        </div>
+                    </Card>
+                </Col>
+                <Col :span="8" class="mt-2 mb-0 pl-0">
+                    <Card class="business-tool-card"
+                        @click.native="$router.push({name:'ussd-creators'})">
+                        <div class="image-box sky-blue-bg d-block float-left">
+                            <img src="/images/assets/icons/checklist.svg" class="tool-image">
+                        </div>
+                        <div>
+                            <span class="d-block font-weight-bold mt-2 heading" style=" font-size: 18px; ">USSD Creator</span>
+                            <span class="d-block mt-2 body" style="font-size:12px;">Create custom user journeys for your customers using our USSD creator</span>
                         </div>
                     </Card>
                 </Col>

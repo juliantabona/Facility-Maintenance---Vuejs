@@ -6,13 +6,6 @@ use App\Traits\CommonTraits;
 use App\Traits\SettingTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'user' => 'App\User',
-    'store' => 'App\Store',
-    'company' => 'App\Company',
-]);
 
 class Setting extends Model
 {

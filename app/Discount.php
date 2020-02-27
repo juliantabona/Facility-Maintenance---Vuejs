@@ -5,23 +5,13 @@ namespace App;
 use App\Traits\CommonTraits;
 use App\Traits\DiscountTraits;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'store' => 'App\Store',
-    'order' => 'App\Order',
-    'product' => 'App\Product',
-    'company' => 'App\Company',
-    'invoice' => 'App\Invoice',
-    'quotation' => 'App\Quotation',
-]);
 
 class Discount extends Model
 {
     use CommonTraits, DiscountTraits;
     
     protected $casts = [
-        'meta' => 'array',
+        'metadata' => 'array',
     ];
 
     /**
@@ -32,7 +22,7 @@ class Discount extends Model
     protected $fillable = [
 
         /*  Discount Details  */
-        'name', 'description', 'type', 'rate', 'meta',
+        'name', 'description', 'type', 'rate', 'metadata',
 
         /*  Ownership Information  */
         'owner_id', 'owner_type',

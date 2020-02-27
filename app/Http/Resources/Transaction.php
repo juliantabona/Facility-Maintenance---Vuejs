@@ -26,7 +26,7 @@ class Transaction extends JsonResource
             'invoice_id' => $this->invoice_id ?? null,
             'owner_id' => $this->owner_id,
             'owner_type' => $this->owner_type,
-            'meta' => $this->meta,
+            'metadata' => $this->metadata,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 

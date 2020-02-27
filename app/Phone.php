@@ -5,14 +5,6 @@ namespace App;
 use App\Traits\PhoneTraits;
 use App\Traits\CommonTraits;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'user' => 'App\User',
-    'store' => 'App\Store',
-    'account' => 'App\Account',
-    'contact' => 'App\Contact',
-]);
 
 class Phone extends Model
 {

@@ -6,13 +6,6 @@ use App\Traits\CommonTraits;
 use App\Traits\ReviewTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'store' => 'App\Store',
-    'order' => 'App\Order',
-    'product' => 'App\Product'
-]);
 
 class Review extends Model
 {

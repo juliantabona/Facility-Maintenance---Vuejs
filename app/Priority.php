@@ -6,11 +6,6 @@ use App\Traits\CommonTraits;
 use App\Traits\PriorityTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'jobcard' => 'App\Jobcard',
-]);
 
 class Priority extends Model
 {

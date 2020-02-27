@@ -6,20 +6,13 @@ use App\Traits\CommonTraits;
 use App\Traits\MessageTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'user' => 'App\User',
-    'store' => 'App\Store',
-    'order' => 'App\Order',
-]);
 
 class Message extends Model
 {
     use Dataviewer, CommonTraits, MessageTraits;
 
     protected $casts = [
-        'meta' => 'array',
+        'metadata' => 'array',
     ];
 
     /**
@@ -30,7 +23,7 @@ class Message extends Model
     protected $fillable = [
 
         /*  Message Details  */
-        'text', 'meta', 'user_id',
+        'text', 'metadata', 'user_id',
 
         /*  Ownership Information  */
         'owner_id', 'owner_type',

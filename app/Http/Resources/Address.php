@@ -26,7 +26,7 @@ class Address extends JsonResource
             'province' => $this->province,
             'city' => $this->city,
             'postal_or_zipcode' => $this->postal_or_zipcode,
-            'meta' => $this->meta,
+            'metadata' => $this->metadata,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 

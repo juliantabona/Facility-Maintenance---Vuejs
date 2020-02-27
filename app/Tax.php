@@ -6,16 +6,6 @@ use App\Traits\TaxTraits;
 use App\Traits\CommonTraits;
 use App\AdvancedFilter\Dataviewer;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'store' => 'App\Store',
-    'order' => 'App\Order',
-    'product' => 'App\Product',
-    'company' => 'App\Company',
-    'invoice' => 'App\Invoice',
-    'quotation' => 'App\Quotation',
-]);
 
 class Tax extends Model
 {

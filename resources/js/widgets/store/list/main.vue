@@ -150,9 +150,6 @@
                 //  Console log to acknowledge the start of api process
                 console.log('Start getting stores...');
 
-                //  Additional data to eager load along with the store found
-                var connections = '';
-
                 //  Use the api call() function located in resources/js/api.js
                 api.call('get', this.user._links['oq:stores'].href)
                     .then(({data}) => {

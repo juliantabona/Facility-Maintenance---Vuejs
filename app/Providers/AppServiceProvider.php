@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +25,40 @@ class AppServiceProvider extends ServiceProvider
             Reference: https://laravel.com/docs/5.7/eloquent-resources#concept-overview
         */
         Resource::withoutWrapping();
+
+        Relation::morphMap([
+            'account' => 'App\Account',
+            'address' => 'App\Address',
+            'category' => 'App\Category',
+            'contact' => 'App\Contact',
+            'cost_center' => 'App\CostCenter',
+            'coupon' => 'App\Coupon',
+            'discount' => 'App\Discount',
+            'document' => 'App\Document',
+            'email' => 'App\Email',
+            'fulfillment' => 'App\Fulfillment',
+            'invoice' => 'App\Invoice',
+            'message' => 'App\Message',
+            'order' => 'App\Order',
+            'phone' => 'App\Phone',
+            'priority' => 'App\Priority',
+            'product' => 'App\Product',
+            'quotation' => 'App\Quotation',
+            'recent_activity' => 'App\RecentActivity',
+            'review' => 'App\Review',
+            'review' => 'App\Review',
+            'setting' => 'App\Setting',
+            'store' => 'App\Store',
+            'tag' => 'App\Tag',
+            'tax' => 'App\Tax',
+            'trackingDetail' => 'App\TrackingDetail',
+            'transaction' => 'App\Transaction',
+            'user' => 'App\User',
+            'ussdInterface' => 'App\UssdInterface',
+            'ussdSession' => 'App\UssdSession',
+            'variable' => 'App\Variable',
+            'verification' => 'App\Verification'
+        ]);
     }
 
     /**

@@ -5,11 +5,6 @@ namespace App;
 use App\Traits\CommonTraits;
 use App\Traits\FulfillmentTraits;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-Relation::morphMap([
-    'order' => 'App\Order',
-]);
 
 class Fulfillment extends Model
 {

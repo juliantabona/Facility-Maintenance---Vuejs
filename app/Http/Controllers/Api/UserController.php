@@ -434,6 +434,77 @@ class UserController extends Controller
         }
     }
 
+    public function getUserUssdCreators(Request $request)
+    {
+        //  Get the specified users id or use the authenticated users id
+        $user_id = $request->route('user_id') ?? auth('api')->user()->id;
+
+        //  Get the user
+        $user = User::findOrFail($user_id);
+
+        //  Get the user ussd creators (i.e ussd interfaces)
+        $ussdCreators = $user->ussdCreators()->paginate() ?? null;
+        
+        //  Check if the ussd creators (i.e ussd interfaces) exists
+        if ($ussdCreators) {
+
+            //  Check if the user is authourized to view the user ussd creators (i.e ussd interfaces)
+            if ($this->user->can('view', $user)) {
+
+                //  Return an API Readable Format of the ussdCreators Instance
+                return ( new \App\UssdInterface() )->convertToApiFormat($ussdCreators);
+                
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+
+            }
+        } else {
+
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
+    public function getUserUssdCreator(Request $request)
+    {
+        //  Get the specified users id or use the authenticated users id
+        $user_id = $request->route('user_id') ?? auth('api')->user()->id;
+
+        //  Get the ussd creator id (i.e ussd interface id)
+        $ussd_interface_id = $request->route('store_id');
+
+        //  Get the user
+        $user = User::findOrFail($user_id);
+
+        //  Get the user store
+        $ussdCreator = $user->ussdCreators()->where('ussd_interface.id', $ussd_interface_id)->first() ?? null;
+
+        //  Check if the ussd creator (i.e ussd interface) exists
+        if ($ussdCreator) {
+
+            //  Check if the user is authourized to view the user store
+            if ($this->user->can('view', $user)) {
+
+                //  Return an API Readable Format of the Store Instance
+                return $ussdCreator->convertToApiFormat();
+
+            } else {
+
+                //  Not Authourized
+                return oq_api_not_authorized();
+
+            }
+        } else {
+
+            //  Not Found
+            return oq_api_notify_no_resource();
+
+        }
+    }
+
     /*
     public function index()
     {
