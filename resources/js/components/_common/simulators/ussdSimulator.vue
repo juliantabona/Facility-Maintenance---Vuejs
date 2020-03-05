@@ -103,6 +103,37 @@
 
                         <Card>
                             
+                            <span class="font-weight-bold d-block">Application Simulator</span>
+
+                            <p class="mt-2">
+                                <span class="d-block">
+                                    Inform your customers to Dial 
+                                    <span class="font-weight-bold text-primary">{{ localUssdInterface.customer_access_code}}</span> 
+                                     to visit your Ussd Appllication on their mobile phones. Click <span class="font-weight-bold text-primary">Launch Simulator</span> 
+                                     to see how your customers view your store.
+                                </span>
+                            </p>
+
+                            <!-- Launch Simulator button -->
+                            <div class="clearfix mt-2">
+
+                                <Poptip trigger="hover" 
+                                        class="float-right"
+                                        placement="top-end"
+                                        word-wrap width="250" 
+                                        content="Launch Simulator to have a glimpse of what your customers see when visiting your store">
+                                    <Button type="success" size="small" @click.native="launchCreatorUssdSimulator()">Launch Simulator</Button>
+                                </Poptip>
+                            </div>
+
+                        </Card>
+
+                    </Col>
+
+                    <Col :span="24" class="pr-2 pl-2 pb-2">
+
+                        <Card>
+                            
                             <span class="font-weight-bold d-block">Customer Simulator</span>
 
                             <p class="mt-2">
@@ -374,6 +405,8 @@
                     testMode: true
                 };
 
+                self.$emit('loading', true);
+
                 //  Start loader
                 self.isSendingUssdResponse = true;
 
@@ -384,7 +417,11 @@
                         //  Stop loader
                         self.isSendingUssdResponse = false;
 
-                        self.ussdResponse = data.substr(4);
+                        self.ussdResponse = (data || {}).response.substr(4);
+
+                        self.$emit('response', data);
+
+                        self.$emit('loading', false);
 
                         /*  If the first 3 characters equal the text "END"  */
                         if( data.substr(3) == 'END' ){
@@ -402,6 +439,8 @@
                     .catch(response => { 
                     
                         console.log(response);
+
+                        self.$emit('loading', false);
 
                         //  Stop loader
                         self.isSendingUssdResponse = false;     

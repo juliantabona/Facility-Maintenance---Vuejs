@@ -49,6 +49,10 @@
     z-index:1 !important;
   }
 
+  .regex-input input{
+    color: #3490dc !important;
+  }
+
   .border-top-dashed{
     border-top: 1px dashed #dee2e6 !important;
   }
@@ -61,7 +65,6 @@
     width: 100%;
     display: block;
     overflow-y:auto;
-    min-height:33px;
     resize: vertical;
     line-height: 1.5;
     color: #606266;
@@ -77,8 +80,17 @@
     transition: border-color .2s cubic-bezier(.645,.045,.355,1);
   }
 
-  .editable-content-field.medium-height{
+  .editable-content-field-small{
+    min-height:33px;
+    resize: none;
+  }
+
+  .editable-content-field-medium{
     min-height: 90px;
+  }
+
+  .editable-content-field-large{
+    min-height: 120px;
   }
 
   .editable-content-field > .dynamic-content-label{

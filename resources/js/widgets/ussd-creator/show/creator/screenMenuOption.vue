@@ -67,11 +67,19 @@
 
             <Col :span="24">
 
-                <!-- Screen Menu Name  -->
-                <span :class="(screen.title == (activeScreen || {}).title ? 'text-primary ': '' ) + 'screen-name cut-text'" 
-                      @click="handleSelectedScreen(index)">
-                    {{ localScreen.title }}
-                </span>
+                <div>
+
+                    <!-- Screen Menu Name  -->
+                    <span :class="(screen.title == (activeScreen || {}).title ? 'text-primary ': '' ) + 'screen-name cut-text'" 
+                        @click="handleSelectedScreen(index)">
+                        {{ localScreen.title }}
+                    </span>
+
+                    <Icon v-if="screen.first_display_screen" type="ios-pin-outline" size="20" 
+                          :style="{ position: 'absolute', top: 0, right: 0 }" 
+                          class="text-success font-weight-bold" />
+
+                </div>
 
                 <div class="screen-toolbox">
 

@@ -993,7 +993,7 @@ Route::get('download/quotations/{quotation_id}', 'Api\DownloadController@downloa
 //  DELETEE EVERYTHING DOWN HERE THIS IS A TESTING SEECTION
 //  DELETEE EVERYTHING DOWN HERE THIS IS A TESTING SEECTION
 
-Route::get('/test/products', function(){
+Route::get('/test/items', function(){
 
     $products = [
         [

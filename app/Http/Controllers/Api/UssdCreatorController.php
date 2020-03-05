@@ -7,15 +7,21 @@ use App\Http\Controllers\Controller;
 
 class UssdCreatorController extends Controller
 {
+    private $log;
     private $text;
+    private $test;
     private $level;
     private $screen;
     private $ussdBuilder;
     private $ussdInterface;
+    private $errorEncountered;
     private $dynamic_data_storage;
 
     public function __construct(Request $request)
     {
+        //  Check if we are on TEST MODE
+        $this->test_mode = ($request->get('testMode') == 'true' || $request->get('testMode') == '1') ? true : false;
+
         //  Get the Ussd TEXT value (User Response)
         $this->text = $request->get('text');
 
@@ -25,16 +31,30 @@ class UssdCreatorController extends Controller
         //  Get the Ussd builder data
         $this->ussdBuilder = $this->ussdInterface->metadata;
 
+        //  Initiate the dynamic data storage to an empty array
+        $this->dynamic_data_storage = [];
+
+        $this->errorEncountered = false;
+
+        //  Set the default level
         $this->level = 1;
 
-        $this->dynamic_data_storage = [];
+        //  Initiate the log to an empty array
+        $this->log = [];
     }
 
     public function home()
     {
         $this->manageGoBackRequests();
 
+        //  Start the process of building the USSD Application
         $response = $this->startBuildingUssd();
+
+        //  If we encountered an error at any point while building the USSD Application
+        if ($this->errorEncountered == true) {
+            //  Display the technical difficulties error page to notify the user of the issue
+            $response = $this->displayTechnicalDifficultiesErrorPage();
+        }
 
         /*
         $response .= "\n" . '_______________________________' ;
@@ -43,16 +63,35 @@ class UssdCreatorController extends Controller
         $response .= "\n" . 'DYNAMIC = ' . json_encode($this->dynamic_data_storage);
         */
 
-        return response($response)->header('Content-Type', 'text/plain');
+        if( $this->test_mode ){
+
+            //  Set an info log for the created variable and its dynamic data value
+            //  $this->logWarning('This is a warning');
+            //  $this->logError('This is an error');
+
+            return response(['response' => $response, 'logs' => $this->log])->header('Content-Type', 'text/plain');
+
+        }else{
+
+            return response($response)->header('Content-Type', 'text/plain');
+
+        }
+
     }
 
     public function startBuildingUssd()
     {
+        //  Set a log that the build process has started
+        $this->logInfo('Building USSD Application');
+
         //  Check if the builder is available and ready for use
         if ($this->builderIsReady()) {
             //  Start building and displaying the ussd screens
             return $this->setupUssdScreens();
         } else {
+            //  Set a log that the build process has started
+            $this->logError('Error building the USSD Application. The metadata required to build the application was not found');
+
             //  Display a custom error to notify the user of the issue
             return $this->displayCustomErrorPage('Sorry we cannot build the USSD Application. This is because we could not find any data to build');
         }
@@ -79,8 +118,11 @@ class UssdCreatorController extends Controller
         if (is_array($this->ussdBuilder)) {
             $response = $this->determineScreenToDisplay();
         } else {
+            //  Set a warning log that we could not find any screens
+            $this->logWarning('No screens found');
+
             //  Display a custom error to notify the user of the issue
-            $response = $this->displayCustomErrorPage('Sorry we cannot build the USSD Application. This is because the data structure is incorrect');
+            $response = $this->displayCustomErrorPage('Sorry no screens were found');
         }
 
         return $response;
@@ -90,57 +132,94 @@ class UssdCreatorController extends Controller
     {
         //  If we are displaying the first screen (i.e we haven't displayed anything yet)
         if ($this->level == 1) {
-            //  Select the first screen on the ussd builder by default
-            $this->screen = $this->ussdBuilder[0];
-        }
+            //  Set an info log that the we are setting up the first screen
+            $this->logInfo('Setting up the first screen');
 
-        //  Check if the screen data exists
-        if (empty($this->screen)) {
-            //  Display a custom error to notify the user of the issue
-            return $this->displayCustomErrorPage('Sorry we cannot build the USSD Application. This is because the screen data was not found');
-        }
+            //  Get the first display screen (The one specified by the user)
+            $this->screen = collect($this->ussdBuilder)->where('first_display_screen', true)->first() ?? null;
 
-        //  Build the current screen display and its store its reply attributes and data
-        $response = $this->buildScreenDisplay();
+            //  If did not manage to get the first display screen specified by the user
+            if (!$this->screen) {
+                //  Set a warning log that the default starting screen was not found
+                $this->logWarning('Default starting screen was not found');
+
+                //  Set an info log that we will use the first available screen
+                $this->logInfo('Set the first available screen as the default starting screen');
+
+                //  Select the first screen on the ussd builder by default
+                $this->screen = $this->ussdBuilder[0];
+            }
+
+            //  Set an info log for the first selected screen
+            $this->logInfo('Selected <span class="text-primary">'.$this->screen['title'].'</span> as the first screen');
+
+        //  If we are displaying any other screen except the first screen
+        } else {
+            //  Check if the screen data exists
+            if (!empty($this->screen)) {
+                //  Set an info log that we are linking to the current screen
+                $this->logInfo('Linking to <span class="text-primary">'.$this->screen['title'].'</span>');
+            } else {
+                //  Set a warning log that the linked screen could not be found
+                $this->logWarning('Linked screen could not be found');
+
+                //  Display a custom error to notify the user of the issue
+                return $this->displayCustomErrorPage('Sorry could not find the linked screen');
+            }
+        }
 
         /* If the user responses are greater than the number of screens displayed, then we need
-         *  to determine whether or not we can access the follow-up screens to match the user
-         *  responses e.g:
-         *
-         *  At level (0) the number of user responses = 0 which means we display screen 1
-         *  At level (1) the number of user responses = 1 which means we display screen 2 (Since we have screen 1 response)
-         *  At level (2) the number of user responses = 2 which means we display screen 3 (Since we have screen 2 response)
-         *
-         */
+        *  to determine whether or not we can access the follow-up screens to match the user
+        *  responses e.g:
+        *
+        *  At level (1) the number of user responses = 0 which means we display screen 1
+        *  At level (2) the number of user responses = 1 which means we display screen 2 (Since we have screen 1 response)
+        *  At level (3) the number of user responses = 2 which means we display screen 3 (Since we have screen 2 response)
+        *
+        */
 
+        //  Check if the user has already responded to the current display screen
         if ($this->completedLevel($this->level)) {
-            //  If the screen uses dynamic data (e.g via an API)
-            if ($this->screen['is_dynamic'] == true) {
+
+            //  Get the users response
+            $user_response = $this->getResponseFromLevel($this->level);   //  John Doe
+
+            //  Set an info log that the user has responded to the current screen and show the input value
+            $this->logInfo('User has responded to <span class="text-primary">'.$this->screen['title'].'</span> with <span class="text-success">' . $user_response .'</span>');
+
+            //  If the screen uses API's
+            if ($this->screen['use_apis'] == true) {
+                //  If the screen does not use API's
             } else {
-                $user_response = $this->getResponseFromLevel($this->level);   //  John Doe
-
                 if ($this->screen['content']['reply_type'] == 'Select Option') {
-                    $user_response = (int) $user_response;   //  e.g 1, 2 or 3 e.t.c
-                    $available_screen_options = $this->screen['content']['select_reply']['static_options'] ?? [];
-                    $number_of_available_screen_options = count($available_screen_options);
+                    //  If the screen select reply uses dynamic information
+                    if ($this->screen['content']['select_reply']['is_dynamic'] == true) {
+                        //  DO THE SELECT DYNAMIC STUFF HERE
 
-                    //  Make sure that the user did not select an incorrect option
-                    if ($user_response > $number_of_available_screen_options || $user_response < 0) {
-                        //  Display a custom error (with go back option) to notify the user of the issue
-                        return $this->displayCustomGoBackPage("You selected an incorrect option. Please try again.\n");
+                    //  If the screen select reply uses static information
+                    } else {
+                        $user_response = (int) $user_response;   //  e.g 1, 2 or 3 e.t.c
+                        $available_screen_options = $this->screen['content']['select_reply']['static_options'] ?? [];
+                        $number_of_available_screen_options = count($available_screen_options);
+
+                        //  Make sure that the user did not select an incorrect option
+                        if ($user_response > $number_of_available_screen_options || $user_response < 0) {
+                            //  Display a custom error (with go back option) to notify the user of the issue
+                            return $this->displayCustomGoBackPage("You selected an incorrect option. Please try again.\n");
+                        }
+
+                        $selected_option = $available_screen_options[$user_response - 1];
+
+                        //  Get the current selected option value and set it as the dynamic data value
+                        $dynamic_data_value = [
+                            'input' => $user_response,
+                            'name' => $selected_option['name'],
+                            'value' => $selected_option['value'] ?? $selected_option['name'],
+                        ] ?? null;  //  e.g Buy Tickets
+
+                        //  Get the next screen link
+                        $next_screen = $available_screen_options[$user_response - 1]['next_screen'] ?? null;  //  e.g Tickets
                     }
-
-                    $selected_option = $available_screen_options[$user_response - 1];
-
-                    //  Get the current selected option value and set it as the dynamic data value
-                    $dynamic_data_value = [
-                        'input' => $user_response,
-                        'name' => $selected_option['name'],
-                        'value' => $selected_option['value'] ?? $selected_option['name'],
-                    ] ?? null;  //  e.g Buy Tickets
-
-                    //  Get the next screen link
-                    $next_screen = $available_screen_options[$user_response - 1]['next_screen'] ?? null;  //  e.g Tickets
                 }
 
                 if ($this->screen['content']['reply_type'] == 'Input Value') {
@@ -183,6 +262,14 @@ class UssdCreatorController extends Controller
                     }
                 }
             }
+        }else{
+
+            //  Build the current screen display and store its reply attributes and data
+            $response = $this->buildScreenDisplay();
+            
+            //  Set an info log that the user has not responded to the current screen
+            $this->logInfo('User has not yet responded to <span class="text-primary">'.$this->screen['title'].'</span>');
+
         }
 
         return $response;
@@ -190,10 +277,22 @@ class UssdCreatorController extends Controller
 
     public function buildScreenDisplay()
     {
-        //  If the screen uses dynamic data (e.g via an API)
-        if ($this->screen['is_dynamic'] == true) {
-            //  If the screen does not use dynamic data (simple screen)
+        //  Set an info log that we are building the current screen
+        $this->logInfo('Start building <span class="text-primary">'.$this->screen['title'].'</span>');
+
+        //  If the screen uses API's
+        if ($this->screen['use_apis'] == true) {
+
+            //  Set an info log that the current screen uses API'S
+            $this->logInfo('<span class="text-primary">'.$this->screen['title'].'</span> uses API\'s');
+
+            //  DO THE API STUFF HERE
+
+        //  If the screen does not use API's (simple screen)
         } else {
+            //  Set an info log that the current screen does not use API'S
+            $this->logInfo('<span class="text-primary">'.$this->screen['title'].'</span> does not use API\'s');
+
             //  Build the screen information using the screen content
             $response = $this->buildScreenContent($this->screen['content']);
         }
@@ -203,31 +302,42 @@ class UssdCreatorController extends Controller
 
     public function buildScreenContent($content)
     {
-        $description_uses_code_editor_mode = $content['description']['code_editor_mode'] ?? '';
+        $description_uses_code_editor_mode = $content['description']['code_editor_mode'] ?? false;
 
-        if( $description_uses_code_editor_mode ){
+        //  If the current content instructions/description uses the PHP Code Editor
+        if ($description_uses_code_editor_mode == true) {
+            //  Set an info log that the current screen uses the PHP Code Editor to build screen instructions
+            $this->logInfo('<span class="text-primary">'.$this->screen['title'].'</span> uses the PHP Code Editor to build instructions');
 
             //  Get the screen description code otherwise default to a return statement that returns an empty string
-            $screen_text = $content['description']['code_editor_text'] ?? "return ''";
+            $screen_instruction_text = $content['description']['code_editor_text'] ?? "return '';";
 
-        }else{    
+            
+        //  If the current content instructions/description does not use the PHP Code Editor
+        } else {
+            //  Set an info log that the current screen uses does not use the PHP Code Editor to build screen instructions
+            $this->logInfo('<span class="text-primary">'.$this->screen['title'].'</span> does not use the PHP Code Editor to build instructions');
 
             //  Get the screen description text otherwise default to an empty string
-            $screen_text = $content['description']['text'] ?? '';
-
+            $screen_instruction_text = $content['description']['text'] ?? '';
         }
 
+        //  Build the screen instructions / description
+        $screen_instructions = $this->replaceTextWithDynamicData($screen_instruction_text, $description_uses_code_editor_mode);
+
         //  Initialize the screen options to an empty string
-        $screen_options = '';
+        $available_screen_action = '';
 
         //  If the screen content must display select options
         if ($content['reply_type'] == 'Select Option') {
             //  Add a line break before showing the options
-            $screen_options .= "\n";
+            $available_screen_action .= "\n";
 
             //  If the select options are dynamic
             if ($content['select_reply']['is_dynamic'] == true) {
-                //  If the select options are static
+                //  DO THE DYNAMIC OPTIONS STUFF HERE
+
+            //  If the select options are static
             } else {
                 //  Get the static options
                 $options = $content['select_reply']['static_options'];
@@ -240,37 +350,54 @@ class UssdCreatorController extends Controller
                     $option = ($option['name'] ? $option['name'] : 'No option');
 
                     //  Add the current option to the rest of the screen options
-                    $screen_options .= $number.$option."\n";     //  e.g 1. View Products
+                    $available_screen_action .= $number.$option."\n";     //  e.g 1. View Products
                 }
             }
         }
 
-        $response = $this->replaceTextWithDynamicData($screen_text, $description_uses_code_editor_mode).$screen_options;
+        //  If we don't have instructions to display
+        if( empty( $screen_instructions ) ){
+
+            //  Set an info log that the current screen does not have instructions to display
+            $this->logInfo('<span class="text-primary">'.$this->screen['title'].'</span> does not have instructions to display');
+
+
+        }
+
+        $response = $screen_instructions.$available_screen_action;
 
         return $this->displayCustomPage($response);
     }
 
     public function replaceTextWithDynamicData($text = "''", $code_editor_mode = false)
     {
-        //  Create dynamic variables
-        foreach ($this->dynamic_data_storage as $key => $value) {
-            /* If $data = ['product' => 'Orange', 'quantity' => 3, 'price' => 450, ...e.tc];
-             *  Then we produce dynamic variables e.g
-             *
-             *  $product = 'Orange';
-             *  $quantity = 3;
-             *  $price = 450;
-             *  ... e.t.c
-             */
+        if (count($this->dynamic_data_storage)) {
+            //  Set an info log that we are getting variables with dynamic data
+            $this->logInfo('Get variables with dynamic data');
 
-            /* Convert the value to a JSON Object. Converting each value into an object helps us
-             *  target nested values by using the "->" symbol e.g we can access deeply nested
-             *  values in this way:
-             *
-             *  $company->details->contacts->phone;
-             *
-             */
-            ${$key} = json_decode(json_encode($value));
+            //  Create dynamic variables
+            foreach ($this->dynamic_data_storage as $key => $value) {
+                /* If $data = ['product' => 'Orange', 'quantity' => 3, 'price' => 450, ...e.tc];
+                *  Then we produce dynamic variables e.g
+                *
+                *  $product = 'Orange';
+                *  $quantity = 3;
+                *  $price = 450;
+                *  ... e.t.c
+                */
+
+                /* Convert the value to a JSON Object. Converting each value into an object helps us
+                *  target nested values by using the "->" symbol e.g we can access deeply nested
+                *  values in this way:
+                *
+                *  $company->details->contacts->phone;
+                *
+                */
+                ${$key} = json_decode(json_encode($value));
+
+                //  Set an info log for the created variable and its dynamic data value
+                $this->logInfo('Variable <span class="text-success">$'.$key.'</span> = '.${$key});
+            }
         }
 
         //  Remove the (\u00a0) special character which represents a no-break space in HTML
@@ -294,10 +421,21 @@ class UssdCreatorController extends Controller
          *
          *  [}]{2} = The string must end with exactly 2 closing curly braces e.g }} not that "}}}" or "}})" or "}}]" will also pass
          */
-
         $pattern = "/[{]{2}[\s]*[a-zA-Z_]{1}[a-zA-Z0-9_\.]{0,}[\s]*[}]{2}/";
 
-        $total_results = preg_match_all($pattern, $text , $results);
+        $total_results = preg_match_all($pattern, $text, $results);
+
+        if( $code_editor_mode == true ){
+
+            //  Set an info log for the total number of dynamic data found in the PHP Code Editor text
+            $this->logInfo('Found ('.$total_results.') dynamic content references within the PHP Code Editor');
+
+        }else{
+
+            //  Set an info log for the total number of dynamic data found in the text
+            $this->logInfo('Found ('.$total_results.') dynamic content references inside the text: <span class="text-success">'.$text.'</span>');
+
+        }
 
         /**
          * The "$total_results" represents the number of matched dynamic content.
@@ -339,12 +477,19 @@ class UssdCreatorController extends Controller
                         //  Get the result type e.g Object, Array, Boolean e.t.c and wrap in square brackets
                         $formatted_result = '['.gettype($formatted_result).']';
                     }
-                } catch (\Exception $e) {
-                    //  Get the error message
-                    $formatted_result = '*'.$e->getMessage().'*';
 
-                    //  Log the error
-                    //  ...
+                    //  Set an info log that we are converting the dynamic propery to its associated value
+                    $this->logInfo('Converting <span class="text-success">'.$result.'</span> to <span class="text-success">'.$formatted_result.'</span>');
+                } catch (\Throwable $e) {
+
+                    //  Handle try catch error
+                    return $this->handleTryCatchError($e);
+
+                } catch (Exception $e) {
+
+                    //  Handle try catch error
+                    return $this->handleTryCatchError($e);
+
                 }
             }
 
@@ -358,35 +503,111 @@ class UssdCreatorController extends Controller
          */
         if ($code_editor_mode) {
             try {
+                //  Set an info log that we are converting the dynamic propery to its associated value
+                $this->logInfo('Process PHP Code from the Code Editor  ');
 
                 //  Remove PHP Tags
-                $text = trim( preg_replace("/<\?php|\?>/i", '', $text) );
+                $text = trim(preg_replace("/<\?php|\?>/i", '', $text));
 
                 //  Process the code
                 $text = eval("$text");
 
+                if( !empty( $text ) ){
+
+                    //  Set an info log of the final result
+                    $this->logInfo('Final result:  <span class="text-success">'."\n".$text. '</span>');
+
+                }
+
                 //  Return the processed text
                 return $text;
-                
-            } catch (Exception $e) {
-                /* NOTE: For some reason we cannot catch the error so i decide to
-                 *  to use the finally method so that when we hit a error we don't
-                 *  stop the code execution instead we return the value of $text
-                 *  before we tried to run the eval() method which caused errors
-                 *
-                 *  However ideally i want to catch the error exception and then
-                 *  grab the exact error message so that we can embbed it into
-                 *  the $text and show the user the actual error on the USSD
-                 *  screen.
-                 *
-                 */
+            } catch (\Throwable $e) {
 
-                echo 'Caught exception: ',  $e->getMessage(), "\n";
+                //  Handle try catch error
+                return $this->handleTryCatchError($e);
+
+            } catch (Exception $e) {
+
+                //  Handle try catch error
+                return $this->handleTryCatchError($e);
+
             }
         } else {
+
+            if( !empty( $text ) ){
+                
+                //  Set an info log of the final result
+                $this->logInfo('Final result:  <span class="text-success">'."\n".$text. '</span>');
+
+            }
+
             //  Return the processed text
             return $text;
         }
+    }
+
+    /** handleTryCatchError()
+     *  This method is used to handle errors caught during
+     *  try-catch screnerios. It logs the error, indicates
+     *  that an error occured and returns null
+     */
+    public function handleTryCatchError($error){
+    
+        //  Set an error log
+        $this->logError('Error:  '.$error->getMessage());
+
+        //  Indicate that we experienced an error
+        $this->errorEncountered = true;
+
+        //  Return nothing
+        return null;
+    }
+
+    /** logInfo()
+     *  This method is used to log information about the USSD
+     *  application build process.
+     */
+    public function logInfo($description = '')
+    {
+        $data = [
+            'type' => 'info',
+            'description' => $description,
+        ];
+
+        $this->updateLog($data);
+    }
+
+    /** logWarning()
+     *  This method is used to log warnings about the USSD
+     *  application build process.
+     */
+    public function logWarning($description = '')
+    {
+        $data = [
+            'type' => 'warning',
+            'description' => $description,
+        ];
+
+        $this->updateLog($data);
+    }
+
+    /** logError()
+     *  This method is used to log errors about the USSD
+     *  application build process.
+     */
+    public function logError($description = '')
+    {
+        $data = [
+            'type' => 'error',
+            'description' => $description,
+        ];
+
+        $this->updateLog($data);
+    }
+
+    public function updateLog($data)
+    {
+        array_push($this->log, $data);
     }
 
     public function getUserResponses($text = null)
@@ -602,6 +823,13 @@ class UssdCreatorController extends Controller
         $response = $this->displayCustomPage($error_message, $options ?? [
             'continue' => false,
         ]);
+
+        return $response;
+    }
+
+    public function displayTechnicalDifficultiesErrorPage()
+    {
+        $response = $this->displayCustomErrorPage('Sorry, we are experiencing technical difficulties');
 
         return $response;
     }

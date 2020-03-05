@@ -51,11 +51,11 @@ class AppServiceProvider extends ServiceProvider
             'store' => 'App\Store',
             'tag' => 'App\Tag',
             'tax' => 'App\Tax',
-            'trackingDetail' => 'App\TrackingDetail',
+            'tracking_detail' => 'App\TrackingDetail',
             'transaction' => 'App\Transaction',
             'user' => 'App\User',
-            'ussdInterface' => 'App\UssdInterface',
-            'ussdSession' => 'App\UssdSession',
+            'ussd_interface' => 'App\UssdInterface',
+            'ussd_session' => 'App\UssdSession',
             'variable' => 'App\Variable',
             'verification' => 'App\Verification'
         ]);

@@ -13,7 +13,8 @@
         <!-- Editor -->
         <div v-else
             v-html="localContent"
-            :class="classes" :style="styles"
+             :style="styles"
+            :class="'editable-content-field editable-content-field-' + this.size + (classes ? ' '+classes : '')"
             @blur="handleBlur($event.target.innerText)"
             @focus="handleFocus($event.target.innerText)"
             :contenteditable="contenteditable" :resize="resize">
@@ -51,6 +52,14 @@
                 type: Boolean,
                 default: true
             },
+            size: {
+                type: String,
+                default: 'medium'
+            },
+            sampleCodeTemplate: {
+                type: String,
+                default: ''
+            },
             resize: {
                 type: Boolean,
                 default: true
@@ -60,9 +69,13 @@
                 default: true
             },
             classes: {
+                type: String,
+                default: null
+            },
+            innerClasses: {
                 type: Array,
                 default: function(){
-                    return ['editable-content-field', 'medium-height'];
+                    return [];
                 }
             },
             styles: {
@@ -130,19 +143,15 @@
                     return code;
 
                 }else{
+                    if( this.sampleCodeTemplate ){
 
-                    //  Set custom placeholder code
-                    return `<?php
+                        //  Get the example code samples
+                        var codeSamples = require('./example-code-samples.js');
 
-            /** Use this editor to write custom php code. Always use the return statement
-             *	when you want to output your information. Below is an example: 
-            */
-
-            $variable = "dynamic";
-
-            return 'Example using ' . $variable . ' screen information';
-
-        ?>`    
+                        //  Set custom placeholder code
+                        return codeSamples.default[this.sampleCodeTemplate] || 'No sample code found';
+                        
+                    }
                 }
             },
             handleBlur(currentContent){
