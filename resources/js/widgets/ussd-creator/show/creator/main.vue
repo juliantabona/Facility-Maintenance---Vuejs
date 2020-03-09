@@ -437,10 +437,11 @@
                         </Col>
 
                         <Col :span="12">
-
+                    
                             <ussdSimulator 
-                                :ussdInterface="localUssdCreator" 
                                 postURL="/api/ussd/creator"
+                                :showCreatorSimulator="true"
+                                :ussdInterface="localUssdCreator"
                                 @loading="ussdSimulatorLoading = $event"
                                 @response="ussdSimulatorResponse = $event">
                             </ussdSimulator>
@@ -644,17 +645,59 @@
                         code_editor_mode: false
                     },
                     next_screen: null,
-                    reply_type: 'No Action',
-                    reply_name: null,
-                    select_reply: {
-                        is_dynamic: false, 
-                        dynamic_options: {
-                                group_reference: '{{ items }}', 
-                                template_value: '{{ item.id }}',
-                                template_reference_name: 'selected_item',
-                                template_display_name: '{{ item.name }} - {{ item.price }}',
-                                no_results_message: 'No items found'
+                    reference_name: null,
+
+                    action: {
+                        selected_action_type: 'no_action',
+                        input_value: {
+                            selected_type: 'single_value_input',
+                            single_value_input: {
+                                reference_name: null
                             },
+                            multi_value_input: {
+                                separator: ' ',
+                                reference_names: ['first_name', 'last_name']
+                            },
+                            next_screen: null
+                        },
+                        select_option: {
+                            selected_type: 'static_options',
+                            static_options: {
+                                options: [
+                                    {
+                                        name: '',
+                                        next_screen: null
+                                    }
+                                ],
+                                reference_name: null,
+                                no_results_message: 'No results found'
+                            }, 
+                            dynamic_options: {
+                                group_reference: '{{ items }}', 
+                                template_reference_name: 'item',
+                                template_display_name: '{{ item.name }} - {{ item.price }}',
+                                template_value: '{{ item.id }}',
+                                reference_name: 'selected_item',
+                                no_results_message: 'No items found',
+                                next_screen: null
+                            },
+                            code_editor_options: {
+                                code_editor_text: null
+                            }
+                        }
+                    },
+
+
+                    /*
+                    select_reply: {
+                        type: false, 
+                        dynamic_options: {
+                            group_reference: '{{ items }}', 
+                            template_value: '{{ item.id }}',
+                            template_reference_name: 'selected_item',
+                            template_display_name: '{{ item.name }} - {{ item.price }}',
+                            no_results_message: 'No items found'
+                        },
                         static_options: [
                             {
                                 name: '', 
@@ -662,15 +705,37 @@
                             }
                         ]
                     },
+                    */
+
                     //  Validation Rules For The Input Value
                     validation:{
                         rules: []
                     },
                     //  Formatting Rules For The Input Value
                     formatting: {
-                        reply_name: null,
+                        reference_name: null,
                         rules: []
                     },
+                    local_storage: [
+                        {
+                            type: 'single_storage', //  single_storage, multi_storage
+                            global_reference_name: 'profile',
+                            data: [
+                                {
+                                    local_reference_name: 'first_name', //  key
+                                    value: '{{ first_name }}',          //  value
+                                },
+                                {
+                                    local_reference_name: 'last_name',  //  key
+                                    value: '{{ last_name }}',           //  value
+                                },
+                                {
+                                    local_reference_name: 'age',  //  key
+                                    value: '{{ age }}',           //  value
+                                }
+                            ]
+                        }
+                    ]
                 };
             },
             getApiTemplate(){

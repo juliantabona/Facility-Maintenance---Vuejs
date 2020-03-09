@@ -69,7 +69,7 @@ class UssdController extends Controller
          *
          *  If we don't have a phone number provided default to "26700000000"
          */
-        $phone_number = $request->get('phoneNumber') ?? '26772882239';
+        $phone_number = $request->get('phoneNumber') ?? '26777479083';
         $this->phone_number = preg_replace('/[^0-9]/', '', $phone_number);
 
         /*  Get the Session Id  */
@@ -384,10 +384,15 @@ class UssdController extends Controller
         */
         $this->updateCustomerJourney();
 
-        /*  Return the response to the user  */
-        return response($response)->header('Content-Type', 'text/plain');
-        //return response($response)->header('Content-Type', 'application/json');
-        //  return response($response."\n\n".'characters: '.strlen($response))->header('Content-Type', 'text/plain');
+        if ($this->test_mode) {
+            //  Return the response to the user
+            return response(['response' => $response])->header('Content-Type', 'text/plain');
+        } else {
+            //  Return the response to the user
+            return response($response)->header('Content-Type', 'text/plain');
+            //return response($response)->header('Content-Type', 'application/json');
+            //  return response($response."\n\n".'characters: '.strlen($response))->header('Content-Type', 'text/plain');
+        }
     }
 
     public function handleStorePagination()
@@ -3017,11 +3022,11 @@ class UssdController extends Controller
 
         //  If we are not on TEST MODE then send SMS to Customer and Merchant
         //if (!$this->test_mode) {
-            /*  Send the order as a summarised SMS to the merchant  */
-            $merchantSMS = $this->order->smsOrderToMerchant();
+        /*  Send the order as a summarised SMS to the merchant  */
+        $merchantSMS = $this->order->smsOrderToMerchant();
 
-            /*  Send the invoice receipt as a summarized SMS to the customer  */
-            $customerSMS = $this->order->invoices()->first()->smsInvoiceReceiptToCustomer();
+        /*  Send the invoice receipt as a summarized SMS to the customer  */
+        $customerSMS = $this->order->invoices()->first()->smsInvoiceReceiptToCustomer();
         //}
 
         /*  If the payment status was successfull  */
@@ -3122,11 +3127,11 @@ class UssdController extends Controller
         $cartTotal = $this->cart['grand_total'];
 
         if ($cartTotal >= 30) {
-            return 5.00;
+            return 3.00;    //  5.00
         } elseif ($cartTotal > 15) {
-            return 1.50;
+            return 3.00;    //  1.50
         } else {
-            return 0.60;
+            return 3.00;    //  0.60
         }
     }
 

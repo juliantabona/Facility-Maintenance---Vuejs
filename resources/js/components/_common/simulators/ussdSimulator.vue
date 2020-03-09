@@ -99,7 +99,7 @@
 
                     </Col>
 
-                    <Col :span="24" class="pr-2 pl-2 pb-2">
+                    <Col v-if="showCreatorSimulator" :span="24" class="pr-2 pl-2 pb-2">
 
                         <Card>
                             
@@ -130,7 +130,7 @@
 
                     </Col>
 
-                    <Col :span="24" class="pr-2 pl-2 pb-2">
+                    <Col v-if="showCustomerSimulator" :span="24" class="pr-2 pl-2 pb-2">
 
                         <Card>
                             
@@ -161,7 +161,7 @@
 
                     </Col>
 
-                    <Col :span="24" class="pr-2 pl-2 pb-2">
+                    <Col v-if="showStaffSimulator" :span="24" class="pr-2 pl-2 pb-2">
 
                         <Card @click.native="showUssdContentModal = true">
                             
@@ -279,12 +279,28 @@
             ussdLoaderText:{
                 type: String,
                 default: 'USSD Code running'
+            },
+            default_ussd_reply:{
+                type: String,
+                default: ''
+            },
+            showCreatorSimulator:{
+                type: Boolean,
+                default: false
+            },
+            showCustomerSimulator:{
+                type: Boolean,
+                default: false
+            },
+            showStaffSimulator:{
+                type: Boolean,
+                default: false
             }
         },
         data(){
             return {
                 ussd_text: '',
-                ussd_reply: '',
+                ussd_reply: this.default_ussd_reply,
                 ussdResponse: '',
                 localUssdInterface: null,
                 //  phoneNumber: '+26700000000',

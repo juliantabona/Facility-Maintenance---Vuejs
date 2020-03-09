@@ -4,13 +4,13 @@
     <div>
 
         <!-- Test API Response Data -->
-        <Tabs v-model="selectedContentTab" type="card" :animated="false">
+        <Tabs v-model="selectedContentTab" type="card" style="overflow: visible;" :animated="false">
 
             <!-- API Response Details -->
-            <TabPane v-for="(selectedTab, key) in ['Instructions', 'Action', 'Validation', 'Formatting', 'Settings']" 
-                    :key="key" :label="generateTabLabel(selectedTab)" :name="selectedTab">
+            <TabPane v-for="(selectedContentTab, key) in ['Instructions', 'Action', 'Validation', 'Formatting', 'Storage', 'Settings']" 
+                    :key="key" :label="generateTabLabel(selectedContentTab)" :name="selectedContentTab">
 
-                <template v-if="selectedTab == 'Instructions'">
+                <template v-if="selectedContentTab == 'Instructions'">
 
                     <!-- Screen Instructions -->
                     <Alert type="info" style="line-height: 1.4em;" class="mb-2" closable>
@@ -80,7 +80,7 @@
                     </div>
                 </template>
 
-                <template v-else-if="selectedTab == 'Action'">
+                <template v-else-if="selectedContentTab == 'Action'">
 
                     <!-- Screen Instructions -->
                     <Alert type="info" style="line-height: 1.4em;" class="mb-2" closable>
@@ -90,184 +90,168 @@
                         <span class="font-italic text-success font-weight-bold">Select Option</span> from a list of specified options.
                     </Alert>
 
-                    <!-- Screen Action Selector -->
-                    <Select v-model="localScreenContent.reply_type" filterable class="w-100 mb-2" placeholder="Reply type">
-                        
-                        <Option v-for="(action, key) in screenActions" :key="key" class="mb-2"
-                                :value="action.name" :label="action.name">
-                        </Option>
+                    <Row :gutter="10">
 
-                    </Select>
-
-                    <template v-if="localScreenContent.reply_type == 'Input Value'">
-
-                        <!-- Input Value Name -->
-                        <Input 
-                            v-model="localScreenContent.reply_name" 
-                            maxlength="30" type="text" class="w-100 mb-2" placeholder="Reply name">
-                            <div slot="prepend">@</div>
-                        </Input>
-                    
-                        <!-- Link To Screen Selector -->
-                        <div class="d-flex mb-2">       
-                            <Icon type="ios-pin-outline" size="20"  class="mt-1 ml-1 mr-2 text-muted font-weight-bold" />
-                            <Select v-model="localScreenContent.next_screen" filterable placeholder="Link To Screen">
-
-                                <Option 
-                                    v-for="(screen, key) in screenTree"
-                                    :key="key" :value="screen.title" :label="screen.title"
-                                    :disabled="localScreenContent.title == screen.title">
-
-                                    <!-- Screen title -->
-                                    <span>{{ screen.title }}</span>
-
+                        <!-- Action Type Separator -->
+                        <Col :span="12" class="d-flex">
+                                
+                            <!-- Single Item Display Name -->
+                            <span class="d-block font-weight-bold text-dark mt-2 mr-2">Action: </span>
+                            
+                            <!-- Screen Action Selector -->
+                            <Select v-model="localScreenContent.action.selected_action_type" 
+                                    class="w-50 mb-2" placeholder="Action type">
+                                
+                                <Option v-for="(action, key) in screenActionsTypes" :key="key" class="mb-2"
+                                        :value="action.type" :label="action.name">
                                 </Option>
 
                             </Select>
-                        </div>
-                        
-                    </template>
+                        </Col>
 
-                    <template v-if="localScreenContent.reply_type == 'Select Option'">
-                                    
-                        <!-- Input Value Name -->
-                        <Input 
-                            v-model="localScreenContent.reply_name" 
-                            v-if="!localScreenContent.select_reply.is_dynamic"
-                            maxlength="30" type="text" class="w-100 mb-2" placeholder="Reply name">
-                            <div slot="prepend">@</div>
-                        </Input>
+                        <Col v-if="localScreenContent.action.selected_action_type != 'no_action'" :span="12" class="d-flex" >
+                                
+                            <!-- Single Item Display Name -->
+                            <span class="d-block font-weight-bold text-dark mt-2 mr-2">Type: </span>
 
-                        <Poptip word-wrap width="350" trigger="hover" placement="top-start"
-                                content="Use dynamic content inside this description field? ">
+                            <!-- Input Action Type Selector -->
+                            <Select v-if="localScreenContent.action.selected_action_type == 'input_value'"
+                                    v-model="localScreenContent.action.input_value.selected_type"
+                                    class="w-50 mb-2" placeholder="Input value type">
+                                
+                                <Option v-for="(action, key) in inputActionTypes" :key="key" class="mb-2"
+                                        :value="action.type" :label="action.name">
+                                </Option>
 
-                            <template slot="content">
-                                <span class="d-block">Use dynamic content inside this description field?</span>
-                            
-                                <span style="margin-top: -15px;" class="border-top d-block pt-2">
-                                    <span class="font-weight-bold">Note: Always wrap strings in single quotes ('') and use the period (.) to concatenat values. Make sure to include <span class="text-primary">return</span> at the begining of your description.</span>
-                                </span>
+                            </Select>
+
+                            <!-- Select Option Action Type Selector -->
+                            <Select v-if="localScreenContent.action.selected_action_type == 'select_option'"
+                                    v-model="localScreenContent.action.select_option.selected_type"
+                                    class="w-50 mb-2" placeholder="Select option type">
+                                
+                                <Option v-for="(action, key) in selectOptionActionTypes" :key="key" class="mb-2"
+                                        :value="action.type" :label="action.name">
+                                </Option>
+
+                            </Select>
+
+                        </Col>
+
+                    </Row>
+
+                    <!-- Input Value Actions  -->
+                    <template v-if="localScreenContent.action.selected_action_type == 'input_value'">
+
+                        <div class="bg-grey-light border mt-3 mb-3 p-2">
+
+                            <!-- If Single Value Input  -->
+                            <template v-if="localScreenContent.action.input_value.selected_type == 'single_value_input'">
+
+                                <!-- Input Reference Name -->
+                                <Input v-model="localScreenContent.action.input_value.single_value_input.reference_name" 
+                                    maxlength="30" type="text" class="w-100 mb-2" placeholder="Reference name">
+                                    <div slot="prepend">@</div>
+                                </Input>
+
                             </template>
 
-                            <Checkbox v-model="localScreenContent.select_reply.is_dynamic" class="mt-2 mb-2">Use Code Editor</Checkbox>
+                            <!-- If Multi Value Input -->
+                            <template v-if="localScreenContent.action.input_value.selected_type == 'multi_value_input'">
 
-                        </Poptip>
+                                <Row>
 
-                        <template v-if="localScreenContent.select_reply.is_dynamic">
-                            <Row :gutter="4">
-                                
-                                <Col :span="4">
-                                
-                                    <span class="d-block text-center mt-1">Foreach</span>
-                                
-                                </Col>
-                                
-                                <Col :span="8">
-                                
-                                    <!-- Input Value Name -->
-                                    <customEditor
-                                        size="small"
-                                        classes="px-1"
-                                        :useCodeEditor="false"
-                                        :placeholder="'{{ items }}'"
-                                        :content="localScreenContent.select_reply.dynamic_options.group_reference"
-                                        @contentChange="localScreenContent.select_reply.dynamic_options.group_reference = $event">
-                                    </customEditor>
-
-                                </Col>
-                                
-                                <Col :span="2">
-
-                                    <span class="d-block text-center mt-1">As</span>
-                                
-                                </Col>
-                                
-                                <Col :span="10">
-                                
-                                    <!-- Input Value Name -->
-                                    <Input 
-                                        v-model="localScreenContent.reply_name" 
-                                        maxlength="30" type="text" class="w-100 mb-2" :placeholder="'item'"
-                                        :disabled="!localScreenContent.select_reply.dynamic_options.group_reference">
-                                        <div slot="prepend">@</div>
-                                    </Input>
-                                
-                                </Col>
-                                
-                                <Col :span="24">
-
-                                    <div class="bg-grey-light border mt-2 mb-3 pt-3 px-2 pb-2">
-
-                                        <!-- Heading -->
-                                        <span class="d-block font-weight-bold text-dark">Display Name</span>
-
-                                        <customEditor
-                                            classes="px-2 py-3 mb-3"
-                                            :useCodeEditor="false"
-                                            :placeholder="'{{ item.name }} - {{ item.price }}'"
-                                            :content="localScreenContent.select_reply.dynamic_options.template_display_name"
-                                            @contentChange="localScreenContent.select_reply.dynamic_options.template_display_name = $event">
-                                        </customEditor>
-
-                                        <!-- Heading -->
-                                        <span class="d-block font-weight-bold text-dark">Option Value</span>
-
-                                        <customEditor
-                                            classes="px-2 py-3 mb-3"
-                                            :useCodeEditor="false"
-                                            :placeholder="'{{ item.id }}'"
-                                            :content="localScreenContent.select_reply.dynamic_options.template_value"
-                                            @contentChange="localScreenContent.select_reply.dynamic_options.template_value = $event">
-                                        </customEditor>
-                                        
-                                        <!-- Heading -->
-                                        <span class="d-block font-weight-bold text-dark">Reference Name</span>
-                                        
-                                        <Input 
-                                            v-model="localScreenContent.select_reply.dynamic_options.template_reference_name"
-                                            maxlength="30" type="text" class="w-100 mb-3" placeholder="selected_item">
-                                            <div slot="prepend">@</div>
-                                        </Input>
+                                    <!-- Multi Value Separator -->
+                                    <Col :span="22" class="d-flex">
                                     
-                                        <!-- Heading -->
-                                        <span class="d-block font-weight-bold text-dark">Link</span>
+                                        <!-- Single Item Display Name -->
+                                        <span class="d-block font-weight-bold text-dark mt-2 mr-2">Separator: </span>
 
-                                        <!-- Link To Screen Selector -->
-                                        <div class="d-flex mb-2">       
-                                            <Icon type="ios-pin-outline" size="20"  class="mt-1 ml-1 mr-2 text-muted font-weight-bold" />
-                                            <Select v-model="localScreenContent.next_screen" filterable placeholder="Link To Screen">
+                                        <!-- Screen Action Selector -->
+                                        <Select v-model="localScreenContent.action.input_value.multi_value_input.separator" 
+                                                class="w-100 mb-2" placeholder="Select separator">
+                                            
+                                            <Option v-for="(separator, key) in multiValueSeparatorTypes" :key="key" class="mb-2"
+                                                    :value="separator.type" :label="separator.name">
+                                            </Option>
 
-                                                <Option 
-                                                    v-for="(screen, key) in screenTree"
-                                                    :key="key" :value="screen.title" :label="screen.title"
-                                                    :disabled="localScreenContent.title == screen.title">
+                                        </Select>
+                                            
+                                    </Col>
 
-                                                    <!-- Screen title -->
-                                                    <span>{{ screen.title }}</span>
+                                    <Col :span="24">
 
-                                                </Option>
+                                        <Row :gutter="4" v-for="(reference_name, x) in localScreenContent.action.input_value.multi_value_input.reference_names" :key="x">
 
-                                            </Select>
-                                        </div>
+                                            <Col :span="22">
 
-                                    </div>
+                                                <!-- Input Value Name -->
+                                                <Input v-model="localScreenContent.action.input_value.multi_value_input.reference_names[x]" 
+                                                    maxlength="30" type="text" class="w-100 mb-2" placeholder="Reference name">
+                                                    <div slot="prepend">@</div>
+                                                </Input>
+
+                                            </Col>
+                                            
+                                            <Col :span="2">
+
+                                                <!-- Remove Option Button  -->
+                                                <Poptip confirm title="Are you sure you want to remove this option?" 
+                                                        ok-text="Yes" cancel-text="No" width="300" @on-ok="removeSelectStaticOption(x)"
+                                                        placement="top-end">
+                                                    <Icon type="ios-trash-outline" class="screen-icon hidable mr-2" size="20"/>
+                                                </Poptip>
+
+                                            </Col>
+
+                                        </Row>
+
+                                    </Col>
+
+                                </Row>
+
+                            </template>
+                            
+                            <!-- Link To Screen Selector -->
+                            <Row>
+
+                                <!-- Multi Value Separator -->
+                                <Col :span="22" class="d-flex mb-2">  
+
+                                    <Icon type="ios-pin-outline" size="20"  class="mt-1 ml-1 mr-2 text-muted font-weight-bold" />
+                                    <Select v-model="localScreenContent.action.input_value.next_screen" filterable placeholder="Link To Screen">
+
+                                        <Option v-for="(screen, key) in screenTree"
+                                                :key="key" :value="screen.title" :label="screen.title"
+                                                :disabled="localScreenContent.title == screen.title">
+
+                                            <!-- Screen title -->
+                                            <span>{{ screen.title }}</span>
+
+                                        </Option>
+
+                                    </Select>
                                     
-                                    <!-- Heading -->
-                                    <span class="d-block font-weight-bold text-dark">No Results Message</span>
-                                    
-                                    <Input 
-                                        v-model="localScreenContent.select_reply.dynamic_options.no_results_message"
-                                        placeholder="Enter message for zero results found"
-                                        type="textarea" :rows="2" class="w-100 mb-3">
-                                    </Input>
-                                
                                 </Col>
 
                             </Row>
-                        </template>
 
-                        <template v-else>
+                        </div>
+                        
+                    </template
+                    <!-- Select Option Actions  -->
+                    <template v-if="localScreenContent.action.selected_action_type == 'select_option'">
 
+                        <!-- If Static Options  -->
+                        <template v-if="localScreenContent.action.select_option.selected_type == 'static_options'">
+
+                            <!-- Selected Static Option Reference Name -->
+                            <Input v-model="localScreenContent.action.select_option.static_options.reference_name" 
+                                   maxlength="30" type="text" class="w-100 mb-2" placeholder="Reference name">
+                                <div slot="prepend">@</div>
+                            </Input>
+
+                            <!-- Static Option List Header -->
                             <Row :gutter="4" class="bg-primary text-white mb-2">
                                 
                                 <Col :span="2">
@@ -293,8 +277,9 @@
 
                             </Row>
 
-                            <template v-if="localScreenContent.select_reply.static_options.length">
-                                <Row :gutter="4" v-for="(option, x) in localScreenContent.select_reply.static_options" :key="x">
+                            <!-- Static Option List Content -->
+                            <template v-if="localScreenContent.action.select_option.static_options.options.length">
+                                <Row :gutter="4" v-for="(option, x) in localScreenContent.action.select_option.static_options.options" :key="x">
                                     
                                     <Col :span="2">
 
@@ -306,12 +291,11 @@
                                     <Col :span="10">
 
                                         <!-- Option Name -->
-                                        <Input 
-                                            v-model="option.name" type="text"
-                                            class="w-100 mb-2" placeholder="Option name"
-                                            @blur="option.name = handleDynamicContent(option.name)"
-                                            @focus="option.name = handleDynamicContent(option.name)">
-                                        </Input>
+                                        <customEditor 
+                                            size="small" classes="px-1" :placeholder="'Option ' + (x + 1)"
+                                            :useCodeEditor="false" :content="option.name"
+                                            @contentChange="option.name = $event">
+                                        </customEditor>
                                     
                                     </Col>
                                     
@@ -341,7 +325,7 @@
 
                                         <!-- Remove Option Button  -->
                                         <Poptip confirm title="Are you sure you want to remove this option?" 
-                                                ok-text="Yes" cancel-text="No" width="300" @on-ok="removeOption(x)"
+                                                ok-text="Yes" cancel-text="No" width="300" @on-ok="removeSelectStaticOption(x)"
                                                 placement="top-end">
                                             <Icon type="ios-trash-outline" class="screen-icon hidable mr-2" size="20"/>
                                         </Poptip>
@@ -351,13 +335,14 @@
                                 </Row>
                             </template>
 
-                            <!-- No request data message -->
+                            <!-- No Static Options -->
                             <Alert v-else type="info" class="mb-2" show-icon>No options</Alert>
 
+                            <!-- Add Static Option -->
                             <div class="clearfix">
 
-                                <!-- Create Screen Button -->
-                                <Button class="float-right" @click.native="addOption()">
+                                <!-- Add Static Option Button -->
+                                <Button class="float-right" @click.native="addSelectStaticOption()">
                                     <Icon type="ios-add" :size="20" />
                                     <span>Add Option</span>
                                 </Button>
@@ -366,11 +351,123 @@
 
                         </template>
                         
+                        <!-- If Dynamic Options  -->
+                        <template v-else-if="localScreenContent.action.select_option.selected_type == 'dynamic_options'">
+
+                            <Row :gutter="4">
+                                
+                                <!-- Foreach Label -->
+                                <Col :span="4">
+                                
+                                    <span class="d-block text-center mt-1">Foreach</span>
+                                
+                                </Col>
+                                
+                                <!-- Foreach Items Group Reference -->
+                                <Col :span="8">
+                                
+                                    <!-- Group Reference -->
+                                    <customEditor
+                                        size="small" classes="px-1"
+                                        :useCodeEditor="false" :placeholder="'{{ items }}'"
+                                        :content="localScreenContent.action.select_option.dynamic_options.group_reference"
+                                        @contentChange="localScreenContent.action.select_option.dynamic_options.group_reference = $event">
+                                    </customEditor>
+
+                                </Col>
+                                
+                                <!-- As Label -->
+                                <Col :span="2">
+
+                                    <span class="d-block text-center mt-1">As</span>
+                                
+                                </Col>
+                                
+                                <Col :span="10">
+                                
+                                    <!-- Template Reference Name -->
+                                    <Input maxlength="30" type="text" class="w-100 mb-2" :placeholder="'item'" 
+                                        :disabled="!localScreenContent.action.select_option.dynamic_options.group_reference"
+                                        v-model="localScreenContent.action.select_option.dynamic_options.template_reference_name">
+                                        <div slot="prepend">@</div>
+                                    </Input>
+                                
+                                </Col>
+                                
+                                <Col :span="24">
+
+                                    <div class="bg-grey-light border mt-2 mb-3 pt-3 px-2 pb-2">
+
+                                        <!-- Single Item Display Name -->
+                                        <span class="d-block font-weight-bold text-dark">Display Name</span>
+
+                                        <customEditor
+                                            classes="px-2 py-3 mb-3" :useCodeEditor="false"
+                                            :placeholder="'{{ item.name }} - {{ item.price }}'"
+                                            :content="localScreenContent.action.select_option.dynamic_options.template_display_name"
+                                            @contentChange="localScreenContent.action.select_option.dynamic_options.template_display_name = $event">
+                                        </customEditor>
+
+                                        <!-- Single Item Value -->
+                                        <span class="d-block font-weight-bold text-dark">Option Value</span>
+
+                                        <customEditor
+                                            classes="px-2 py-3 mb-3" 
+                                            :useCodeEditor="false" :placeholder="'{{ item.id }}'"
+                                            :content="localScreenContent.action.select_option.dynamic_options.template_value"
+                                            @contentChange="localScreenContent.action.select_option.dynamic_options.template_value = $event">
+                                        </customEditor>
+                                        
+                                        <!-- Selected Item Reference Name -->
+                                        <span class="d-block font-weight-bold text-dark">Reference Name</span>
+                                        
+                                        <Input 
+                                            v-model="localScreenContent.action.select_option.dynamic_options.reference_name"
+                                            maxlength="30" type="text" class="w-100 mb-3" placeholder="selected_item">
+                                            <div slot="prepend">@</div>
+                                        </Input>
+                                    
+                                        <!-- Heading -->
+                                        <span class="d-block font-weight-bold text-dark">Link</span>
+
+                                        <!-- Link To Screen Selector -->
+                                        <div class="d-flex mb-2">       
+                                            <Icon type="ios-pin-outline" size="20"  class="mt-1 ml-1 mr-2 text-muted font-weight-bold" />
+                                            <Select v-model="localScreenContent.action.select_option.dynamic_options.next_screen" filterable placeholder="Link To Screen">
+
+                                                <Option v-for="(screen, key) in screenTree"
+                                                    :key="key" :value="screen.title" :label="screen.title"
+                                                    :disabled="localScreenContent.title == screen.title">
+
+                                                    <!-- Screen title -->
+                                                    <span>{{ screen.title }}</span>
+
+                                                </Option>
+
+                                            </Select>
+                                        </div>
+
+                                    </div>
+                                    
+                                    <!-- Heading -->
+                                    <span class="d-block font-weight-bold text-dark">No Results Message</span>
+                                    
+                                    <Input 
+                                        v-model="localScreenContent.action.select_option.dynamic_options.no_results_message"
+                                        placeholder="Enter message for zero results found"
+                                        type="textarea" :rows="2" class="w-100 mb-3">
+                                    </Input>
+                                
+                                </Col>
+
+                            </Row>
+                        </template>
+                        
                     </template>
 
                 </template>
 
-                <template v-if="selectedTab == 'Validation'">
+                <template v-else-if="selectedContentTab == 'Validation'">
 
                     <!-- Validation Rules -->
                     <Alert v-if="!numberOfActiveValidationRules" type="info" style="line-height: 1.4em;" class="mb-2" closable>
@@ -498,7 +595,7 @@
 
                 </template>
 
-                <template v-if="selectedTab == 'Formatting'">
+                <template v-else-if="selectedContentTab == 'Formatting'">
 
                     <!-- Formatting -->
                     <Alert v-if="!numberOfActiveFormattingRules" type="info" style="line-height: 1.4em;" class="mb-2" closable>
@@ -520,8 +617,8 @@
 
                                 <!-- Input Value Name -->
                                 <Input 
-                                    v-model="localScreenContent.formatting.reply_name" 
-                                    maxlength="30" type="text" class="w-100 mb-2" placeholder="Formatted Reply name (Optional)">
+                                    v-model="localScreenContent.formatting.reference_name" 
+                                    maxlength="30" type="text" class="w-100 mb-2" placeholder="Formatted Reference name (Optional)">
                                     <div slot="prepend">@</div>
                                 </Input>
 
@@ -713,7 +810,21 @@
 
                 </template>
 
-                <template v-if="selectedTab == 'Settings'">
+                <template v-else-if="selectedContentTab == 'Storage'">
+
+                    <!-- Formatting -->
+                    <Alert type="info" style="line-height: 1.4em;" class="mb-2" closable>
+                        Use <span class="font-italic text-success font-weight-bold">Screen Storage</span> to temporarily
+                        store data collected by the current screen and any other hierarchical screen leading to this
+                        current screen. e.g If you collected First Name in Screen 1, Last Name in Screen 2, you can
+                        collect Age in this screen (Screen 3) and store all the details under a specified reference 
+                        name e.g <span class="font-italic text-success font-weight-bold">user</span> or
+                        <span class="font-italic text-success font-weight-bold">profile</span>
+                    </Alert>
+
+                </template>
+
+                <template v-else-if="selectedContentTab == 'Settings'">
 
                     <!-- Formatting -->
                     <Alert type="info" style="line-height: 1.4em;" class="mb-2" closable>
@@ -754,15 +865,51 @@
             return {
                 localScreenContent: this.screenContent,
                 selectedContentTab: 'Instructions',
-                screenActions: [
+                screenActionsTypes: [
                     {
-                        name: 'No Action'
+                        name: 'No Action', type: 'no_action'
                     },
                     {
-                        name: 'Input Value'
+                        name: 'Input Value', type: 'input_value'
                     },
                     {
-                        name: 'Select Option'
+                        name: 'Select Option', type: 'select_option'
+                    }
+                ],
+                inputActionTypes: [
+                    {
+                        name: 'Single Input', type: 'single_value_input'
+                    },
+                    {
+                        name: 'Multiple Inputs', type: 'multi_value_input'
+                    }
+                ],
+                selectOptionActionTypes: [
+                    {
+                        name: 'Static Options', type: 'static_options'
+                    },
+                    {
+                        name: 'Dynamic Options', type: 'dynamic_options'
+                    },
+                    {
+                        name: 'Code Editor Options', type: 'code_editor_options'
+                    }
+                ],
+                multiValueSeparatorTypes: [
+                    {
+                        name: 'Single spaces ( )', type: ' '
+                    },
+                    {
+                        name: 'Comma symbol (,)', type: ','
+                    },
+                    {
+                        name: 'Hyphen symbol (-)', type: '-'
+                    },
+                    {
+                        name: 'Plus symbol (+)', type: '+'
+                    },
+                    {
+                        name: 'Forward slash symbol (/)', type: '/'
                     }
                 ],
                 validation_rules:[
@@ -770,18 +917,21 @@
                         active: false,
                         rule: '/[a-zA-Z]+/',
                         name: 'Only Letters',
+                        type: 'only_letters',
                         error_msg: 'Please enter letters only'
                     },
                     {
                         active: false,
                         rule: '/[0-9]+/',
                         name: 'Only Numbers',
+                        type: 'only_numbers',
                         error_msg: 'Please enter numbers only'
                     },
                     {
                         active: false,
                         rule: '/[a-zA-Z0-9]+/',
                         name: 'Only Numbers & Letters',
+                        type: 'only_numbers_and_letters',
                         error_msg: 'Please enter numbers and letters only'
                     },
                     {
@@ -789,6 +939,7 @@
                         active: false,
                         rule: '/[a-zA-Z0-9]+/',
                         name: 'Minimum Characters',
+                        type: 'minimum_characters',
                         error_msg: 'Please enter 2 or more characters'
                     },
                     {
@@ -796,24 +947,28 @@
                         active: false,
                         rule: '/[a-zA-Z0-9]+/',
                         name: 'Maximum Characters',
+                        type: 'maximum_characters',
                         error_msg: 'Please enter no more than 2 characters'
                     },
                     {
                         active: false,
                         rule: '//',
                         name: 'Validate Email',
+                        type: 'valiate_email',
                         error_msg: 'Please provide a valid email address'
                     },
                     {
                         active: false,
                         rule: '//',
                         name: 'Validate Phone Number',
+                        type: 'valiate_phone_number',
                         error_msg: 'Please provide a valid phone number'
                     },
                     {
                         active: false,
                         rule: '/[0-9]{2}\/[0-9]{2}\/[0-9]{2}/',
                         name: 'Validate Date Format - DD/MM/YYYY',
+                        type: 'valiate_date_format',
                         error_msg: 'Please enter a valid date (DD/MM/YYYY) e.g 02/08/2020'
                     },
                     {
@@ -821,6 +976,7 @@
                         active: false,
                         rule: '//',
                         name: 'Equal To (=)',
+                        type: 'equal_to',
                         error_msg: 'Please enter the number 3'
                     },
                     {
@@ -828,6 +984,7 @@
                         active: false,
                         rule: '//',
                         name: 'Not Equal To',
+                        type: 'not_equal_to',
                         error_msg: 'Please enter any number except 3'
                     },
                     {
@@ -835,6 +992,7 @@
                         active: false,
                         rule: '//',
                         name: 'Less Than (<)',
+                        type: 'less_than',
                         error_msg: 'Please enter numbers less than 3'
                     },
                     {
@@ -842,18 +1000,21 @@
                         active: false,
                         rule: '//',
                         name: 'Greater Than (>)',
+                        type: 'greater_than',
                         error_msg: 'Please enter numbers greater than 3'
                     },
                     {
                         active: false,
                         rule: '//',
-                        name: 'Avoid Spaces',
-                        error_msg: 'Do not use spaces.'
+                        name: 'No Spaces',
+                        type: 'no_spaces',
+                        error_msg: 'Do not use spaces'
                     },
                     {
                         active: false,
                         rule: '//',
-                        name: 'Avoid Special Characters e.g ($ % & *)',
+                        name: 'No Special Characters e.g ($ % & *)',
+                        type: 'no_special_characters',
                         error_msg: 'Do not use special characters e.g ($ % & *)'
                     }
                 ],
@@ -960,19 +1121,19 @@
             
         },
         methods: {
-            generateTabLabel(selectedTab){
-                if(selectedTab == 'Validation'){
+            generateTabLabel(selectedContentTab){
+                if(selectedContentTab == 'Validation'){
 
                     var countRules = this.numberOfActiveValidationRules;
-                    return selectedTab + (countRules ?  ' ('+countRules+')': '');
+                    return selectedContentTab + (countRules ?  ' ('+countRules+')': '');
 
-                }else if(selectedTab == 'Formatting'){
+                }else if(selectedContentTab == 'Formatting'){
 
                     var countRules = this.numberOfActiveFormattingRules;
-                    return selectedTab + (countRules ?  ' ('+countRules+')': '');
+                    return selectedContentTab + (countRules ?  ' ('+countRules+')': '');
 
                 }else{
-                    return selectedTab
+                    return selectedContentTab
                 }
             },
             addCustomValidationRule(){
@@ -1012,7 +1173,7 @@
                 return ['truncate', 'convert_to_money', 'date_format', 'custom_format'].includes(formatting_rule.type) 
                        && formatting_rule.active
             },
-            addOption(){
+            addSelectStaticOption(){
 
                 //  Build the option template
                 var optionTemplate = {
@@ -1021,12 +1182,12 @@
                     };
 
                 //  Add the screen to the screen tree
-                this.localScreenContent.select_reply.static_options.push( optionTemplate );
+                this.localScreenContent.action.select_option.static_options.options.push( optionTemplate );
 
             },
-            removeOption(index){
+            removeSelectStaticOption(index){
                 //  Remove screen from list
-                this.localScreenContent.select_reply.static_options.splice(index, 1);
+                this.localScreenContent.action.select_option.static_options.options.splice(index, 1);
             },
             getDynamicContent(currentScreen){
 
@@ -1037,19 +1198,19 @@
                 for(var x = 0; x < this.screenTree.length; x++){
 
                     //  If the screen allows the user to respond with a reply
-                    if( this.screenTree[x].reply_type != 'No Action'){
+                    if( this.screenTree[x].action_type != 'No Action'){
 
                         //  If the screen links the user to this current screen
                         if( this.screenTree[x].content.next_screen == currentScreenTitle ){
 
                             //  Get the reply field name
-                            let replyName = this.screenTree[x].reply_name;
+                            let referenceName = this.screenTree[x].reference_name;
 
                             //  If the reply field is not empty
-                            if( replyName != '' && replyName != null ){
+                            if( referenceName != '' && referenceName != null ){
 
                                 //  Add the reply field name to the dynamic content fields
-                                dynamicContent.push( replyName );
+                                dynamicContent.push( referenceName );
 
                             }
 

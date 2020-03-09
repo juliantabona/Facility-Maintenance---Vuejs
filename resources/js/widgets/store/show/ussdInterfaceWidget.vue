@@ -132,9 +132,14 @@
                 </Col>
 
                 <!-- Mobile Store Access Info -->
-                <Col :span="12" class="pl-5">
+                <Col v-if="ussdInterface" :span="12" class="pl-5">
                     
-                    <ussdSimulator :ussdInterface="ussdInterface"></ussdSimulator>
+                    <ussdSimulator 
+                        :showStaffSimulator="true"
+                        :showCustomerSimulator="true"
+                        :ussdInterface="ussdInterface" 
+                        :default_ussd_reply="default_ussd_reply">
+                    </ussdSimulator>
 
                 </Col>
             </Row>
@@ -185,6 +190,13 @@
                 showStaffAccessInstructions: false,
                 showMobileStoreInfo: false
  
+            }
+        },
+        computed:{
+            default_ussd_reply(){
+
+                return '1*' + (this.localUssdInterface || {}).code;
+
             }
         },
         methods: {

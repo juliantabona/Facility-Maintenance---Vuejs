@@ -12,9 +12,10 @@ class UssdCreatorController extends Controller
     private $test;
     private $level;
     private $screen;
-    private $ussdBuilder;
+    private $linkedScreen;
     private $ussdInterface;
-    private $errorEncountered;
+    private $currentUserResponse;
+    private $ussdBuilderMetadata;
     private $dynamic_data_storage;
 
     public function __construct(Request $request)
@@ -29,12 +30,10 @@ class UssdCreatorController extends Controller
         $this->ussdInterface = \App\UssdInterface::find(59);
 
         //  Get the Ussd builder data
-        $this->ussdBuilder = $this->ussdInterface->metadata;
+        $this->ussdBuilderMetadata = $this->ussdInterface->metadata;
 
         //  Initiate the dynamic data storage to an empty array
         $this->dynamic_data_storage = [];
-
-        $this->errorEncountered = false;
 
         //  Set the default level
         $this->level = 1;
@@ -49,12 +48,6 @@ class UssdCreatorController extends Controller
 
         //  Start the process of building the USSD Application
         $response = $this->startBuildingUssd();
-
-        //  If we encountered an error at any point while building the USSD Application
-        if ($this->errorEncountered == true) {
-            //  Display the technical difficulties error page to notify the user of the issue
-            $response = $this->displayTechnicalDifficultiesErrorPage();
-        }
 
         /*
         $response .= "\n" . '_______________________________' ;
@@ -86,14 +79,17 @@ class UssdCreatorController extends Controller
 
         //  Check if the builder is available and ready for use
         if ($this->builderIsReady()) {
+            
             //  Start building and displaying the ussd screens
-            return $this->setupUssdScreens();
+            return $this->startBuildingUssdScreens();
+
         } else {
+
             //  Set a log that the build process has started
             $this->logError('Error building the USSD Application. The metadata required to build the application was not found');
 
-            //  Display a custom error to notify the user of the issue
-            return $this->displayCustomErrorPage('Sorry we cannot build the USSD Application. This is because we could not find any data to build');
+            //  Display the technical difficulties error page to notify the user of the issue
+            return $this->displayTechnicalDifficultiesErrorPage();
         }
     }
 
@@ -105,79 +101,565 @@ class UssdCreatorController extends Controller
     public function builderIsReady()
     {
         //  If we have any builder data return true otherwise false
-        return !empty($this->ussdBuilder) ? true : false;
+        return !empty($this->ussdBuilderMetadata) ? true : false;
     }
 
-    /*  setupUssdScreens()
-     *  This method uses the ussd builder data to start building the actual
-     *  display screens that must be returned.
+    /*  startBuildingUssdScreens()
+     *  This method uses the ussd builder metadata get all the ussd screens,
+     *  locate the first screen and start building each display screen that
+     *  must be returned.
      */
-    public function setupUssdScreens()
+    public function startBuildingUssdScreens()
     {
-        //  First we make sure that the builder data is an array at its top level
-        if (is_array($this->ussdBuilder)) {
-            $response = $this->determineScreenToDisplay();
-        } else {
+        //  Check if the USSD screens exist
+        $doesNotExistResponse = $this->handleNonExistentScreens();
+
+        //  If the USSD screens do not exist return the response otherwise continue
+        if( !empty( $doesNotExistResponse ) ) return $doesNotExistResponse;
+
+        //  Get the first display screen
+        $this->screen = $this->getFirstScreenToDisplay();
+
+        //  Handle current screen
+        return $this->handleCurrentScreen();
+    }
+
+    /*  handleNonExistentScreens()
+     *  This method checks if we have any screens to display. If we don't we
+     *  log a warning and display the technical difficulties page.
+     */
+    public function handleNonExistentScreens()
+    {
+        //  Check if the screens exist
+        if ($this->checkIfScreensExist() != true) {
+
             //  Set a warning log that we could not find any screens
             $this->logWarning('No screens found');
 
-            //  Display a custom error to notify the user of the issue
-            $response = $this->displayCustomErrorPage('Sorry no screens were found');
+            //  Display the technical difficulties error page to notify the user of the issue
+            $response = $this->displayTechnicalDifficultiesErrorPage();
+            
         }
 
-        return $response;
+        //  Return null if we have screens
+        return null;
     }
+
+    /*  checkIfScreensExist()
+     *  This method checks if the USSD metadata has any screens we can display.
+     *  It will return true if we have screens to display and false if we don't
+     *  have screens to display.
+     */
+    public function checkIfScreensExist()
+    {
+        //  Check if the screen metadata is an array that its not empty
+        if (is_array($this->ussdBuilderMetadata) && !empty($this->ussdBuilderMetadata) ) {
+            
+            //  Return true to indicate that the screens exist
+            return true;
+
+        }
+
+        //  Return false to indicate that the screens do not exist
+        return false;
+    }
+
+    /*  getFirstScreenToDisplay()
+     *  This method gets the first screen that we should display. First we look
+     *  for a screen indicated by the user. If we can't locate that screen we
+     *  then default to the first available screen that we can display.
+     */
+    public function getFirstScreenToDisplay()
+    {
+        //  Set an info log that we are searching for the first screen
+        $this->logInfo('Searching for the first screen');
+
+        //  Get the first display screen (The one specified by the user)
+        $this->screen = collect($this->ussdBuilderMetadata)->where('first_display_screen', true)->first() ?? null;
+
+        //  If we did not manage to get the first display screen specified by the user
+        if (!$this->screen) {
+            //  Set a warning log that the default starting screen was not found
+            $this->logWarning('Default starting screen was not found');
+
+            //  Set an info log that we will use the first available screen
+            $this->logInfo('Selecting the first available screen as the default starting screen');
+
+            //  Select the first screen on the ussd builder by default
+            $this->screen = $this->ussdBuilderMetadata[0];
+        }
+
+        //  Set an info log for the first selected screen
+        $this->logInfo('Selected <span class="text-primary">'.$this->screen['title'].'</span> as the first screen');
+
+        //  Return the first screen to display
+        return  $this->screen;
+    }
+
+    /*  handleCurrentScreen()
+     *  This method first checks if the screen we want to handle exists. This could be the
+     *  first display screen or any linked screen. In either case if the screen does not
+     *  exist we log a warning and display the technical difficulties page. We then check
+     *  if the user has already responded to the current screen. If (No) then we build 
+     *  and display the current screen. If (Yes) then we need to validate, format and
+     *  store the users response respectively if specified. 
+     */
+    public function handleCurrentScreen()
+    {
+        //  Check if the current display screen exists
+        $doesNotExistResponse = $this->handleNonExistentScreen();
+
+        //  If the current display screen does not exist return the response otherwise continue
+        if( $doesNotExistResponse ) return $doesNotExistResponse;
+
+        //  Check if the user has already responded to the current display screen
+        if ($this->completedLevel($this->level)) {
+
+            //  Get the user response (Input provided by the user) for the current display screen
+            $this->getCurrentScreenUserResponse();
+
+            //  Validate the user response (Input provided by the user)
+            $failedValidationResponse = $this->validateCurrentScreenUserResponse();
+
+            //  If the current user response failed the validation return the failed response otherwise continue
+            if( $failedValidationResponse ) return $failedValidationResponse;
+
+            //  Format the user response (Input provided by the user)
+            $failedFormatResponse = $this->formatCurrentScreenUserResponse();
+
+            //  If the current user response failed to format return the failed response otherwise continue
+            if( $failedFormatResponse ) return $failedFormatResponse;
+
+            //  Store the user response (Input provided by the user) as a named dynamic variable
+            $this->storeCurrentScreenUserResponseAsDynamicVariable();
+
+            //  Check if the current screen must link to another screen
+            if( $this->checkIfCurrentScreenMustLinkToAnotherScreen() ){
+
+                //  Get the linked screen from the current screen
+                $this->linkedScreen = $this->getLinkedScreenFromCurrentScreen();
+
+                //  Increment the current level so that we target the next screen (This means we are targeting the linked screen)
+                ++$this->level;
+    
+                //  Check if the user responded to the next screen (This means they responded to the linked screen)
+                if( $this->completedLevel($this->level) ){
+
+                    //  Set the current screen as the linked screen
+                    $this->screen = $this->linkedScreen;
+
+                    //  Handle the current screen (This means we are handling the linked screen)
+                    return $this->handleCurrentScreen();
+    
+                }
+
+            }
+
+        }else{
+
+            //  Build the current screen display
+            return $this->buildCurrentScreen();
+
+        }
+            
+    }
+
+    public function handleNonExistentScreen()
+    {
+        /** First check if the current screen is available for processing
+         *  Note that at level = 1 we are indicating that we are targeting
+         *  the first display screen. Any level more that 1 e.g level = 2
+         *  indicates that we are targeting the linked display screen
+         */
+
+        //  If this is the first display screen
+        if ($this->level == 1) {
+
+            //  If the first display screen is not available
+            if (empty($this->screen)) {
+
+                //  Set a warning log that the first display screen could not be found
+                $this->logWarning('The first display screen could not be found');
+
+                //  Display the technical difficulties error page to notify the user of the issue
+                return $this->displayTechnicalDifficultiesErrorPage();
+
+            }
+
+        //  If this is the linked display screen
+        }else{ 
+
+            //  If the linked display screen is not available
+            if (empty($this->screen)) {
+
+                //  Set a warning log that the first display screen could not be found
+                $this->logWarning('The linked display screen could not be found');
+
+                //  Display the technical difficulties error page to notify the user of the issue
+                $response = $this->displayTechnicalDifficultiesErrorPage();
+
+            }
+
+        }
+
+        return null;
+    }
+
+    /*  getCurrentScreenUserResponse()
+     *  This method gets the users response for the current screen if it exists otherwise
+     *  returns an empty string if it does not exist. We also log an info message to 
+     *  indicate the screen name associated with the provided response.
+     */
+    public function getCurrentScreenUserResponse()
+    {
+        //  Get the current screen user response (Input provided by the user)
+        $this->currentUserResponse = $this->getResponseFromLevel($this->level) ?? '';   //  John Doe
+
+        //  Set an info log that the user has responded to the current screen and show the input value
+        $this->logInfo('User has responded to <span class="text-primary">'.$this->screen['title'].'</span> with <span class="text-success">' . $this->currentUserResponse .'</span>');
+
+        //  Return the current screen user response
+        return $this->currentUserResponse;
+    }
+
+    /*  validateCurrentScreenUserResponse()
+     *  This method gets all the validation rules of the current screen. We then use these validation 
+     *  rules to validate the users response for the current screen. The validation rules that are 
+     *  used depend on whether the current screen uses API's
+     */
+    public function validateCurrentScreenUserResponse()
+    {
+        //  If the current screen uses API's
+        if ($this->screen['use_apis'] == true) {
+
+            //  Validate the user response (Input provided by the user)
+        
+        //  If the current screen does not use API's
+        }else{
+
+            //  Get the validation rules
+            $validationRules = $this->screen->content->validation->rules ?? [];
+
+        }
+
+        //  Validate the user response (Input provided by the user)
+        $failedValidationResponse = $this->handleValidationRules( $validationRules );
+
+        //  If the current user response failed the validation return the failed response otherwise continue
+        if( $failedValidationResponse ) return $failedValidationResponse;
+        
+        //  Return null if validation passes
+        return null;
+    }
+
+    /*  validateCurrentScreenUserResponse()
+     *  This method checks if the given validation rules are active (If they must be used). 
+     *  If the validation rule must be used then we determine which rule we are given and which 
+     *  validation method must be used for each given case.
+     */
+    public function handleValidationRules( $validationRules = [])
+    {
+        //  If we have validation rules
+        if( !empty( $validationRules ) ){
+
+            //  For each validation rulle
+            foreach( $validationRules as $validationRule ){
+
+                //  If the current validation rule is active (Must be used)
+                if( $validationRule['active'] == true ){
+
+                    //  Get the type of validation rule e.g "only_letters" or "only_numbers"
+                    $validationType = $validationRule['type'];
+
+                    //  Use the switch statement to determine which validation method to use
+                    switch ( $validationType ) {
+
+                        case 'only_letters':
+
+                            return $this->applyValidationRule($validationRule, 'validateOnlyLetters'); break;
+                            
+                        /*
+                        case 'only_numbers':
+
+                            return $this->applyValidationRule($validationRule, 'validateOnlyNumbers'); break;
+
+                        case 'only_numbers_and_letters':
+
+                            return $this->applyValidationRule($validationRule, 'validateOnlyNumbersAndLetters'); break;
+                        */
+                    }
+
+                }
+
+            }
+
+        }
+
+        //  Return null to indicate that validation passed
+        return null;
+    }
+
+    /*  validateOnlyLetters()
+     *  This method validates to make sure the current screen user's response
+     *  is only letters and numbers
+     */
+    public function validateOnlyLetters($validationRule)
+    {
+        //  Regex pattern to allow letters and spaces only
+        $pattern = "/[a-zA-Z\s]+/";
+
+        //  If the pattern was not matched exactly i.e validation failed
+        if( !preg_match($pattern, $this->currentUserResponse) ){
+
+            //  Handle the failed validation
+            return $this->handleFailedValidation($validationRule);
+
+        }
+    } 
+
+    /*  applyValidationRule()
+     *  This method gets the validation rule and callback. The callback represents the name of
+     *  the validation function that we must run to validate the current users response. Since 
+     *  we allow custom Regex patterns for custom validation support, we must perform this under 
+     *  a try/catch incase the provided custom Regex pattern is invalid. This will allow us to 
+     *  catch any emerging error and be able to use the handleFailedValidation() in order to 
+     *  display the fatal error message and additional debugging details.
+     */
+    public function applyValidationRule($validationRule, $callback)
+    {
+
+        $initialUserResponse = $this->currentUserResponse;
+
+        try{                
+
+            /** Perform the validation method here e.g "validateOnlyLetters()" within the try/catch
+             *  method and pass the validation rule e.g "validateOnlyLetters( $validationRule )"
+             */  
+            $callback( $validationRule );
+
+        } catch (\Throwable $e) {
+
+            //  Handle failed validation
+            $this->handleFailedValidation($validationRule);
+
+            //  Handle try catch error
+            return $this->handleTryCatchError($e);
+
+        } catch (Exception $e) {
+            
+            //  Handle failed validation
+            $this->handleFailedValidation($validationRule);
+
+            //  Handle try catch error
+            return $this->handleTryCatchError($e);
+
+        }
+
+    }
+
+    /*  handleFailedValidation()
+     *  This method logs a warning with details about the failed validation rule
+     */
+    public function handleFailedValidation($validationRule)
+    {
+        $this->logWarning('Validation failed using ('.$validationRule['name'].'): <span class="text-error">' + $validationRule['error_msg'] . '</span>');
+    }
+
+    /*  formatCurrentScreenUserResponse()
+     *  This method gets all the formatting rules of the current screen. We then use these formatting 
+     *  rules to format the users response for the current screen. The formatting rules that are 
+     *  used depend on whether the current screen uses API's
+     */
+    public function formatCurrentScreenUserResponse()
+    {
+        //  If the screen uses API's
+        if ($this->screen['use_apis'] == true) {
+
+            //  Format the user response (Input provided by the user)
+        
+        }else{
+
+            //  Get the format rules
+            $formattingRules = $this->screen->content->formatting->rules ?? [];
+            
+        }
+
+        //  Format the user response (Input provided by the user)
+        $failedFormatResponse = $this->handleFormattingRules( $formattingRules );
+
+        //  If the current user response failed to format return the failed response otherwise continue
+        if( $failedFormatResponse ) return $failedFormatResponse;
+        
+        //  Return null if formatting passes
+        return null;
+    }
+
+    /*  handleFormattingRules()
+     *  This method checks if the given formatting rules are active (If they must be used). 
+     *  If the formatting rule must be used then we determine which rule we are given and which
+     *  formatting method must be used for each given case.
+     */
+    public function handleFormattingRules( $formattingRules = [])
+    {
+        //  If we have formatting rules
+        if( !empty( $formattingRules ) ){
+
+            //  For each formatting rulle
+            foreach( $formattingRules as $formattingRule ){
+
+                //  If the current formatting rule is active (Must be used)
+                if( $formattingRule['active'] == true ){
+
+                    //  Get the type of formatting rule e.g "capitalize" or "uppercase"
+                    $formattingType = $formattingRule['type'];
+
+                    //  Use the switch statement to determine which formatting method to use
+                    switch ( $formattingType ) {
+
+                        case 'capitalize':
+
+                            return $this->applyFormattingRule($formattingRule, 'capitalizeFormat'); break;
+                            
+                        /*
+                        case 'uppercase':
+
+                            return $this->applyFormattingRule($formattingRule, 'uppercaseFormat'); break;
+
+                        case 'lowercase':
+
+                            return $this->applyFormattingRule($formattingRule, 'lowercaseFormat'); break;
+                        */
+                    }
+
+                }
+
+            }
+
+        }
+
+        //  Return null to indicate that formatting passed
+        return null;
+    }
+
+    /*  capitalizeFormat()
+     *  This method formats the current screen user's response
+     *  by capitalizing the given string
+     */
+    public function capitalizeFormat($formattingRule)
+    {
+        //  Capitalize the current string
+        $this->currentUserResponse = ucwords( strtolower( $this->currentUserResponse ) );
+    }  
+
+    /*  applyFormattingRule()
+     *  This method gets the formatting rule and callback. The callback represents the name of
+     *  the formatting function that we must run to format the current users response. Since we 
+     *  allow custom code for custom formatting support, we must perform this under a try/catch
+     *  incase the provided custom PHP code is invalid. This will allow us to catch any emerging 
+     *  error and be able to use the handleFailedFormatting() in order to display the fatal 
+     *  error message and additional debugging details.
+     */
+    public function applyFormattingRule($formattingRule, $callback)
+    {
+        $initialUserResponse = $this->currentUserResponse;
+
+        try{                
+
+            /** Perform the formatting method here e.g "capitalizeFormat()" within the try/catch
+             *  method and pass the formatting rule e.g "capitalizeFormat( $formattingRule )"
+             */  
+            $callback( $formattingRule );
+
+        } catch (\Throwable $e) {
+
+            //  Handle failed formatting
+            $this->handleFailedFormatting($formattingRule);
+
+            //  Handle try catch error
+            return $this->handleTryCatchError($e);
+
+        } catch (Exception $e) {
+
+            //  Handle failed formatting
+            $this->handleFailedFormatting($formattingRule);
+
+            //  Handle try catch error
+            return $this->handleTryCatchError($e);
+
+        }
+
+    }
+
+    /*  handleFailedFormatting()
+     *  This method logs a warning with details about the failed formatting rule
+     */
+    public function handleFailedFormatting($formattingRule)
+    {
+        //  Handle failed formatting
+        $this->logWarning('Formatting failed using ('.$formattingRule['name'].') for <span class="text-success">' . $formattingRule . '</span>');
+    }
+
+    public function storeCurrentScreenUserResponseAsDynamicVariable()
+    {
+        //  Get the current screen expected action type
+        $screenActionType = $this->getCurrentScreenActionType();
+
+        //  If the action is to select an option e.g 1, 2 or 3
+        if( $screenActionType == 'Select Option' ){
+
+            //  Get the current screen expected action type
+            $screenSelectOptionType = $this->getCurrentScreenSelectOptionType();
+
+            //  If the select option uses 
+            if( $this->screen['content']['select_reply']['type']  == 'Static Options' ){
+
+            }
+
+        //  If the action is to input a value e.g John
+        }else if( $screenActionType == 'Input Value' ){
+
+
+            
+        }
+    }
+
+    public function getCurrentScreenActionType()
+    {
+        //  If the screen uses API's
+        if ($this->screen['use_apis'] == true) {
+
+            //  Returnthe Last API Request Contnt
+
+        //  If the screen does not use API's
+        }else{
+
+            return $this->screen['content']['action_type'] ?? '';
+
+        }
+
+    }
+
+    public function getCurrentScreenSelectOptionType()
+    {
+        //  If the screen uses API's
+        return $this->screen['content']['select_reply']['type'] ?? '';
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 
     public function determineScreenToDisplay()
     {
-        //  If we are displaying the first screen (i.e we haven't displayed anything yet)
-        if ($this->level == 1) {
-            //  Set an info log that the we are setting up the first screen
-            $this->logInfo('Setting up the first screen');
-
-            //  Get the first display screen (The one specified by the user)
-            $this->screen = collect($this->ussdBuilder)->where('first_display_screen', true)->first() ?? null;
-
-            //  If did not manage to get the first display screen specified by the user
-            if (!$this->screen) {
-                //  Set a warning log that the default starting screen was not found
-                $this->logWarning('Default starting screen was not found');
-
-                //  Set an info log that we will use the first available screen
-                $this->logInfo('Set the first available screen as the default starting screen');
-
-                //  Select the first screen on the ussd builder by default
-                $this->screen = $this->ussdBuilder[0];
-            }
-
-            //  Set an info log for the first selected screen
-            $this->logInfo('Selected <span class="text-primary">'.$this->screen['title'].'</span> as the first screen');
-
-        //  If we are displaying any other screen except the first screen
-        } else {
-            //  Check if the screen data exists
-            if (!empty($this->screen)) {
-                //  Set an info log that we are linking to the current screen
-                $this->logInfo('Linking to <span class="text-primary">'.$this->screen['title'].'</span>');
-            } else {
-                //  Set a warning log that the linked screen could not be found
-                $this->logWarning('Linked screen could not be found');
-
-                //  Display a custom error to notify the user of the issue
-                return $this->displayCustomErrorPage('Sorry could not find the linked screen');
-            }
-        }
-
-        /* If the user responses are greater than the number of screens displayed, then we need
-        *  to determine whether or not we can access the follow-up screens to match the user
-        *  responses e.g:
-        *
-        *  At level (1) the number of user responses = 0 which means we display screen 1
-        *  At level (2) the number of user responses = 1 which means we display screen 2 (Since we have screen 1 response)
-        *  At level (3) the number of user responses = 2 which means we display screen 3 (Since we have screen 2 response)
-        *
-        */
-
         //  Check if the user has already responded to the current display screen
         if ($this->completedLevel($this->level)) {
 
@@ -191,9 +673,10 @@ class UssdCreatorController extends Controller
             if ($this->screen['use_apis'] == true) {
                 //  If the screen does not use API's
             } else {
-                if ($this->screen['content']['reply_type'] == 'Select Option') {
+                if ($this->screen['content']['action_type'] == 'Select Option') {
+
                     //  If the screen select reply uses dynamic information
-                    if ($this->screen['content']['select_reply']['is_dynamic'] == true) {
+                    if ($this->screen['content']['select_reply']['type'] == 'basic') {
                         //  DO THE SELECT DYNAMIC STUFF HERE
 
                     //  If the screen select reply uses static information
@@ -222,7 +705,7 @@ class UssdCreatorController extends Controller
                     }
                 }
 
-                if ($this->screen['content']['reply_type'] == 'Input Value') {
+                if ($this->screen['content']['action_type'] == 'Input Value') {
                     //  Get the current input value and set it as the dynamic data value
                     $dynamic_data_value = $user_response;  //  e.g John Doe
 
@@ -230,19 +713,19 @@ class UssdCreatorController extends Controller
                     $next_screen = $this->screen['content']['next_screen'] ?? null;  //  e.g register
                 }
 
-                if ($this->screen['content']['reply_type'] != 'No Action') {
+                if ($this->screen['content']['action_type'] != 'No Action') {
                     //  Get the reply name (if available)
-                    $reply_name = $this->screen['content']['reply_name'];   //  e.g first_name
+                    $reference_name = $this->screen['content']['reference_name'];   //  e.g first_name
 
                     //  If the reply name is not empty and the user reponse has been set
-                    if (!empty($reply_name) && isset($dynamic_data_value) && !empty($dynamic_data_value)) {
+                    if (!empty($reference_name) && isset($dynamic_data_value) && !empty($dynamic_data_value)) {
                         //  Save the dynamic attribute and its associated value in the dynamic data storage
-                        $this->dynamic_data_storage[$reply_name] = $dynamic_data_value;
+                        $this->dynamic_data_storage[$reference_name] = $dynamic_data_value;
                     }
 
                     //  If the reply name is not empty and the user reponse has been set
                     if (isset($next_screen) && !empty($next_screen)) {
-                        foreach ($this->ussdBuilder as $screen) {
+                        foreach ($this->ussdBuilderMetadata as $screen) {
                             //  To avoid self infinite loops
                             if ($screen['title'] != $this->screen['title']) {
                                 if ($screen['title'] == $next_screen) {
@@ -329,7 +812,7 @@ class UssdCreatorController extends Controller
         $available_screen_action = '';
 
         //  If the screen content must display select options
-        if ($content['reply_type'] == 'Select Option') {
+        if ($content['action_type'] == 'Select Option') {
             //  Add a line break before showing the options
             $available_screen_action .= "\n";
 
@@ -556,11 +1039,8 @@ class UssdCreatorController extends Controller
         //  Set an error log
         $this->logError('Error:  '.$error->getMessage());
 
-        //  Indicate that we experienced an error
-        $this->errorEncountered = true;
-
-        //  Return nothing
-        return null;
+        //  Display the technical difficulties error page to notify the user of the issue
+        return $this->displayTechnicalDifficultiesErrorPage();
     }
 
     /** logInfo()
