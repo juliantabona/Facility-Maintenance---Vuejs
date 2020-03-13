@@ -117,7 +117,7 @@
                             <!-- Input Action Type Selector -->
                             <Select v-if="localScreenContent.action.selected_action_type == 'input_value'"
                                     v-model="localScreenContent.action.input_value.selected_type"
-                                    class="w-50 mb-2" placeholder="Input value type">
+                                    class="mb-2" placeholder="Input value type">
                                 
                                 <Option v-for="(action, key) in inputActionTypes" :key="key" class="mb-2"
                                         :value="action.type" :label="action.name">
@@ -128,7 +128,7 @@
                             <!-- Select Option Action Type Selector -->
                             <Select v-if="localScreenContent.action.selected_action_type == 'select_option'"
                                     v-model="localScreenContent.action.select_option.selected_type"
-                                    class="w-50 mb-2" placeholder="Select option type">
+                                    class="mb-2" placeholder="Select option type">
                                 
                                 <Option v-for="(action, key) in selectOptionActionTypes" :key="key" class="mb-2"
                                         :value="action.type" :label="action.name">
@@ -181,37 +181,62 @@
 
                                     <Col :span="24">
 
-                                        <Row :gutter="4" v-for="(reference_name, x) in localScreenContent.action.input_value.multi_value_input.reference_names" :key="x">
+                                        <template v-if="localScreenContent.action.input_value.multi_value_input.reference_names.length">
+                                        
+                                            <Row :gutter="4" v-for="(reference_name, x) in localScreenContent.action.input_value.multi_value_input.reference_names" :key="x">
 
-                                            <Col :span="22">
+                                                <Col :span="22">
 
-                                                <!-- Input Value Name -->
-                                                <Input v-model="localScreenContent.action.input_value.multi_value_input.reference_names[x]" 
-                                                    maxlength="30" type="text" class="w-100 mb-2" placeholder="Reference name">
-                                                    <div slot="prepend">@</div>
-                                                </Input>
+                                                    <!-- Input Value Name -->
+                                                    <Input v-model="localScreenContent.action.input_value.multi_value_input.reference_names[x]" 
+                                                        maxlength="30" type="text" class="w-100 mb-2" placeholder="Reference name">
+                                                        <div slot="prepend">@</div>
+                                                    </Input>
 
-                                            </Col>
-                                            
-                                            <Col :span="2">
+                                                </Col>
+                                                
+                                                <Col :span="2">
 
-                                                <!-- Remove Option Button  -->
-                                                <Poptip confirm title="Are you sure you want to remove this option?" 
-                                                        ok-text="Yes" cancel-text="No" width="300" @on-ok="removeSelectStaticOption(x)"
-                                                        placement="top-end">
-                                                    <Icon type="ios-trash-outline" class="screen-icon hidable mr-2" size="20"/>
-                                                </Poptip>
+                                                    <!-- Remove Option Button  -->
+                                                    <Poptip confirm title="Are you sure you want to remove this option?" 
+                                                            ok-text="Yes" cancel-text="No" width="300" @on-ok="removeMultiInputReference(x)"
+                                                            placement="top-end">
+                                                        <Icon type="ios-trash-outline" class="screen-icon hidable mr-2" size="20"/>
+                                                    </Poptip>
 
-                                            </Col>
+                                                </Col>
 
-                                        </Row>
+                                            </Row>
+
+                                        </template>
+
+                                        <Alert v-else type="info" class="mb-2" show-icon>No references</Alert>
+
+                                    </Col>
+
+                                    <Col :span="22">
+
+                                        <!-- Add Static Option -->
+                                        <div class="clearfix">
+
+                                            <!-- Add Static Option Button -->
+                                            <Button class="float-right" @click.native="addMultiInputReference()">
+                                                <Icon type="ios-add" :size="20" />
+                                                <span>Add Reference</span>
+                                            </Button>
+
+                                        </div>
 
                                     </Col>
 
                                 </Row>
 
                             </template>
-                            
+
+                        </div>
+
+                        <div class="bg-grey-light border mt-3 mb-3 p-2">
+
                             <!-- Link To Screen Selector -->
                             <Row>
 
@@ -219,7 +244,7 @@
                                 <Col :span="22" class="d-flex mb-2">  
 
                                     <Icon type="ios-pin-outline" size="20"  class="mt-1 ml-1 mr-2 text-muted font-weight-bold" />
-                                    <Select v-model="localScreenContent.action.input_value.next_screen" filterable placeholder="Link To Screen">
+                                    <Select v-model="localScreenContent.action.input_value.multi_value_input.next_screen" filterable placeholder="Link To Screen">
 
                                         <Option v-for="(screen, key) in screenTree"
                                                 :key="key" :value="screen.title" :label="screen.title"
@@ -238,7 +263,8 @@
 
                         </div>
                         
-                    </template
+                    </template>
+                    
                     <!-- Select Option Actions  -->
                     <template v-if="localScreenContent.action.selected_action_type == 'select_option'">
 
@@ -284,7 +310,7 @@
                                     <Col :span="2">
 
                                         <!-- Option Number -->
-                                        <span class="d-block text-center mt-1">{{ x + 1 }}</span>
+                                        <span class="d-block text-center mt-1">{{ option.input }}</span>
                                     
                                     </Col>
                                     
@@ -335,7 +361,6 @@
                                 </Row>
                             </template>
 
-                            <!-- No Static Options -->
                             <Alert v-else type="info" class="mb-2" show-icon>No options</Alert>
 
                             <!-- Add Static Option -->
@@ -346,6 +371,29 @@
                                     <Icon type="ios-add" :size="20" />
                                     <span>Add Option</span>
                                 </Button>
+
+                            </div>
+
+                            <!-- Messages / Desclaimers -->
+                            <div class="bg-grey-light border mt-3 mb-3 p-2">
+
+                                <!-- Heading -->
+                                <span class="d-block font-weight-bold text-dark mt-3">No Options Message</span>
+                                
+                                <Input 
+                                    v-model="localScreenContent.action.select_option.static_options.no_results_message"
+                                    placeholder="Enter no options message"
+                                    type="textarea" :rows="2" class="w-100 mb-3">
+                                </Input>
+
+                                <!-- Heading -->
+                                <span class="d-block font-weight-bold text-dark">Incorrect Option Selected Message</span>
+                                
+                                <Input 
+                                    v-model="localScreenContent.action.select_option.static_options.incorrect_option_selected_message"
+                                    placeholder="Enter incorrect option selected message"
+                                    type="textarea" :rows="2" class="w-100 mb-3">
+                                </Input>
 
                             </div>
 
@@ -448,19 +496,87 @@
                                         </div>
 
                                     </div>
-                                    
-                                    <!-- Heading -->
-                                    <span class="d-block font-weight-bold text-dark">No Results Message</span>
-                                    
-                                    <Input 
-                                        v-model="localScreenContent.action.select_option.dynamic_options.no_results_message"
-                                        placeholder="Enter message for zero results found"
-                                        type="textarea" :rows="2" class="w-100 mb-3">
-                                    </Input>
+
+                                    <!-- Messages / Desclaimers -->
+                                    <div class="bg-grey-light border mt-3 mb-3 p-2">
+
+                                        <!-- Heading -->
+                                        <span class="d-block font-weight-bold text-dark mt-3">No Options Message</span>
+                                        
+                                        <Input 
+                                            v-model="localScreenContent.action.select_option.dynamic_options.no_results_message"
+                                            placeholder="Enter no options message"
+                                            type="textarea" :rows="2" class="w-100 mb-3">
+                                        </Input>
+
+                                        <!-- Heading -->
+                                        <span class="d-block font-weight-bold text-dark">Incorrect Option Selected Message</span>
+                                        
+                                        <Input 
+                                            v-model="localScreenContent.action.select_option.dynamic_options.incorrect_option_selected_message"
+                                            placeholder="Enter incorrect option selected message"
+                                            type="textarea" :rows="2" class="w-100 mb-3">
+                                        </Input>
+
+                                    </div>
                                 
                                 </Col>
 
                             </Row>
+                        </template>
+                        
+                        <!-- If Dynamic Options  -->
+                        <template v-else-if="localScreenContent.action.select_option.selected_type == 'code_editor_options'">
+
+                            <Row>
+                                
+                                <!-- Code Editor -->
+                                <Col :span="24">
+
+                                    <!-- Custom PHP Code Editor -->
+                                    <customEditor
+                                        :useCodeEditor="true"
+                                        sampleCodeTemplate="ussd_creator_select_options_action_sample_code"
+                                        :codeContent="localScreenContent.action.select_option.code_editor_options.code_editor_text"
+                                        @codeChange="localScreenContent.action.select_option.code_editor_options.code_editor_text = $event">
+                                    </customEditor>
+
+                                    <!-- Messages / Desclaimers -->
+                                    <div class="bg-grey-light border mt-3 mb-3 p-2">
+                                        
+                                        <!-- Selected Item Reference Name -->
+                                        <span class="d-block font-weight-bold text-dark">Reference Name</span>
+                                        
+                                        <Input 
+                                            v-model="localScreenContent.action.select_option.code_editor_options.reference_name"
+                                            maxlength="30" type="text" class="w-100 mb-3" placeholder="selected_item">
+                                            <div slot="prepend">@</div>
+                                        </Input>
+
+                                        <!-- Heading -->
+                                        <span class="d-block font-weight-bold text-dark mt-3">No Options Message</span>
+                                        
+                                        <Input 
+                                            v-model="localScreenContent.action.select_option.code_editor_options.no_results_message"
+                                            placeholder="Enter no options message"
+                                            type="textarea" :rows="2" class="w-100 mb-3">
+                                        </Input>
+
+                                        <!-- Heading -->
+                                        <span class="d-block font-weight-bold text-dark">Incorrect Option Selected Message</span>
+                                        
+                                        <Input 
+                                            v-model="localScreenContent.action.select_option.code_editor_options.incorrect_option_selected_message"
+                                            placeholder="Enter incorrect option selected message"
+                                            type="textarea" :rows="2" class="w-100 mb-3">
+                                        </Input>
+
+                                    </div>
+
+                                </Col>
+
+                            </Row>
+
                         </template>
                         
                     </template>
@@ -897,7 +1013,10 @@
                 ],
                 multiValueSeparatorTypes: [
                     {
-                        name: 'Single spaces ( )', type: ' '
+                        name: 'Single spaces ( )', type: 'spaces'
+                    },
+                    {
+                        name: 'Period symbol (.)', type: '.'
                     },
                     {
                         name: 'Comma symbol (,)', type: ','
@@ -907,6 +1026,9 @@
                     },
                     {
                         name: 'Plus symbol (+)', type: '+'
+                    },
+                    {
+                        name: 'Hash symbol (#)', type: ' '
                     },
                     {
                         name: 'Forward slash symbol (/)', type: '/'
@@ -1173,12 +1295,31 @@
                 return ['truncate', 'convert_to_money', 'date_format', 'custom_format'].includes(formatting_rule.type) 
                        && formatting_rule.active
             },
+            addMultiInputReference(){
+
+                //  Build the multi-input reference name template
+                var template = '';
+
+                //  Add to existing reference names
+                this.localScreenContent.action.input_value.multi_value_input.reference_names.push( template );
+
+            },
+            removeMultiInputReference(index){
+
+                //  Remove current reference name
+                this.localScreenContent.action.input_value.multi_value_input.reference_names.splice(index, 1);
+
+            },
             addSelectStaticOption(){
+
+                var input = (this.localScreenContent.action.select_option.static_options.options.length + 1);
 
                 //  Build the option template
                 var optionTemplate = {
-                        name: '', 
-                        next_screen: ''
+                        name: '',
+                        value: '',
+                        input: input,
+                        next_screen: null
                     };
 
                 //  Add the screen to the screen tree

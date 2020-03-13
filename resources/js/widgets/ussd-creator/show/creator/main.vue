@@ -652,13 +652,14 @@
                         input_value: {
                             selected_type: 'single_value_input',
                             single_value_input: {
-                                reference_name: null
+                                reference_name: null,
+                                next_screen: null
                             },
                             multi_value_input: {
-                                separator: ' ',
-                                reference_names: ['first_name', 'last_name']
-                            },
-                            next_screen: null
+                                separator: 'spaces',
+                                reference_names: ['first_name', 'last_name'],
+                                next_screen: null
+                            }
                         },
                         select_option: {
                             selected_type: 'static_options',
@@ -666,11 +667,14 @@
                                 options: [
                                     {
                                         name: '',
+                                        value: '',
+                                        input: '1',
                                         next_screen: null
                                     }
                                 ],
                                 reference_name: null,
-                                no_results_message: 'No results found'
+                                no_results_message: 'No options available',
+                                incorrect_option_selected_message: 'You selected an incorrect option. Please try again'
                             }, 
                             dynamic_options: {
                                 group_reference: '{{ items }}', 
@@ -678,11 +682,15 @@
                                 template_display_name: '{{ item.name }} - {{ item.price }}',
                                 template_value: '{{ item.id }}',
                                 reference_name: 'selected_item',
+                                next_screen: null,
                                 no_results_message: 'No items found',
-                                next_screen: null
+                                incorrect_option_selected_message: 'You selected an incorrect option. Please try again',
                             },
                             code_editor_options: {
-                                code_editor_text: null
+                                code_editor_text: null,
+                                reference_name: 'selected_item',
+                                no_results_message: 'No items found',
+                                incorrect_option_selected_message: 'You selected an incorrect option. Please try again'
                             }
                         }
                     },
