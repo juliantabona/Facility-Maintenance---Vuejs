@@ -695,12 +695,26 @@ class UssdController extends Controller
                 unset($sessionData['created_at']);
 
                 //  Update the session
-                DB::table('ussd_sessions')->where('session_id', $this->session_id)->update($sessionData);
+                $update = DB::table('ussd_sessions')->where('session_id', $this->session_id)->update($sessionData);
+
+                if( $update ){
+                    return 'Update Success';
+                }else{
+                    return 'Update Fail';
+                }
 
             //  If we dont't have a Ussd Session
             } else {
+
                 //  Create a new session
-                DB::table('ussd_sessions')->insert($sessionData);
+                $create = DB::table('ussd_sessions')->insert($sessionData);
+
+                if( $create ){
+                    return 'Create Success';
+                }else{
+                    return 'Create Fail';
+                }
+
             }
 
         } catch (\Throwable $e) {
