@@ -110,6 +110,9 @@ class UssdController extends Controller
                 //  If the session has a text value
                 if (!empty($session->text)) {
                     
+                    //  Convert encoded values e.g "%23" into "#"
+                    $this->text = urldecode( $this->text );
+                    
                     //  Update the current text with the previous session text value and the current text value
                     $this->text = $session->text.($this->text != '' ? '*'.$this->text : '');
 
