@@ -707,7 +707,13 @@ class UssdController extends Controller
             } else {
 
                 //  Create a new session
-                $create = DB::table('ussd_sessions')->insert($sessionData);
+                //$create = DB::table('ussd_sessions')->insert($sessionData);
+
+                $create = DB::table('ussd_sessions')->insert(
+                    ['session_id' => '123', 'service_code' => '*123#', 'phone_number' => '26775993221', 'status' => '0', 'text' => '0']
+                );
+
+
 
                 if( $create ){
                     return 'Create Success';
