@@ -390,7 +390,7 @@ class UssdController extends Controller
         $response .= 'Text: '.$this->text."\n";
         $response .= 'Text: '.$this->original_text."\n";
         $response .= 'Session Id: '.$this->session_id."\n";
-        $response .= 'Query: '.$query;
+        $response .= 'Session Id: '.$this->session_id."\n";
 
         if ($this->test_mode) {
             //  Return the response to the user
