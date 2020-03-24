@@ -222,6 +222,8 @@ class UssdController extends Controller
      */
     public function home()
     {
+        return response( 'CON Hello, the service is fine!' )->header('Content-Type', 'text/plain');
+
         $this->offset = 0;
 
         $this->verifyUssdDetails();
