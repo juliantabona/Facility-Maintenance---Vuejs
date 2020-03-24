@@ -147,8 +147,8 @@ class UssdController extends Controller
         $serviceCode = '*253*179#';
         $client = new \GuzzleHttp\Client();
         $params['form_params'] = $request->all();
-        $uri = 'http://oqcloud.local/api/ussd/customer';
-        //  $uri = 'https://oqcloud.co.bw/api/ussd/customer';
+        //  $uri = 'http://oqcloud.local/api/ussd/customer';
+        $uri = 'https://oqcloud.co.bw/api/ussd/customer';
 
         try {
             //  Get the xml content from the request
