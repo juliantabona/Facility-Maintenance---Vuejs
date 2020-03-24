@@ -82,23 +82,44 @@ class UssdController extends Controller
         /*  Get the USSD TEXT value (User Response)  */
         $this->text = $request->get('text');
 
-        /*  Get the original text before its formatted */
-        $this->original_text = $this->text;
+        /*  Note: When we use the Orange USSD Service it does not automatically give us a history of 
+         *  previous user replies. Instead of giving us "1*2*3" they will return only "3" being the
+         *  last response given by the user. This means that we lose all other user responses. To
+         *  get the full text we need to keep storing each input then on every request we get the
+         *  store input and combine it with the current input e.g
+         * 
+         *  On session start we have ""
+         *  The user replies with "1" so we save this input into the DB
+         *  The user replies with "2" so we get the last input saved and merge it with the current input to get "1*2"
+         *  The user replies with "3" so we get the last inputs saved and merge it with the current input to get "1*2*3"
+         *  We continue the process in this way to keep up with the user responses. 
+         * 
+         *  When using Test Mode we don't need this functionality since we always get the full text e.g "1*2*3" instead
+         *  of only the last response.
+         * 
+         *  Refer to updateCustomerJourney() to see how the responses are saved
+         */
+        if ($this->session_id && !$this->test_mode) {
 
-        /*  If we have a session id  */
-        if ($this->session_id) {
             //  Get the session of the current session ID
             $session = DB::table('ussd_sessions')->where('session_id', $this->session_id)->first();
 
             //  If we have an existing session returned
             if ($session) {
+
                 //  If the session has a text value
                 if (!empty($session->text)) {
+                    
                     //  Update the current text with the previous session text value and the current text value
                     $this->text = $session->text.($this->text != '' ? '*'.$this->text : '');
+
                 }
             }
+
         }
+
+        /*  Get the original text before its formatted */
+        $this->original_text = $this->text;
 
         /*  Define the user's mobile number  */
         $this->user['phone'] = [
