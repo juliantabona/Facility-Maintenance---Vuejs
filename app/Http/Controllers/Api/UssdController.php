@@ -384,12 +384,13 @@ class UssdController extends Controller
         *  we know if they are shopping, have selected a product, have selected a payment
         *  method, have paid successfully or experienced a failed payment, e.t.c
         */
-        $this->updateCustomerJourney();
+        $query = $this->updateCustomerJourney();
 
         $response = $response."\n\n";
         $response .= 'Text: '.$this->text."\n";
-        $response .= 'Text: '.$this->original_text;
-        $response .= 'Session Id: '.$this->session_id;
+        $response .= 'Text: '.$this->original_text."\n";
+        $response .= 'Session Id: '.$this->session_id."\n";
+        $response .= 'Query: '.$query;
 
         if ($this->test_mode) {
             //  Return the response to the user
@@ -674,12 +675,24 @@ class UssdController extends Controller
             unset($sessionData['created_at']);
 
             //  Update the session
-            DB::table('ussd_sessions')->where('session_id', $this->session_id)->update($sessionData);
+            $update = DB::table('ussd_sessions')->where('session_id', $this->session_id)->update($sessionData);
+
+            if( $update ){
+                return 'Update success';
+            }else{
+                return 'Update fail';
+            }
 
         //  If we dont't have a Ussd Session
         } else {
             //  Create a new session
-            DB::table('ussd_sessions')->insert($sessionData);
+            $create = DB::table('ussd_sessions')->insert($sessionData);
+
+            if( $update ){
+                return 'Create success';
+            }else{
+                return 'Create fail';
+            }
         }
     }
 
