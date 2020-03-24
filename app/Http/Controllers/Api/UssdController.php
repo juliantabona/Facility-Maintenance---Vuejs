@@ -384,9 +384,21 @@ class UssdController extends Controller
         *  we know if they are shopping, have selected a product, have selected a payment
         *  method, have paid successfully or experienced a failed payment, e.t.c
         */
-        $query = $this->updateCustomerJourney();
+        try{
+            $query = 'CON ' . $this->updateCustomerJourney();
+
+        } catch (\Throwable $e) {
+            
+            $query = $e->getMessage();
+
+        } catch (Exception $e) {
+
+            $query = $e->getMessage();
+
+        }
 
         $response = $response."\n";
+        $response = $query."\n";
 
         if ($this->test_mode) {
             //  Return the response to the user
