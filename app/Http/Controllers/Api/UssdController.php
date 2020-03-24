@@ -710,7 +710,7 @@ class UssdController extends Controller
                 $create = DB::table('ussd_sessions')->insert($sessionData);
 
                 if( $create ){
-                    return 'Create Success - ' . json_encode($create);
+                    return 'Create Success';
                 }else{
                     return 'Create Fail';
                 }
