@@ -46,7 +46,7 @@
 
                             </div>
 
-                            <!-- Requests Dragger  -->
+                            <!-- Screen Dragger  -->
                             <draggable v-if="screenTree.length"
                                 :list="screenTree"
                                 @start="drag=true" 
@@ -219,121 +219,282 @@
                         <Row v-if="activeScreen" :gutter="20">
 
                             <Col :span="24">
-                            
-                                <Poptip trigger="hover" width="350" placement="right" word-wrap class="mb-4"
-                                        content="Use API's to Create, Get, Update or Delete resources stored in an external system. You can also use API's to send Emails, SMS's and process Subcriptions">
+
+                                <Collapse simple value="2">
+
+                                    <!-- Delivery Details -->
+                                    <Panel name="1">
+
+                                        <!-- Heading -->
+                                        <span class="text-dark">Display</span>
+                                        
+                                        <Row slot="content">
+
+                                            <!-- Action Type Separator -->
+                                            <Col :span="12" class="d-flex">
+                                                    
+                                                <!-- Single Item Display Name -->
+                                                <span class="d-block font-weight-bold text-dark mt-2 mr-2">Type: </span>
+                                                
+                                                <!-- Screen Action Selector -->
+                                                <Select v-model="activeScreen.display_type" 
+                                                        class="mb-2" placeholder="Display type">
+                                                    
+                                                    <Option v-for="(display_type, key) in displayTypes" :key="key" class="mb-2"
+                                                            :value="display_type.value" :label="display_type.name">
+                                                    </Option>
+
+                                                </Select>
+                                            </Col>
+
+                                            <Col :span="24">
+                                            
+                                                <Row v-if="activeScreen.display_type == 'repeat_display'"
+                                                    class="bg-grey-light border mt-3 mb-3 p-2">
+
+                                                    <!-- Test API Response Data -->
+                                                    <Tabs v-model="selectedRepeatDisplayTab" type="card" style="overflow: visible;" :animated="false">
+
+                                                        <!-- API Response Details -->
+                                                        <TabPane v-for="(tabName, key) in ['Repeat', 'Content', 'Navigation']" 
+                                                                :key="key" :label="tabName" :name="tabName">
+                                                        </TabPane>
+
+                                                    </Tabs>
+
+                                                
+                                                    <!-- Foreach Display -->
+                                                    <Col :span="4">
+                                                    
+                                                        <span class="d-block text-center mt-1">Foreach</span>
+                                                    
+                                                    </Col>
+                                                    
+                                                    <!-- Foreach Items Group Reference -->
+                                                    <Col :span="8">
+                                                    
+                                                        <!-- Group Reference -->
+                                                        <customEditor
+                                                            size="small" classes="px-1"
+                                                            :useCodeEditor="false" :placeholder="'{{ items }}'"
+                                                            :content="activeScreen.repeat_display.group_reference"
+                                                            @contentChange="activeScreen.repeat_display.group_reference = $event">
+                                                        </customEditor>
+
+                                                    </Col>
+                                                    
+                                                    <!-- As Label -->
+                                                    <Col :span="2">
+
+                                                        <span class="d-block text-center mt-1">As</span>
+                                                    
+                                                    </Col>
+                                                    
+                                                    <Col :span="10">
+                                                    
+                                                        <!-- Template Reference Name -->
+                                                        <Input maxlength="30" type="text" class="w-100 mb-2" :placeholder="'item'" 
+                                                            :disabled="!activeScreen.repeat_display.group_reference"
+                                                            v-model="activeScreen.repeat_display.template_reference_name">
+                                                            <div slot="prepend">@</div>
+                                                        </Input>
+                                                    
+                                                    </Col>
+                                                    
+                                                    <Col :span="24">
+
+                                                        <div class="bg-grey-light border mt-2 mb-3 pt-3 px-2 pb-2">
+                                                        
+                                                            <!-- Heading -->
+                                                            <span class="d-block font-weight-bold text-dark">Link</span>
+
+                                                            <!-- Link To Screen Selector -->
+                                                            <div class="d-flex mb-2">       
+                                                                <Icon type="ios-pin-outline" size="20"  class="mt-1 ml-1 mr-2 text-muted font-weight-bold" />
+                                                                <Select v-model="activeScreen.repeat_display.next_screen" filterable placeholder="Link To Screen">
+
+                                                                    <Option v-for="(screen, key) in screenTree"
+                                                                        :key="key" :value="screen.title" :label="screen.title">
+
+                                                                        <!-- Screen title -->
+                                                                        <span>{{ screen.title }}</span>
+
+                                                                    </Option>
+
+                                                                </Select>
+                                                            </div>
+
+                                                        </div>
+
+                                                        <!-- Messages / Desclaimers -->
+                                                        <div class="bg-grey-light border mt-3 mb-3 p-2">
+                                                            
+                                                            <!-- Static Option List Content -->
+                                                            <template v-if="activeScreen.repeat_display.next_item_indicator.length">
+                                                                
+                                                                <!-- Heading -->
+                                                                <span class="d-block font-weight-bold text-dark mb-2">Next Item Indicator</span>
+                                                            
+                                                                <Row :gutter="4" v-for="(indicator, x) in activeScreen.repeat_display.next_item_indicator" :key="x" class="mb-3">
+                                                                    
+                                                                    
+                                                                    <Col :span="6">
+
+                                                                        <!-- Enable Navigation Indicator -->
+                                                                        <Checkbox v-model="indicator.active"class="mt-1">
+                                                                            {{ indicator.name }}
+                                                                        </Checkbox>
+
+                                                                    </Col>
+
+                                                                    <template v-if="['include_input', 'exclude_input'].includes(indicator.type)">
+                                                                        
+                                                                        <Col :span="18">
+
+                                                                            <!-- Option Number -->
+                                                                            <Input v-model="indicator.value" type="text" class="w-100" placeholder="e.g 1" :disabled="!indicator.active"></Input>
+
+                                                                        </Col>
+
+                                                                    </template>
+                                                                    
+                                                                    <template v-if="['include_range', 'exclude_range'].includes(indicator.type)">
+
+                                                                        <Col :span="9">
+
+                                                                            <!-- Option Number -->
+                                                                            <InputNumber v-model="indicator.min_value" :min="1" :max="indicator.max_value - 1" :step="1" class="w-100" :disabled="!indicator.active"></InputNumber>
+                                                                        
+                                                                        </Col>
+
+                                                                        <Col :span="9">
+
+                                                                            <!-- Option Number -->
+                                                                            <InputNumber v-model="indicator.max_value" :min="indicator.min_value + 1" :step="1" class="w-100" :disabled="!indicator.active"></InputNumber>
+                                                                        
+                                                                        </Col>
+
+                                                                    </template>
+
+                                                                </Row>
+
+                                                            </template>
+
+                                                            <Alert v-else type="info" class="mb-2" show-icon>No options</Alert>
+
+                                                        </div>
+
+                                                        <!-- Messages / Desclaimers -->
+                                                        <div class="bg-grey-light border mt-3 mb-3 p-2">
+
+                                                            <!-- Heading -->
+                                                            <span class="d-block font-weight-bold text-dark mt-3">No Options Message</span>
+                                                            
+                                                            <Input 
+                                                                v-model="activeScreen.repeat_display.no_results_message"
+                                                                placeholder="Enter no options message"
+                                                                type="textarea" :rows="2" class="w-100 mb-3">
+                                                            </Input>
+
+                                                            <!-- Heading -->
+                                                            <span class="d-block font-weight-bold text-dark">Incorrect Option Selected Message</span>
+                                                            
+                                                            <Input 
+                                                                v-model="activeScreen.repeat_display.incorrect_option_selected_message"
+                                                                placeholder="Enter incorrect option selected message"
+                                                                type="textarea" :rows="2" class="w-100 mb-3">
+                                                            </Input>
+
+                                                        </div>
+                                                    
+                                                    </Col>
+
+                                                </Row>
+
+                                            </Col>
+                                        </Row>
+
+                                    </Panel>
+
+                                    <!-- Billing Details -->
+                                    <Panel name="2">
+
+                                        <!-- Heading -->
+                                        <span class="text-dark">Content</span>
+
+                                        <Row slot="content">
+
+                                            <Col :span="24">
+                                            
+                                                <Poptip trigger="hover" width="350" placement="right" word-wrap class="mb-4"
+                                                        content="Use API's to Create, Get, Update or Delete resources stored in an external system. You can also use API's to send Emails, SMS's and process Subcriptions">
+                                                    
+                                                    <Icon type="ios-planet-outline" class="border rounded-circle p-1" :size="20" />
+                                                    <span class="font-weight-bold text-dark">Use APIs: </span>
+                                                    <i-switch 
+                                                        size="small" 
+                                                        class="ml-1"
+                                                        :disabled="false"
+                                                        true-color="#13ce66" 
+                                                        false-color="#ff4949"
+                                                        :value="activeScreen.use_apis" 
+                                                        @on-change="activeScreen.use_apis = $event">
+                                                    </i-switch>
+                                                </Poptip>
+
+                                            </Col>
+
+                                            <!-- Settings For Screen Not Using API's --> 
+                                            <Col v-if="activeScreen.use_apis" :span="24">
                                     
-                                    <Icon type="ios-planet-outline" class="border rounded-circle p-1" :size="20" />
-                                    <span class="font-weight-bold text-dark">Use APIs: </span>
-                                    <i-switch 
-                                        size="small" 
-                                        class="ml-1"
-                                        :disabled="false"
-                                        true-color="#13ce66" 
-                                        false-color="#ff4949"
-                                        :value="activeScreen.use_apis" 
-                                        @on-change="activeScreen.use_apis = $event">
-                                    </i-switch>
-                                </Poptip>
+                                                <!-- Requests Dragger  -->
+                                                <draggable v-if="activeScreen.api_triggers.length"
+                                                    :list="activeScreen.api_triggers"
+                                                    @start="drag=true" 
+                                                    @end="drag=false" 
+                                                    :options="{
+                                                        group:'requests',
+                                                        draggable:'.single-request', 
+                                                        handle:'.request-dragger-handle'
+                                                    }">
 
-                            </Col>
+                                                    <!-- Single Request  -->
+                                                    <singleRequestWidget v-for="(request, index) in activeScreen.api_triggers" :key="index"   
+                                                        :index="index"
+                                                        :request="request"
+                                                        :screenTree="screenTree"
+                                                        @removeRequest="handleRemoveRequest(index)">
+                                                    </singleRequestWidget>
 
-                            <!-- Settings For Screen Not Using API's --> 
-                            <Col v-if="activeScreen.use_apis" :span="24">
+                                                </draggable>
 
-                                <template v-if="activeScreen">
+                                                <!-- No request data message -->
+                                                <Alert v-else type="info" class="mb-2" show-icon>No requests</Alert>
 
-                                    <el-tabs value="general">
-                                            
-                                        <!-- General Settings -->
-                                        <el-tab-pane label="General" name="general" class="pt-2">
+                                                <div class="clearfix">
 
-                                            <div>
-                                                <!-- Heading -->
-                                                <span class="d-block text-dark float-left">
-                                                    <span class="font-weight-bold">Success </span>(Default Message)
-                                                </span>
+                                                    <!-- Add Request Button -->
+                                                    <Button class="float-right" @click.native="addApiRequest(activeScreen)">
+                                                        <Icon type="ios-add" :size="20" />
+                                                        <span>Add Request</span>
+                                                    </Button>
 
-                                                <!-- Default API Error -->
-                                                <el-input type="text" v-model="activeScreen.api.general.default_success_message" size="small" class="w-100 mb-3"></el-input>
-                                            </div>
+                                                </div>
 
-                                            <div>
-                                                <!-- Heading -->
-                                                <span class="d-block text-dark float-left">
-                                                    <span class="font-weight-bold">Error </span>(Default Message)
-                                                </span>
+                                            </Col>
 
-                                                <!-- Default API Error -->
-                                                <el-input type="text" v-model="activeScreen.api.general.default_error_message" size="small" class="w-100 mb-3"></el-input>
-                                            </div>
+                                            <!-- Settings For Screen Using API's --> 
+                                            <Col v-else :span="24">
 
-                                            <div>
-                                                <!-- Heading -->
-                                                <span class="d-block text-dark float-left">
-                                                    <span class="font-weight-bold">No Results </span>(Default Message)
-                                                </span>
+                                                <screenContentWidget :screenContent="activeScreen.content" :screenTree="screenTree"></screenContentWidget>
 
-                                                <!-- Default No Results Message -->
-                                                <el-input type="text" v-model="activeScreen.api.general.no_results_message" size="small" class="w-100 mb-3"></el-input>
-                                            </div>
+                                            </Col>
 
-                                        </el-tab-pane>
-                                            
-                                        <!-- API Request Settings -->
-                                        <el-tab-pane label="API Requests" name="api_requests">
-                    
-                                            <!-- Requests Dragger  -->
-                                            <draggable v-if="activeScreen.api.requests.length"
-                                                :list="activeScreen.api.requests"
-                                                @start="drag=true" 
-                                                @end="drag=false" 
-                                                :options="{
-                                                    group:'requests',
-                                                    draggable:'.single-request', 
-                                                    handle:'.request-dragger-handle'
-                                                }">
+                                        </Row>
 
-                                                <!-- Single Request  -->
-                                                <singleRequestWidget v-for="(request, index) in activeScreen.api.requests" :key="index"   
-                                                    :index="index"
-                                                    :request="request"
-                                                    :screenTree="screenTree"
-                                                    @removeRequest="handleRemoveRequest(index)">
-                                                </singleRequestWidget>
+                                    </Panel>
 
-                                            </draggable>
-
-                                            <!-- No request data message -->
-                                            <Alert v-else type="info" class="mb-2" show-icon>No requests</Alert>
-
-                                            <div class="clearfix">
-
-                                                <!-- Add Request Button -->
-                                                <Button class="float-right" @click.native="addApiRequest(activeScreen)">
-                                                    <Icon type="ios-add" :size="20" />
-                                                    <span>Add Request</span>
-                                                </Button>
-
-                                            </div>
-
-                                        </el-tab-pane>
-                                            
-                                        <!-- API Response Settings -->
-                                        <el-tab-pane label="API Response" name="api_response">
-                                            
-                                        </el-tab-pane>
-
-                                    </el-tabs>
-
-                                </template>
-
-                            </Col>
-
-                            <!-- Settings For Screen Using API's --> 
-                            <Col v-else :span="24">
-
-                                <screenContentWidget :screenContent="activeScreen.content" :screenTree="screenTree"></screenContentWidget>
+                                </Collapse>
 
                             </Col>
 
@@ -473,6 +634,8 @@
     /*  Buttons  */
     import ussdSimulator from './../../../../components/_common/simulators/ussdSimulator.vue';
 
+    import customEditor from '../../../../components/_common/wiziwigEditors/customEditor.vue';
+
     import screenMenuOption from './screenMenuOption.vue';
     import screenContentWidget from './screenContentWidget.vue';
     import singleRequestWidget from './singleRequestWidget.vue';
@@ -484,8 +647,8 @@
                 default: null
             }
         },
-        components: { draggable, Loader, basicButton, ussdSimulator, 
-                      screenMenuOption, screenContentWidget, singleRequestWidget
+        components: { draggable, Loader, basicButton, ussdSimulator, screenMenuOption, 
+                      screenContentWidget, singleRequestWidget, customEditor
                     },
         data(){
             return {
@@ -498,7 +661,40 @@
                 currentActiveScreenTitle: null,
                 localUssdCreator: this.ussdCreator,
                 selectedLogType: 'All',
+                selectedRepeatDisplayTab: 'Repeat',
                 logTypes: ['All', 'Info', 'Warnings', 'Errors'],
+                displayTypes: [
+                    { name: 'Single Display', value: 'single_display' },
+                    { name: 'Repeat Display', value: 'repeat_display' }
+                ],
+                nextItemIndicators: [
+                    {
+                        active: true,
+                        name: 'Allow Input',
+                        type: 'include_input',
+                        value: '1,2,3'
+                    },
+                    {
+                        active: false,
+                        name: 'Ignore Input',
+                        type: 'exclude_input',
+                        value: '4,5,6'
+                    },
+                    {
+                        active: false,
+                        name: 'Allow Range',
+                        type: 'include_range',
+                        min_value: 1,
+                        max_value: 3
+                    },
+                    {
+                        active: false,
+                        name: 'Ignore Range',
+                        type: 'exclude_range',
+                        min_value: 1,
+                        max_value: 3
+                    }
+                ],
                 screenTree: (this.ussdCreator || {}).metadata || [],
             }
         }, 
@@ -589,10 +785,20 @@
                 //  Build the screen template
                 screenTemplate = { 
                     title: screenTitle, 
+                    display_type: 'single_display',
+                    repeat_display: {
+                        group_reference: '{{ items }}', 
+                        template_reference_name: 'item',
+                        next_screen: null,
+                        no_results_message: 'No items found',
+                        incorrect_option_selected_message: 'You selected an incorrect option. Please try again',
+
+                        next_item_indicator: this.nextItemIndicators
+                    },
                     use_apis: false, 
                     first_display_screen: firstDisplayScreen,
                     content: this.getContentTemplate(),
-                    api: this.getApiTemplate()
+                    api_triggers: []
                 };
 
                 //  Add the screen to the screen tree
@@ -606,33 +812,41 @@
 
                 //  Build the template
                 var template = {
-                        url: 'http://oqcloud.local/api/test/items', // 'https://domain.com/api/items',
-                        name: 'Get Items',
-                        method: 'get',
-                        trigger: 'on-enter',
-                        query_params: [{ key: '', value: ''}],
-                        form_data: [{ key: '', value: ''}],
-                        headers: [{ key: '', value: ''}],
-                        response_data: [
-                            {
-                                status: 200,
-                                attributes: [
-                                    {
-                                        name: 'get_items_response',
-                                        value: 'response'
-                                    },
-                                    {
-                                        name: 'items',
-                                        value: 'response.items'
-                                    }
-                                ],
-                                content: this.getContentTemplate()
-                            }
-                        ]
+                        api_type: 'custom',
+                        api_data: {
+                            url: 'http://oqcloud.local/api/test/items', // 'https://domain.com/api/items',
+                            name: 'Get Items',
+                            method: 'get',
+                            trigger: 'on-enter',
+                            query_params: [{ key: '', value: ''}],
+                            form_data: [{ key: '', value: ''}],
+                            headers: [{ key: '', value: ''}],
+                            general: {
+                                response_type: 'automatic',
+                                default_success_message: 'Completed successfully',
+                                default_error_message: 'Sorry, we are experiencing technical difficulties'
+                            },
+                            response_status_handles: [
+                                {
+                                    status: '200',
+                                    attributes: [
+                                        {
+                                            name: 'get_items_response',
+                                            value: '{{ response }}'
+                                        },
+                                        {
+                                            name: 'items',
+                                            value: '{{ response.items }}'
+                                        }
+                                    ],
+                                    content: this.getContentTemplate()
+                                }
+                            ]
+                        }
                     };
 
                 //  Add the api request data to the screen api request dataset
-                screen.api.requests.push( template );
+                screen.api_triggers.push( template );
 
             },
             getContentTemplate(){
@@ -744,19 +958,6 @@
                             ]
                         }
                     ]
-                };
-            },
-            getApiTemplate(){
-                
-                return  {
-
-                    general: {
-                        no_results_message: 'No results found',
-                        default_success_message: 'Completed successfully',
-                        default_error_message: 'Sorry, we are experiencing technical difficulties'
-                    },
-                    requests: []
-
                 };
             },
             showEditor(){

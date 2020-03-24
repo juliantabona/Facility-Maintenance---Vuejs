@@ -298,7 +298,6 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
 
             //  Settings related resources
             Route::post('/statistics', 'Api\StoreController@getStoreStatistics')->name('statistics');
-            
         });
     });
 
@@ -993,36 +992,99 @@ Route::get('download/quotations/{quotation_id}', 'Api\DownloadController@downloa
 //  DELETEE EVERYTHING DOWN HERE THIS IS A TESTING SEECTION
 //  DELETEE EVERYTHING DOWN HERE THIS IS A TESTING SEECTION
 
-Route::get('/test/items', function(){
+Route::get('/driving/test', function () {
 
-    $products = [
+    $instructions = 'Your test will be 2 questions long. You must complete all questions and get 1 or more to pass your test.';
+
+    $questions = [
         [
-            "ID" => "1",
-            "Name" => "Product 1",
-            "Quantity" => "5",
-            "Price" => "250"
+            'id' => '1',
+            'text' => 'What can present a danger in road traffic?',
+            'choices' => [
+                [
+                    'id' => '20',
+                    'is_correct' => true,
+                    'text' => 'Headlights set to high'
+                ],
+                [
+                    'id' => '21',
+                    'is_correct' => false,
+                    'text' => 'Listening to music on the car radio'
+                ],
+                [
+                    'id' => '22',
+                    'is_correct' => false,
+                    'text' => 'Driving slow on the hard shoulder'
+                ]
+            ]
         ],
         [
-            "ID" => "2",
-            "Name" => "Product 2",
-            "Quantity" => "10",
-            "Price" => "350"
-        ],
-        [
-            "ID" => "3",
-            "Name" => "Product 3",
-            "Quantity" => "15",
-            "Price" => "550"
+            'id' => '2',
+            'text' => 'What can be the cause for veering off the roadway?',
+            'choices' => [
+                [
+                    'id' => '23',
+                    'is_correct' => true,
+                    'text' => 'Excessive speed'
+                ],
+                [
+                    'id' => '24',
+                    'is_correct' => false,
+                    'text' => 'Talking with passengers'
+                ],
+                [
+                    'id' => '25',
+                    'is_correct' => false,
+                    'text' => 'Paying to much attention to traffic'
+                ]
+            ]
         ]
     ];
 
     $data = [
-        'total' => 3,
-        'products' => $products
+        'total' => 2,
+        'time_limit' =>[
+            'in_minutes' => 5,
+            'in_seconds' => 320,
+            'human_readable' => '5 mins 20 sec'
+        ],
+        'instructions' => $instructions,
+        'questions' => $questions
     ];
 
     $status = 200;
 
     return response()->json($data, $status);
-    
+});
+
+Route::get('/test/items', function () {
+    $products = [
+        [
+            'id' => '1',
+            'name' => 'Tomatoes',
+            'quantity' => '5',
+            'price' => '250',
+        ],
+        [
+            'id' => '2',
+            'name' => 'Cabbage',
+            'quantity' => '10',
+            'price' => '350',
+        ],
+        [
+            'id' => '3',
+            'name' => 'Onions',
+            'quantity' => '15',
+            'price' => '550',
+        ],
+    ];
+
+    $data = [
+        'total' => 3,
+        'our_products' => $products,
+    ];
+
+    $status = 200;
+
+    return response()->json($data, $status);
 });

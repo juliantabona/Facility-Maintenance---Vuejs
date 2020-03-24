@@ -189,6 +189,14 @@ class Product extends Model
     {
         return $this->morphToMany('App\Tag', 'owner', 'tag_allocations')->withTimestamps();
     }
+ 
+    /* 
+     *  Returns ussd interfaces (i.e Ussd Stores)
+     */
+     public function ussdInterfaces()
+     {
+        return $this->morphedByMany('App\UssdInterface', 'owner', 'product_allocations')->withTimestamps();
+     }
 
     /*
      *  Returns recent activities owned by this product
@@ -420,7 +428,7 @@ class Product extends Model
             //  If this product takes stock
             if ($this->allow_stock_management) {
                 //  If the current product owner is a store
-                if ($this->owner->resource_type == 'store') {
+                if ($this->owner_type == 'store') {
                     //  Get the stores minimum stock quantity
                     $minimum_stock_quantity = $this->owner->minimum_stock_quantity;
 
@@ -616,8 +624,12 @@ class Product extends Model
      */
     public function getCurrencyAttribute()
     {
-        //  Get the store currency
-        return $this->owner->currency;
+        if( $this->owner ){
+
+            //  Get the store currency
+            return $this->owner->currency;
+
+        }
     }
 
     /*

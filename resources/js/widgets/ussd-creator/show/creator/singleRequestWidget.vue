@@ -63,12 +63,12 @@
 
         <div slot="title">
 
-            <el-input v-if="showContent" type="text" v-model="localRequest.name" size="small" class="w-50"></el-input>
+            <el-input v-if="showContent" type="text" v-model="localRequest.api_data.name" size="small" class="w-50"></el-input>
 
             <!-- Request Name  -->
             <span v-else class="request-name font-weight-bold cut-text">
                 {{ getRequestNumber ? getRequestNumber +'. ' : '' }}
-                {{ localRequest.name }}
+                {{ localRequest.api_data.name }}
             </span>
             
         </div>
@@ -135,7 +135,7 @@
 
                                         </Row>
 
-                                        <Row v-for="(query_param, index) in localRequest.query_params" :key="index" :gutter="4" class="mb-2">
+                                        <Row v-for="(query_param, index) in localRequest.api_data.query_params" :key="index" :gutter="4" class="mb-2">
 
                                             <Col :span="11">
 
@@ -204,7 +204,7 @@
 
                                         </Row>
 
-                                        <Row v-for="(form_data, index) in localRequest.form_data" :key="index" :gutter="4" class="mb-2">
+                                        <Row v-for="(form_data, index) in localRequest.api_data.form_data" :key="index" :gutter="4" class="mb-2">
 
                                             <Col :span="11">
 
@@ -273,7 +273,7 @@
 
                                         </Row>
 
-                                        <Row v-for="(header, index) in localRequest.headers" :key="index" :gutter="4" class="mb-2">
+                                        <Row v-for="(header, index) in localRequest.api_data.headers" :key="index" :gutter="4" class="mb-2">
 
                                             <Col :span="11">
 
@@ -341,10 +341,10 @@
                             
                                     <Col :span="18">
 
-                                        <i-input v-model="localRequest.url" class="w-100 mb-2" placeholder="https://www.website.com/api/items">
+                                        <i-input v-model="localRequest.api_data.url" class="w-100 mb-2" placeholder="https://www.website.com/api/items">
                                             
                                             <!-- Select API Method -->
-                                            <Select v-model="localRequest.method" slot="prepend" style="width: 80px">
+                                            <Select v-model="localRequest.api_data.method" slot="prepend" style="width: 80px">
                                                 <Option value="get">GET</Option>
                                                 <Option value="post">POST</Option>
                                                 <Option value="patch">PATCH</Option>
@@ -359,7 +359,7 @@
 
                                         <!-- Run Api -->
                                         <Button class="float-right" type="success" @click.native="testApi()"
-                                            :disabled="isTestingApiUrl || !localRequest.url" >
+                                            :disabled="isTestingApiUrl || !localRequest.api_data.url" >
                                             <Icon type="ios-repeat" :size="20" />
                                             <span>Test Api</span>
                                         </Button>
@@ -465,79 +465,138 @@
                             <Col :span="24">
 
                                 <!-- Header -->
-                                <span class="d-block font-weight-bold text-dark mb-2">Responses</span>
+                                <span class="d-block font-weight-bold text-dark">Responses</span>
 
-                                <Tabs v-model="selectedRequestResponseTab" type="card" :animated="false">
+                                <!-- General Settings -->
+                                <div class="bg-grey-light border mt-2 mb-3 p-2">
 
-                                    <!-- API Response For Status 200 -->
-                                    <TabPane v-for="(responseType, key) in api_response_types" :key="key"
-                                            :label="responseType.status" :name="responseType.status"
-                                            :closable="true">
-
-                                        <span v-if="responseType.description" class="d-block mb-2">
-                                            <span class="font-weight-bold text-dark">Description: </span>
-                                            <span>{{ responseType.description }}</span>
+                                    <div>
+                                        <!-- Heading -->
+                                        <span class="d-block text-dark float-left">
+                                            <span class="font-weight-bold">Success </span>(Default Message)
                                         </span>
 
-                                        <div class="bg-grey-light border mt-3 mb-3 p-2">
+                                        <!-- Default API Error -->
+                                        <el-input type="text" v-model="localRequest.api_data.general.default_success_message" size="small" class="w-100 mb-3"></el-input>
+                                    </div>
 
-                                            <Row :gutter="4">
+                                    <div>
+                                        <!-- Heading -->
+                                        <span class="d-block text-dark float-left">
+                                            <span class="font-weight-bold">Error </span>(Default Message)
+                                        </span>
 
-                                                <Col :span="12">
-                                            
-                                                    <span class="d-block font-weight-bold text-dark mb-2">Response Name</span>
+                                        <!-- Default API Error -->
+                                        <el-input type="text" v-model="localRequest.api_data.general.default_error_message" size="small" class="w-100 mb-3"></el-input>
+                                    </div>
 
-                                                </Col>
+                                </div>
 
-                                                <Col :span="12">
-                                            
-                                                    <span class="d-block font-weight-bold text-dark mb-2">Response Value</span>
+                                <!-- Select display mode -->
+                                <div class="d-flex mt-2">
+                                    <span class="font-weight-bold text-dark mt-1 mr-2">Use:</span>
+                                    <Select v-model="localRequest.api_data.general.response_type" 
+                                            placeholder="Select" class="mb-4">
 
-                                                </Col>
+                                        <Option 
+                                            v-for="(api_response_type, key) in api_response_types"
+                                            :key="key" :value="api_response_type.value" 
+                                            :label="api_response_type.name">
+                                        </Option>
 
-                                            </Row>
+                                    </Select>
+                                </div>
 
-                                            <Row v-for="(attribute, key) in getScreenAttributes" :key="key" :gutter="4" class="mb-2">
+                                <!-- Manual response -->
+                                <template v-if="localRequest.api_data.general.response_type == 'manual'">
 
-                                                <Col :span="12">
+                                    <Alert type="info" style="line-height: 1.4em;" class="mb-2">
+                                        Add one or more <span class="font-italic text-success font-weight-bold">Status Codes</span> to take advantage of dynamic screen content. 
+                                        Each status code represents an opportunity to handle the request in a specific manner e.g fetching the response data and displaying it
+                                        as dynamic <span class="font-italic text-success font-weight-bold">Select Options</span> or displaying the 
+                                        <span class="font-italic text-success font-weight-bold">Api Error</span> to the user.
+                                    </Alert>
 
-                                                    <i-input v-model="attribute.name" size="small" class="w-100" placeholder="products">
-                                                        <div slot="prepend">@</div>
-                                                    </i-input>
+                                    <Tabs v-model="selectedRequestResponseTab" type="card" :animated="false">
 
-                                                </Col>
+                                        <!-- API Response For Status 200 -->
+                                        <TabPane v-for="(responseType, key) in localRequest.api_data.response_status_handles" :key="key"
+                                                :label="responseType.status" :name="responseType.status"
+                                                :closable="true">
 
-                                                <Col :span="12">
+                                            <span v-if="responseType.description" class="d-block mb-2">
+                                                <span class="font-weight-bold text-dark">Description: </span>
+                                                <span>{{ responseType.description }}</span>
+                                            </span>
 
-                                                    <i-input v-model="attribute.value" size="small" class="w-100" placeholder="response.products"
-                                                            :disabled="key == 0"></i-input>
+                                            <div class="bg-grey-light border mt-3 mb-3 p-2">
 
-                                                </Col>
+                                                <Row :gutter="4">
 
-                                            </Row>
+                                                    <Col :span="12">
+                                                
+                                                        <span class="d-block font-weight-bold text-dark mb-2">Response Name</span>
 
-                                            <div class="clearfix">
+                                                    </Col>
 
-                                                <!-- Run Api -->
-                                                <Button class="float-right" @click.native="addResponseOption()">
-                                                    <Icon type="ios-add" :size="20" />
-                                                    <span>Add</span>
-                                                </Button>
+                                                    <Col :span="12">
+                                                
+                                                        <span class="d-block font-weight-bold text-dark mb-2">Response Value</span>
+
+                                                    </Col>
+
+                                                </Row>
+
+                                                <Row v-for="(attribute, key) in currentResponseHandle.attributes" :key="key" :gutter="4" class="mb-2">
+
+                                                    <Col :span="12">
+
+                                                        <i-input v-model="attribute.name" size="small" class="w-100" placeholder="products">
+                                                            <div slot="prepend">@</div>
+                                                        </i-input>
+
+                                                    </Col>
+
+                                                    <Col :span="12">
+
+                                                        <i-input v-model="attribute.value" size="small" class="w-100" placeholder="response.products"
+                                                                :disabled="key == 0"></i-input>
+
+                                                    </Col>
+
+                                                </Row>
+
+                                                <div class="clearfix">
+
+                                                    <!-- Run Api -->
+                                                    <Button class="float-right" @click.native="addResponseOption()">
+                                                        <Icon type="ios-add" :size="20" />
+                                                        <span>Add</span>
+                                                    </Button>
+
+                                                </div>
 
                                             </div>
 
-                                        </div>
+                                        </TabPane>
 
-                                    </TabPane>
+                                    </Tabs>
 
-                                </Tabs>
-                                
-                                <screenContentWidget 
-                                    v-if="getScreenContent"
-                                    :screenTree="screenTree"
-                                    :screenContent="getScreenContent" 
-                                    class="bg-grey-light border-bottom mt-2 p-2">
-                                </screenContentWidget>
+                                    <!-- If manual -->
+                                    <div class="bg-grey-light border-bottom mt-2 p-2">
+                                        <screenContentWidget 
+                                            :screenTree="screenTree"
+                                            :screenContent="currentResponseHandle.content">
+                                        </screenContentWidget>
+                                    </div>
+
+                                </template>
+
+                                <!-- Automatic response -->
+                                <Alert v-else type="info" style="line-height: 1.4em;" class="mb-2">
+                                    The application will automatically decide whether to use the <span class="font-italic text-success font-weight-bold">default success</span> or
+                                    <span class="font-italic text-success font-weight-bold">default error</span> message depending on whether or not the API call is successful.
+                                </Alert>
 
                             </Col>
                         </Row>
@@ -590,6 +649,16 @@
                 selectedRequestUrlTab: 'Body',
                 selectedRequestResponseTab: '200',
                 api_response_types: [
+                    { 
+                        name: 'Automatic Responses',
+                        value: 'automatic'
+                    },
+                    { 
+                        name: 'Manual Responses',
+                        value: 'manual'
+                    },
+                ],
+                api_response_status_handles: [
                     { 
                         status: '200',
                         description: 'The request was handled successfully'
@@ -652,33 +721,19 @@
                 return JSON.stringify( (this.testAPIResponse || {}).data, undefined, 2);
 
             },
-            getScreenAttributes(){
+            currentResponseHandle(){
                 
-                for(var x=0; x < this.localRequest.response_data.length; x++){
+                for(var x=0; x < this.localRequest.api_data.response_status_handles.length; x++){
 
-                    if( this.localRequest.response_data[x].status == this.selectedRequestResponseTab){
+                    if( this.localRequest.api_data.response_status_handles[x].status == this.selectedRequestResponseTab){
 
-                        return this.localRequest.response_data[x].attributes;
+                        return this.localRequest.api_data.response_status_handles[x];
 
                     }
 
                 }
 
-                return [];
-            },
-            getScreenContent(){
-                
-                for(var x=0; x < this.localRequest.response_data.length; x++){
-
-                    if( this.localRequest.response_data[x].status == this.selectedRequestResponseTab){
-
-                        return this.localRequest.response_data[x].content;
-
-                    }
-
-                }
-
-                return null;
+                return {};
             }
         },
         methods: {
@@ -712,25 +767,13 @@
                         value: ''
                     };
 
-                //  Foreach response
-                for(var x=0; x < this.localRequest.response_data.length; x++){
+                //  Add the template to the current response status handle attributes
+                this.currentResponseHandle.attributes.push( template );
 
-                    //  If the current response data status is equal to the current open tab
-                    if( this.localRequest.response_data[x].status == parseInt(this.selectedRequestResponseTab) ){
-                        
-                        //  Add the template
-                        this.localRequest.response_data[x].attributes.push( template );
-
-                        //  Stop loop
-                        break;
-
-                    }
-
-                }
             },
             testApi(){
                 
-                if(this.localRequest.method && this.localRequest.url){
+                if(this.localRequest.api_data.method && this.localRequest.api_data.url){
 
                     //  Hold constant reference to the vue instance
                     const self = this;
@@ -742,7 +785,7 @@
                     this.testAPIResponse = null;
 
                     //  Use the api call() function located in resources/js/api.js
-                    api.call(this.localRequest.method, this.localRequest.url)
+                    api.call(this.localRequest.api_data.method, this.localRequest.api_data.url)
                         .then((response) => {
 
                             console.log(response);

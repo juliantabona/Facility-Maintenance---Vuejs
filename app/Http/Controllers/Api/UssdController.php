@@ -24,6 +24,7 @@ class UssdController extends Controller
     private $currency;
     private $test_mode;
     private $session_id;
+    private $store_code;
     private $newCustomer;
     private $service_code;
     private $phone_number;
@@ -81,6 +82,9 @@ class UssdController extends Controller
         /*  Get the USSD TEXT value (User Response)  */
         $this->text = $request->get('text');
 
+        /*  Get the original text before its formatted */
+        $this->original_text = $this->text;
+
         /*  If we have a session id  */
         if ($this->session_id) {
             //  Get the session of the current session ID
@@ -95,9 +99,6 @@ class UssdController extends Controller
                 }
             }
         }
-
-        /*  Get the original text before its formatted */
-        $this->original_text = $this->text;
 
         /*  Define the user's mobile number  */
         $this->user['phone'] = [
@@ -221,6 +222,8 @@ class UssdController extends Controller
      */
     public function home()
     {
+        $this->offset = 0;
+
         $this->verifyUssdDetails();
 
         $this->manageEncodedRequests();
@@ -242,6 +245,7 @@ class UssdController extends Controller
                 if ($this->hasProvidedStoreCode()) {
                     /*  Check if a USSD Interface using the store code provided exists  */
                     if ($this->isValidStoreCode()) {
+
                         $this->method_used_to_find_store = $this->method_used_to_find_store ?? 'store code';
 
                         /*  Allow the user to start shopping (At the specified store)  */
@@ -250,7 +254,7 @@ class UssdController extends Controller
                     /*  If no store using the provided store code exists  */
                     } else {
                         /*  Notify the user that the store was not found  */
-                        return $this->displayCustomGoBackPage("Store was not found. Make sure you are using the correct store code\n");
+                        $response = $this->displayCustomGoBackPage("Store was not found. Make sure you are using the correct store code\n");
                     }
 
                     /*  If the user hasn't yet provided the store code  */
@@ -265,7 +269,7 @@ class UssdController extends Controller
                     /*  If the user wants to search stores from their favourite store list  */
                     if ($this->wantsToSearchMyFavouriteStores()) {
                         /*  Make sure the users favourite stores are accessible from here on  */
-                        $this->stores = $this->getMyStores();
+                        $this->stores = $this->getMyFavouriteStores();
 
                         /*  Manage pagination requests  */
                         $this->handleStorePagination();
@@ -277,7 +281,7 @@ class UssdController extends Controller
                             /*  Visit the selected store  */
                             return $this->visitSelectedStore();
                         } else {
-                            /*  Display the "Select Category Store Page"  */
+                            /*  Display the "Select Favourite Store Page"  */
                             $response = $this->displayStoresPage();
                         }
 
@@ -285,19 +289,22 @@ class UssdController extends Controller
                     } elseif ($this->wantsToSearchPopularStores()) {
                         /*  Make sure the popular stores are accessible from here on  */
                         $this->stores = $this->getPopularStores();
-
+                        
                         /*  Manage pagination requests  */
                         $this->handleStorePagination();
 
                         /*  If the user already selected a specific store from the "Stores Page"  */
                         if ($this->hasSelectedStore()) {
+
                             $this->method_used_to_find_store = 'Popular Stores';
 
                             /*  Visit the selected store  */
                             return $this->visitSelectedStore();
                         } else {
+                            
                             /*  Display the "Select Popular Store Page"  */
                             $response = $this->displayStoresPage();
+
                         }
 
                         /*  If the user wants to search by store categories  */
@@ -323,7 +330,7 @@ class UssdController extends Controller
                                 $this->method_used_to_find_store = 'Search By Category';
 
                                 /*  Visit the selected store  */
-                                return $this->visitSelectedStore($responses_to_remove = 4);
+                                return $this->visitSelectedStore();
                             } else {
                                 /*  Display the "Select Popular Store Page"  */
                                 $response = $this->displayStoresPage();
@@ -335,11 +342,12 @@ class UssdController extends Controller
 
                         /*  If the user wants to search by store name  */
                     } elseif ($this->wantsToSearchByStoreName()) {
+
                         /*  If the user already provided store name on the "Enter Store Name Page"  */
                         if ($this->hasProvidedStoreNameToSearch()) {
                             /*  Make sure the searched stores are accessible from here on  */
                             $this->stores = $this->getSearchedStores();
-
+                            
                             $this->offset = ++$this->offset;
 
                             /*  Manage pagination requests  */
@@ -350,7 +358,7 @@ class UssdController extends Controller
                                 $this->method_used_to_find_store = 'Search By Name';
 
                                 /*  Visit the selected store  */
-                                return $this->visitSelectedStore($responses_to_remove = 4);
+                                return $this->visitSelectedStore();
                             } else {
                                 /*  Display the "Select Popular Store Page"  */
                                 $response = $this->displayStoresPage();
@@ -363,7 +371,7 @@ class UssdController extends Controller
                         /*  Selected an option that does not exist  */
                     } else {
                         /*  Notify the user of incorrect option selected  */
-                        return $this->displayIncorrectOptionPage();
+                        $response = $this->displayIncorrectOptionPage();
                     }
                 } else {
                     /*  Display the "Find Stores Page"  */
@@ -373,7 +381,7 @@ class UssdController extends Controller
                 /*  Selected an option that does not exist  */
             } else {
                 /*  Notify the user of incorrect option selected  */
-                return $this->displayIncorrectOptionPage();
+                $response = $this->displayIncorrectOptionPage();
             }
         }
 
@@ -386,7 +394,8 @@ class UssdController extends Controller
 
         if ($this->test_mode) {
             //  Return the response to the user
-            return response(['response' => $response])->header('Content-Type', 'text/plain');
+            return response(['response' => $response])->header('Content-Type', 'application/json');
+            //return response(['response' => $response ."\n\n".'Text: ' .$this->text ."\n".'Text: ' .$this->original_text])->header('Content-Type', 'application/json');
         } else {
             //  Return the response to the user
             return response($response)->header('Content-Type', 'text/plain');
@@ -399,11 +408,15 @@ class UssdController extends Controller
     {
         /*  If the user indicated to paginate the "Stores Page"  */
         if ($this->wantsToPaginateStoresPage()) {
+            
             /*  Paginate the "Stores Page"  */
             $this->stores_on_display = $this->paginate($this->stores, $this->stores_per_page, 3);
+
         } else {
+            
             /*  Show the first page of the "Stores Page"  */
             $this->stores_on_display = $this->paginate($this->stores, $this->stores_per_page);
+
         }
     }
 
@@ -426,12 +439,14 @@ class UssdController extends Controller
 
         /*  Selected a store that does not exist  */
         if (!$this->store) {
+
             /*  Notify the user of incorrect option selected  */
             return $this->displayIncorrectOptionPage();
+
         }
 
         /*  Get the store code  */
-        $store_code = $this->store->ussdInterface->code ?? null;
+        $this->store_code = $this->store->ussdInterface->code ?? null;
 
         /*  First we need to remove the first three options we provided. The first option was
          *  when we indicated that we wanted to search for a store. The second option was when
@@ -447,24 +462,22 @@ class UssdController extends Controller
          */
 
         /*  If we have the store and the store code */
-        if ($store_code) {
+        if ($this->store_code) {
             /*  Get all the responses as an array  */
             $responses = explode('*', $this->text);
 
             /*  Remove the first three (3) responses of the array  */
-            $responses = array_slice($responses, $responses_to_remove);
+            $responses = array_slice($responses, ($responses_to_remove + $this->offset));
 
             /*  Add the two (2) new responses to the array  */
-            array_unshift($responses, '1', $store_code);
+            array_unshift($responses, '1', $this->store_code);
 
             /*  Join the remaining responses */
             $this->text = implode('*', $responses);
 
-            /*  Reset the offset value  */
-            $this->offset = 0;
-
             /*  Run home() again to access the store */
             return $this->home();
+
         } else {
             /*  Notify the user that we have issues connecting to the store  */
             return $this->displayIssueConnectingToStorePage();
@@ -504,6 +517,7 @@ class UssdController extends Controller
         if ($this->hasSelectedStoreLandingPageOption()) {
             /*  If the user already indicated that they want to start shopping  */
             if ($this->wantsToStartShopping()) {
+
                 /*  Allow the user to start shopping  (At the specified store)  */
                 $response = $this->startShopping();
 
@@ -537,48 +551,48 @@ class UssdController extends Controller
 
     public function getStoreDetails()
     {
-        /*  Get the store code the user provided from the "Enter Store Code Page".
-         *  We can use the store code to get the USSD Interface. The USSD Interface
-         *  can then get us the exact store.
-         */
-        $store_code = $this->getProvidedStoreCode();
+        //  If we don't have the store details
+        if( empty( $this->store ) ){
 
-        /*  Get the Ussd Interface
-         *
-         *  The interface contains the USSD screen name, description and its "live_mode"
-         *  status to inform us whether to allow the user access the store landing page.
-         *  The interface also gives us access to the owning store, which allows us to
-         *  access the store products, discounts, taxes, e.t.c
-         */
-        $this->ussd_interface = $this->getUssdInterface($store_code);
+            /*  Get the store code the user provided from the "Enter Store Code Page".
+             *  We can use the store code to get the USSD Interface. The USSD Interface
+             *  can then get us the exact store.
+             */
+            if( empty($this->store_code) ) $this->store_code = $this->getProvidedStoreCode();
+    
+            /*  Get the store */
+            $this->store = $this->getStoreUsingStoreCode();
 
-        /*  Get the Ussd Interface owning store only if the interface exists */
-        $this->store = $this->ussd_interface ? $this->ussd_interface->owner : null;
-
-        /*  Get the Ussd Interface products only if the interface exists */
-        $this->products = $this->ussd_interface ? $this->ussd_interface->products : null;
-
-        /*  Get the store currency symbol or currency code if only if the store exists */
-        $this->currency = $this->store ? ($this->store['currency']['symbol'] ?? $this->store['currency']['code']) : null;
+        }
 
         /*  If no store using the provided store code was found, or maybe the store
          *  was deleted or we could not gain access to it for some reason
          */
-        if (!$this->store) {
+        if( empty( $this->store ) ){
+
             /*  Notify the user that we have issues connecting to the store  */
             return $this->displayIssueConnectingToStorePage();
+
         }
+        
+        /*  Get the store currency symbol or currency code */
+        $this->currency =  $this->store->currency['symbol'] ?? $this->store->currency['code'];
+
+        /*  Get the store products */
+        $this->products = $this->getStoreProducts();
+        
     }
 
     public function getCustomerDetails()
     {
-        //  Get the current contact
-        $this->getContact();
+        $this->contact = $this->getContact();
 
         //  If we have a contact
         if ($this->contact) {
+            
             //  Set this contact as a new customer if they have never placed an order on this store before
-            $this->newCustomer = ($this->contact->orders()->count() == 0);
+            $this->newCustomer = $this->contact->orders()->exists();
+
         }
     }
 
@@ -611,7 +625,7 @@ class UssdController extends Controller
             'status' => $this->shopping_status,
             'text' => $this->original_text,
             'owner_id' => ($this->store) ? $this->store->id : null,
-            'owner_type' => ($this->store) ? $this->store->resource_type : null,
+            'owner_type' => ($this->store) ? ( new \App\Store )->getResourceTypeAttribute() : null,
             'created_at' => DB::raw('now()'),
             'updated_at' => DB::raw('now()'),
             'metadata' => json_encode([
@@ -687,8 +701,10 @@ class UssdController extends Controller
     {
         /*  If the store is not supporting USSD at this time  */
         if (!$this->store->ussdInterface->live_mode) {
+
             /*  Notify the user that the store is not available  */
             return $this->displayCustomGoBackPage("Sorry, the store is currently offline.\n");
+            
         }
 
         /*  If the user added more items than is allowed to their cart,
@@ -1237,8 +1253,8 @@ class UssdController extends Controller
     public function displayFindStoresPage()
     {
         $response = "Find Stores:\n";
-        $response .= '1. My favourites ('.count($this->getMyStores()).")\n";
-        $response .= "2. Popular stores\n";
+        $response .= '1. My favourites ('.$this->getMyFavouriteStores(true).")\n";
+        $response .= '2. Popular stores ('.$this->getPopularStores(true).")\n";
         $response .= "3. Search by category\n";
         $response .= '4. Search by name';
 
@@ -1250,13 +1266,36 @@ class UssdController extends Controller
      */
     public function displayStoresPage()
     {
-        $response = "Select store:\n";
+        $response = '';
 
-        if (count($this->stores_on_display)) {
+        if ( count($this->stores_on_display) ) {
+
+            $total_stores = count($this->stores);
+            $response = "Select store";
+    
+            if ( count($this->stores_on_display) ) {
+    
+                $keys = array_keys( collect($this->stores_on_display)->toArray() );
+    
+                //  Get the last display number e.g 1, 2 or 3
+                $last_store_number = ++$keys[ count($this->stores_on_display) - 1 ];
+    
+                if( $response ){
+        
+                    //  E.g (4/20) or (8/20)
+                    $response .= ' - Showing ('.$last_store_number.'/'.$total_stores.')'."\n";
+                    $response .= "---";
+    
+                }
+    
+            }
+    
+            $response .= "\n";
+
             foreach ($this->stores_on_display as $key => $store) {
                 $number = ++$key;
-                $ussd_interface = $store->ussdInterface;
-                $response .= $number.'. '.$ussd_interface['name']."\n";
+                $name = $store->ussdInterface->name;
+                $response .= $number.'. '.$name."\n";
             }
 
             $response .= '99. Show more';
@@ -1330,8 +1369,8 @@ class UssdController extends Controller
     public function displayStoreLandingPage()
     {
         /*  Show the store name  */
-        $response = $this->ussd_interface['name'].":\n";
-        $call_to_action = $this->ussd_interface['call_to_action'] ?? 'View Products';
+        $response = $this->store->ussdInterface->name.":\n";
+        $call_to_action = $this->store->ussdInterface->call_to_action ?? 'View Products';
         $number_of_orders = count($this->getMyOrders());
 
         /*  Show available store options  */
@@ -1382,8 +1421,8 @@ class UssdController extends Controller
                 $option_number = $key + 1;
 
                 /*  Get the product name, currency symbol and price  */
-                $product_id = trim($product['id']);
-                $product_name = trim($product['name']);
+                $product_id = trim($product->id);
+                $product_name = trim($product->name);
                 $product_price = $product['grand_total'];
 
                 /*  Check if the product has variables  */
@@ -1638,9 +1677,11 @@ class UssdController extends Controller
      *  view all orders or search for a specific order
      */
     public function displayViewAllOrdersOrSearchOrderPage()
-    {
+    {        
+        $number_of_orders = count($this->getMyOrders());
+
         $response = "Select option:\n";
-        $response .= "1. Recent Orders\n";
+        $response .= "1. Recent Orders(".$number_of_orders.")\n";
         $response .= '2. Search Order';
 
         return $this->displayCustomGoBackPage($response);
@@ -1652,8 +1693,31 @@ class UssdController extends Controller
      */
     public function displayOrderListPage()
     {
+        $response = '';
+
         if (count($this->orders_on_display)) {
-            $response = "Select Order:\n";
+
+            $total_orders = count($this->orders);
+            $response = "Select Order";
+    
+            if ( count($this->orders_on_display) ) {
+    
+                $keys = array_keys( collect($this->orders_on_display)->toArray() );
+    
+                //  Get the last display number e.g 1, 2 or 3
+                $last_order_number = ++$keys[ count($this->orders_on_display) - 1 ];
+    
+                if( $response ){
+    
+                    //  E.g (4/20) or (8/20)
+                    $response .= ' - Showing ('.$last_order_number.'/'.$total_orders.')'."\n";
+                    $response .= "---";
+    
+                }
+    
+            }
+    
+            $response .= "\n";
 
             foreach ($this->orders_on_display as $key => $order) {
                 $number = (++$key);
@@ -1738,7 +1802,7 @@ class UssdController extends Controller
     public function displayContactUsPage()
     {
         /*  Show the store contact us information  */
-        $response = $this->ussd_interface['contact_us']."\n";
+        $response = $this->store->ussdInterface->contact_us."\n";
 
         return $this->displayCustomGoBackPage($response);
     }
@@ -1750,7 +1814,7 @@ class UssdController extends Controller
     public function displayAboutUsPage()
     {
         /*  Show the store about us information  */
-        $response = $this->ussd_interface['about_us']."\n";
+        $response = $this->store->ussdInterface->about_us."\n";
 
         return $this->displayCustomGoBackPage($response);
     }
@@ -2081,17 +2145,21 @@ class UssdController extends Controller
         /*  If the user already responded to the "Enter Store Code Page" (Level 2)
          *  then we can access the provided Store Code.
          */
-        $store_code = $this->getProvidedStoreCode();
+        $this->store_code = $this->getProvidedStoreCode();
 
         /*  If we have a Store Code  */
-        if ($store_code) {
+        if ($this->store_code) {
+
             /*  Get the USSD Interface using the Store Code  */
-            $store = $this->getUssdInterface($store_code);
+            $store = $this->getUssdInterface();
 
             /*  If a store was found */
             if ($store) {
+
                 return true;
+
             }
+
         }
 
         return false;
@@ -2111,11 +2179,13 @@ class UssdController extends Controller
     /*  getUssdInterface()
      *  Returns the Ussd Interface that matches the store code provided
      */
-    public function getUssdInterface($store_code = null)
+    public function getUssdInterface()
     {
-        if ($store_code) {
+        if ($this->store_code) {
+
             /*  Get the USSD Interface that uses ussd store code  */
-            return UssdInterface::where('code', $store_code)->first() ?? null;
+            return DB::table('ussd_interfaces')->where('code', $this->store_code)->first() ?? null;
+        
         }
     }
 
@@ -2130,33 +2200,106 @@ class UssdController extends Controller
         return  $this->completedLevel(1) && $this->getResponseFromLevel(1) == '2';
     }
 
-    public function getMyStores()
+    public function getStoreColumns()
     {
-        //  Get all the contacts that match the given mobile number and return each contact with its associated stores
-        $contacts = ( new \App\Contact())->withMobilePhone($this->user['phone'])->with('stores')->get();
+        // The table columns we want to return for the store found
+        $columns = [
 
-        //  If we have any contacts
-        if (count($contacts)) {
-            //  Foreach contact get the stores
-            $stores = collect($contacts)->map(function ($contact) {
-                return $contact['stores'];
-            })->flatten()->all();
+            //  Store fields
+            'stores.id',
+            'stores.name',
+            'stores.industry',
+            'stores.currency',
+            'stores.description',
+            'stores.abbreviation'
 
-            return $stores;
-        }
+        ];
 
-        return [];
+        return $columns;
+        
+    }
+
+    public function getMyFavouriteStores($count = false)
+    {
+        //  Get the current users phone
+        $userPhone = $this->user['phone'];
+
+        // The table columns we want to return for the store found
+        $columns = $this->getStoreColumns();
+
+        $myFavStores = ( new \App\Store )->select($columns)->supportUssd()->contactHasMobile($userPhone)
+                        ->with('ussdInterface', 'taxes', 'discounts')
+                        ->limit(98);
+
+        $myFavStores = ($count == true) ? $myFavStores->count() : $myFavStores->get();
+
+
+        return $myFavStores ?? [];
     }
 
     public function getContact()
     {
         /*  Get the contact that owns this phone if they exists  */
-        $this->contact = $this->store->contactsWithMobilePhone($this->user['phone'])->first();
+        return $this->store->contactsWithMobilePhone($this->user['phone'])->first();
     }
 
-    public function getPopularStores()
+    public function getPopularStores($count = false)
     {
-        return (new \App\Store())->supportUssd()->popular()->get();
+        // The table columns we want to return for the store found
+        $columns = $this->getStoreColumns();
+
+        $popularStores = ( new \App\Store )->select($columns)->supportUssd()
+                         ->with('ussdInterface', 'taxes', 'discounts')
+                         ->popular()->limit(98);
+
+        $popularStores = ($count == true) ? $popularStores->count() : $popularStores->get();
+
+        return $popularStores ?? [];
+    }
+
+    public function getStoreUsingStoreCode()
+    {
+        // The table columns we want to return for the store found
+        $columns = $this->getStoreColumns();
+
+        $store = ( new \App\Store )->select($columns)->supportUssd($this->store_code)
+                 ->with('ussdInterface', 'taxes', 'discounts')
+                 ->first();
+
+        return $store;
+        
+    }
+
+    public function getStoreProducts()
+    {
+        /** Get the selected store products [Using Query Builder Version]
+         * 
+         *  Note: Using Query Builder we are able to execute the query much faster.
+         *  This is because we dont have to execute the Model attributes from the
+         *  $appends array. This drastically speeds up our query.
+         * 
+         */
+        $columns = [
+            'products.id' ,'products.name', 'description', 'products.type', 'cost_per_item', 'unit_regular_price', 'unit_sale_price',
+            'stock_quantity', 'allow_stock_management', 'auto_manage_stock', 'variant_attributes', 'allow_variants'
+        ];
+
+        $ussd_interface = ( new \App\UssdInterface() )->where('code', $this->store_code)->with(['products' => function ($query) use ($columns){
+                            $query->select($columns)->limit(98);
+                        }])->first();
+
+        if( $ussd_interface ){
+
+            $products = $ussd_interface->products;
+
+        }else{
+
+            $products = [];
+
+        }
+
+        return $products;
+
     }
 
     public function getStoreCategories()
@@ -2268,7 +2411,7 @@ class UssdController extends Controller
          *  If the option contains the value "99_" then the user wants to
          *  paginate the stores page
          */
-        return  $this->completedLevel(3) && substr($this->getResponseFromLevel(3), 0, 3) == '99_';
+        return  $this->completedLevel(3 + $this->offset) && substr($this->getResponseFromLevel(3 + $this->offset), 0, 3) == '99_';
     }
 
     public function wantsToPaginateStoreCategoriesPage()
@@ -2277,13 +2420,13 @@ class UssdController extends Controller
          *  If the option contains the value "99_" then the user wants to
          *  paginate the store categories page
          */
-        return  $this->completedLevel(3) && substr($this->getResponseFromLevel(3), 0, 3) == '99_';
+        return  $this->completedLevel(3 + $this->offset) && substr($this->getResponseFromLevel(3 + $this->offset), 0, 3) == '99_';
     }
 
     public function paginate($data, $per_page, $level = null)
     {
         if (!is_null($level)) {
-            $response = $this->getResponseFromLevel($level);
+            $response = $this->getResponseFromLevel($level + $this->offset);
             $number_of_times_to_paginate = substr($response, 3, 5);
 
             $this->offset = $this->offset + 1;
@@ -2328,8 +2471,14 @@ class UssdController extends Controller
         /*  Get the provided store name  */
         $store_name = $this->getResponseFromLevel(3);
 
-        /*  Get the first 98 stores that match the provided store name  */
-        return ( new \App\Store() )->search($store_name)->limit(98)->get();
+        // The table columns we want to return for the store found
+        $columns = $this->getStoreColumns();
+
+        $searchedStores = ( new \App\Store )->select($columns)->supportUssd()
+                            ->with('ussdInterface', 'taxes', 'discounts')
+                            ->search($store_name)->limit(98)->get();
+
+        return $searchedStores ?? [];
     }
 
     /*  hasSelectedStore()
@@ -2487,13 +2636,12 @@ class UssdController extends Controller
 
     public function getMyOrders()
     {
-        //  Get the current contact
-        $this->getContact();
-
         //  If we have a contact
         if ($this->contact) {
+
             //  Return the store orders where this contact is recognised as the order customer or reference
             return $this->store->contactOrders($this->contact->id)->get() ?? [];
+            
         }
 
         return [];
@@ -3022,11 +3170,13 @@ class UssdController extends Controller
 
         //  If we are not on TEST MODE then send SMS to Customer and Merchant
         //if (!$this->test_mode) {
-        /*  Send the order as a summarised SMS to the merchant  */
-        $merchantSMS = $this->order->smsOrderToMerchant();
 
         /*  Send the invoice receipt as a summarized SMS to the customer  */
         $customerSMS = $this->order->invoices()->first()->smsInvoiceReceiptToCustomer();
+
+        /*  Send the order as a summarised SMS to the merchant  */
+        $merchantSMS = $this->order->smsOrderToMerchant();
+        
         //}
 
         /*  If the payment status was successfull  */
@@ -3110,8 +3260,11 @@ class UssdController extends Controller
             array_push($items, ['id' => $selected_product['id'], 'quantity' => $selected_product['quantity']]);
         }
 
+        $taxes = $this->store->taxes ?? [];
+        $discounts = $this->store->discounts ?? [];
+
         /*  Retrieve and return the cart details relating to the merchant and items provided  */
-        return ( new \App\MyCart() )->getCartDetails($items, $this->store->taxes, $this->store->discounts);
+        return ( new \App\MyCart() )->getCartDetails($items, $taxes, $discounts);
     }
 
     public function getOrderItemsInArray()

@@ -30,7 +30,20 @@ class Store extends Model
         'currency' => 'array',
     ];
 
-    protected $with = ['phones', 'emails', 'addresses'];
+    
+    protected $with = [
+        //  'phones', 'emails', 'addresses'
+    ];
+
+    protected $appends = [
+        'logo', 'is_verified', 'is_email_verified', 'is_mobile_verified',
+        'default_mobile', 'default_email', 'default_address',
+        'team_access_code', 'customer_access_code',
+        'resource_type'
+
+        //  'phone_list', 'average_rating', 'is_approved', 'statistics',
+        //  'activity_count', 'last_approved_activity', 'current_activity_status',
+    ];
 
     /**
      * The attributes that are mass assignable.
@@ -65,10 +78,13 @@ class Store extends Model
      *  Scope:
      *  Return stores that support USSD access (Accessible by 2G Devices via USSD)
      */
-    public function scopeSupportUssd($query)
+    public function scopeSupportUssd($query, $code = null)
     {
-        return $query->whereHas('ussdInterface', function (Builder $query) {
-            $query->where('live_mode', 1);
+        return $query->whereHas('ussdInterface', function (Builder $query) use($code) {
+                $query->where('live_mode', 1)
+                    ->when($code, function ($query, $code) {
+                        return $query->where('code', $code);
+                    });
         });
     }
 
@@ -99,7 +115,19 @@ class Store extends Model
      */
     public function scopeSearch($query, $name)
     {
-        return $query->orWhere('name', $name)->orWhere('abbreviation', $name);
+        return $query->where('name', 'like', '%'.$name.'%')->orWhere('abbreviation', 'like', '%'.$name.'%');
+    }
+
+    /*
+     *  Scope:
+     *  Return stores that have a contact using a particular phone number
+     */
+    public function scopeContactHasMobile($query, $phone)
+    {
+        return $query->whereHas('contacts.mobiles', function (Builder $query) use($phone) {
+                $query->where('calling_code', $phone['calling_code'])
+                      ->where('number', $phone['number']);
+            });
     }
 
     /*
@@ -517,15 +545,6 @@ class Store extends Model
     }
 
     /* ATTRIBUTES */
-
-    protected $appends = [
-        'logo',  'is_verified', 'is_email_verified', 'is_mobile_verified', 'customer_access_code',
-        'team_access_code', 'phone_list', 'default_mobile', 'default_email', 'default_address',
-        'average_rating', 'resource_type', 'phone_list', 'last_approved_activity', 'is_approved',
-        'current_activity_status', 'activity_count',
-
-        'statistics',
-    ];
 
     /*
      *  Returns the store statistics

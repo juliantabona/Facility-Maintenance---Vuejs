@@ -175,7 +175,8 @@ trait MyCartTraits
         });
 
         //  Lets get the items from the DB that are related to the cart items
-        $relatedItems = Product::whereIn('id', $itemIds)->get();
+        $selectedColumns = ['id', 'name', 'description', 'type', 'cost_per_item', 'unit_regular_price', 'unit_sale_price', 'sku', 'barcode'];
+        $relatedItems = Product::select( $selectedColumns )->whereIn('id', $itemIds)->get();
 
         //  Foreach item
         foreach ($items as $key => $item) {

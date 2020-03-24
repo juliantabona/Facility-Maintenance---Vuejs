@@ -7,7 +7,7 @@
         <Tabs v-model="selectedContentTab" type="card" style="overflow: visible;" :animated="false">
 
             <!-- API Response Details -->
-            <TabPane v-for="(selectedContentTab, key) in ['Instructions', 'Action', 'Validation', 'Formatting', 'Storage', 'Settings']" 
+            <TabPane v-for="(selectedContentTab, key) in ['Instructions', 'Action', 'Validate', 'Format', 'Storage', 'Settings']" 
                     :key="key" :label="generateTabLabel(selectedContentTab)" :name="selectedContentTab">
 
                 <template v-if="selectedContentTab == 'Instructions'">
@@ -583,7 +583,7 @@
 
                 </template>
 
-                <template v-else-if="selectedContentTab == 'Validation'">
+                <template v-else-if="selectedContentTab == 'Validate'">
 
                     <!-- Validation Rules -->
                     <Alert v-if="!numberOfActiveValidationRules" type="info" style="line-height: 1.4em;" class="mb-2" closable>
@@ -711,7 +711,7 @@
 
                 </template>
 
-                <template v-else-if="selectedContentTab == 'Formatting'">
+                <template v-else-if="selectedContentTab == 'Format'">
 
                     <!-- Formatting -->
                     <Alert v-if="!numberOfActiveFormattingRules" type="info" style="line-height: 1.4em;" class="mb-2" closable>
@@ -734,7 +734,7 @@
                                 <!-- Input Value Name -->
                                 <Input 
                                     v-model="localScreenContent.formatting.reference_name" 
-                                    maxlength="30" type="text" class="w-100 mb-2" placeholder="Formatted Reference name (Optional)">
+                                    maxlength="30" type="text" class="w-100 mb-2" placeholder="Formatted response reference name (Optional)">
                                     <div slot="prepend">@</div>
                                 </Input>
 
@@ -1244,12 +1244,12 @@
         },
         methods: {
             generateTabLabel(selectedContentTab){
-                if(selectedContentTab == 'Validation'){
+                if(selectedContentTab == 'Validate'){
 
                     var countRules = this.numberOfActiveValidationRules;
                     return selectedContentTab + (countRules ?  ' ('+countRules+')': '');
 
-                }else if(selectedContentTab == 'Formatting'){
+                }else if(selectedContentTab == 'Format'){
 
                     var countRules = this.numberOfActiveFormattingRules;
                     return selectedContentTab + (countRules ?  ' ('+countRules+')': '');

@@ -13,6 +13,7 @@ class UssdCreatorController extends Controller
     private $level;
     private $screen;
     private $screens;
+    private $api_trigger;
     private $linkedScreen;
     private $screenActions;
     private $screenContent;
@@ -22,6 +23,7 @@ class UssdCreatorController extends Controller
     private $ussdBuilderMetadata;
     private $generated_variables;
     private $dynamic_data_storage;
+    private $last_recorded_log_microtime;
 
     public function __construct(Request $request)
     {
@@ -60,18 +62,7 @@ class UssdCreatorController extends Controller
         //  Start the process of building the USSD Application
         $response = $this->startBuildingUssd();
 
-        /*
-        $response .= "\n" . '_______________________________' ;
-        $response .= "\n" . 'TEXT = ' . $this->text;
-        $response .= "\n" . '_______________________________';
-        $response .= "\n" . 'DYNAMIC = ' . json_encode($this->dynamic_data_storage);
-        */
-
         if ($this->test_mode) {
-            //  Set an info log for the created variable and its dynamic data value
-            //  $this->logWarning('This is a warning');
-            //  $this->logError('This is an error');
-
             return response(['response' => $response, 'logs' => $this->log])->header('Content-Type', 'text/plain');
         } else {
             return response($response)->header('Content-Type', 'text/plain');
@@ -118,7 +109,7 @@ class UssdCreatorController extends Controller
         $doesNotExistResponse = $this->handleNonExistentScreens();
 
         //  If the USSD screens do not exist return the response otherwise continue
-        if ($this->isDisplayErrorPage($doesNotExistResponse)) return $doesNotExistResponse;
+        if ($this->isDisplayScreen($doesNotExistResponse)) return $doesNotExistResponse;
 
         //  Get the first display screen
         $this->screen = $this->getFirstScreenToDisplay();
@@ -212,7 +203,7 @@ class UssdCreatorController extends Controller
         $doesNotExistResponse = $this->handleNonExistentScreen();
 
         //  If the current display screen does not exist return the response otherwise continue
-        if ($this->isDisplayErrorPage($doesNotExistResponse)) {
+        if ($this->isDisplayScreen($doesNotExistResponse)) {
             return $doesNotExistResponse;
         }
 
@@ -234,58 +225,64 @@ class UssdCreatorController extends Controller
 
     public function handleAPIDrivenScreen()
     {
-        //  Get the current screen API type
-        $apiType = $this->getAPIType();
+        //  Get the API Triggers
+        $api_triggers = $this->screen['api_triggers'] ?? [];
 
-        //  If the current screen uses a custom API
-        if( $apiType == 'custom' ){
-            
-            //  Handle the custom API
-            $this->handleCustomApi();
+        $response = null;
+
+        foreach( $api_triggers as $api_trigger ){
+
+            //  Get the current API Trigger
+            $this->api_trigger = $api_trigger;
+
+            //  Get the current Trigger API type
+            $apiType = $this->getAPIType();
+
+            //  If the current Trigger is a custom API
+            if( $apiType == 'custom' ){
+                
+                //  Handle the custom API
+                $response = $this->handleCustomApi();
+
+            }
 
         }
+
+        return $response;
+    }
+
+    public function getAPIType()
+    {
+        return $this->api_trigger['api_type'] ?? null;
     }
 
     public function handleCustomApi()
     {
-        $url = $this->getCustomApiURL();
-        $method = $this->getCustomApiMethod();
-        $headers = $this->getCustomApiHeaders();
-        $formData = $this->getCustomApiFormData();
-        $queryParams = $this->getCustomApiQueryParams();
-
         //  Run the custom API Call
         $apiCallResponse = $this->runCustomApiCall();
 
         //  If the response returned a screen display return the screen display otherwise continue
-        if ($this->isDisplayErrorPage($apiCallResponse)) return $apiCallResponse;
+        if ($this->isDisplayScreen($apiCallResponse)) return $apiCallResponse;
 
-        $apiHandleResponse = $this->handleCustomApiResponse( $apiCallResponse );
-
-        //  If the response returned a screen display return the screen display otherwise continue
-        if ($this->isDisplayErrorPage($apiHandleResponse)) return $apiHandleResponse;
+        return $this->handleCustomApiResponse( $apiCallResponse );
 
     }    
     
     public function runCustomApiCall()
     {
-
-        //  Get the identifier of the resource
         $url = $this->getCustomApiURL();
-
-        //  Get the method to be applied to a resource
         $method = $this->getCustomApiMethod();
         $headers = $this->getCustomApiHeaders();
         $form_data = $this->getCustomApiFormData();
         $query_params = $this->getCustomApiQueryParams();
-        $body = [];
+        $request_options = [];
 
         if( empty($url) || empty($method) ){
 
             if( empty($url) ){
 
                 //  Set a warning log that the custom API Url was not provided
-                $this->logWarning('Custom API Url was not provided');
+                $this->logWarning('API Url was not provided');
 
                 //  Display the technical difficulties error page to notify the user of the issue
                 return $this->displayTechnicalDifficultiesErrorPage();
@@ -294,8 +291,8 @@ class UssdCreatorController extends Controller
 
             if( empty($method) ){
 
-                //  Set a warning log that the custom API Url was not provided
-                $this->logWarning('Custom API Method was not provided');
+                //  Set a warning log that the custom API Method was not provided
+                $this->logWarning('API Method was not provided');
 
                 //  Display the technical difficulties error page to notify the user of the issue
                 return $this->displayTechnicalDifficultiesErrorPage();
@@ -305,36 +302,21 @@ class UssdCreatorController extends Controller
         }else{
 
             //  Set an info log of the Custome API Url provided
-            $this->logInfo('Custom API Url: ' . $url);
+            $this->logInfo('API Url: <span class="text-success">' . $url .'</span>');
 
             //  Set an info log of the custom API Method provided
-            $this->logInfo('Custom API Method: ' . $method);
+            $this->logInfo('API Method: <span class="text-success">' . ucwords($method) .'</span>');
 
         }
 
         //  Check if the provided url is correct
-        if( !isValidUrl($url) ){
+        if( !$this->isValidUrl($url) ){
 
-            //  Set a warning log that the custom API Url was not provided
-            $this->logWarning('Custom API Url provided is incorrect ('.$url.')');
+            //  Set a warning log that the custom API Url provided is incorrect
+            $this->logWarning('API Url provided is incorrect (<span class="text-danger">'.$url.'</span>)');
 
             //  Display the technical difficulties error page to notify the user of the issue
             return $this->displayTechnicalDifficultiesErrorPage();
-
-        }
-
-        //  If we have the form data
-        if( !empty( $form_data ) && is_array( $form_data ) ){
-
-            //  Add the form data to the form_params attribute of our API options
-            array_push($body, ['form_params' => $form_data]);
-
-            foreach( $form_data as $key => $value ){
-
-                //  Set an info log of the custom API form data attribute
-                $this->logInfo('Form Data: ' . $key .' = '. $value);
-
-            }
 
         }
 
@@ -344,33 +326,455 @@ class UssdCreatorController extends Controller
             foreach( $headers as $key => $value ){
 
                 //  Set an info log of the custom API header attribute
-                $this->logInfo('Headers: ' . $key .' = '. $value);
+                $this->logInfo('Headers: <span class="text-success">' . $key .'</span> = <span class="text-success">'. $value . '</span>');
+
+            }
+
+        }
+
+        //  If we have the form data
+        if( !empty( $query_params ) && is_array( $query_params ) ){
+
+            foreach( $query_params as $key => $value ){
+
+                //  Set an info log of the custom API query param attribute
+                $this->logInfo('Query Params: <span class="text-success">' . $key .'</span> = <span class="text-success">'. $value . '</span>');
+
+            }
+
+        }
+
+        //  If we have the form data
+        if( !empty( $form_data ) && is_array( $form_data ) ){
+
+            //  Add the form data to the form_params attribute of our API options
+            array_push($request_options, ['form_params' => $form_data]);
+
+            foreach( $form_data as $key => $value ){
+
+                //  Set an info log of the custom API form data attribute
+                $this->logInfo('Form Data: <span class="text-success">' . $key .'</span> = <span class="text-success">'. $value . '</span>');
 
             }
 
         }
 
         //  Create a new Http Guzzle Client
-        $http = new \GuzzleHttp\Client();
+        $httpClient = new \GuzzleHttp\Client();
+
+        try {
         
-        $response = $http->{ $method }($url, $headers, $body);
+            //  Set an info log that we are performing custom API call
+            $this->logInfo('Run API call to: <span class="text-success">'.$url.'</span>');
+            
+            //  Perform and return the Http request
+            return $httpClient->request($method, $url, $request_options);
 
-        //  Lets get an array instead of a stdObject so that we can return without errors
-        $response = json_decode($response->getBody(), true);
+        /** About guzzle errors
+         * 
+         *  GuzzleHttp\Exception\ClientException for 400-level errors
+         *  GuzzleHttp\Exception\ServerException for 500-level errors
+         *  GuzzleHttp\Exception\BadResponseException for both (it's their superclass)
+         * 
+         *  Read More = http://docs.guzzlephp.org/en/latest/quickstart.html#exceptions
+         */
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+                
+            //  Set a warning log that the Api call failed
+            $this->logWarning('Api call to <span class="text-danger">'.$url.'</span> failed.');
 
-        return oq_api_notify([
-                    'auth' => $response,                                        //  API ACCESS TOKEN
-                    'user' => $this->load(['settings'])->toArray(),
-                ], 201);
+            /**
+             * Here we actually catch the instance of GuzzleHttp\Psr7\Response
+             * (find it in ./vendor/guzzlehttp/psr7/src/Response.php) with all
+             * its own and its 'Message' trait's methods.
+             *
+             * So now we have: HTTP status code, message, headers and body.
+             * Just check the exception object has the response before.
+             * running any methods on it.
+             */
+            if ($e->hasResponse()) {
+                
+                //  Return the failed response from the current exception object
+                return $e->getResponse();
+                
+            //  Incase we fail to get the response object
+            }else{
+
+                //  Handle try catch error
+                return $this->handleTryCatchError($e);
+                
+            }
+
+        //  Just incase we failed to catch RequestException
+        } catch (\Throwable $e) {
+                
+            //  Set a warning log that the Api call failed
+            $this->logWarning('Api call to <span class="text-danger">'.$url.'</span> failed.');
+
+            //  Handle try catch error
+            return $this->handleTryCatchError($e);
+
+        //  Just incase we failed to catch RequestException and Throwable
+        } catch (Exception $e) {
+                
+            //  Set a warning log that the Api call failed
+            $this->logWarning('Api call to <span class="text-danger">'.$url.'</span> failed.');
+
+            //  Handle try catch error
+            return $this->handleTryCatchError($e);
+
+        }
     }
 
-    public function handleCustomApiResponse( $apiCallResponse = null )
+    public function getCustomApiURL()
     {
-        $statusCode = $apiCallResponse->getStatusCode();            // 200
-        $statusPhrase = $apiCallResponse->getReasonPhrase();        // OK
-        $protocolScheme =  $apiCallResponse->getUri()->getScheme(); // http
-        $port =  $apiCallResponse->getUri()->getPort();             // 8080
-        $host =  $apiCallResponse->getUri()->getHost();             // httpbin.org
+        $url = $this->api_trigger['api_data']['url'] ?? null;
+        
+        return $url;
+    }
+    public function getCustomApiMethod()
+    {
+        $method = $this->api_trigger['api_data']['method'] ?? null;
+        
+        return $method;
+    }
+    public function getCustomApiHeaders()
+    {
+        $headers = $this->api_trigger['api_data']['headers'] ?? [];
+
+        $data = [];
+
+        foreach( $headers as $header ){
+
+            if( !empty( $header['key'] ) ){
+
+                $data[ $header['key'] ] = $header['value'];
+
+            }
+
+        }
+
+        return $data;
+    }
+    public function getCustomApiFormData()
+    {
+        $form_data = $this->api_trigger['api_data']['form_data'] ?? [];
+
+        $data = [];
+
+        foreach( $form_data as $form_item ){
+            
+            if( !empty( $form_item['key'] ) ){
+
+                $data[ $form_item['key'] ] = $form_item['value'];
+
+            }
+
+        }
+
+        return $data;
+    }
+    public function getCustomApiQueryParams()
+    {
+        $query_params = $this->api_trigger['api_data']['query_params'] ?? [];
+
+        $data = [];
+
+        foreach( $query_params as $query_param ){
+
+            if( !empty( $form_item['key'] ) ){
+
+                $data[ $query_param['key'] ] = $query_param['value'];
+
+        }
+
+        }
+
+        return $data;
+    }
+    public function getCustomApiStatusHandles()
+    {
+        $query_params = $this->api_trigger['api_data']['response_status_handles'] ?? [];
+
+        return $query_params;
+    }
+
+    public function isValidUrl($url = '')
+    {
+        return filter_var($url, FILTER_VALIDATE_URL) ? true : false;
+    }
+    
+    public function handleCustomApiResponse( $response = null )
+    {
+        if( $response ){
+
+            /** Get the return type. We use the return type to determine how we want to handle
+             *  the response of the API Call. Our options are as follows:
+             * 
+             *  Automatic : Automatically display the default success/error message depending on the API success
+             *  Manual    : Manually setup a display screen with custom instructions, action, validation, e.t.c
+             * 
+             *  Default is "automatic" if no value is provided
+             */
+            $return_type = $this->api_trigger['api_data']['general']['response_type'] ?? 'automatic';
+        
+            //  Set an info log that we are starting to handle the custom API response
+            $this->logInfo('Start handling Api Response.');
+
+            if( $return_type == 'manual' ){
+
+                return $this->handleCustomApiManualResponse( $response );
+
+            }else if( $return_type == 'automatic' ){
+
+                return $this->handleCustomApiAutomaticResponse( $response );
+
+            }
+
+        }
+    }
+
+    public function handleCustomApiAutomaticResponse( $response = null )
+    {
+        //  Set an info log that the custom API will be handled automatically
+        $this->logInfo('Handle response <span class="text-success">Automatically</span>');
+
+        //  Get the response status code e.g "200"
+        $status_code = $response->getStatusCode();
+
+        //  Get the response status phrase e.g "OK"
+        $status_phrase = $response->getReasonPhrase() ?? '';
+
+        //  Get the default success message
+        $default_success_message = $this->api_trigger['api_data']['general']['default_success_message'] ?? 'Completed successfully';
+
+        //  Get the default error message
+        $default_error_message = $this->api_trigger['api_data']['general']['default_error_message'] ?? null;
+
+        /** About Status Code:
+         * 
+         *  1xx informational response – the request was received, continuing process
+         *  2xx successful – the request was successfully received, understood, and accepted
+         *  3xx redirection – further action needs to be taken in order to complete the request
+         *  4xx client error – the request contains bad syntax or cannot be fulfilled
+         *  5xx server error – the server failed to fulfil an apparently valid request
+         * 
+         */
+        $digit = substr($status_code, 0, 1);
+
+        //  If the status code starts with "1", "2" or "3" e.g "100", "200", "301" e.t.c 
+        if( in_array($digit, ['1', '2', '3']) ){  
+
+            //  Set an info log of the response status code received
+            $this->logInfo('API response returned a status (<span class="text-success">'.$status_code.'</span>) Status text: <span class="text-success">'.$status_phrase.'</span>');
+
+            //  This is a good response - Display the custom succcess message
+            return $this->displayCustomPage($default_success_message, ['continue' => false]);
+
+
+        //  If the status code starts with "4" or "5" e.g "400", "401", "500" e.t.c 
+        }elseif( in_array($digit, ['4', '5']) ){  
+
+            //  Set an info log of the response status code received
+            $this->logWarning('API response returned a status (<span class="text-danger">'.$status_code.'</span>) <br/> Status text: <span class="text-danger">'.$status_phrase.'</span>');
+
+            //  If the custom error message was provided
+            if( !empty( $default_error_message ) ){
+
+                //  This is a bad response - Display the custom error message
+                return $this->displayCustomErrorPage($default_error_message);
+
+            //  If the custom error message was not provided 
+            }else{
+
+                //  Display the technical difficulties error page to notify the user of the issue
+                return $this->displayTechnicalDifficultiesErrorPage();
+
+            }
+
+        }
+    }
+    public function handleCustomApiManualResponse( $response = null )
+    {  
+        //  Use the try/catch handles incase we run into any possible errors
+        try {
+            
+            //  Set an info log that the custom API will be handled manually
+            $this->logInfo('Handle response <span class="text-success">Manually</span>');
+
+            //  Get the response status code e.g "200"
+            $status_code = $response->getStatusCode();
+            
+            //  Get the response status phrase e.g "OK"
+            $status_phrase = $response->getReasonPhrase() ?? '';
+
+            //  Get the response body e.g [ "products" => [ ... ] ]  
+            $response_body = json_decode($response->getBody()); 
+
+            //  Get the response status handles
+            $request_status_handles = $this->api_trigger['api_data']['response_status_handles'] ?? null;
+
+            if( !empty( $request_status_handles ) ){
+
+                //  Get the request status handle that matches the given status
+                $selectedHandle = collect(array_filter($request_status_handles, function ($request_status_handle) use($status_code) {
+                    return $request_status_handle['status'] == $status_code;
+                }))->first() ?? null;
+
+                //  If a matching response status handle was found
+                if( $selectedHandle ){
+
+                    //  Set an info log that we are storing the attributes of the custom API response
+                    $this->logInfo('Start processing and storing the response attributes');
+
+                    //  Get the response attributes
+                    $response_attributes = $selectedHandle['attributes'];
+
+                    //  Set an info log of the number of attributes found
+                    $this->logInfo('Found ('.count($response_attributes).') attributes');
+
+                    //  Add the current response body to the dynamic data storage 
+                    $this->dynamic_data_storage['response'] = $response_body;
+
+                    //  If we have dynamic variables with stored data
+                    if (count($this->dynamic_data_storage)) {
+
+                        //  Create dynamic variables
+                        foreach ($this->dynamic_data_storage as $key => $value) {
+                            /*  Foreach dataset use the iterator key to create the dynamic variable name and
+                            *  assign the iterator value as the new variable value.
+                            *
+                            *  Example:
+                            *
+                            *  $data = ['product' => 'Orange', 'quantity' => 3, 'price' => 450, ...e.tc];
+                            *
+                            *  Foreach dataset, we produce dynamic variables e.g
+                            *
+                            *  $product = 'Orange';
+                            *  $quantity = 3;
+                            *  $price = 450;
+                            *
+                            *  ... e.t.c
+                            *
+                            *  Convert the value to a JSON Object. Converting each value into an object helps us
+                            *  target nested values by using the "->" symbol e.g we can access deeply nested
+                            *  values in this way:
+                            *
+                            *  $company->details->contacts->phone;
+                            *
+                            */
+                            ${$key} = $this->convertToJsonObject($value);
+
+                        }
+
+                    }
+
+                    foreach( $response_attributes as $response_attribute ){
+
+                        //  If the attribute name and value exists
+                        if( !empty($response_attribute['name'] && !empty($response_attribute['value']) ) ){
+
+                            //  Get the attribute name
+                            $name = $response_attribute['name'];
+
+                            //  Get the attribute value
+                            $mustache_tag = $response_attribute['value'];
+
+                            //  Use the try/catch handles incase we run into any possible errors
+                            try {
+
+                                //  Convert "{{ company.name }}" into "$company->name"
+                                $dynamic_variable = $this->convertMustacheTagIntoPHPVariable($mustache_tag, true);
+
+                                //  Convert the dynamic property into its dynamic value e.g "$company->name" into "Company XYZ"
+                                $output = eval("return $dynamic_variable;");
+
+                                //  Add the current attribute value as additional dynamic data to our dynamic data storage
+                                $this->dynamic_data_storage[ $name ] = $output;
+
+                                //  If the dynamic value is a string, integer or float
+                                if ( is_string($output) || is_integer($output) || is_float($output)) {
+
+                                    //  Set an info log that we are converting the dynamic propery to its associated value
+                                    $this->logInfo('Converting <span class="text-success">'.$mustache_tag.'</span> to <span class="text-success">'.$output.'</span>');
+
+                                //  Incase the dynamic value is not a string, integer or float
+                                }else{
+
+                                    //  Set an info log that we are converting the dynamic propery to its associated value
+                                    $this->logInfo('Converting <span class="text-success">'.$mustache_tag.'</span> to <span class="text-success">['.gettype($output).']</span>');
+                                
+                                }
+                                
+                            } catch (\Throwable $e) {
+
+                                //  Handle try catch error
+                                return $this->handleTryCatchError($e);
+
+                            } catch (Exception $e) {
+
+                                //  Handle try catch error
+                                return $this->handleTryCatchError($e);
+
+                            }
+                            
+                        }
+
+                    }
+                    
+                    //  Check if we have an attribute named "response"
+                    $attributeNamedResponseExists = count(array_filter($response_attributes, function ($response_attribute) {
+                        return $response_attribute['name'] == 'response';
+                    })) ? true : false;
+
+                    //  If we don't have an attribute named "response"
+                    if( !$attributeNamedResponseExists ){
+
+                        //  Remove the current response body we added to the dynamic data using the name "response"
+                        unset( $this->dynamic_data_storage['response'] );
+
+                    }
+
+                    /** Get the screen content that will be used for determining screen details such as
+                     *  screen instructions, allowed actions, validation rules, formatting rules,
+                     *  local storage and screen specific settings.
+                     */
+                    $this->screenContent = $selectedHandle['content'];
+
+                    //  Handle the Non API Driven screen
+                    return $this->handleNonAPIDrivenScreen();
+                    
+                }else{
+
+                    //  Set a warning log that the custom API does not have a matching response status handle
+                    $this->logWarning('No matching status handle to process the current response of status <span class="text-success">'.$status_code.'</span>');
+
+                }
+
+            }else{
+
+                //  Set a warning log that the custom API does not have response status handles
+                $this->logWarning('No response status handles to process the current response of status <span class="text-success">'.$status_code.'</span>');
+
+            }
+
+            //  Set a warning log that the custom API cannot be handled manually
+            $this->logWarning('Could not handle the response <span class="text-success">Manually</span>, attempt to handle <span class="text-success">Automatically</span>');
+
+            //  Handle the request automatically
+            return $this->handleCustomApiAutomaticResponse( $response );
+
+        } catch (\Throwable $e) {
+
+            //  Handle try catch error
+            return $this->handleTryCatchError($e);
+
+        } catch (Exception $e) {
+
+            //  Handle try catch error
+            return $this->handleTryCatchError($e);
+
+        }
     }
 
 
@@ -423,14 +827,14 @@ class UssdCreatorController extends Controller
         //  Check if the screen uses API's
         if ($this->screen['use_apis'] == true) {
             //  Set an info log that the current screen uses API's
-            $this->logInfo('User has responded to <span class="text-primary">'.$this->screen['title'].'</span> uses API\'s');
+            $this->logInfo('<span class="text-primary">'.$this->screen['title'].'</span> uses API\'s');
 
             //  Return true to indicate that the screen does use API's
             return true;
         }
 
         //  Set an info log that the current screen uses API's
-        $this->logInfo('User has responded to <span class="text-primary">'.$this->screen['title'].'</span> does not use API\'s');
+        $this->logInfo('<span class="text-primary">'.$this->screen['title'].'</span> does not use API\'s');
 
         //  Return false to indicate that the screens does not use API's
         return false;
@@ -445,7 +849,7 @@ class UssdCreatorController extends Controller
             $response = $this->handleCurrentScreenUserResponse();
 
             //  If validating, formatting or storing the user input failed the return the failed response otherwise continue
-            if ($this->isDisplayErrorPage($response)) {
+            if ($this->isDisplayScreen($response)) {
                 return $response;
             }
 
@@ -479,7 +883,7 @@ class UssdCreatorController extends Controller
         $failedValidationResponse = $this->validateCurrentScreenUserResponse();
 
         //  If the current user response failed the validation then return the failed response otherwise continue
-        if ($this->isDisplayErrorPage($failedValidationResponse)) {
+        if ($this->isDisplayScreen($failedValidationResponse)) {
             return $failedValidationResponse;
         }
 
@@ -487,7 +891,7 @@ class UssdCreatorController extends Controller
         $failedFormatResponse = $this->formatCurrentScreenUserResponse();
 
         //  If the current user response failed to format then return the failed response otherwise continue
-        if ($this->isDisplayErrorPage($failedFormatResponse)) {
+        if ($this->isDisplayScreen($failedFormatResponse)) {
             return $failedFormatResponse;
         }
 
@@ -495,7 +899,7 @@ class UssdCreatorController extends Controller
         $storeInputResponse = $this->storeCurrentScreenUserResponseAsDynamicVariable();
 
         //  If storing the current user response failed then return the failed response otherwise continue
-        if ($this->isDisplayErrorPage($storeInputResponse)) {
+        if ($this->isDisplayScreen($storeInputResponse)) {
             return $storeInputResponse;
         }
     }
@@ -530,7 +934,7 @@ class UssdCreatorController extends Controller
         $failedValidationResponse = $this->handleValidationRules($validationRules);
 
         //  If the current user response failed the validation return the failed response otherwise continue
-        if ($this->isDisplayErrorPage($failedValidationResponse)) {
+        if ($this->isDisplayScreen($failedValidationResponse)) {
             return $failedValidationResponse;
         }
 
@@ -647,7 +1051,7 @@ class UssdCreatorController extends Controller
         $failedFormatResponse = $this->handleFormattingRules($formattingRules);
 
         //  If the current user response failed to format return the failed response otherwise continue
-        if ($this->isDisplayErrorPage($failedFormatResponse)) {
+        if ($this->isDisplayScreen($failedFormatResponse)) {
             return $failedFormatResponse;
         }
 
@@ -850,7 +1254,7 @@ class UssdCreatorController extends Controller
          *  The optionsResponse must return an array options. If this response is not an array
          *  or is a error page, then return the message string or error page.
          */
-        if (!is_array($optionsResponse) || $this->isDisplayErrorPage($optionsResponse)) {
+        if (!is_array($optionsResponse) || $this->isDisplayScreen($optionsResponse)) {
             return $optionsResponse;
         }
 
@@ -884,7 +1288,7 @@ class UssdCreatorController extends Controller
          *  The optionsResponse must return an array options. If this response is not an array
          *  or is a error page, then return the message string or error page.
          */
-        if (!is_array($optionsResponse) || $this->isDisplayErrorPage($optionsResponse)) {
+        if (!is_array($optionsResponse) || $this->isDisplayScreen($optionsResponse)) {
             return $optionsResponse;
         }
 
@@ -918,7 +1322,7 @@ class UssdCreatorController extends Controller
          *  The optionsResponse must return an array options. If this response is not an array
          *  or is a error page, then return the message string or error page.
          */
-        if (!is_array($optionsResponse) || $this->isDisplayErrorPage($optionsResponse)) {
+        if (!is_array($optionsResponse) || $this->isDisplayScreen($optionsResponse)) {
             return $optionsResponse;
         }
 
@@ -964,7 +1368,7 @@ class UssdCreatorController extends Controller
         $reference_name = $this->screenContent['action']['select_option']['dynamic_options']['reference_name'] ?? null;
 
         //  Get the custom "incorrect option selected message"
-        $incorrect_option_selected_message = $this->screenContent['action']['dynamic_options']['dynamic_options']['incorrect_option_selected_message'] ?? null;
+        $incorrect_option_selected_message = $this->screenContent['action']['select_option']['dynamic_options']['incorrect_option_selected_message'] ?? null;
 
         //  Check if we have options to display
         $optionsExist = count($options) ? true : false;
@@ -997,17 +1401,20 @@ class UssdCreatorController extends Controller
                 if (!empty($reference_name)) {
                     //  If the option value was provided
                     if (!empty($selectedOption['value'])) {
+                        
                         //  Get the option value only
                         $dynamic_data = $selectedOption['value'];
 
                     //  If the option value was not provided
                     } else {
+                        
                         //  Get the option name and input. Set value equal to option name
                         $dynamic_data = [
                             'name' => $selectedOption['name'],
                             'value' => $selectedOption['name'],
                             'input' => $selectedOption['input'],
                         ];
+                        
                     }
 
                     //  Store the select option as dynamic data
@@ -1017,7 +1424,7 @@ class UssdCreatorController extends Controller
                 //  If the user did not select an option that exists
             } else {
                 //  Display the custom "Incorrect option selected" otherwise use default
-                $message = $incorrect_option_selected_message."\n" ?? "You selected an incorrect option. Please try again\n";
+                $message = ($incorrect_option_selected_message ?? "You selected an incorrect option. Please try again")."\n" ;
 
                 //  Display a custom message (with go back option) to notify the user of the issue
                 return $this->displayCustomGoBackPage($message);
@@ -1026,7 +1433,7 @@ class UssdCreatorController extends Controller
             //  If we don't have options to display
         } else {
             //  Display the custom "No options available" otherwise use default
-            $message = $no_results_message."\n" ?? "No options available\n";
+            $message = ($no_results_message ?? "No options available")."\n";
 
             //  Display a custom message (with go back option) to notify the user of the issue
             return $this->displayCustomGoBackPage($message);
@@ -1178,7 +1585,7 @@ class UssdCreatorController extends Controller
         $screenInstructionsBuildResponse = $this->buildScreenDisplayInstructions();
 
         //  If the screen instructions failed to build return the failed response otherwise continue
-        if ($this->isDisplayErrorPage($screenInstructionsBuildResponse)) {
+        if ($this->isDisplayScreen($screenInstructionsBuildResponse)) {
             return $screenInstructionsBuildResponse;
         }
 
@@ -1189,7 +1596,7 @@ class UssdCreatorController extends Controller
         $screenActionBuildResponse = $this->buildScreenDisplayActions();
 
         //  If the screen actions failed to build return the failed response otherwise continue
-        if ($this->isDisplayErrorPage($screenActionBuildResponse)) {
+        if ($this->isDisplayScreen($screenActionBuildResponse)) {
             return $screenActionBuildResponse;
         }
 
@@ -1235,11 +1642,13 @@ class UssdCreatorController extends Controller
         return $this->handleEmbeddedDynamicContentConversion($screen_instruction_text, $uses_code_editor_mode);
     }
 
-    public function isDisplayErrorPage($text = '')
+    public function isDisplayScreen($text = '')
     {
         if (is_string($text)) {
-            //  If the first 3 character match the "END" then this is an error page
-            return  substr($text, 0, 3) == 'END' ? true : false;
+            
+            //  If the first 3 characters of the text match the words "CON" or "END" then this is a display screen
+            return  (substr($text, 0, 3) == 'CON' || substr($text, 0, 3) == 'END') ? true : false;
+
         }
 
         return false;
@@ -1276,12 +1685,15 @@ class UssdCreatorController extends Controller
                  *  $company->details->contacts->phone;
                  *
                  */
-                ${$key} = json_decode(json_encode($value));
+                ${$key} = $this->convertToJsonObject($value);
 
                 //  Set an info log for the created variable and its dynamic data value
                 $this->logInfo('Variable <span class="text-success">$'.$key.'</span> = '.json_encode($value));
             }
         }
+
+        //  Remove the (\u00a0) special character which represents a no-break space in HTML
+        $text = $this->remove_HTML_No_Break_Space( $text );
 
         //  Get all instances of mustache tags within the given text
         $result = $this->getInstancesOfMustacheTags($text);
@@ -1304,8 +1716,9 @@ class UssdCreatorController extends Controller
         if ($number_of_mustache_tags) {
             //  Foreach mustache tag we must convert it into a php variable
             foreach ($mustache_tags as $mustache_tag) {
+                
                 //  Convert "{{ company.name }}" into "$company->name"
-                $dynamicVariable = $this->convertMustacheTagIntoPHPVariable($mustache_tag, true);
+                $dynamic_variable = $this->convertMustacheTagIntoPHPVariable($mustache_tag, true);
 
                 /*  If the current text is not using the PHP Code Editor Mode then this means that it does
                  *  not want to process complex code e.g if-else statements, foreach statements and php
@@ -1316,7 +1729,7 @@ class UssdCreatorController extends Controller
                     //  Use the try/catch handles incase we run into any possible errors
                     try {
                         //  Convert the dynamic property into its dynamic value e.g "$company->name" into "Company XYZ"
-                        $output = eval("return $dynamicVariable;");
+                        $output = eval("return $dynamic_variable;");
 
                         //  Incase the dynamic value is not a string, integer or float
                         if (!is_string($output) && !is_integer($output) && !is_float($output)) {
@@ -1336,10 +1749,16 @@ class UssdCreatorController extends Controller
                         //  Handle try catch error
                         return $this->handleTryCatchError($e);
                     }
-                }
 
-                //  Replace the mustache tag with its dynamic data
-                $text = preg_replace("/$mustache_tag/", $output, $text);
+                    //  Replace the mustache tag with its dynamic data e.g replace "{{ company.name }}" with "Company XYZ"
+                    $text = preg_replace("/$mustache_tag/", $output, $text);
+
+                }else{
+
+                    //  Replace the mustache tag with its dynamic variable e.g replace "{{ company.name }}" with "$company->name"
+                    $text = preg_replace("/$mustache_tag/", $dynamic_variable, $text);
+
+                }
             }
         }
 
@@ -1371,10 +1790,15 @@ class UssdCreatorController extends Controller
         return $text;
     }
 
+    public function remove_HTML_No_Break_Space( $text = '' )
+    {
+        return preg_replace('/\xc2\xa0/', '', $text);
+    }
+
     public function getInstancesOfMustacheTags($text = '')
     {
         //  Remove the (\u00a0) special character which represents a no-break space in HTML
-        $text = preg_replace('/\xc2\xa0/', '', $text);
+        $text = $this->remove_HTML_No_Break_Space( $text );
 
         /** Detect Dynamic Variables
          *
@@ -1415,33 +1839,109 @@ class UssdCreatorController extends Controller
         return ['total' => $total_results, 'mustache_tags' => $results[0]];
     }
 
-    public function convertMustacheTagIntoPHPVariable($string = null, $add_sign = false)
+    public function convertMustacheTagIntoPHPVariable($text = null, $add_sign = false)
     {
-        //  If the string has been provided and is type of (String)
-        if (!empty($string) && is_string($string)) {
-            //  Remove left and right spaces (If Any)
-            $string = trim($string);
+        //  If the text has been provided and is type of (String)
+        if (!empty($text) && is_string($text)) {
+            
+            //  Remove the (\u00a0) special character which represents a no-break space in HTML
+            $text = $this->remove_HTML_No_Break_Space( $text );
 
             //  Remove any HTML Tags
-            $string = strip_tags($string);
+            $text = strip_tags($text);
 
             //  Replace all curly braces and spaces with nothing e.g convert "{{ company.name }}" into "company.name"
-            $string = preg_replace("/[{}\s]*/", '', $string);
+            $text = preg_replace("/[{}\s]*/", '', $text);
 
             //  Replace one or more occurences of the period with "->" e.g convert "company.name" or "company..name" into "company->name"
-            $string = preg_replace("/[\.]+/", '->', $string);
+            $text = preg_replace("/[\.]+/", '->', $text);
+
+            //  Remove left and right spaces (If Any)
+            $text = trim($text);
 
             //  If we should add the PHP "$" sign
             if ($add_sign == true) {
+                
                 //  Append the $ sign to the begining of the result e.g convert "company->name" into "$company->name"
-                $string = '$'.$string;
+                $text = '$'.$text;
+
             }
 
-            //  Return the converted string
-            return $string;
+            //  Return the converted text
+            return $text;
         }
 
         return null;
+    }
+
+    public function convertMustacheTagIntoDynamicData($mustache_tag)
+    {
+        //  Use the try/catch handles incase we run into any possible errors
+        try {
+            
+            //  Create dynamic variables
+            foreach ($this->dynamic_data_storage as $key => $value) {
+                /*  Foreach dataset use the iterator key to create the dynamic variable name and
+                    *  assign the iterator value as the new variable value.
+                    *
+                    *  Example:
+                    *
+                    *  $data = ['product' => 'Orange', 'quantity' => 3, 'price' => 450, ...e.tc];
+                    *
+                    *  Foreach dataset, we produce dynamic variables e.g
+                    *
+                    *  $product = 'Orange';
+                    *  $quantity = 3;
+                    *  $price = 450;
+                    *
+                    *  ... e.t.c
+                    *
+                    *  Convert the value to a JSON Object. Converting each value into an object helps us
+                    *  target nested values by using the "->" symbol e.g we can access deeply nested
+                    *  values in this way:
+                    *
+                    *  $company->details->contacts->phone;
+                    *
+                    */
+                ${$key} = $this->convertToJsonObject($value);
+            }
+
+            //  Set an info log that we are converting the mustache tag into dynamic data
+            $this->logInfo('Start converting mustache tag <span class="text-success">'.$mustache_tag.'</span> into its associated dynamic data');
+    
+            //  Convert "{{ company.name }}" into "$company->name" and store the result within a unique variable referenced as "dynamic_variable"
+            ${ $this->generateUniqueVariable('dynamic_variable') } = $this->convertMustacheTagIntoPHPVariable($mustache_tag, true);
+
+            //  Convert the dynamic property into its dynamic value e.g "$company->name" into "Company XYZ"
+            $output = eval("return ${ $this->generated_variables['dynamic_variable'] };");
+
+            //  Incase the dynamic value is not a string, integer or float
+            if (!is_string($output) && !is_integer($output) && !is_float($output)) {
+
+                //  Set an info log for the final conversion result
+                $this->logInfo('Converting <span class="text-success">'.$mustache_tag.'</span> to [<span class="text-success">'.gettype($output).'</span>]');
+            
+            }else{
+
+                //  Set an info log for the final conversion result
+                $this->logInfo('Converting <span class="text-success">'.$mustache_tag.'</span> to <span class="text-success">'.$output.'</span>');
+
+            }
+
+            //  Return the final output
+            return $output;
+
+        } catch (\Throwable $e) {
+
+            //  Handle try catch error
+            return $this->handleTryCatchError($e);
+
+        } catch (Exception $e) {
+
+            //  Handle try catch error
+            return $this->handleTryCatchError($e);
+
+        }
     }
 
     public function removePHPTags($text = '')
@@ -1645,7 +2145,7 @@ class UssdCreatorController extends Controller
                 *  $company->details->contacts->phone;
                 *
                 */
-            ${$key} = json_decode(json_encode($value));
+            ${$key} = $this->convertToJsonObject($value);
 
             //  Set an info log for the created variable and its dynamic data value
             $this->logInfo('Variable <span class="text-success">$'.$key.'</span> = '.json_encode($value));
@@ -1686,7 +2186,7 @@ class UssdCreatorController extends Controller
         // Create and set the custom generated variable equal to the converted result
         ${ $this->generateUniqueVariable('items') } =
 
-            // Convert the group_reference value mustache tag into a PHP valid variable name
+            // Convert the group_reference value mustache tag into a PHP valid variable name e.g "{{ products }}" into "products"
             $this->convertMustacheTagIntoPHPVariable(
                 // Param 1 - Pass the value to convert (The group reference mustache tag)
                 ${ $this->generated_variables['data_structure'] }->group_reference,
@@ -1711,18 +2211,30 @@ class UssdCreatorController extends Controller
         //  Get the value of the items
         $this->generated_variables['items'] = ${ $this->generated_variables['items'] };
 
-        //  Check if the variable is of type [Array] - Use PHP is_array() to check.
-        if (!is_array(${ $this->generated_variables['items'] })) {
-            /** Does not exist
-             *
-             *  Set an warning log that the group reference value must be of type array.
-             */
-            $dataType = ucwords(gettype(${ $this->generated_variables['items'] }));
-            $providedMustacheTag = ${ $this->generated_variables['data_structure'] }->group_reference;
-            $this->logWarning('The given group reference mustache tag <span class="text-success">'.$providedMustacheTag.'</span> must be of type [<span class="text-success">Array</span>] however we received a value of type [<span class="text-success">'.$dataType.'</span>] therefore we cannot create the dynamic select options');
+        /** Note that empty arrays ( i.e = [] ) are converted to null values due to the
+         *  convertToJsonObject() method, therefore it is very possible that the value
+         *  of ${ $this->generated_variables['items'] } may be an empty array eventhough
+         *  running gettype() may return "null" instead of type of "array". This means 
+         *  that we must first check if the value is null before we can check if this 
+         *  is of type of "array". We will then later treat this null value as an
+         *  empty array and display an "no results message"
+         * 
+         */
+        if (!is_null(${ $this->generated_variables['items'] })) {
 
-            //  Display the technical difficulties error page to notify the user of the issue
-            return $this->displayTechnicalDifficultiesErrorPage();
+            //  Check if the variable is of type [Array] - Use PHP is_array() to check.
+            if (!is_array(${ $this->generated_variables['items'] })) {
+                /** Does not exist
+                 *
+                 *  Set an warning log that the group reference value must be of type array.
+                 */
+                $dataType = ucwords(gettype(${ $this->generated_variables['items'] }));
+                $providedMustacheTag = ${ $this->generated_variables['data_structure'] }->group_reference;
+                $this->logWarning('The given group reference mustache tag <span class="text-success">'.$providedMustacheTag.'</span> must be of type [<span class="text-success">Array</span>] however we received a value of type [<span class="text-success">'.$dataType.'</span>] therefore we cannot create the dynamic select options');
+
+                //  Display the technical difficulties error page to notify the user of the issue
+                return $this->displayTechnicalDifficultiesErrorPage();
+            }
         }
 
         //  Use the try/catch handles incase we run into any possible errors
@@ -1730,11 +2242,14 @@ class UssdCreatorController extends Controller
             //  Set an info log that we are starting to list the dynamic options
             $this->logInfo('Start listing dynamic options');
 
-            //  Check if we have options to display
-            ${ $this->generateUniqueVariable('optionsExist') } = count(${ $this->generated_variables['items'] }) ? true : false;
+            /** Check if we have options to display
+             *  The options must be an non-empty array and must not be null
+             */
+            ${ $this->generateUniqueVariable('optionsExist') } = ( count( ${ $this->generated_variables['items'] } ) != 0 && !is_null( ${ $this->generated_variables['items'] } ) ) ? true : false;
 
             //  If we have options to display
             if (${ $this->generated_variables['optionsExist'] } == true) {
+
                 ${ $this->generateUniqueVariable('number') } = null;
 
                 ${ $this->generateUniqueVariable('text') } = "\n";
@@ -1766,28 +2281,46 @@ class UssdCreatorController extends Controller
                     );
 
                     //  If the option name failed to build return the failed response otherwise continue
-                    if ($this->isDisplayErrorPage(${ $this->generated_variables['buildResponse'] })) {
+                    if ($this->isDisplayScreen(${ $this->generated_variables['buildResponse'] })) {
                         return ${ $this->generated_variables['buildResponse'] };
                     }
 
                     //  Get the built option name
                     ${ $this->generated_variables['option_name'] } = ${ $this->generated_variables['buildResponse'] };
 
-                    //  Process dynamic content embedded within the template value
-                    ${ $this->generated_variables['buildResponse'] } = $this->handleEmbeddedDynamicContentConversion(
-                        //  Text containing embedded dynamic content that must be convert
-                        ${ $this->generated_variables['data_structure'] }->template_value,
-                        //  Is this text information generated using the PHP Code Editor
-                        false
-                    );
+                    //  If the provided value is a valid mustache tag
+                    if( $this->isValidMustacheTag( ${ $this->generated_variables['data_structure'] }->template_value, false ) ){
+
+                        //  Convert the mustache tag into its associated dynamic data value e.g "{{ product }}" into an array [...] of the product data
+                        ${ $this->generated_variables['buildResponse'] } = $this->convertMustacheTagIntoDynamicData( ${ $this->generated_variables['data_structure'] }->template_value );
+
+                    //  If the provided value is not a valid mustache tag
+                    }else{
+
+                        //  Process dynamic content embedded within the template value e.g "This is {{ company.name }}" into "This is Company XYZ"
+                        ${ $this->generated_variables['buildResponse'] } = $this->handleEmbeddedDynamicContentConversion(
+                            //  Text containing embedded dynamic content that must be convert
+                            ${ $this->generated_variables['data_structure'] }->template_value,
+                            //  Is this text information generated using the PHP Code Editor
+                            false
+                        ); 
+
+                    }
 
                     //  If the option value failed to build return the failed response otherwise continue
-                    if ($this->isDisplayErrorPage(${ $this->generated_variables['buildResponse'] })) {
+                    if ($this->isDisplayScreen(${ $this->generated_variables['buildResponse'] })) {
                         return ${ $this->generated_variables['buildResponse'] };
                     }
 
                     //  Get the built option value
                     ${ $this->generated_variables['option_value'] } = ${ $this->generated_variables['buildResponse'] };
+
+                    //  Set an info log of the option display name
+                    $this->logInfo('Option name: <span class="text-success">'.${ $this->generated_variables['option_name'] }.'</span>');
+
+                    //  Set an info log of the option value
+                    $this->logInfo('Option value: <span class="text-success">'.json_encode( ${ $this->generated_variables['option_value'] } ).'</span>');
+
 
                     //  If the return type is an array format
                     if (${ $this->generated_variables['returnType'] } == 'array') {
@@ -1818,20 +2351,21 @@ class UssdCreatorController extends Controller
 
                 //  If the return type is an array format
                 if (${ $this->generated_variables['returnType'] } == 'array') {
-                    $this->logInfo('PUSH TO ARRAY');
-                    $this->logInfo(json_encode(${ $this->generated_variables['collection'] }));
 
                     //  Return the options as an array of options
                     return ${ $this->generated_variables['collection'] };
 
                 //  If the return type is a string format
                 } elseif (${ $this->generated_variables['returnType'] } == 'string') {
+
                     //  Build the option as a string
                     return ${ $this->generated_variables['text'] };
+
                 }
 
                 //  If we don't have options to display
             } else {
+
                 //  If we have instructions to be displayed then add break lines
                 ${ $this->generateUniqueVariable('text') } = (!empty($this->screenInstructions) ? "\n\n" : '');
 
@@ -1843,6 +2377,7 @@ class UssdCreatorController extends Controller
 
                 //  Return the custom or default "No options available"
                 return ${ $this->generated_variables['text'] };
+                
             }
         } catch (\Throwable $e) {
             //  Handle try catch error
@@ -1986,8 +2521,9 @@ class UssdCreatorController extends Controller
         if (!empty($text)) {
             //  If the data to verify is of type String
             if (is_string($text)) {
+
                 //  Remove the (\u00a0) special character which represents a no-break space in HTML
-                $text = preg_replace('/\xc2\xa0/', '', $text);
+                $text = $this->remove_HTML_No_Break_Space( $text );
 
                 /** Detect Dynamic Variables
                  *
@@ -2020,8 +2556,8 @@ class UssdCreatorController extends Controller
         //  If we should log a warning
         if ($log_warning == true) {
             //  Incase the value received is not a string
-            if (!is_string($output)) {
-                $this->logWarning('The provided mustache tag is not a valid mustache tag syntax. Instead we received a value of type ['.gettype($output).']');
+            if (!is_string($text)) {
+                $this->logWarning('The provided mustache tag is not a valid mustache tag syntax. Instead we received a value of type ['.gettype($text).']');
             } else {
                 $this->logWarning('The provided mustache tag '.$text.' is not a valid mustache tag syntax');
             }
@@ -2029,191 +2565,6 @@ class UssdCreatorController extends Controller
 
         //  Return false to indicate that this is not a valid mustache tag
         return false;
-    }
-
-    public function determineScreenToDisplay()
-    {
-        //  Check if the user has already responded to the current display screen
-        if ($this->completedLevel($this->level)) {
-            //  Get the users response
-            $user_response = $this->getResponseFromLevel($this->level);   //  John Doe
-
-            //  Set an info log that the user has responded to the current screen and show the input value
-            $this->logInfo('User has responded to <span class="text-primary">'.$this->screen['title'].'</span> with <span class="text-success">'.$user_response.'</span>');
-
-            //  If the screen uses API's
-            if ($this->screen['use_apis'] == true) {
-                //  If the screen does not use API's
-            } else {
-                if ($this->screen['content']['action_type'] == 'Select Option') {
-                    //  If the screen select reply uses dynamic information
-                    if ($this->screen['content']['select_reply']['type'] == 'basic') {
-                        //  DO THE SELECT DYNAMIC STUFF HERE
-
-                    //  If the screen select reply uses static information
-                    } else {
-                        $user_response = (int) $user_response;   //  e.g 1, 2 or 3 e.t.c
-                        $available_screen_options = $this->screen['content']['select_reply']['static_options'] ?? [];
-                        $number_of_available_screen_options = count($available_screen_options);
-
-                        //  Make sure that the user did not select an incorrect option
-                        if ($user_response > $number_of_available_screen_options || $user_response < 0) {
-                            //  Display a custom error (with go back option) to notify the user of the issue
-                            return $this->displayCustomGoBackPage("You selected an incorrect option. Please try again.\n");
-                        }
-
-                        $selected_option = $available_screen_options[$user_response - 1];
-
-                        //  Get the current selected option value and set it as the dynamic data value
-                        $dynamic_data_value = [
-                            'input' => $user_response,
-                            'name' => $selected_option['name'],
-                            'value' => $selected_option['value'] ?? $selected_option['name'],
-                        ] ?? null;  //  e.g Buy Tickets
-
-                        //  Get the next screen link
-                        $next_screen = $available_screen_options[$user_response - 1]['next_screen'] ?? null;  //  e.g Tickets
-                    }
-                }
-
-                if ($this->screen['content']['action_type'] == 'Input Value') {
-                    //  Get the current input value and set it as the dynamic data value
-                    $dynamic_data_value = $user_response;  //  e.g John Doe
-
-                    //  Get the next screen link
-                    $next_screen = $this->screen['content']['next_screen'] ?? null;  //  e.g register
-                }
-
-                if ($this->screen['content']['action_type'] != 'No Action') {
-                    //  Get the reply name (if available)
-                    $reference_name = $this->screen['content']['reference_name'];   //  e.g first_name
-
-                    //  If the reply name is not empty and the user reponse has been set
-                    if (!empty($reference_name) && isset($dynamic_data_value) && !empty($dynamic_data_value)) {
-                        //  Save the dynamic attribute and its associated value in the dynamic data storage
-                        $this->dynamic_data_storage[$reference_name] = $dynamic_data_value;
-                    }
-
-                    //  If the reply name is not empty and the user reponse has been set
-                    if (isset($next_screen) && !empty($next_screen)) {
-                        foreach ($this->ussdBuilderMetadata as $screen) {
-                            //  To avoid self infinite loops
-                            if ($screen['title'] != $this->screen['title']) {
-                                if ($screen['title'] == $next_screen) {
-                                    //  Increment the level
-                                    $this->level = ++$this->level;
-
-                                    //  Set the global screen to the current screen that we are linking to
-                                    $this->screen = $screen;
-
-                                    //  Build the screen display
-                                    $response = $this->determineScreenToDisplay();
-
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } else {
-            //  Build the current screen display and store its reply attributes and data
-            $response = $this->buildScreenDisplay();
-
-            //  Set an info log that the user has not responded to the current screen
-            $this->logInfo('User has not yet responded to <span class="text-primary">'.$this->screen['title'].'</span>');
-        }
-
-        return $response;
-    }
-
-    public function buildScreenDisplay()
-    {
-        //  Set an info log that we are building the current screen
-        $this->logInfo('Start building <span class="text-primary">'.$this->screen['title'].'</span>');
-
-        //  If the screen uses API's
-        if ($this->screen['use_apis'] == true) {
-            //  Set an info log that the current screen uses API'S
-            $this->logInfo('<span class="text-primary">'.$this->screen['title'].'</span> uses API\'s');
-
-        //  DO THE API STUFF HERE
-
-        //  If the screen does not use API's (simple screen)
-        } else {
-            //  Set an info log that the current screen does not use API'S
-            $this->logInfo('<span class="text-primary">'.$this->screen['title'].'</span> does not use API\'s');
-
-            //  Build the screen information using the screen content
-            $response = $this->buildScreenContent($this->screen['content']);
-        }
-
-        return $response;
-    }
-
-    public function buildScreenContent($content)
-    {
-        $description_uses_code_editor_mode = $content['description']['code_editor_mode'] ?? false;
-
-        //  If the current content instructions/description uses the PHP Code Editor
-        if ($description_uses_code_editor_mode == true) {
-            //  Set an info log that the current screen uses the PHP Code Editor to build screen instructions
-            $this->logInfo('<span class="text-primary">'.$this->screen['title'].'</span> uses the PHP Code Editor to build instructions');
-
-            //  Get the screen description code otherwise default to a return statement that returns an empty string
-            $screen_instruction_text = $content['description']['code_editor_text'] ?? "return '';";
-
-        //  If the current content instructions/description does not use the PHP Code Editor
-        } else {
-            //  Set an info log that the current screen uses does not use the PHP Code Editor to build screen instructions
-            $this->logInfo('<span class="text-primary">'.$this->screen['title'].'</span> does not use the PHP Code Editor to build instructions');
-
-            //  Get the screen description text otherwise default to an empty string
-            $screen_instruction_text = $content['description']['text'] ?? '';
-        }
-
-        //  Build the screen instructions / description
-        $screen_instructions = $this->replaceMustacheTagsWithDynamicData($screen_instruction_text, $description_uses_code_editor_mode);
-
-        //  Initialize the screen options to an empty string
-        $available_screen_action = '';
-
-        //  If the screen content must display select options
-        if ($content['action_type'] == 'Select Option') {
-            //  Add a line break before showing the options
-            $available_screen_action .= "\n";
-
-            //  If the select options are dynamic
-            if ($content['select_reply']['is_dynamic'] == true) {
-                //  DO THE DYNAMIC OPTIONS STUFF HERE
-
-            //  If the select options are static
-            } else {
-                //  Get the static options
-                $options = $content['select_reply']['static_options'];
-
-                foreach ($options as $key => $option) {
-                    //  Set the option number
-                    $number = (++$key).'. ';
-
-                    //  Get the option value otherwise default to "No option"
-                    $option = ($option['name'] ? $option['name'] : 'No option');
-
-                    //  Add the current option to the rest of the screen options
-                    $available_screen_action .= $number.$option."\n";     //  e.g 1. View Products
-                }
-            }
-        }
-
-        //  If we don't have instructions to display
-        if (empty($screen_instructions)) {
-            //  Set an info log that the current screen does not have instructions to display
-            $this->logInfo('<span class="text-primary">'.$this->screen['title'].'</span> does not have instructions to display');
-        }
-
-        $response = $screen_instructions.$available_screen_action;
-
-        return $this->displayCustomPage($response);
     }
 
     /** handleTryCatchError()
@@ -2241,6 +2592,7 @@ class UssdCreatorController extends Controller
         $data = [
             'type' => 'info',
             'description' => $description,
+            'level' => $this->level ?? null,
             'screen' => $this->screen['title'] ?? null,
             'datetime' => (\Carbon\Carbon::now())->format('Y-m-d H:i:s')
         ];
@@ -2257,6 +2609,7 @@ class UssdCreatorController extends Controller
         $data = [
             'type' => 'warning',
             'description' => $description,
+            'level' => $this->level ?? null,
             'screen' => $this->screen['title'] ?? null
         ];
 
@@ -2272,6 +2625,7 @@ class UssdCreatorController extends Controller
         $data = [
             'type' => 'error',
             'description' => $description,
+            'level' => $this->level ?? null,
             'screen' => $this->screen['title'] ?? null
         ];
 
@@ -2280,7 +2634,26 @@ class UssdCreatorController extends Controller
 
     public function updateLog($data)
     {
+        //  Get the last recorded log microtime
+        if( empty( $this->last_recorded_log_microtime ) ){
+            
+            $this->last_recorded_log_microtime = $this->getMicroTime();
+
+        }
+
+        //  Calculate the current log time since the last recorded log time
+        $microtime_since_last_log = ( $this->getMicroTime() - $this->last_recorded_log_microtime ) / 1000;
+
+        //  Update our log data stack
+        array_push( $data, ['microtime_since_last_log', $microtime_since_last_log] );
+
+        //  Push the latest log update
         array_push($this->log, $data);
+    }
+
+    public function getMicroTime()
+    {
+        return microtime(true);
     }
 
     public function getUserResponses($text = null)
