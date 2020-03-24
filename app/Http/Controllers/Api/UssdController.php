@@ -392,6 +392,10 @@ class UssdController extends Controller
         */
         $this->updateCustomerJourney();
 
+        $response = $response . "\n\n";
+        $response .= 'Text: ' .$this->text. "\n";
+        $response .= 'Text: '.$this->original_text;
+
         if ($this->test_mode) {
             //  Return the response to the user
             return response(['response' => $response])->header('Content-Type', 'application/json');
