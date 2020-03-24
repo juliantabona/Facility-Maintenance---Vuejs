@@ -677,20 +677,20 @@ class UssdController extends Controller
             //  Update the session
             $update = DB::table('ussd_sessions')->where('session_id', $this->session_id)->update($sessionData);
 
-            if( $update ){
+            if ($update) {
                 return 'Update success';
-            }else{
+            } else {
                 return 'Update fail';
             }
 
-        //  If we dont't have a Ussd Session
+            //  If we dont't have a Ussd Session
         } else {
             //  Create a new session
             $create = DB::table('ussd_sessions')->insert($sessionData);
 
-            if( $update ){
+            if ($update) {
                 return 'Create success';
-            }else{
+            } else {
                 return 'Create fail';
             }
         }
