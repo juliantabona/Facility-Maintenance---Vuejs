@@ -387,7 +387,6 @@ class UssdController extends Controller
         $query = $this->updateCustomerJourney();
 
         $response = $response."\n";
-        $response .= 'Query: '.$query;
 
         if ($this->test_mode) {
             //  Return the response to the user
