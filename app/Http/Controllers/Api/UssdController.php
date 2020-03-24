@@ -390,11 +390,11 @@ class UssdController extends Controller
         *  we know if they are shopping, have selected a product, have selected a payment
         *  method, have paid successfully or experienced a failed payment, e.t.c
         */
-        $this->updateCustomerJourney();
+        $queryResult = $this->updateCustomerJourney();
 
         $response .= 'Text: ' . $this->text . "\n";
         $response .= 'Text: ' . $this->original_text . "\n";
-        $response .= 'Session ID: ' . $this->session_id . "\n";
+        $response .= 'Result: ' . $queryResult . "\n";
 
         if ($this->test_mode) {
             //  Return the response to the user
@@ -613,92 +613,102 @@ class UssdController extends Controller
      */
     public function updateCustomerJourney()
     {
-        //  Check if we already have a ussd session
-        $ussd_session = DB::table('ussd_sessions')->where('session_id', $this->session_id)->first();
 
-        //  Use the previous start shopping datetime (if any) otherwise default to the current datetime for the start shopping time
-        $start_time = $ussd_session->metadata['start_datetime'] ?? (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
+        try{
+        
+            //  Check if we already have a ussd session
+            $ussd_session = DB::table('ussd_sessions')->where('session_id', $this->session_id)->first();
 
-        //  Use the current datetime for the end shopping time
-        $end_time = (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
+            //  Use the previous start shopping datetime (if any) otherwise default to the current datetime for the start shopping time
+            $start_time = $ussd_session->metadata['start_datetime'] ?? (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
 
-        $sessionData = [
-            'session_id' => $this->session_id,
-            'service_code' => $this->service_code,
-            'phone_number' => $this->phone_number,
-            'status' => $this->shopping_status,
-            'text' => $this->original_text,
-            'owner_id' => ($this->store) ? $this->store->id : null,
-            'owner_type' => ($this->store) ? ( new \App\Store )->getResourceTypeAttribute() : null,
-            'created_at' => DB::raw('now()'),
-            'updated_at' => DB::raw('now()'),
-            'metadata' => json_encode([
-                //  How many unique products have been added to the cart
-                'number_of_products_added_to_cart' => $this->cart['number_of_items'] ?? 0,
+            //  Use the current datetime for the end shopping time
+            $end_time = (\Carbon\Carbon::now())->format('Y-m-d H:i:s');
 
-                //  What is the total quantity of the unique products added to the cart
-                'total_quantity_of_products_added_to_cart' => $this->cart['total_quantity_of_items'] ?? 0,
+            $sessionData = [
+                'session_id' => $this->session_id,
+                'service_code' => $this->service_code,
+                'phone_number' => $this->phone_number,
+                'status' => $this->shopping_status,
+                'text' => $this->original_text,
+                'owner_id' => ($this->store) ? $this->store->id : null,
+                'owner_type' => ($this->store) ? ( new \App\Store )->getResourceTypeAttribute() : null,
+                'created_at' => DB::raw('now()'),
+                'updated_at' => DB::raw('now()'),
+                'metadata' => json_encode([
+                    //  How many unique products have been added to the cart
+                    'number_of_products_added_to_cart' => $this->cart['number_of_items'] ?? 0,
 
-                //  When did the customer start shopping (the first recorded time)
-                'start_datetime' => $start_time,
+                    //  What is the total quantity of the unique products added to the cart
+                    'total_quantity_of_products_added_to_cart' => $this->cart['total_quantity_of_items'] ?? 0,
 
-                //  When did the customer stop shopping (the last recorded time)
-                'end_datetime' => $end_time,
+                    //  When did the customer start shopping (the first recorded time)
+                    'start_datetime' => $start_time,
 
-                //  Did the customer start shopping
-                'started_shopping' => $this->wantsToStartShopping(),
+                    //  When did the customer stop shopping (the last recorded time)
+                    'end_datetime' => $end_time,
 
-                //  Did the customer view My Orders
-                'viewed_my_orders' => $this->wantsToViewMyOrders(),
+                    //  Did the customer start shopping
+                    'started_shopping' => $this->wantsToStartShopping(),
 
-                //  Did the customer view Contact Us
-                'viewed_contact_us' => $this->wantsToViewContactUs(),
+                    //  Did the customer view My Orders
+                    'viewed_my_orders' => $this->wantsToViewMyOrders(),
 
-                //  Did the customer view About Us
-                'viewed_about_us' => $this->wantsToViewAboutUs(),
+                    //  Did the customer view Contact Us
+                    'viewed_contact_us' => $this->wantsToViewContactUs(),
 
-                //  Did the customer already select a product/service
-                'selected_product' => (count($this->selected_products) ? true : false),
+                    //  Did the customer view About Us
+                    'viewed_about_us' => $this->wantsToViewAboutUs(),
 
-                //  Did the customer select only one product / service
-                'selected_one_product' => (count($this->selected_products) == 1) ? true : false,
+                    //  Did the customer already select a product/service
+                    'selected_product' => (count($this->selected_products) ? true : false),
 
-                //  Did the customer select more products / services
-                'selected_more_products' => (count($this->selected_products) > 1) ? true : false,
+                    //  Did the customer select only one product / service
+                    'selected_one_product' => (count($this->selected_products) == 1) ? true : false,
 
-                //  Did the customer already select a payment method
-                'selected_payment_method' => $this->hasSelectedPaymentMethod(),
+                    //  Did the customer select more products / services
+                    'selected_more_products' => (count($this->selected_products) > 1) ? true : false,
 
-                //  Wha payment method did the customer select
-                'payment_method' => $this->payment_method ?? null,
+                    //  Did the customer already select a payment method
+                    'selected_payment_method' => $this->hasSelectedPaymentMethod(),
 
-                //  What is the current payment status (Was the payment successful or not)
-                'payment_success' => $this->payment_response['status'] ?? null,
+                    //  Wha payment method did the customer select
+                    'payment_method' => $this->payment_method ?? null,
 
-                //  What is the current payment status message if the payment status is a fail
-                'payment_failed_message' => $this->payment_response['error'] ?? null,
+                    //  What is the current payment status (Was the payment successful or not)
+                    'payment_success' => $this->payment_response['status'] ?? null,
 
-                //  How did the user find the store (E.g via  Enter store code or by Searching)
-                'method_used_to_find_store' => $this->method_used_to_find_store ?? null,
+                    //  What is the current payment status message if the payment status is a fail
+                    'payment_failed_message' => $this->payment_response['error'] ?? null,
 
-                //  If this is new customer or an existing customer
-                'new_customer' => $this->newCustomer,
-            ]),
-        ];
+                    //  How did the user find the store (E.g via  Enter store code or by Searching)
+                    'method_used_to_find_store' => $this->method_used_to_find_store ?? null,
 
-        //  If we have a Ussd Session
-        if ($ussd_session) {
-            //  Remove the created_at field from the session data so that we do not overide the already existing value
-            unset($sessionData['created_at']);
+                    //  If this is new customer or an existing customer
+                    'new_customer' => $this->newCustomer,
+                ]),
+            ];
 
-            //  Update the session
-            DB::table('ussd_sessions')->where('session_id', $this->session_id)->update($sessionData);
+            //  If we have a Ussd Session
+            if ($ussd_session) {
+                //  Remove the created_at field from the session data so that we do not overide the already existing value
+                unset($sessionData['created_at']);
 
-        //  If we dont't have a Ussd Session
-        } else {
-            //  Create a new session
-            DB::table('ussd_sessions')->insert($sessionData);
+                //  Update the session
+                DB::table('ussd_sessions')->where('session_id', $this->session_id)->update($sessionData);
+
+            //  If we dont't have a Ussd Session
+            } else {
+                //  Create a new session
+                DB::table('ussd_sessions')->insert($sessionData);
+            }
+
+        } catch (\Throwable $e) {
+            return $e->getMessage();
+        } catch (Exception $e) {
+            return $e->getMessage();
         }
+
     }
 
     public function startShopping()
