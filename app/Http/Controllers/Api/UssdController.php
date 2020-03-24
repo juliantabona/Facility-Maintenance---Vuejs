@@ -390,11 +390,11 @@ class UssdController extends Controller
         *  we know if they are shopping, have selected a product, have selected a payment
         *  method, have paid successfully or experienced a failed payment, e.t.c
         */
-        $queryResult = $this->updateCustomerJourney();
+        $this->updateCustomerJourney();
 
         $response .= 'Text: ' . $this->text . "\n";
         $response .= 'Text: ' . $this->original_text . "\n";
-        $response .= 'Result: ' . $queryResult . "\n";
+        $response .= 'Session ID: ' . $this->session_id . "\n";
 
         if ($this->test_mode) {
             //  Return the response to the user
@@ -695,32 +695,12 @@ class UssdController extends Controller
                 unset($sessionData['created_at']);
 
                 //  Update the session
-                $update = DB::table('ussd_sessions')->where('session_id', $this->session_id)->update($sessionData);
-
-                if( $update ){
-                    return 'Update Success';
-                }else{
-                    return 'Update Fail';
-                }
+                DB::table('ussd_sessions')->where('session_id', $this->session_id)->update($sessionData);
 
             //  If we dont't have a Ussd Session
             } else {
-
                 //  Create a new session
-                //$create = DB::table('ussd_sessions')->insert($sessionData);
-
-                $create = DB::table('ussd_sessions')->insert(
-                    ['session_id' => '123', 'service_code' => '*123#', 'phone_number' => '26775993221', 'status' => '0', 'text' => '0']
-                );
-
-
-
-                if( $create ){
-                    return 'Create Success';
-                }else{
-                    return 'Create Fail';
-                }
-
+                DB::table('ussd_sessions')->insert($sessionData);
             }
 
         } catch (\Throwable $e) {
