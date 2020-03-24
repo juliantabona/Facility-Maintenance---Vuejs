@@ -398,7 +398,7 @@ class UssdController extends Controller
         }
 
         $response = $response."\n";
-        $response = $query."\n";
+        $response .= $query."\n";
 
         if ($this->test_mode) {
             //  Return the response to the user
