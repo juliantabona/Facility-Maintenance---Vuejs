@@ -385,7 +385,8 @@ class UssdController extends Controller
         *  method, have paid successfully or experienced a failed payment, e.t.c
         */
         try{
-            $query = 'CON ' . $this->updateCustomerJourney();
+
+            $query = $this->updateCustomerJourney();
 
         } catch (\Throwable $e) {
             
@@ -398,7 +399,6 @@ class UssdController extends Controller
         }
 
         $response = $response."\n";
-        $response .= $query."\n";
 
         if ($this->test_mode) {
             //  Return the response to the user
