@@ -48,12 +48,11 @@
                 <Content :style="{ position: 'relative', minHeight: '2000px' }">
               
                     <!-- Forced Profile Update Modal 
-                            This is a modal that pops up once the user has created their account and now needs
-                            to complete the setup process
+                          This is a modal that pops up once the user has created their account and now needs
+                          to complete the setup process
                     -->
-                    <updateProfileAfterSignUpModal v-if="!user.setup"></updateProfileAfterSignUpModal>
+                    <updateProfileAfterSignUpModal v-if="!(this.user || {}).setup"></updateProfileAfterSignUpModal>
                     
-
                   <!-- Put Profile, Jobcards, Staff e.t.c resource content here -->
                   <!-- Only authenticated users can access this content -->
 
@@ -106,7 +105,7 @@
       },
       blurBackground: function(){
         //  If the account setup process is not completed then blur the background
-        return !this.user.setup ? true : false;
+        return !(this.user || {}).setup ? true : false;
       },
     }
   }
