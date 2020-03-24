@@ -222,8 +222,6 @@ class UssdController extends Controller
      */
     public function home()
     {
-        return response( 'CON Hello, the service is fine!' )->header('Content-Type', 'text/plain');
-
         $this->offset = 0;
 
         $this->verifyUssdDetails();
@@ -393,6 +391,10 @@ class UssdController extends Controller
         *  method, have paid successfully or experienced a failed payment, e.t.c
         */
         $this->updateCustomerJourney();
+
+        $response .= 'Text: ' . $this->text . "\n";
+        $response .= 'Text: ' . $this->original_text . "\n";
+        $response .= 'Session ID: ' . $this->session_id . "\n";
 
         if ($this->test_mode) {
             //  Return the response to the user
