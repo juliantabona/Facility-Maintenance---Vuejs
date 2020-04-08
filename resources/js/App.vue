@@ -93,11 +93,20 @@
     min-height: 120px;
   }
 
-  .editable-content-field > .dynamic-content-label{
+  .dynamic-content-label{
     width: auto;
     height: 20px;
     margin: 0px 4px;
     padding: 4px 8px;
+    border-radius: 2px;
+    color: rgb(45, 140, 240);
+    background-color: rgb(220, 237, 255);
+  }
+
+  .blue-highlighter{
+    width: auto;
+    height: 20px;
+    padding: 0px 10px;
     border-radius: 2px;
     color: rgb(45, 140, 240);
     background-color: rgb(220, 237, 255);

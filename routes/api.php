@@ -747,7 +747,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     *********************************/
 
     Route::prefix('ussd')->group(function () {
-        Route::post('/creator', 'Api\UssdCreatorController@home')->name('ussd-creator-home');
+        Route::post('/creator', 'Api\UssdBuilder\HomeController@home')->name('ussd-creator-home');
         Route::post('/customer', 'Api\UssdController@home')->name('ussd-customer-home');
         Route::post('/merchant', 'Api\UssdMerchantController@merchantHome')->name('ussd-merchant-home');
         Route::post('/customer/online', 'Api\UssdController@redirectToOnline')->name('ussd-customer-home-online');
@@ -993,7 +993,7 @@ Route::get('download/quotations/{quotation_id}', 'Api\DownloadController@downloa
 //  DELETEE EVERYTHING DOWN HERE THIS IS A TESTING SEECTION
 
 Route::get('/driving/test', function () {
-
+    
     $instructions = 'Your test will be 2 questions long. You must complete all questions and get 1 or more to pass your test.';
 
     $questions = [
@@ -1004,19 +1004,19 @@ Route::get('/driving/test', function () {
                 [
                     'id' => '20',
                     'is_correct' => true,
-                    'text' => 'Headlights set to high'
+                    'text' => 'Headlights set to high',
                 ],
                 [
                     'id' => '21',
                     'is_correct' => false,
-                    'text' => 'Listening to music on the car radio'
+                    'text' => 'Listening to music on the car radio',
                 ],
                 [
                     'id' => '22',
                     'is_correct' => false,
-                    'text' => 'Driving slow on the hard shoulder'
-                ]
-            ]
+                    'text' => 'Driving slow on the hard shoulder',
+                ],
+            ],
         ],
         [
             'id' => '2',
@@ -1025,31 +1025,31 @@ Route::get('/driving/test', function () {
                 [
                     'id' => '23',
                     'is_correct' => true,
-                    'text' => 'Excessive speed'
+                    'text' => 'Excessive speed',
                 ],
                 [
                     'id' => '24',
                     'is_correct' => false,
-                    'text' => 'Talking with passengers'
+                    'text' => 'Talking with passengers',
                 ],
                 [
                     'id' => '25',
                     'is_correct' => false,
-                    'text' => 'Paying to much attention to traffic'
-                ]
-            ]
-        ]
+                    'text' => 'Paying to much attention to traffic',
+                ],
+            ],
+        ],
     ];
 
     $data = [
         'total' => 2,
-        'time_limit' =>[
+        'time_limit' => [
             'in_minutes' => 5,
             'in_seconds' => 320,
-            'human_readable' => '5 mins 20 sec'
+            'human_readable' => '5 mins 20 sec',
         ],
         'instructions' => $instructions,
-        'questions' => $questions
+        'questions' => $questions,
     ];
 
     $status = 200;

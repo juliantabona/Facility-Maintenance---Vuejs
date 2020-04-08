@@ -38,8 +38,7 @@ class Api {
                     resolve(response);
                 })
                 .catch(response => {
-
-                    console.log('Error 1 Response!!!!');
+                    
                     console.log(response);
                     
                     if (response.status === 401) {

@@ -322,12 +322,20 @@ let routes = [
         component: require('./views/dashboard/business-tools/list/main.vue')
     },
 
-    //  MISC
+    /**************************************
+    *  REMOVE LATER
+    **************************************/  
     {
         path: '/dragger', name: 'dragger',
         meta: { layout: 'Dashboard', middlewareAuth: true },
         component: require('./views/dashboard/draggable/main.vue')
     },
+    {
+         //  Driving Theory
+         path: '/driving-theory', name: 'driving-theory',
+         meta: { layout: 'Dashboard', middlewareAuth: true },
+         component: require('./views/dashboard/driving-theory/show/main.vue')
+     },
 
 
 ];

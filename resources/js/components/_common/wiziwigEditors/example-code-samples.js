@@ -44,7 +44,7 @@ function ussd_creator_select_options_action_sample_code()
      *	Below is an example: 
      */
 
-    //  Our products
+    //  Our products (Usually dynamic information e.g From an API call)
     $products = [
         ["id"=>"1", "name"=>"Product 1"],
         ["id"=>"2", "name"=>"Product 2"],
@@ -58,12 +58,22 @@ function ussd_creator_select_options_action_sample_code()
     $items = $products;  // $items = {{ products }};
 
     /** Foreach item we will build the option. Each option must have four
-     *  attributes:
+     *  main attributes:
      * 
      *  @name: The option display name
      *  @value: The option value that must be stored as dynamic data
-     *  @next_screen: The name of the screen to link to after option selection
+     *  @link: [
+     *     @type: Whether you want to link to a "screen" or "display"
+     *     @name: The name of the screen or display to link to after option selection
+     *   ]
      *  @input: A number, letter or symbol the user must input to select the option
+     *
+     *	---	Optional Parameters ---
+     *  @separator: [
+     *     @top: Characters to add above to separate the option from other options e.g '---'
+     *     @bottom: Characters to add below to separate the option from other options e.g '---'
+     *   ]
+     *
      */
     foreach($items as $key => $item){
 
@@ -72,7 +82,14 @@ function ussd_creator_select_options_action_sample_code()
             'input' => ++$key,
             'value' => $item['id'],
             'name' => $item['name'],
-            'next_screen' => 'View Product'
+            'link' => [
+                'type' => 'screen',         //  or "display"
+                'name' => 'View Product'
+            ],
+            'separator' => [
+                'top' => '',
+                'bottom' => ''
+            ]
         ];
 
         //  Add each option to our options list

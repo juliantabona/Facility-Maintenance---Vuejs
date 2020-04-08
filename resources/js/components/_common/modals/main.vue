@@ -1,7 +1,9 @@
 <template>
     <div>
         <!-- Modal -->
-        <Modal :width="width" :title="title" v-model="modalVisible" 
+        <Modal :width="width" 
+               :title="title" 
+               v-model="modalVisible" 
                :closable="showCloseBtn"
                :mask-closable="modalClosable" 
                :footer-hide="!okText && !cancelText"
