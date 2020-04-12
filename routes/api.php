@@ -747,7 +747,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     *********************************/
 
     Route::prefix('ussd')->group(function () {
-        Route::post('/creator', 'Api\UssdBuilder\HomeController@home')->name('ussd-creator-home');
+        Route::post('/creator', 'Api\UssdBuilder\UssdCreatorController@home')->name('ussd-creator-home');
         Route::post('/customer', 'Api\UssdController@home')->name('ussd-customer-home');
         Route::post('/merchant', 'Api\UssdMerchantController@merchantHome')->name('ussd-merchant-home');
         Route::post('/customer/online', 'Api\UssdController@redirectToOnline')->name('ussd-customer-home-online');

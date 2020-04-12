@@ -10,36 +10,54 @@
 
     /*  Question Toolbox */
 
-    .question-option >>> .question-toolbox{
+    .draggable-option >>> .question-number{
+        color: #fff;
+        padding: 10px;
+        font-size: 20px;
+        background: #6f9cca;
+        border-radius: 0 10px;
+    }
+
+    .draggable-option >>> .question-text{
+        width: 100%;
+        align-self: center;
+        line-height: 1.5em;
+    }
+
+    .draggable-option >>> .question-toolbox{
         z-index: 1;
         position: relative;
         margin: -2px 0 0 0;
         background: #fff;
     }
 
-    .question-option >>> .question-toolbox,
-    .question-option >>> .question-toolbox .hidable{
+    .draggable-option >>> .question-toolbox,
+    .draggable-option >>> .question-toolbox .hidable{
         opacity:0;
     }
 
-    .question-option:hover >>> .question-toolbox,
-    .question-option:hover >>> .question-toolbox .hidable{
+    .draggable-option:hover >>> .question-toolbox,
+    .draggable-option:hover >>> .question-toolbox .hidable{
         opacity:1;
     }
 
-    .question-option >>> .question-toolbox .question-icon{
+    .draggable-option >>> .question-toolbox .question-icon{
         padding: 2px;
         border-radius: 100%;
         color: black;
         cursor: pointer;
     }
 
-    .question-option >>> .question-toolbox .question-icon:hover{
+    .draggable-option >>> .question-toolbox .question-icon:hover{
         color: #ffffff;
         background: #2d8cf0;
     }
 
-    .question-option >>> .ivu-card-body{
+    .draggable-option >>> .ivu-card-head{
+        padding: 10px 10px 0 !important;
+    }
+
+    .draggable-option >>> .ivu-card-body{
         padding:0 !important;
     }
 
@@ -51,14 +69,18 @@
 
 <template>
 
-    <Card v-if="localQuestion" class="question-option mb-2">
+    <Card v-if="localQuestion" class="draggable-option mb-4">
+
+        <Spin v-if="isDeletingQuestion" size="large" fix></Spin>
 
         <!-- Question Name -->
-        <div slot="title">
+        <div slot="title" class="d-flex mb-2">
 
             <!-- Question Name Label  -->
-            <span class="question-name font-weight-bold cut-text">
-                {{ getQuestionNumber ? getQuestionNumber +'. ' : '' }}
+            <span class="d-inline-block question-number font-weight-bold mr-2">
+                {{ getQuestionNumber }}
+            </span>
+            <span class="d-inline-block question-text font-weight-bold">
                 {{ localQuestion.text }}
             </span>
             
@@ -66,12 +88,6 @@
 
         <!-- Question Toolbar (Edit, Move, Delete Buttons) -->
         <div slot="extra" class="d-flex" style="margin-top: -2px;">
-
-            <span class="d-flex blue-highlighter mr-2" style="border-radius: 5px;">
-                <!-- Question Type -->
-                <span>{{ localQuestion.choices.length }}</span>
-
-            </span>
 
             <div class="question-toolbox">
 
@@ -86,22 +102,31 @@
                 <Icon type="ios-create-outline" class="question-icon hidable mr-2" size="20" @click="editQuestion()" />
 
                 <!-- Move Question Button  -->
-                <Icon type="ios-move" class="question-icon question-dragger-handle hidable mr-2" size="20" />
+                <Icon type="ios-move" class="question-icon dragger-handle hidable mr-2" size="20" />
             
             </div>
 
-        </div>   
+        </div>  
 
         <!-- Display Choices -->
-        <div>
+        <ul v-if="localQuestion.choices.length" style="margin-left: 30px;" class="p-2">
 
-            <div v-for="(choice, index) in localQuestion.choices">
+            <li v-for="(choice, index) in localQuestion.choices">
 
                 <span>{{ choice.text }}</span>
 
-            </div>
+            </li>
 
-        </div>
+        </ul>
+
+        <!-- No questions message -->
+        <Alert v-else type="info" class="m-2" show-icon>No choices</Alert>
+
+        <div :class="(questionAndChoicesCharacters > 160 ? 'bg-warning ' : 'bg-grey-light ') + 'p-2 pl-4'">
+            <span class="mr-2"><span class="font-weight-bold text-dark">Question:</span> {{ questionCharacters }}</span>
+            <span class="mr-2"><span class="font-weight-bold text-dark">Choices:</span> {{ choicesCharacters }}</span>
+            <span class="mr-2"><span class="font-weight-bold text-dark">Total:</span> {{ questionAndChoicesCharacters }}</span>
+        </div> 
     
         <!-- 
             MODAL TO EDIT EXISTING QUESTION
@@ -139,6 +164,7 @@
         components: { editQuestionModal },
         data(){
             return {
+                isDeletingQuestion: false,
                 localQuestion: this.question,
                 isOpenEditQuestionModal: false
             }
@@ -164,6 +190,23 @@
                  *  It works like a counter.
                  */
                 return (this.index != null ? this.index + 1 : '');
+            },
+            questionCharacters(){
+                return this.localQuestion.text.length || 0;
+            },
+            choicesCharacters(){
+                var total = 0;
+
+                for(var x=0; x < this.localQuestion.choices.length; x++){
+                    
+                    total += this.localQuestion.choices[x].text.length;
+
+                }
+                
+                return total;
+            },
+            questionAndChoicesCharacters(){
+                return (this.questionCharacters + this.choicesCharacters)
             }
         },
         methods: {
@@ -186,7 +229,41 @@
 
             },
             handleRemoveQuestion(index) {
-                this.topic.questions.splice(index, 1);
+
+                //  Hold constant reference to the vue instance
+                const self = this;
+
+                //  Start loader
+                self.isDeletingQuestion = true;
+
+                var question = this.topic.questions[index];
+                
+                api.call('delete', 'http://driving-theory.local/api/questions/'+question.id)
+                    .then(({data}) => {
+                        
+                        //  Console log the data returned
+                        console.log(data);
+
+                        //  Stop loader
+                        self.isDeletingQuestion = false;
+
+                        //  Display Success Message
+                        self.$Notice.success({
+                            title: 'Question removed!'
+                        });
+
+                        //  Close Modal
+                        self.topic.questions.splice(index, 1);
+
+                    })         
+                    .catch(response => { 
+
+                        //  Stop loader
+                        self.isDeletingQuestion = false;
+
+                        //  Log the responce
+                        console.log(response);    
+                    });
             }
         }
     }

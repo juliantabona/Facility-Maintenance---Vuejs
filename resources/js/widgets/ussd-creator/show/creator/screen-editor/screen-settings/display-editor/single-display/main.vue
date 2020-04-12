@@ -131,6 +131,9 @@
                     <!-- Display navigation -->
                     <displayNavigation v-show="activeNavTab == 'Navigation'" :display="localDisplay"></displayNavigation>
                         
+                    <!-- Display pagination -->
+                    <displayPagination v-show="activeNavTab == 'Pagination'" :display="localDisplay"></displayPagination>
+                        
                     <!-- Display Settings -->
                     <displaySettings v-show="activeNavTab == 'Settings'" :display="localDisplay"></displaySettings>
 
@@ -160,6 +163,9 @@
     
     //  Get the display navigation
     import displayNavigation from './navigation/main.vue';
+    
+    //  Get the display pagination
+    import displayPagination from './pagination/main.vue';
 
     //  Get the display settings
     import displaySettings from './settings/main.vue';
@@ -184,7 +190,8 @@
             }
         }, 
         components: {
-            firstDisplayCheckbox, displayInstruction, displayAction, displayEvents, displayNavigation, displaySettings
+            firstDisplayCheckbox, displayInstruction, displayAction, displayEvents, 
+            displayPagination, displayNavigation, displaySettings
         },
         data(){
             return {
@@ -223,6 +230,8 @@
                     tabs.push('Navigation');
                 }
                 
+                tabs.push('Pagination');
+
                 tabs.push('Settings');
 
                 return tabs;
@@ -236,6 +245,9 @@
 
                 //  Create the duplicate display name
                 var duplicateName = 'Display - #' + (this.screen.displays.length + 1);
+
+                //  Disable the first display indicator
+                duplicateDisplay.first_display = false;
 
                 //  Set the duplicate display name
                 duplicateDisplay.name = duplicateName;

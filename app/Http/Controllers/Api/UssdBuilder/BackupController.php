@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\UssdBuilder;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
-class HomeController extends Controller
+class BackupController extends Controller
 {
     private $log;
     private $text;

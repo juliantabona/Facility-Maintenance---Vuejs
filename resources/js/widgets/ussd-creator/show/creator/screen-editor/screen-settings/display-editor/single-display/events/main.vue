@@ -3,6 +3,16 @@
     <!-- Screen Display Events -->
     <div>
 
+        <!-- Display Event Explainer -->
+        <Alert type="info" style="line-height: 1.4em;" class="mb-2" closable>
+            Use <span class="font-italic text-success font-weight-bold">Events</span> to Create, Read, Update and Delete content using
+            <span class="font-italic text-success font-weight-bold">CRUD API's</span> and
+            <span class="font-italic text-success font-weight-bold">Validate</span>, 
+            <span class="font-italic text-success font-weight-bold">Format</span> or 
+            <span class="font-italic text-success font-weight-bold">Store</span> 
+            content including the users input among other dynamic content.
+        </Alert>
+
         <!-- Before Display Response Events -->
         <div class="mb-2">
 

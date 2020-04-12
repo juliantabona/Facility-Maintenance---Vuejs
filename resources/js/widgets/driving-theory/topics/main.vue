@@ -5,12 +5,6 @@
         box-shadow: 0px 5px 10px #b9b9b9;
     }
 
-    .topic-card >>> .topic-heading{
-        display:block;
-        font-size: 20px;
-        font-weight: bold;
-    }
-
 </style>
 
 <template>
@@ -18,12 +12,31 @@
 
         <Col :span="20" :offset="2">
         
-            <template v-if="isLoadingTopics">
+            <template v-if="!isLoadingTopics">
 
-                <div class="pb-3 border-bottom">
+                <div class="border-bottom clearfix pb-3 mb-3">
 
-                    <h2 v-if="activeTopic">{{ activeTopic.name }}</h2>
-                    <h2 v-else>Topics</h2>
+                    <template v-if="activeTopic">
+
+                        <h2 class="float-left">{{ activeTopic.name }}</h2>
+
+                        <Button type="default" class="p-1 float-right" @click.native="goBack()">
+                            <Icon type="md-arrow-back" :size="20" />
+                            <span class="mr-2">Go Back</span>
+                        </Button>
+
+                    </template>
+
+                    <template v-else>
+
+                        <h2 class="float-left">Topics</h2>
+
+                        <Button type="default" class="p-1 float-right" @click.native="refreshTopics()">
+                            <Icon type="ios-refresh" :size="20" />
+                            <span class="mr-2">Refresh</span>
+                        </Button>
+
+                    </template>
 
                 </div>
 
@@ -49,7 +62,8 @@
 
                                 <div>
 
-                                    <span class="topic-heading">{{ topic.name }}</span>
+                                    <span>{{ topic.name }}</span>
+                                    <Icon type="md-arrow-forward" :size="15" class="float-right mt-1"/>
 
                                 </div>
 
@@ -90,6 +104,17 @@
             }
         },
         methods: {
+            goBack(){
+                //  Remove the current active topic
+                this.activeTopic = null;
+            },
+            refreshTopics(){
+                //  Remove the current active topic
+                this.activeTopic = null;
+
+                //  Get topics
+                this.fetchTopics();
+            },
             selectTopic(topic){
 
                 this.activeTopic = topic;
@@ -103,7 +128,7 @@
                 //  Start loader
                 self.isLoadingTopics = true;
                 
-                api.call('get', 'http://localhost:8000/api/sub-topics')
+                api.call('get', 'http://driving-theory.local/api/sub-topics')
                     .then(({data}) => {
                         
                         //  Console log the data returned

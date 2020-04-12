@@ -196,30 +196,35 @@
 
                     //  Repeat navigation properties
                     screen_repeat_navigation: {
-                        forward_navigation: {
-                            selected_type: 'custom',  //  none, any, only_numbers, custom, regex
-                            custom: {
-                                inputs: '1, 2, 3'
-                            },
-                            regex: {
-                                rule: '/[a-zA-Z]+/'
-                            }
-                        },
-                        backward_navigation: {
-                            selected_type: 'none',  //  none, any, only_numbers, custom, regex
-                            custom: {
-                                inputs: '1, 2, 3'
-                            },
-                            regex: {
-                                rule: '/[a-zA-Z]+/'
-                            }
-                        }
+                        forward_navigation: [],
+                        backward_navigation: []
                     },
 
+                    //  Event settings
                     events: {
                         before_reply: [],
                         after_reply: []
-                    }
+                    },
+                    
+                    //  Pagination settings
+                    pagination: [
+                        {
+                            name: 'Scroll Down',
+                            selected_type: 'scroll_down',     //  scroll_up, scroll_down
+                            content_target: {
+                                selected_type: 'both'         //  instruction, action, both
+                            },
+                            slice: {
+                                start: 0,
+                                end: 160
+                            },
+                            input: '99',
+                            show_more: {
+                                visible: true,
+                                text: '99. More'
+                            }
+                        }
+                    ]
                 };
 
             }

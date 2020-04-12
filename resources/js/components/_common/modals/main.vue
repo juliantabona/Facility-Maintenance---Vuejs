@@ -5,7 +5,7 @@
                :title="title" 
                v-model="modalVisible" 
                :closable="showCloseBtn"
-               :mask-closable="modalClosable" 
+               :mask-closable="maskClosable" 
                :footer-hide="!okText && !cancelText"
                @on-visible-change="detectClose">
 
@@ -55,7 +55,7 @@
                 type: Boolean,
                 default: true,
             },
-            modalClosable:{
+            maskClosable:{
                 type: Boolean,
                 default: true,
             }

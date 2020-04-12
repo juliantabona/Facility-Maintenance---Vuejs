@@ -4,11 +4,12 @@
 
         <!-- Modal -->
         <mainModal  
-            :width="500"
+            :width="600"
             v-bind="$props"
-            okText="Create"
             cancelText="Cancel"
+            okText="Save Changes"
             title="Edit Question"
+            :maskClosable="false"
             :hideModal="hideModal"
             @on-ok="saveChanges()"
             :isSaving="isSavingChanges" 
@@ -17,21 +18,28 @@
             <template slot="content">
 
                 <!-- Question -->
-                <div class="d-flex mb-3">
+                <div class="mb-3">
 
-                    <span class="text-dark font-weight-bold mr-1 mt-1">Question: </span>
+                    <span class="text-dark font-weight-bold d-block mr-1 mt-1 mb-1">Question: </span>
 
-                    <Input type="textarea" class="w-100 mb-2" v-model="question.text" placeholder="Write question..."></Input>
+                    <Input type="textarea" class="w-100" v-model="localQuestion.text" placeholder="Write question..."></Input>
                 
                 </div>
 
-                <div class="d-flex mb-3">
+                <div class="mb-2">
 
-                    <span class="text-dark font-weight-bold mr-1 mt-1">Choices: </span>
+                    <div class="clearfix">
+                        <span class="float-left text-dark font-weight-bold d-block border-bottom pb-2 mr-1 mt-1 mb-1 ">Choices: </span>
+                        
+                        <Button type="default" class="p-1 float-right" @click.native="addChoice()">
+                            <Icon type="ios-refresh" :size="20" />
+                            <span class="mr-2">Add Choice</span>
+                        </Button>
+                    </div>
 
                     <!-- Question Choices List & Dragger  -->
                     <draggable v-if="choicesExist"
-                        :list="question.choices"
+                        :list="localQuestion.choices"
                         @start="drag=true" 
                         @end="drag=false" 
                         :options="{
@@ -41,8 +49,8 @@
                         }">
 
                         <!-- Single Choice  -->
-                        <singleChoice v-for="(choice, index) in question.choices" :key="index"  
-                            :question="question"
+                        <singleChoice v-for="(choice, index) in localQuestion.choices" :key="index"  
+                            :question="localQuestion"
                             :choice="choice"
                             :index="index">
                         </singleChoice>
@@ -50,7 +58,7 @@
                     </draggable>
 
                     <!-- No choices message -->
-                    <Alert v-else type="info" class="mb-2" show-icon>No Choices Found</Alert>
+                    <Alert v-else type="info" class="mt-2 mb-2" show-icon>No choices found</Alert>
                 
                 </div>
 
@@ -60,6 +68,10 @@
     </div>
 </template>
 <script>
+
+    import draggable from 'vuedraggable';
+    
+    import singleChoice from './../singleChoice.vue';
 
     //  Main Modal
     import mainModal from '../../../../components/_common/modals/main.vue';
@@ -71,7 +83,7 @@
                 default:() => {}
             }
         },
-        components: { mainModal },
+        components: { draggable, singleChoice, mainModal },
         data(){
             return{
                 hideModal: false,
@@ -84,12 +96,23 @@
             //  Check if the choices exists
             choicesExist(){
 
-                return (this.question.choices.length) ? true : false ;
+                return (this.localQuestion.choices.length) ? true : false ;
             }
 
         },
         methods: {
-            
+            closeModal(){
+                this.hideModal = true;
+            },
+            addChoice(){
+
+                var numberOfChoices = this.localQuestion.choices.length;
+
+                this.localQuestion.choices.push({
+                    text: '',
+                    is_correct: true
+                });
+            },
             saveChanges() {
 
                 //  Hold constant reference to the vue instance
@@ -97,8 +120,10 @@
 
                 //  Start loader
                 self.isSavingChanges = true;
+
+                var formData = this.localQuestion;
                 
-                api.call('post', 'http://127.0.0.1:8000/questions/'+this.question.id)
+                api.call('put', 'http://driving-theory.local/api/questions/'+this.localQuestion.id, formData)
                     .then(({data}) => {
                         
                         //  Console log the data returned
@@ -106,6 +131,14 @@
 
                         //  Stop loader
                         self.isSavingChanges = false;
+
+                        //  Display Success Message
+                        self.$Notice.success({
+                            title: 'Changes saved!'
+                        });
+
+                        //  Close Modal
+                        self.closeModal();
 
                     })         
                     .catch(response => { 

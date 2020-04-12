@@ -13,19 +13,20 @@
 
         </Col>
 
-        <Col :span="18">
+        <Col :span="18" class="d-flex">
 
-            <i-input v-model="localEvent.event_data.url" class="w-100 mb-2" placeholder="https://www.website.com/api/items">
-                
-                <!-- Select Event API Method -->
-                <Select v-model="localEvent.event_data.method" slot="prepend" style="width: 80px">
-                    <Option value="get">GET</Option>
-                    <Option value="post">POST</Option>
-                    <Option value="patch">PATCH</Option>
-                    <Option value="delete">DELETE</Option>
-                </Select>
+            <!-- Select Event API Method -->
+            <Select v-model="localEvent.event_data.method" style="width: 110px" class="mr-1">
+                <Option value="get">GET</Option>
+                <Option value="post">POST</Option>
+                <Option value="patch">PATCH</Option>
+                <Option value="delete">DELETE</Option>
+            </Select>
 
-            </i-input>
+            <customEditor size="small" class="w-100" classes="px-1"
+                :useCodeEditor="false" :content="localEvent.event_data.url"
+                @contentChange="localEvent.event_data.url = $event">
+            </customEditor>
 
         </Col>
 
@@ -143,6 +144,10 @@
     //  Get the loader
     import Loader from './../../../../../../../../../components/_common/loaders/Loader.vue';
 
+    import customEditor from './../../../../../../../../../components/_common/wiziwigEditors/customEditor.vue';
+
+    
+
     export default {
         props:{
             event: {
@@ -150,7 +155,7 @@
                 default: null
             }
         },
-        components: { Loader },
+        components: { Loader, customEditor },
         data(){
             return{
                 localEvent: this.event,

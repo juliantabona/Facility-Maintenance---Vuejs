@@ -22,7 +22,7 @@
             </singleEvent>
             
             <!-- No events message -->
-            <Alert v-if="!eventsExist" type="info" show-icon style="width:200px;">No Events Found</Alert>
+            <Alert v-if="!eventsExist" type="info" show-icon style="width:300px;">No Events Found</Alert>
 
         </draggable>
 

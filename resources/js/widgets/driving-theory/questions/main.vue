@@ -38,6 +38,15 @@
             <!-- No questions message -->
             <Alert v-else type="info" class="mb-2" show-icon>No Questions Found</Alert>
 
+            <div v-if="(localTopic.questions.length >= 3)" class="clearfix pt-2 mt-3 border-top">
+
+                <Button type="primary" class="p-1 float-right" @click.native="addQuestion()">
+                    <Icon type="ios-add" :size="20" />
+                    <span class="mr-2">Add Question</span>
+                </Button>
+
+            </div>
+
         </Col>
 
         <!-- 
@@ -69,11 +78,12 @@
             }
         },
         components: { 
-            draggable, singleQuestion
+            draggable, singleQuestion, createQuestionModal
         },
         data(){
             return {
-                localTopic: this.topic
+                localTopic: this.topic,
+                isOpenCreateQuestionModal: false
             }
         },
         watch: {
@@ -94,7 +104,8 @@
             //  Check if the questions exists
             questionsExist(){
 
-                return (this.localTopic.questions.length) ? true : false ;
+                return (((this.localTopic || {}).questions || {}).length) ? true : false;
+
             }
 
         },

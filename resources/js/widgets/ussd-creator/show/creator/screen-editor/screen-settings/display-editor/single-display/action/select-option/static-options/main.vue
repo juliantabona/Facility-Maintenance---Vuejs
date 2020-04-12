@@ -25,7 +25,7 @@
             </singleStaticOption>
             
             <!-- No options message -->
-            <Alert v-if="!staticOptionsExist" type="info" show-icon style="width:200px;">No Options Found</Alert>
+            <Alert v-if="!staticOptionsExist" type="info" show-icon style="width:300px;">No Options Found</Alert>
 
         </draggable>
 

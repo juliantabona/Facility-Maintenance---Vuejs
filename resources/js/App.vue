@@ -112,6 +112,48 @@
     background-color: rgb(220, 237, 255);
   }
 
+  /*  Draggable Option */
+  .draggable-option >>> .cut-text { 
+      text-overflow: ellipsis !important;
+      overflow: hidden !important;
+      width: 85% !important;
+      white-space: nowrap !important;
+      display: block;
+  }
+
+  .draggable-option >>> .option-toolbox{
+      z-index: 1;
+      position: relative;
+      margin: -2px 0 0 0;
+      background: #fff;
+  }
+
+  .draggable-option >>> .option-toolbox,
+  .draggable-option >>> .option-toolbox .hidable{
+      opacity:0;
+  }
+
+  .draggable-option:hover >>> .option-toolbox,
+  .draggable-option:hover >>> .option-toolbox .hidable{
+      opacity:1;
+  }
+
+  .draggable-option >>> .option-toolbox .option-icon{
+      padding: 2px;
+      border-radius: 100%;
+      color: black;
+      cursor: pointer;
+  }
+
+  .draggable-option >>> .option-toolbox .option-icon:hover{
+      color: #ffffff;
+      background: #2d8cf0;
+  }
+
+  .draggable-option >>> .ivu-card-body{
+      padding:0 !important;
+  }
+
 </style>
 
 <template>
