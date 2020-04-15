@@ -439,20 +439,12 @@
 
                         self.$emit('loading', false);
 
-                        console.log('Ussd Response');
-                        console.log(data);
-
                         /*  If the first 3 characters equal the text "END"  */
-                        if( (data || {}).response.substr(0,3) == 'END' ){
-
-                            /*  Close the simulator  */ 
-                            self.closeUssdSimulator();
-
-                        }else{ 
+                        if( (data || {}).response.substr(0,3) == 'CON' ){
 
                             self.focusOnReplyInput();
 
-                            console.log('Focus on input');
+                        }else{ 
 
                         }
                         
