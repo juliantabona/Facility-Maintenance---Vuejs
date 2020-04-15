@@ -4,7 +4,8 @@
         margin-bottom: 0px;
     }
 
-    .live_mode_switch >>> .el-form-item__label {
+    .form_switch >>> .el-form-item__label,
+    .form_switch >>> .el-form-item__label {
         line-height: 2.9em !important;
     }
 
@@ -30,7 +31,7 @@
                 <Col :span="12">
 
                     <!-- Live Mode -->
-                    <el-form-item label="Live Mode" prop="live_mode" class="live_mode_switch mb-2" :error="customErrors.live_mode">
+                    <el-form-item label="Live Mode" prop="live_mode" class="form_switch mb-2" :error="customErrors.live_mode">
                         <i-switch 
                             true-color="#13ce66" 
                             false-color="#ff4949" 
@@ -90,6 +91,25 @@
                 <!-- Contact Us -->
                 <el-form-item label="Contact Us" prop="contact_us" :error="customErrors.contact_us">
                     <el-input type="textarea" v-model="formData.contact_us" size="small" style="width:100%" placeholder="Mobile store contact us" :rows="3"></el-input>
+                </el-form-item>
+                
+                <!-- Allow Delivery -->
+                <el-form-item label="Allow Delivery" prop="live_mode" class="form_switch mb-2" :error="customErrors.live_mode">
+                    <i-switch 
+                        true-color="#13ce66" 
+                        false-color="#ff4949" 
+                        class="ml-1" size="large"
+                        :disabled="isUpdating"
+                        :value="formData.allow_delivery" 
+                        @on-change="formData.allow_delivery = $event">
+                        <span slot="open">Yes</span>
+                        <span slot="close">No</span>
+                    </i-switch>
+                </el-form-item>
+
+                <!-- Delivery Policy -->
+                <el-form-item v-if="formData.allow_delivery" label="Delivery Policy" prop="delivery_policy" :error="customErrors.delivery_policy">
+                    <el-input type="textarea" v-model="formData.delivery_policy" size="small" style="width:100%" placeholder="Enter delivery policy" :rows="3"></el-input>
                 </el-form-item>
 
             </div>
@@ -253,7 +273,7 @@
                         }
                     });
                 });
-            }
+            },
         },
         created(){
 

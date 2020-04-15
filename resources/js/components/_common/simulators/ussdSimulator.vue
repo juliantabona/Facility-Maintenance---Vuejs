@@ -73,6 +73,7 @@
     .el-form-item.is-error{
         margin-bottom: 22px !important;
     }
+
 </style>
 
 <template>
@@ -219,7 +220,7 @@
                         <el-input 
                             ref="reply_input"
                             type="text" v-model="ussd_reply" size="small" 
-                            class="w-100 mt-2" placeholder="Reply..."
+                            class="ussd_input w-100 mt-2" placeholder=""
                             @keyup.enter.native="handleUssdReply()"
                             @keyup.escape.native="closeUssdSimulator()">
                         </el-input>
@@ -230,17 +231,20 @@
                     <Loader v-show="isSendingUssdResponse" :loading="true" type="text" class="text-left mt-2">{{ ussdLoaderText }}</Loader>
 
                     <!-- Send/Cancel buttons -->
-                    <div class="clearfix mt-2">
-                                    
-                        <Poptip v-show="!isSendingUssdResponse" trigger="hover" content="Press ENTER on keyboard" 
+                    <div v-if="isSendingUssdResponse == false" class="ussd_reply_container mt-3 d-flex">
+                        
+                        <Poptip trigger="hover" content="Press ENTER on keyboard" 
                                 class="float-right" placement="bottom-end" word-wrap width="220">
-                            <Button type="success" size="large" @click="handleUssdReply()">{{ ussd_reply ? 'Send' : 'Refresh'  }}</Button>
+                            <span class="ussd_btn font-weight-bold ml-4 text-primary" @click="closeUssdSimulator()">Cancel</span>
                         </Poptip>
-                                    
+                        
+                        <span class="text-grey-light">|</span>
+                        
                         <Poptip trigger="hover" content="Press ESC on keyboard" class="float-right mr-2" 
-                                :placement="isSendingUssdResponse? 'bottom-end' : 'bottom'" word-wrap width="200">
-                            <Button type="default" size="large" @click="closeUssdSimulator()">Cancel</Button>
+                                :placement="isSendingUssdResponse ? 'bottom-end' : 'bottom'" word-wrap width="200">
+                            <span class="ussd_btn font-weight-bold mr-4 text-primary" @click="handleUssdReply()">Send</span>
                         </Poptip>
+
                     </div>
 
                 </Card>
@@ -367,15 +371,11 @@
 
                 this.$nextTick(() => {
 
-                    //  Wait for 100 miliseconds
-                    setTimeout(()=>{
-
-                        //  Focus on the reply input field
-                        self.$refs.reply_input.$refs.input.focus();
-
-                    },100);
+                    //  Focus on the reply input field
+                    self.$refs.reply_input.$refs.input.focus();
 
                 });
+
 
             },
             resetUssdSimulator(){
@@ -439,15 +439,20 @@
 
                         self.$emit('loading', false);
 
+                        console.log('Ussd Response');
+                        console.log(data);
+
                         /*  If the first 3 characters equal the text "END"  */
-                        if( data.substr(3) == 'END' ){
+                        if( (data || {}).response.substr(0,3) == 'END' ){
 
                             /*  Close the simulator  */ 
-                            self.closeUssdSimulator()
+                            self.closeUssdSimulator();
 
                         }else{ 
 
                             self.focusOnReplyInput();
+
+                            console.log('Focus on input');
 
                         }
                         

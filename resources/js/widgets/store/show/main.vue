@@ -1,287 +1,128 @@
-<style scoped>
-
-    .store-menu {
-        height: 48px;
-        line-height: 30px;
-        background: transparent;
-    }
-
-    .store-menu:after {
-        background: transparent;
-    }
-
-    .store-menu li {
-        padding: 0 15px;
-        font-size: 12px !important;
-    }
-    
-    .store-selector {
-        width: 250px;
-    }
-
-    .store-selector >>> .ivu-select-selection .ivu-select-selected-value {
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        width: 220px;
-    }
-
-</style>
-
 <template>
 
-    <Row>
+  <!-- 
+    Layout used by authenticated users to access store dashboard
+    Contains Header, SideMenu, Content and Footer
+  -->
+  <div class="layout">
 
-        <Col :span="24">
+      <Layout>
 
-            <Row v-if="!hideStoreMenu" class="border-bottom mb-3">
+          <!-- Dashboard Header -->
+          <storeHeader>
+
+            <Row>
 
                 <!-- Store header -->
-                <Col :span="10">
+                <Col :span="22" :offset="2" class="d-flex">
 
                     <!-- Button to go back to store list -->
-                    <Button type="text" @click.native="$emit('goBack')">
+                    <Button size="large" type="text" class="text-white mr-2" ghost @click.native="goToStores()">
                         <Icon type="ios-arrow-back" />
                         <span>Stores</span>
                     </Button>
 
-                    <!-- Change store selector -->
-                    <Select v-model="localStoreUrl" filterable class="store-selector">
-                        
-                        <Option v-for="(store, key) in stores" :key="key" class="mb-2"
-                                :value="((store._links || {}).self || {}).href" :label="store.name"
-                                @click.native="changeStore(store)">
-                            
-                            <!-- Store logo -->
-                            <Avatar src="https://logosvector.net/wp-content/uploads/2013/08/debonairs-pizza-vector-logo.png" slot="prefix" size="small" />
-
-                            <!-- Store name -->
-                            <span>{{ store.name }}</span>
-
-                        </Option>
-
-                    </Select>
-
-                </Col>
-
-                <Col :span="14">
-
-                    <Menu mode="horizontal" theme="light" :active-name="activeStoreTab" class="store-menu"
-                          @on-select="changeActiveStoreTab($event)">
-                        <MenuItem name="overview">
-                            <Icon type="ios-stats-outline" :size="20" />
-                            Overview
-                        </MenuItem>
-                        <MenuItem name="orders">
-                            <Icon type="ios-paper-outline" :size="20" />
-                            Orders
-                        </MenuItem>
-                        <MenuItem name="customers">
-                            <Icon type="ios-people-outline" :size="20" />
-                            Customers
-                        </MenuItem>
-                        <MenuItem name="mobile_store">
-                            <Icon type="ios-phone-portrait" :size="20" />
-                            Mobile Store
-                        </MenuItem>
-                        <MenuItem name="settings">
-                            <Icon type="ios-settings-outline" :size="20" />
-                            Settings
-                        </MenuItem>
-                    </Menu>
+                    <h1 v-if="store && !isLoadingStore" class="text-light">{{ store.name }}</h1>
 
                 </Col>
 
             </Row>
-            
-            <Row>
 
-                <!-- Loading store -->
-                <Col v-if="isLoadingStore" :span="12" :offset="6"> 
+          </storeHeader>
 
-                    <!-- Show loader -->
-                    <Loader :loading="true" type="text" class="mt-5 text-left" theme="white">Loading store...</Loader>
+          <Layout class="ivu-layout-has-sider">
 
-                </Col>
+            <!-- Dashboard Aside -->
+            <storeAside :url="localStoreUrl"></storeAside>
 
-                <!-- Show when we have store -->
-                <Col v-if="store && !isLoadingStore" :span="24">
+            <Layout :style="{marginTop: '75px', padding: '20px'}">
 
-                    <div>
+                <!-- Dashboard content -->
+                <Content :style="{ position: 'relative', minHeight: '2000px' }">
+                    
+                  <!-- Put Overview, Orders, Products e.t.c resource content here -->
+                  <!-- Only authenticated users can access this content -->
+
+                  <transition name="slide">
+                    
+                    <template v-if="store">
+
+                        <!-- Store Home -->
+                        <home v-if="activeLink == 'home'" :store="store" @updatedStore="handleUpdatedStore($event)">></home>
+
+                        <!-- Store Orders -->
+                        <orders v-if="activeLink == 'orders'" :store="store"></orders>
                         
-                        <Card v-if="!store.is_mobile_verified" class="p-2">
-                            
-                            <Row :gutter="20">
-
-                                <Col :span="8">
-
-                                    <div v-if="default_mobile_phone && !isLoadingDefaultMobilePhone">
-
-                                        <Card class="mb-2">
-                                            <span class="font-weight-bold text-primary">Please verify your mobile number: </span>
-                                            <span class="d-block font-weight-bold mt-2 text-primary" style="font-size:20px;">
-                                                {{ default_mobile_phone.full_number }}
-                                            </span>
-                                        </Card>
-                                            
-                                        <Card class="mb-2">
-                                            
-                                            <!-- Phone Verification Form -->
-                                            <phoneVerificationForm 
-                                                :phone="default_mobile_phone"
-                                                @success="handleSuccess($event)">
-                                            </phoneVerificationForm>
-
-                                        </Card>
-                                        
-                                    </div>
-
-                                    <!-- Loader -->
-                                    <Loader v-if="isLoadingDefaultMobilePhone" :loading="true" type="text" class="mt-5 text-left" theme="white">Loading phones...</Loader>
-            
-                                </Col>
-
-                            </Row>
-
-                        </Card>
-
-                        <template v-else>
-
-                            <!-- Overview Tab -->
-                            <overviewWidget v-if="activeStoreTab == 'overview'" :store="store"></overviewWidget>
-
-                            <!-- Orders Tab -->
-                            <orderWidget v-if="activeStoreTab == 'orders'" 
-                                :ordersUrl="(store._links['oq:orders'] || {}).href" @hideStoreMenu="hideStoreMenu = $event">
-                            </orderWidget>
-
-                            <!-- Customers Tab -->
-                            <customerWidget v-if="activeStoreTab == 'customers'" :customersUrl="(store._links['oq:customer_contacts'] || {}).href"></customerWidget>
-
-                            <!-- USSD Interface Tab -->
-                            <ussdInterfaceWidget v-if="activeStoreTab == 'mobile_store'" :store="store"></ussdInterfaceWidget>
-
-                            <!-- Settings Tab -->
-                            <Card v-if="activeStoreTab == 'settings'" class="pt-3 pb-3">
-                                <span>Settings Here</span>
-                            </Card>
-
-                        </template>
+                        <!-- Store Products -->
+                        <products v-if="activeLink == 'products'"></products>
                         
-                    </div>
+                        <!-- Store Customers -->
+                        <customers v-if="activeLink == 'customers'"></customers>
+                        
+                        <!-- Store Analytics -->
+                        <analytics v-if="activeLink == 'analytics'"></analytics>
+                        
+                        <!-- Mobile Store -->
+                        <mobileStore v-if="activeLink == 'mobile-store'" :store="store"></mobileStore>
+                        
+                        <!-- Store Settings -->
+                        <settings v-if="activeLink == 'settings'"></settings>
 
-                </Col>
+                    </template>
 
-                <!-- Show when we don't have store -->
-                <Col v-if="!store && !isLoadingStore" :span="20" :offset="2">
-                    <Row :gutter="20">
-                        <Col :span="8">
-                            <div class="mt-5 mb-2 pt-5 pb-3 clearfix border-bottom">
-                                <h1 class="mb-3">Couldn't Find Store</h1>
-                                <p class="mb-3" style="font-size:14px;">This store may have been deleted. Try reloading your browser incase we had connection issues trying to get the store.</p>
-                            </div>
-                            <span>Need help? <a href="#" class="font-weight-bold">Learn more <Icon type="ios-share-alt-outline" :size="20" style="margin-top: -9px;"/></a></span>
-                        </Col>
-                        <Col :span="16">
-                            <img style="width:100%;" class="mt-4" src="/images/backgrounds/mobile-ecommerce.png">
-                        </Col>
-                    </Row>
-                </Col>
+                  </transition>
 
-            </Row>
+                </Content>
 
-        </Col>
+            </Layout>
 
-    </Row>
+          </Layout>
+
+      </Layout>
+  </div>
 
 </template>
 
 <script>
     
-    /*  Phone Verification Form  */
-    import phoneVerificationForm from './../../../components/_common/forms/phone/verifyPhone.vue';
+    import storeHeader from './../../../layouts/header/store-header.vue';
     
-    /*  Buttons  */
-    import basicButton from './../../../components/_common/buttons/basicButton.vue';
+    import storeAside from './../../../layouts/aside/store-aside.vue';
 
-    /*  Loaders  */
-    import Loader from './../../../components/_common/loaders/Loader.vue'; 
+    import home from './home/main.vue';
+    import orders from './orders/main.vue';
+    import products from './products/main.vue';
+    import customers from './customers/main.vue';
+    import mobileStore from './mobile-store/main.vue';
 
-    /*  Widgets  */
-    import overviewWidget from './overview/main.vue';
-    import orderWidget from './../../order/list/main.vue';
-    import customerWidget from './customerWidget.vue'
-    import ussdInterfaceWidget from './ussdInterfaceWidget.vue'
-    import productWidget from './productWidget.vue';
-    import messageWidget from './messageWidget.vue';
-    import reviewWidget from './reviewWidget.vue';
+
 
     export default {
-        props:{
-            storeUrl: {
-                type: String,
-                default: null
-            },
-            stores: {
-                type: Array,
-                default: function(){
-                    return []
-                }
-            }
-        },
-        components: { 
-            phoneVerificationForm, basicButton, Loader, overviewWidget, orderWidget, customerWidget, 
-            ussdInterfaceWidget, productWidget, messageWidget, reviewWidget
-        },
+        components:{ storeHeader, storeAside, home, orders, products, customers, mobileStore },
         data(){
             return {
-
                 store: null,
-                hideStoreMenu: false,
                 isLoadingStore: false,
-                default_mobile_phone: null,
-                localStoreUrl: this.storeUrl,
-                isLoadingDefaultMobilePhone: false,
- 
-            }
-        },
-        watch: {
-
-            //  Watch for changes on the storeUrl
-            storeUrl: {
-                handler: function (val, oldVal) {
-
-                    //  If the updated store url is not the same as the current local store url
-                    if( this.localStoreUrl != val ){
-
-                        //  Update the local store url value
-                        this.localStoreUrl = val;
-
-                        //  Setup the store
-                        this.handleStoreSetup();
-
-                    }
-
-                },
-                deep: true
             }
         },
         computed: {
-            activeStoreTab(){
-                return this.$route.query.activeStoreTab || 'overview';
-            }
+            activeLink(){
+                return this.$route.query.menu || 'home';
+            },
+            localStoreUrl(){
+                return decodeURIComponent(this.$route.params.url);
+            },
         },
         methods: {
-            handleStoreSetup(){
-
-                //  Fetch the store
-                this.fetchStore().then((data) => {
-                    if( !this.store.is_mobile_verified ){
-                        this.fetchDefaultMobilePhone();
-                    }
-                });
-
+            goToStores(){
+                this.$router.push({ name: 'stores' });
             },
+            handleUpdatedStore(updatedStore){
+                this.store = updatedStore;
+            },
+
+
+
             changeStore(store){
 
                 this.$emit('changeStore', ((store._links || {}).self || {}).href);
@@ -299,6 +140,16 @@
                     activeStoreTab: activeStoreTabName
 
                 }});
+
+            },
+            handleStoreSetup(){
+
+                //  Fetch the store
+                this.fetchStore().then((data) => {
+                    if( !this.store.is_mobile_verified ){
+                        this.fetchDefaultMobilePhone();
+                    }
+                });
 
             },
             fetchStore() {

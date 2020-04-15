@@ -1,13 +1,5 @@
 <style scoped>
 
-  /*  Style the header bar */
-  .main-header {
-    width: 100%;
-    height:60px;
-    -webkit-box-shadow: 5px 2px 5px #00000030;
-    box-shadow: 5px 2px 5px #00000030;
-  }
-
   /*  Style sidebar collapse button */
   .main-header >>> .rotate-icon{
     transform: rotate(-90deg);

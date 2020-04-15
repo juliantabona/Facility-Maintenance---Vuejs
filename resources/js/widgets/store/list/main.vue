@@ -52,7 +52,7 @@
                             <div class="mb-3">
                                 
                                 <Card v-for="(store, key) in stores" :key="key" class="mb-2"
-                                    @click.native="activeStoreUrl = ((store._links || {}).self || {}).href">
+                                    @click.native="goToStore(store)">
 
                                     <!-- Store name -->
                                     <span>{{ store.name }}</span>
@@ -135,6 +135,12 @@
                 //  Set the active store url to the url of the store we just created
                 this.activeStoreUrl = ((store._links || {}).self || {}).href;
 
+            },
+            goToStore(store){
+                //  this.activeStoreUrl = ((store._links || {}).self || {}).href;
+                var url = ((store._links || {}).self || {}).href;
+
+                this.$router.push({ name: 'show-store', params: { url: encodeURIComponent(url) } });
             },
             fetchStores() {
 

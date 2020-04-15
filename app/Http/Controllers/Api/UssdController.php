@@ -35,6 +35,7 @@ class UssdController extends Controller
     private $shopping_status;
     private $stores_per_page;
     private $text_field_name;
+    private $delivery_address;
     private $payment_response;
     private $favourite_stores;
     private $variable_options;
@@ -998,8 +999,62 @@ class UssdController extends Controller
 
     public function handleCartCheckout()
     {
+        if( $this->store->ussdInterface->allow_delivery ){
+
+            if ($this->hasSelectedDeliveryMethod()) {
+
+                if($this->wantsDeliveryToAddress()){
+
+                    if ($this->hasProvidedDeliveryAddress()) {
+                        
+                        //  Get the users delivery
+                        $this->delivery_address = $this->getResponseFromLevel(7 + $this->offset);
+
+                        //  If the store has a delivery policy
+                        if( !empty( $this->store->ussdInterface->delivery_policy ) ){
+
+                            if ($this->hasReviewedAndAcceptedDeliveryPolicy()) {
+
+                                //  Increment the offset (Since we added the "Review delivery policy screen")
+                                $this->offset = $this->offset + 1;
+
+                            }else{
+            
+                                /*  Show the user the store delivery policy page  */
+                                return $this->displayStoreDeliveryPolicyPage();
+    
+                            }
+
+                        }
+
+                        //  Increment the offset (Since we added the "Enter delivery address screen")
+                        $this->offset = $this->offset + 1;
+    
+                    }else{
+        
+                        /*  Show the user the enter delivery address page  */
+                        return $this->displayEnterDeliveryAddressPage();
+    
+                    }
+
+                }
+
+                //  Increment the offset (Since we added the "Select delivery method screen")
+                $this->offset = $this->offset + 1;
+
+            /*  If the user has not already selected the delivery method  */
+            } else {
+    
+                /*  Show the user the delivery options page  */
+                return $this->displayDeliveryOptionsPage();
+    
+            }
+
+        }
+
         /*  If the user already selected the payment method  */
         if ($this->hasSelectedPaymentMethod()) {
+
             /*  If the user already selected that they want to pay with Airtime  */
             if ($this->wantsToPayWithAirtime()) {
                 /*  Process the order using Airtime  */
@@ -1636,6 +1691,41 @@ class UssdController extends Controller
         $response .= $this->canAddMoreItems() ? "\nEnter # to add another item\n" : '';
 
         return $response;
+    }
+
+    
+    /*  displayDeliveryOptionsPage()
+     *  This is the page displayed when a user must select a delivery method
+     */
+    public function displayDeliveryOptionsPage()
+    {
+        $response = "How would you like to receive your order?\n";
+        $response .= "1. I will pick up myself\n";
+        $response .= '2. Deliver to me';
+
+        return $this->displayCustomGoBackPage($response);
+    }
+
+    /*  displayEnterDeliveryAddressPage()
+     *  This is the page displayed when a user must select a delivery method
+     */
+    public function displayEnterDeliveryAddressPage()
+    {
+        $response = "Enter the physical address for delivery e.g Gaborone, Block 6, Plot 1234";
+
+        return $this->displayCustomGoBackPage($response);
+    }
+
+    /*  displayStoreDeliveryPolicyPage()
+     *  This is the page displayed when a store wants to show the user their 
+     *  delivery policy
+     */
+    public function displayStoreDeliveryPolicyPage()
+    {
+        $response = $this->store->ussdInterface->delivery_policy."\n";
+        $response .= "1. Continue";
+
+        return $this->displayCustomGoBackPage($response);
     }
 
     /*  displayPaymentOptionsPage()
@@ -3055,6 +3145,22 @@ class UssdController extends Controller
         return  $this->completedLevel(5 + $this->offset) && $this->getResponseFromLevel(5 + $this->offset) == '1';
     }
 
+    public function hasSelectedDeliveryMethod()
+    {
+        /*  If the user already responded to the Select delivery method page (Level 6)
+         *  by selecting a specific delivery method option.
+         */
+        return  $this->completedLevel(6 + $this->offset);
+    }
+
+    public function wantsDeliveryToAddress()
+    {
+        /*  If the user already responded to the Select delivery method page (Level 6)
+         *  by selecting option (2) for "Deliver to me".
+         */
+        return  $this->completedLevel(6 + $this->offset) && $this->getResponseFromLevel(6 + $this->offset) == '2';
+    }
+
     public function hasSelectedPaymentMethod()
     {
         /*  If the user already responded to the Select payment method page (Level 6)
@@ -3077,6 +3183,14 @@ class UssdController extends Controller
          *  by selecting option (2) for pay using Orange Money.
          */
         return  $this->completedLevel(6 + $this->offset) && $this->getResponseFromLevel(6 + $this->offset) == '2';
+    }
+
+    public function hasProvidedDeliveryAddress()
+    {
+        /*  If the user already responded to the Select delivery method page (Level 6)
+         *  by selecting a specific delivery method option.
+         */
+        return  $this->completedLevel(7 + $this->offset);
     }
 
     public function hasSelectedAirtimeConfirmationOption()
@@ -3120,6 +3234,15 @@ class UssdController extends Controller
         }
 
         return false;
+    }
+
+    public function hasReviewedAndAcceptedDeliveryPolicy()
+    {
+        /*  If the user already responded to the "Review delivery policy Page" (Level 8)
+         *  by selecting option (1) to confirm the delivery policy.
+         */
+        return  $this->completedLevel(8 + $this->offset) && $this->getResponseFromLevel(8 + $this->offset) == '1';
+
     }
 
     public function procressOrder()

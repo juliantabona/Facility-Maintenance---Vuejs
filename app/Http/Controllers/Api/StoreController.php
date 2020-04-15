@@ -101,6 +101,37 @@ class StoreController extends Controller
         }
     }
 
+    public function updateStore(Request $request, $store_id)
+    {
+        //  Check if the user is authourized to update the store
+        if ($this->user->can('update', Store::class)) {
+
+            //  Get the updated store
+            $store = Store::find($store_id);
+
+            //  Update store
+            $updatedStore = $store->initiateUpdate( $storeInfo = $request->all() );
+
+            //  Check if the store was updated
+            if ($updatedStore) {
+                
+                //  Return an API Readable Format of the Store Instance
+                return $updatedStore->convertToApiFormat();
+
+            } else {
+
+                //  Not Found
+                return oq_api_notify_no_resource();
+
+            }
+
+        } else {
+
+            //  Not Authourized
+            return oq_api_not_authorized();
+
+        }
+    }
 
     /*********************************
      *  OWNERSHIP RELATED RESOURCES  *

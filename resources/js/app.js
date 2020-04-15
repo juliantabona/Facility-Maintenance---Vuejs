@@ -20,7 +20,7 @@ window.Vue = require('vue');
 //  Layout Components
 Vue.component('oq-Basic-Layout',  require('./layouts/main/basic-layout.vue'));
 Vue.component('oq-Dashboard-Layout',  require('./layouts/main/dashboard-layout.vue'));
-Vue.component('oq-Store-Layout',  require('./layouts/main/store-layout.vue'));
+Vue.component('oq-Store-Dashboard-Layout',  require('./layouts/main/store-layout.vue'));
 Vue.component('oq-Header',  require('./layouts/header/default.vue'));
 Vue.component('oq-Aside',  require('./layouts/aside/default.vue'));
 

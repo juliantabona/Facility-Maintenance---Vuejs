@@ -5,7 +5,9 @@ function getFormFields() {
         call_to_action: null,
         contact_us: null,
         about_us: null,
-        live_mode: null
+        live_mode: null,
+        allow_delivery: null,
+        delivery_policy: null
     }
 }
 
@@ -22,6 +24,9 @@ function getFormRules() {
         ],
         about_us: [
             { required: true, message: 'Provide about us information' }
+        ],
+        delivery_policy: [
+            { required: true, message: 'Provide delivery policy' }
         ]
     }
 }
@@ -71,7 +76,9 @@ export default {
                 call_to_action: self.formData.call_to_action,
                 contact_us: self.formData.contact_us,
                 about_us: self.formData.about_us,
-                live_mode: self.formData.live_mode
+                live_mode: self.formData.live_mode,
+                allow_delivery: self.formData.allow_delivery,
+                delivery_policy: self.formData.delivery_policy
             };
 
             console.log(updateData);
@@ -79,7 +86,7 @@ export default {
             if(self.ussdInterface['_links'].self.href){
 
                 //  Use the api call() function located in resources/js/api.js
-                return api.call('post', self.ussdInterface['_links'].self.href, updateData)
+                return api.call('put', self.ussdInterface['_links'].self.href, updateData)
                     .then(({data}) => {
 
                         //  Reset the custom errors

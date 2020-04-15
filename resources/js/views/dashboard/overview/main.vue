@@ -134,43 +134,6 @@
         margin: 0 30px;
     }
 
-    .intergration-card >>> .image-box{
-        display: block;
-        width: 80px;
-        margin: 20px auto;
-        padding: 15px;
-        background: #eeeeee;
-        border-radius: 50%;
-    }
-
-    .intergration-card >>> .image-box.premium-image-box{
-        background: #ff0c91;
-    }
-
-    .intergration-card >>> .image-box.subcription-image-box{
-        background: #ff6d0c;
-    }
-
-    .intergration-card >>> .image-box.mobile-money-image-box{
-        background: #04ce27;
-    }
-
-    .intergration-card >>> .image-box .tool-image{
-        width: 100%;
-    }
-
-    .intergration-card >>> .image-box .tool-image{
-        filter: invert(100%) sepia(3%) saturate(1375%) hue-rotate(264deg) brightness(122%) contrast(99%);
-    }
-
-    .intergration-card >>> .heading{
-        font-size: 20px;
-    }
-
-    .intergration-card >>> .body{
-        margin: 0 10px;
-    }
-
     .subscrption-progress{
         width: 180px;
     }

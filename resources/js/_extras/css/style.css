@@ -1,0 +1,349 @@
+    /*  Style CSS   */
+    html, *, body {
+        font-weight: 400;
+        text-rendering: optimizeLegibility !important;
+        -webkit-font-smoothing: antialiased !important;
+    }
+
+    body{
+        overflow: inherit !important;
+        margin:0
+    }
+
+    html, body, h1, h2, h3, h4, h5, h6, p, span, sup{
+        font-family: 'Helvetica', 'Arial', 'sans-serif';
+    }
+
+    /*  Element UI Fixes    */
+    /*  Element UI Fixes    */
+    /*  Element UI Fixes    */
+
+    /*  Fix the Element UI checkbox alignment */
+    .el-checkbox.el-checkbox {
+        margin-left: 0px !important;
+        margin-right: 30px !important;
+    }
+
+    .el-form-item{
+        margin-bottom: 0px;
+    }
+
+    .el-form-item .el-form-item__label {
+        margin: 0;
+        padding: 0;
+        line-height: 2em;
+    }
+
+    /*  Fixes the phone number components embedded within the element ui forms  */
+    .el-form-item.phone-number .el-form-item__content {
+        line-height: inherit;
+        display: inline-block;
+    }
+
+    .el-form-item.phone-number .el-form-item__content,
+    .el-form-item.phone-number .el-form-item__content .ivu-poptip,
+    .el-form-item.phone-number .el-form-item__content .ivu-poptip-rel,
+    .el-form-item.phone-number .el-form-item__content .vue-phone-number-input {
+        width: 100% !important;
+    }
+    
+
+    .el-form-item.is-error{
+        margin-bottom: 22px !important;
+    }
+
+    /*  IVIEW Fixes    */
+    /*  IVIEW Fixes    */
+    /*  IVIEW Fixes    */
+
+    /*  Removes the blue outline when clicking on any iview text button using ghost=true  */
+    .ivu-btn-ghost{
+        box-shadow: none !important;
+    }
+
+    /*  The badge count shows on top of the loaders so we need to make it move behind the loader   */
+    .ivu-badge .ivu-badge-count{
+        z-index:1 !important;
+    }
+    
+    /*  APP LAYOUTS    */
+
+    /*  DEFAULT LAYOUT CSS */
+
+    /*  Style the header bar */
+    .main-header {
+        width: 100%;
+        height:60px;
+        -webkit-box-shadow: 5px 2px 5px #00000030;
+        box-shadow: 5px 2px 5px #00000030;
+    }
+
+    /*  Default Layout Aside */
+    .layout-aside {
+        background: #fff !important;
+        position: relative;
+        width: 200px;
+        z-index: 4;
+        top: 64px;
+        bottom: 0;
+    }
+
+    /*  Style side menu texts */
+    .layout-aside .menu-item > span{
+        display: inline-block;
+        overflow: hidden;
+        width: 75px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: bottom;
+        transition: width .2s ease .2s;
+    }
+
+    /*  Style side menu arrows */
+    .layout-aside .menu-item i{
+        transform: translateX(0px);
+        transition: font-size .2s ease, transform .2s ease;
+        vertical-align: middle;
+        font-size: 16px;
+    }
+
+    .layout-aside .ivu-menu-submenu .ivu-menu{
+        background: #f3f3f3;
+    }
+
+    .layout-aside .ivu-menu-vertical .ivu-menu-submenu-title-icon {
+        margin-right: 20px;
+    }
+
+    .layout-aside .support-btn{
+        color: #fff;
+        background: #19be6b;
+    }
+
+    .layout-aside .support-btn:hover{
+        color: #fff;
+        background: #00dc6d;
+    }
+
+
+    /*  STORE LAYOUT CSS */
+
+    /*  Layout Header */
+    .store-layout-header {
+        width: 100% !important;
+        height:60px !important;
+        z-index:1000 !important;
+        position:fixed !important;
+        background: #014e9e !important;
+        box-shadow: 5px 2px 5px #00000030 !important;
+        -webkit-box-shadow: 5px 2px 5px #00000030 !important;
+    }
+
+    .store-layout-header > .ivu-row,
+    .store-layout-header > .ivu-row > .ivu-col {
+        align-items: center !important;
+        height: -webkit-fill-available !important;
+    }
+
+    /*  TRANSITION CSS */
+    /*  TRANSITION CSS */
+    /*  TRANSITION CSS */
+
+    /*  Main Content Transition CSS */
+    .main-content-fade-enter-active, .main-content-fade-leave-active {
+        transition: all 1s ease;
+    }
+
+    .main-content-fade-enter, .main-content-fade-leave-to
+        /* .component-fade-leave-active for <2.1.8 */ {
+        opacity: 0;
+        display: none;
+    }
+
+    /*  Slide Transition */
+    .slide-enter,
+    .slide-leave-to { opacity: 0; z-index:100; }
+
+    .slide-enter-to,
+    .slide-leave { opacity: 1; z-index:200; }
+
+    .slide-enter-active,
+    .slide-leave-active { position: absolute; width:100%; } 
+
+    .slide-enter-active,
+    .slide-leave-active { transition: all 750ms ease }
+
+
+    /*  Cut text exceeding the width limit below */
+    .cut-text { 
+        text-overflow: ellipsis !important;
+        overflow: hidden !important; 
+        width: 235px !important; 
+        white-space: nowrap !important;
+    }
+
+    .regex-input input{
+        color: #3490dc !important;
+    }
+
+    .border-top-dashed{
+        border-top: 1px dashed #dee2e6 !important;
+    }
+
+    .border-bottom-dashed{
+        border-bottom: 1px dashed #dee2e6 !important;
+    }
+
+    .editable-content-field{
+        width: 100%;
+        display: block;
+        overflow-y:auto;
+        resize: vertical;
+        line-height: 1.5;
+        color: #606266;
+        padding: 5px 15px;
+        font-size: inherit;
+        border-radius: 4px;
+        background-image: none;
+        box-sizing: border-box;
+        background-color: #fff;
+        border: 1px solid #dcdfe6;
+        -webkit-box-sizing: border-box;
+        -webkit-transition: border-color .2s cubic-bezier(.645,.045,.355,1);
+        transition: border-color .2s cubic-bezier(.645,.045,.355,1);
+    }
+
+    .editable-content-field-small{
+        min-height:33px;
+        resize: none;
+    }
+
+    .editable-content-field-medium{
+        min-height: 90px;
+    }
+
+    .editable-content-field-large{
+        min-height: 120px;
+    }
+
+    .dynamic-content-label{
+        width: auto;
+        height: 20px;
+        margin: 0px 4px;
+        padding: 4px 8px;
+        border-radius: 2px;
+        color: rgb(45, 140, 240);
+        background-color: rgb(220, 237, 255);
+    }
+
+    .blue-highlighter{
+        width: auto;
+        height: 20px;
+        padding: 0px 10px;
+        border-radius: 2px;
+        color: rgb(45, 140, 240);
+        background-color: rgb(220, 237, 255);
+    }
+
+    /*  Draggable Option */
+    /*  Draggable Option */
+    /*  Draggable Option */
+
+    .draggable-option .cut-text { 
+        text-overflow: ellipsis !important;
+        overflow: hidden !important;
+        width: 85% !important;
+        white-space: nowrap !important;
+        display: block;
+    }
+
+    .draggable-option .option-toolbox{
+        z-index: 1;
+        position: relative;
+        margin: -2px 0 0 0;
+        background: #fff;
+    }
+
+    .draggable-option .option-toolbox,
+    .draggable-option .option-toolbox .hidable{
+        opacity:0;
+    }
+
+    .draggable-option:hover .option-toolbox,
+    .draggable-option:hover .option-toolbox .hidable{
+        opacity:1;
+    }
+
+    .draggable-option .option-toolbox .option-icon{
+        padding: 2px;
+        border-radius: 100%;
+        color: black;
+        cursor: pointer;
+    }
+
+    .draggable-option .option-toolbox .option-icon:hover{
+        color: #ffffff;
+        background: #2d8cf0;
+    }
+
+    .draggable-option .ivu-card-body{
+        padding:0 !important;
+    }
+
+    .intergration-card .image-box{
+        display: block;
+        width: 80px;
+        margin: 20px auto;
+        padding: 15px;
+        background: #eeeeee;
+        border-radius: 50%;
+    }
+
+    .intergration-card .image-box.premium-image-box{
+        background: #ff0c91;
+    }
+
+    .intergration-card .image-box.subcription-image-box{
+        background: #ff6d0c;
+    }
+
+    .intergration-card .image-box.mobile-money-image-box{
+        background: #04ce27;
+    }
+
+    .intergration-card .image-box .tool-image{
+        width: 100%;
+    }
+
+    .intergration-card .image-box .tool-image{
+        filter: invert(100%) sepia(3%) saturate(1375%) hue-rotate(264deg) brightness(122%) contrast(99%);
+    }
+
+    .intergration-card .heading{
+        font-size: 20px;
+    }
+
+    .intergration-card > .body{
+        margin: 0 10px;
+    }
+
+    /*  USSD Simulator Input */
+    .ussd-content-container .ussd_input input {
+        padding: 0;
+        border: none;
+        border-radius: 0;
+        /*caret-color: transparent;*/
+        border-bottom: 2px solid #11d8b3 !important;
+    }
+
+    .ussd-content-container .ussd_reply_container {
+        justify-content: space-around;
+    }
+
+    .ussd-content-container .ussd_reply_container .ussd_btn {
+        cursor: pointer;
+    }
+    
+    .ussd-content-container .ussd_reply_container .ussd_btn:active {
+        opacity: 0.8;
+    }

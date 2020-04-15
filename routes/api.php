@@ -212,7 +212,10 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
         Route::get('/', 'Api\StoreController@getStores')->name('stores');
         Route::post('/', 'Api\StoreController@createStore')->name('stores-create');
 
-        //  Single store
+        //  Update single store
+        Route::put('/{store_id}', 'Api\StoreController@updateStore')->name('update-store')->where('store_id', '[0-9]+');
+
+        //  Get single store
         Route::get('/{store_id}', 'Api\StoreController@getStore')->name('store')->where('store_id', '[0-9]+');
 
         //  Single store resources
@@ -310,7 +313,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     Route::prefix('ussd-interfaces')->group(function () {
         //  Single interface
         Route::get('/{ussd_interface_id}', 'Api\UssdInterfaceController@getUssdInterface')->name('ussd-interface')->where('ussd_interface_id', '[0-9]+');
-        Route::post('/{ussd_interface_id}', 'Api\UssdInterfaceController@updateUssdInterface')->name('ussd-interface-update')->where('ussd_interface_id', '[0-9]+');
+        Route::put('/{ussd_interface_id}', 'Api\UssdInterfaceController@updateUssdInterface')->name('ussd-interface-update')->where('ussd_interface_id', '[0-9]+');
 
         //  Single interface resources
         Route::prefix('{ussd_interface_id}')->name('ussd-interface-')->group(function ($group) {
@@ -993,7 +996,6 @@ Route::get('download/quotations/{quotation_id}', 'Api\DownloadController@downloa
 //  DELETEE EVERYTHING DOWN HERE THIS IS A TESTING SEECTION
 
 Route::get('/driving/test', function () {
-    
     $instructions = 'Your test will be 2 questions long. You must complete all questions and get 1 or more to pass your test.';
 
     $questions = [

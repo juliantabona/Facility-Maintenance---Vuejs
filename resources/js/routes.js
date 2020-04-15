@@ -271,6 +271,13 @@ let routes = [
         meta: { layout: 'Dashboard', middlewareAuth: true },
         component: require('./views/dashboard/store/list/main.vue')
     },
+    
+    {
+        //  Stores
+        path: '/stores/:url', name: 'show-store',
+        meta: { middlewareAuth: true },
+        component: require('./views/dashboard/store/show/main.vue')
+    },
    
     {
         //  Store

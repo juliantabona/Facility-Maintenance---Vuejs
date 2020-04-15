@@ -27,6 +27,7 @@ class UssdInterface extends Model
     protected $casts = [
         'metadata' => 'array',
         'live_mode' => 'boolean', //  Return the following 1/0 as true/false
+        'allow_delivery' => 'boolean', //  Return the following 1/0 as true/false
     ];
 
     /**
@@ -38,6 +39,7 @@ class UssdInterface extends Model
 
         /*  Basic Info  */
         'name', 'about_us', 'contact_us', 'call_to_action', 'code', 'live_mode', 
+        'allow_delivery', 'delivery_policy',
         
         'metadata',
 
@@ -104,9 +106,14 @@ class UssdInterface extends Model
         return strtolower(Str::snake(class_basename($this)));
     }
 
-     public function setLiveModeAttribute($value)
-     {
-         $this->attributes['live_mode'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
-     }
+    public function setLiveModeAttribute($value)
+    {
+        $this->attributes['live_mode'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
+    }
+
+    public function setAllowDeliveryAttribute($value)
+    {
+        $this->attributes['allow_delivery'] = ( ($value == 'true' || $value == '1') ? 1 : 0);
+    }
  }
  

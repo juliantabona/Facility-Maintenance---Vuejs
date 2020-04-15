@@ -16,11 +16,13 @@ class CreateUssdInterfacesTable extends Migration
 
             /*  Basic Info  */
             $table->string('name')->nullable();
-            $table->string('about_us')->nullable();
-            $table->string('contact_us')->nullable();
+            $table->string('about_us', 500)->nullable();
+            $table->string('contact_us', 500)->nullable();
             $table->string('call_to_action')->nullable();
             $table->string('code')->nullable();
             $table->boolean('live_mode')->nullable()->default(false);
+            $table->boolean('allow_delivery')->nullable()->default(false);
+            $table->string('delivery_policy', 500)->nullable();
             $table->json('metadata')->nullable();
 
             /*  Ownership Information  */
