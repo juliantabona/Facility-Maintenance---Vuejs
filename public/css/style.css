@@ -327,6 +327,10 @@
         margin: 0 10px;
     }
 
+    .ussd-content-container{
+        background:#014e9e !important;
+    }
+
     /*  USSD Simulator Input */
     .ussd-content-container .ussd_input input {
         padding: 0;

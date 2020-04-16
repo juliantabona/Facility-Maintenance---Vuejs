@@ -199,7 +199,7 @@
             <!-- Ussd info goes here -->
             <div v-show="showUssdContentModal" class="ussd-content-container">
                     
-                <Poptip trigger="hover" :content="liveModeStatusMsg" word-wrap width="300">
+                <Poptip v-if="false" trigger="hover" :content="liveModeStatusMsg" word-wrap width="300">
                         
                     <span :class="'ussd-heading' + (localUssdInterface.live_mode ? ' online' : ' offline')">
                         <span>Your store is {{ (localUssdInterface.live_mode ? 'Online' : 'Offline') }}</span>
@@ -249,11 +249,7 @@
 
                 </Card>
 
-                <div class="overlay"></div>
-
             </div>
-
-            <img src="/images/backgrounds/screensaver-01.jpg" style="width:100%;">
 
         </div>
 
@@ -351,7 +347,8 @@
             },
             launchCustomerUssdSimulator(){
                 this.resetUssdSimulator();
-                this.ussd_reply = '1*'+this.localUssdInterface.code;
+                //this.ussd_reply = '1*'+this.localUssdInterface.code;
+                this.ussd_reply = '';
                 this.handleUssdReply();
                 this.showUssdPopup();
             },
