@@ -207,24 +207,28 @@
                     },
                     
                     //  Pagination settings
-                    pagination: [
-                        {
-                            name: 'Scroll Down',
-                            selected_type: 'scroll_down',     //  scroll_up, scroll_down
-                            content_target: {
-                                selected_type: 'both'         //  instruction, action, both
-                            },
-                            slice: {
-                                start: 0,
-                                end: 160
-                            },
-                            input: '99',
-                            show_more: {
-                                visible: true,
-                                text: '99. More'
-                            }
-                        }
-                    ]
+                    pagination: {
+                        active: false,
+                        content_target: {
+                            selected_type: 'both'         //  instruction, action, both
+                        },
+                        paginate_by_line_breaks: true,
+                        slice: {
+                            separation_type: 'words',     //  characters, words
+                            start: '0',
+                            end: '160'
+                        },
+                        scroll_down_input: '99',
+                        scroll_up_input: '88',
+                        show_more: {
+                            visible: true,
+                            text: '99. More'
+                        },
+                        trailing_end: '...',
+                        break_line_before_trail: false,
+                        break_line_after_trail: false,
+                    }
+
                 };
 
             }

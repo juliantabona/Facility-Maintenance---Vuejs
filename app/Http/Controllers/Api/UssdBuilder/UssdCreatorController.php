@@ -2052,15 +2052,13 @@ class UssdCreatorController extends Controller
 
     public function handlePagination()
     {
-        $paginations = $this->display['content']['pagination'];
+        $pagination = $this->display['content']['pagination'];
 
-        foreach( $paginations as $pagination ){
+        //  If the pagination is active
+        if( $pagination['active'] == true ){
 
             //  Set an info log that we are handling pagination
             $this->logInfo('<span class="text-primary">'.$this->screen['name'].'</span>, handling pagination (<span class="text-success">'.$pagination['name'].'</span>)');
-
-            //  Get the pagination type
-            $pagination_type = $pagination['selected_type'];
 
             //  Get the pagination content target
             $content_target = $pagination['content_target']['selected_type'];
@@ -2077,8 +2075,11 @@ class UssdCreatorController extends Controller
             //  Get the pagination end slice
             $end_slice = $pagination['slice']['end'];
 
-            //  Get the pagination input
-            $input = $pagination['input'];
+            //  Get the pagination scroll down input
+            $scroll_down_input = $pagination['scroll_down_input'];
+
+            //  Get the pagination scroll up input
+            $scroll_up_input = $pagination['scroll_up_input'];
 
             //  Get the trail for showing we have more content e.g "..."
             $trailing_characters = $pagination['trailing_end'];
@@ -2122,13 +2123,21 @@ class UssdCreatorController extends Controller
             //  Make sure the end slice is greater than the start slice
             $end_slice = ( $end_slice < $start_slice ) ? 160 : $end_slice;
 
-            //  Process dynamic content embedded within the input
-            $outputResponse = $this->handleEmbeddedDynamicContentConversion($input, false);
+            //  Process dynamic content embedded within the scroll down input
+            $outputResponse = $this->handleEmbeddedDynamicContentConversion($scroll_down_input, false);
 
             //  If we have a screen to show return the response otherwise continue
             if ($this->shouldDisplayScreen($outputResponse)) return $outputResponse;
             
-            $input = $outputResponse;
+            $scroll_down_input = trim( $outputResponse );
+
+            //  Process dynamic content embedded within the scroll up input
+            $outputResponse = $this->handleEmbeddedDynamicContentConversion($scroll_up_input, false);
+
+            //  If we have a screen to show return the response otherwise continue
+            if ($this->shouldDisplayScreen($outputResponse)) return $outputResponse;
+            
+            $scroll_up_input = trim( $outputResponse );
 
             if( $show_more_visible ){
             
@@ -2303,23 +2312,21 @@ class UssdCreatorController extends Controller
             }
 
             //  If we have the input
-            if ( !empty($input) ) {
-                    
-                $input = trim($input);
+            if ( !empty($scroll_down_input) || !empty($scroll_up_input) ) {
 
                 //  Start slicing the content
                 while ( $this->completedLevel( $this->level ) ) {
                 
                     $userResponse = $this->getResponseFromLevel($this->level) ?? '';   //  99
 
-                    //  If the user response matches the pagination input
-                    if ( $userResponse == $input) {
-                        
-                        //  Set an info log that we are scrolling on the content
-                        $this->logInfo('<span class="text-primary">'.$this->screen['name'].'</span> scrolling ' . ($pagination_type == 'scroll_up' ? 'up' : 'down'));
+                    //  If the user response matches the pagination scroll up or scroll down input
+                    if ( $userResponse == $scroll_down_input || $userResponse == $scroll_up_input) {
+                      
+                        if( $userResponse == $scroll_up_input ){
 
-                        if( $pagination_type == 'scroll_up'){
-
+                            //  Set an info log that we are scrolling on the content
+                            $this->logInfo('<span class="text-primary">'.$this->screen['name'].'</span> scrolling up'));
+    
                             if( $this->pagination_index > 0 ){
 
                                 //  Decrement the pagination index so that we target the previous pagination content slice
@@ -2327,14 +2334,17 @@ class UssdCreatorController extends Controller
 
                             }
 
-                        }else if( $pagination_type == 'scroll_down'){
+                        }else if( $userResponse == $scroll_down_input ){
+
+                            //  Set an info log that we are scrolling on the content
+                            $this->logInfo('<span class="text-primary">'.$this->screen['name'].'</span> scrolling down'));
 
                             //  Increment the pagination index so that next time we target the next pagination content slice
                             ++$this->pagination_index;
 
                         }
 
-                        // Increment the current level so that we target the next display
+                        // Increment the current level so that we target the next display response
                         ++$this->level;
 
                     }else{

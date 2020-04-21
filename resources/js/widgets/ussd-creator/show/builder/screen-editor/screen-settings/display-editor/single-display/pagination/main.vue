@@ -13,12 +13,8 @@
         <div class="mb-2">
 
             <span class="d-block font-weight-bold text-dark">Pagination: </span>
-
-            <div class="bg-grey-light border mt-2 mb-3 pt-3 px-2 pb-2">
                 
-                <paginationManager :paginations="display.content.pagination"></paginationManager>
-
-            </div>
+            <paginationManager :pagination="localDisplay.content.pagination"></paginationManager>
 
         </div>
 
