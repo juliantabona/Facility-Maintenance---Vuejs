@@ -63,8 +63,19 @@ class UssdCreatorController extends Controller
         /*  Get the Service Code  */
         $this->service_code = $request->get('serviceCode');
 
-        //  Get the Ussd Interface
-        $this->ussdInterface = \App\UssdInterface::find(59);
+        if( $this->test_mode ){
+
+            $creator_id = $request->get('creatorId');
+
+            //  Get the Ussd Interface
+            $this->ussdInterface = \App\UssdInterface::find($creator_id);
+
+        }else{
+
+            /** FIND A WAY TO GET THE USSD INTERFACE (I.E THE USSD CREATOR)
+             *  FOR THE REAL ONLINE VERSION OF THIS REQUEST
+             */
+        }
 
         //  Get the Ussd builder data
         $this->ussdBuilderMetadata = $this->ussdInterface->metadata;
@@ -112,29 +123,9 @@ class UssdCreatorController extends Controller
     {
         //  Set a log that the build process has started
         $this->logInfo('Building USSD Application');
-
-        //  Check if the builder is available and ready for use
-        if ($this->builderIsReady()) {
-            //  Start building and displaying the ussd screens
-            return $this->startBuildingUssdScreens();
-        } else {
-            //  Set a log that the build process has started
-            $this->logError('Error building the USSD Application. The metadata required to build the application was not found');
-
-            //  Display the technical difficulties error page to notify the user of the issue
-            return $this->displayTechnicalDifficultiesErrorPage();
-        }
-    }
-
-    /*  builderIsReady()
-     *  This method checks if we have the data we need in order to build the
-     *  ussd application. Incase we do not have the data, we must immediately
-     *  stop any future operations and notify the user of the issue.
-     */
-    public function builderIsReady()
-    {
-        //  If we have any builder data return true otherwise false
-        return !empty($this->ussdBuilderMetadata) ? true : false;
+        
+        //  Start building and displaying the ussd screens
+        return $this->startBuildingUssdScreens();
     }
 
     /******************************************
@@ -2074,6 +2065,12 @@ class UssdCreatorController extends Controller
             //  Get the pagination content target
             $content_target = $pagination['content_target']['selected_type'];
             
+            //  Get the pagination separation type e.g separate by "words" or "characters"
+            $separation_type = $pagination['slice']['separation_type'];
+
+            //  Get the trail for showing we have more content e.g "..."
+            $paginate_by_line_breaks = $pagination['paginate_by_line_breaks'];
+
             //  Get the pagination start slice
             $start_slice = $pagination['slice']['start'];
 
@@ -2082,6 +2079,9 @@ class UssdCreatorController extends Controller
 
             //  Get the pagination input
             $input = $pagination['input'];
+
+            //  Get the trail for showing we have more content e.g "..."
+            $trailing_characters = $pagination['trailing_end'];
 
             //  Get the pagination show more visibility
             $show_more_visible = $pagination['show_more']['visible'];
@@ -2097,6 +2097,12 @@ class UssdCreatorController extends Controller
 
             //  Get the processed value (Convert from [String] to [Number]) - Default to 0 if anything goes wrong
             $start_slice = (int) $outputResponse ?? 0;
+
+            //  Make sure the start slice is no less than 0
+            $start_slice = ( $start_slice < 0 ) ? 0 : $start_slice;
+
+            //  Make sure the start slice is no greater than 150
+            $start_slice = ( $start_slice > 150 ) ? 150 : $start_slice;
             
             //  Process dynamic content embedded within the end slice
             $outputResponse = $this->handleEmbeddedDynamicContentConversion($end_slice, false);
@@ -2106,7 +2112,16 @@ class UssdCreatorController extends Controller
 
             //  Get the processed value (Convert from [String] to [Number]) - Default to 160 if anything goes wrong
             $end_slice = (int) $outputResponse ?? 160;
-            
+
+            //  Make sure the start slice is no less than 0
+            $end_slice = ( $end_slice < 0 ) ? 0 : $end_slice;
+
+            //  Make sure the start slice is no greater than 160
+            $end_slice = ( $end_slice > 160 ) ? 160 : $end_slice;
+
+            //  Make sure the end slice is greater than the start slice
+            $end_slice = ( $end_slice < $start_slice ) ? 160 : $end_slice;
+
             //  Process dynamic content embedded within the input
             $outputResponse = $this->handleEmbeddedDynamicContentConversion($input, false);
 
@@ -2126,9 +2141,6 @@ class UssdCreatorController extends Controller
                 $show_more_text = $outputResponse;
 
             }
-
-            //  Set an array to store all the content slices
-            $content_slices = [];
 
             if( $content_target == 'instruction' ){
 
@@ -2150,45 +2162,143 @@ class UssdCreatorController extends Controller
             //  Get the rest of the content as the content to paginate
             $pagination_content = substr($content, $start_slice);
 
-            //  Get the trail for showing we have more content
-            $trailing_characters = '...';
-
             //  If the show more text is set to be visible and its not empty
             if( $show_more_visible == true && !empty($show_more_text) ){
                 
-                //  Conbine the trail the show more text
+                //  Combine the trail and the show more text e.g "..." and "99.More"
                 $trailing_characters .= "\n".$show_more_text;
 
             }
 
-            //  Start slicing the content
-            while ( !empty( $pagination_content ) ) {
+            /** Pagination by line breaks works a best as possible to avoid cutting words
+             *  of select options of paragraphs of content separated by line breaks
+             *  e.g If we have: 
+             *  ---------------------------------------
+             *  Hello guys i want to make sure that we can always hang out no matter what.
+             *  1. Send Message
+             *  2. Edit Message
+             *  3. Cancel Message
+             *  ---------------------------------------
+             *  
+             *  This will slice the content without cutting the select options or any line break.
+             *  Note that the character limit in this example is 40 characters
+             *
+             *  Slice 1:
+             *  ---------------------------------------
+             *  Hello guys i want to make sure that      = 39 characters (including line-break and trailing characters)
+             *  ...
+             *  ---------------------------------------
+             *  
+             *  Slice 2:
+             *  ---------------------------------------
+             *  we can always hang out no matter         = 36 characters (including line-break and trailing characters)
+             *  ...
+             *  ---------------------------------------
+             *
+             *  Slice 3:
+             *  ---------------------------------------
+             *  what                                     = 40 characters (including line-break and trailing characters)
+             *  1. Send Message
+             *  2. Edit Message
+             *  ...
+             *  ---------------------------------------
+             *
+             *  Slice 4:
+             *  ---------------------------------------
+             *  3. Cancel Message                        = 17 characters (including line-break and trailing characters)
+             *  ---------------------------------------
+             */
+            if( $paginate_by_line_breaks ){
 
-                //  Get the trail characters
+                /** Separate the pagination content into individual paragraphs using the line break.
+                 *  This helps separate the instruction content and each select option to stand alone.
+                 *  
+                 */
+                $pagination_content_paragraphs = explode("\n", $pagination_content);
+
+                /*  Remove empty paragraphs  */
+                $pagination_content_paragraphs = array_filter($pagination_content_paragraphs, function ($pagination_content_paragraph) {
+                    return !empty( trim( $pagination_content_paragraph ) );
+                });
+                
+                $content_groups = [];
+
+                foreach($pagination_content_paragraphs as $index => $pagination_content_paragraph){
+
+                    //  If we have another paragraph after the current one, add the trailing characters to the current paragraph
+                    if( isset( $pagination_content_paragraphs[ $index + 1 ] ) ){
+                        $pagination_content_paragraph .= $trailing_characters;
+                    }
+
+                    //  Get the content slices
+                    $slices = $this->getPaginationContentSlices($pagination_content_paragraph, $trailing_characters, $start_slice, $end_slice, $separation_type);
+
+                    array_push( $content_groups, $slices );
+                }
+
+                $content_slices = [];
+
+                //  Get the trail character length e.g "..." = 3 while "... 99.More" = 11
                 $trail_length = strlen($trailing_characters);
 
-                //  If we slice the content and don't have any left overs (Remaining characters)
-                if( empty( substr($pagination_content, $end_slice) ) ){
-                
-                    //  Get the content slice without the trail
-                    $content_slice = substr($pagination_content, 0, $end_slice);
+                foreach( $content_groups as $grouped_slices ){
 
-                    //  Update the pagination content left after slicing
-                    $pagination_content = substr($pagination_content, $end_slice);
+                    foreach( $grouped_slices as $slice ){
 
-                //  If we slice the content and we have left overs (Remaining characters)
-                }else{
+                        $curr_slice_length = strlen( $slice );
 
-                    //  Get the content slice with the trail
-                    $content_slice = substr($pagination_content, 0, $end_slice - $trail_length) . $trailing_characters;
+                        //  If we don't have any content slices yet
+                        if( empty( $content_slices ) ){
 
-                    //  Update the pagination content left after slicing
-                    $pagination_content = substr($pagination_content, $end_slice - $trail_length);
+                            //  Add the first slice
+                            array_push($content_slices, $slice);
+
+                        //  If we already have content slices
+                        }else{
+
+                            //  Get the total number of slices we have
+                            $total_slices = count( $content_slices );
+
+                            $last_slice = $content_slices[ $total_slices - 1 ];
+
+                            $last_slice_length = strlen( $last_slice );
+
+                            /** Check if its possible to get the last slice, remove the trailing characters
+                             *  and add the current slice with a line break (character = 1) without exceeding 
+                             *  the allowed character limit ($end_slice - $start_slice).
+                             */
+                            if( $last_slice_length - $trail_length + $curr_slice_length + 1 <= ($end_slice - $start_slice) ){
+
+                                //  Remove the trailing characters from the last slice
+                                $last_slice_without_trail = substr($last_slice, 0, ($last_slice_length - $trail_length));
+
+                                //  Combine the last slice without the trail with the current slice
+                                $last_slice_with_current_slice = $last_slice_without_trail ."\n". $slice;
+
+                                //  Update the stored last slice
+                                $content_slices[ $total_slices - 1 ] = $last_slice_with_current_slice;
+
+                            }else{
+
+                                /** Add the current slice as a new slice. This slice cannot be combined with 
+                                 *  the previous inserted slice without exceeeding the limit), therefore it 
+                                 *  must be added alone.
+                                 */
+                                array_push($content_slices, $slice);
+    
+
+                            }
+
+                        }
+    
+                    }
 
                 }
 
-                //  Add the slice to the content slices
-                array_push($content_slices, $content_slice);
+            }else{
+
+                //  Get the content slices
+                $content_slices = $this->getPaginationContentSlices($pagination_content, $trailing_characters, $start_slice, $end_slice, $separation_type);
 
             }
 
@@ -2244,6 +2354,202 @@ class UssdCreatorController extends Controller
 
         }
         
+    }
+
+    public function getPaginationContentSlices($pagination_content = '', $trailing_characters = '...', $start_slice = 0, $end_slice = 160, $separation_type = 'words')
+    {
+        /** To stop any potential forever loops, lets limit the cycles to 100 loops
+         *  This means we can only loop 100 times and also means that if we have 
+         *  long content we can only return 100 content slices. If each content
+         *  slice is 160 characters then the maximum characters to return will
+         *  be (100 cycles * 160 characters) = 16,000 characters. For now this
+         *  seems like a good limit to stop if the content is either too long
+         *  of we are stuck in a loop that keeps repeating forever.
+         */
+        $cycles = 0;
+
+        //  Set an array to store all the content slices
+        $content_slices = [];
+
+        //  Start slicing the content
+        while ( !empty( $pagination_content ) && ($cycles <= 100) ) {
+
+            if( $cycles == 100 ){
+                
+                //  Log a warning that its possible we have a forever loop (since its rare to reach 100 cycles)
+                $this->logWarning('Possible forever loop detected while handling pagination.');
+
+            }
+
+            //  Increment the cycle
+            $cycles = $cycles + 1;
+
+            //  Get the trail character length e.g "..." = 3 while "... 99.More" = 11
+            $trail_length = strlen($trailing_characters);
+
+            /** If we are separating based on characters then this means we can cut the
+                *  content at any point since the user does not mind word characters being
+                *  separated
+                */
+            if( $separation_type == 'characters' ){
+
+                /** If we slice the content and don't have any left overs (Remaining characters)
+                    *  This takes care of the last paginated content. On the last paginated content
+                    *  We don't add any trailing content or the show more text.
+                    */
+                if( empty( substr($pagination_content, $end_slice) ) ){
+                
+                    //  Get the content slice without the trail
+                    $content_slice = substr($pagination_content, 0, $end_slice);
+
+                    //  Update the pagination content left after slicing
+                    $pagination_content = substr($pagination_content, $end_slice);
+
+                /** If we slice the content and we have left overs (Remaining characters)
+                    *  This takes care of the first paginated content and any other content 
+                    *  after that except the last paginated content. We add any trailing 
+                    *  content and the show more text if its provided.
+                    */
+                }else{
+
+                    //  Get the content slice with the trail
+                    $content_slice = substr($pagination_content, 0, $end_slice - $trail_length) . $trailing_characters;
+
+                    //  Update the pagination content left after slicing
+                    $pagination_content = substr($pagination_content, $end_slice - $trail_length);
+
+                }
+
+            /** If we are separating based on words then this means we cannot cut the
+                *  content at any point since the user does mind word characters being
+                *  separated
+                */
+            }elseif( $separation_type == 'words' ){
+
+                //  If the character length of the content is less than or exactly the allowed maximum limit set
+                if( strlen( $pagination_content ) <= ($end_slice - $start_slice)){
+                    
+                    //  Get the pagination content as the current slice
+                    $content_slice = $pagination_content;
+
+                    //  Set the paginated content to nothing
+                    $pagination_content = '';
+
+                }else{
+
+                    $content_slice = '';
+                    $words = explode(' ', $pagination_content );    // string to array
+                    
+                    foreach( $words as $key => $word ){
+
+                        /** If the current content and the current word and the trailing characters and the extra
+                            *  joining space " " of string length = 1 can be added without exceeding the limit then add 
+                            *  the word. Note that the string length for the empty space " " does not apply for the first
+                            *  word added. However every other word will have the " " character when appending to the content
+                            *  
+                            *  This means we can add this current word now, then on the next iteration if we can't add that
+                            *  following word we can finish off by adding the trailing characters since we had made room for
+                            *  them on the last word that was inserted. By adding the trailing characters we indicate the 
+                            *  end of the maximum content  we could get for the current content slice.
+                            */
+
+                        /** If this is the first word then we dont have an empty space to add so use 0 as the string length. 
+                            *  However if this is not the first word then we have an empty space to add so use 1 as the string
+                            *  length
+                            */
+                        $empty_space_length = ($key == 0) ? 0 : 1;
+
+                        /** We need to first make sure that the given word is not longer than the allowed character limit e.g
+                            *  if the word is 200 characters long but the allowed character limit is 160 then we need to figure
+                            *  out how to handle this
+                            */
+                        if( !( strlen( $word ) <=  ($end_slice - $start_slice) ) ){
+                            
+                            /** Slice the word in this way:
+                                *  
+                                *  Get the character limit allowed by calculating:
+                                *
+                                *  $limit = ($end_slice - $start_slice)
+                                *
+                                *  After that we need to count the content we already have using strlen( $content_slice )
+                                *  We need to subtract that from the character limit since the content slice already has
+                                *  content occupying space.
+                                *  
+                                *  $limit = ($end_slice - $start_slice) - strlen( $content_slice )
+                                *  
+                                *  Now we need to add the trailing information. This means we need to subtract that from
+                                *  the character limit so that we can fit the trailing information content
+                                *  
+                                *  $limit = ($end_slice - $start_slice) - strlen( $content_slice ) - $trail_length
+                                */ 
+
+                            $existing_content_length = strlen( $content_slice );
+
+                            $limit = ($end_slice - $start_slice) - $existing_content_length - $trail_length;
+                            
+                            /** If this is the first word don't add the empty space but 
+                                *  if this is not the first word then add the empty space.
+                                */
+                                if($key != 0){
+                                    
+                                $word = ' '.$word;
+
+                            }
+
+                            //  Trim the word and add it result to the content slice
+                            $content_slice .= substr($word, 0,  $limit);
+
+                            //  Add the trailing characters at the end of the result
+                            $content_slice .= $trailing_characters;
+
+                            /** Stop getting content (We will continue again on the next While Loop Iteration)
+                                *  That is when we will continue reducing the extremely long word if its still
+                                *  too long
+                                */
+                            break 1;
+
+                        }elseif( (strlen( $content_slice ) + strlen( $word ) + $trail_length + $empty_space_length) <= ($end_slice - $start_slice) ){    
+
+                            /** If this is the first word don't add the empty space but trim the word for left and right spaces. 
+                                *  If this is not the first word then add the empty space.
+                                */
+                            if($key == 0){
+                                    
+                                $content_slice .= $word;
+
+                            }else{
+                                    
+                                $content_slice .= ' '.$word;
+
+                            }
+
+                        }else{
+
+                            //  Add the trailing characters after the last inserted word
+                            $content_slice .= $trailing_characters;
+                            
+                            //  Stop adding content
+                            break 1;
+
+                        }
+
+                    }
+
+                    //  Update the pagination content left after slicing
+                    $pagination_content = trim( substr($pagination_content, strlen($content_slice) - $trail_length) );
+
+                }
+
+            }
+
+            //  Add the slice to the content slices
+            array_push($content_slices, $content_slice);
+
+        }
+
+        //  Return the content slices
+        return $content_slices;
+
     }
 
     public function resetPagination()

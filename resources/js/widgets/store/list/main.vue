@@ -2,17 +2,7 @@
 
     <Row>
 
-        <Col :span="22" :offset="1" v-if="activeStoreUrl">
-
-            <!-- Show store widget -->
-            <showStoreWidget :storeUrl="activeStoreUrl" :stores="stores"
-                @changeStore="activeStoreUrl = $event" 
-                @goBack="fetchStores()">
-            </showStoreWidget>
-
-        </Col>
-
-        <Col v-else :span="22" :offset="1">
+        <Col :span="22" :offset="1">
 
             <div class="pb-3 border-bottom">
                 <h2>Stores</h2>
@@ -121,7 +111,6 @@
                 stores: null,
                 user: auth.user,
                 createStoreUrl: null,
-                activeStoreUrl: null,
                 isLoadingStores: false,
                 wantsToCreateStore: false
             }
@@ -132,12 +121,11 @@
                 //  Close the create store form
                 this.wantsToCreateStore = false;
 
-                //  Set the active store url to the url of the store we just created
-                this.activeStoreUrl = ((store._links || {}).self || {}).href;
+                //  Go to the store
+                this.goToCreator(store);
 
             },
             goToStore(store){
-                //  this.activeStoreUrl = ((store._links || {}).self || {}).href;
                 var url = ((store._links || {}).self || {}).href;
 
                 this.$router.push({ name: 'show-store', params: { url: encodeURIComponent(url) } });
@@ -149,9 +137,6 @@
 
                 //  Start loader
                 self.isLoadingStores = true;
-
-                //  Make sure we are not displaying any store
-                self.activeStoreUrl = null;
 
                 //  Console log to acknowledge the start of api process
                 console.log('Start getting stores...');

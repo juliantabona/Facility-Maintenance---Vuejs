@@ -1,12 +1,12 @@
 <style scoped>
 
     .circle-ripple {
-        width: 1px;
-        height: 1px;
-        border-radius: 50%;
-        position:absolute;
         top: 50%;
         right: 50%;
+        width: 2px;
+        height: 2px;
+        border-radius: 50%;
+        position:absolute;
         transform: translateX(-50%);
         transform: translateY(-50%);
         z-index:1;

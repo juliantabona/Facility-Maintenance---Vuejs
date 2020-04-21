@@ -2,40 +2,32 @@
 
     <Row>
 
-        <Col :span="24" v-if="activeUssdCreatorUrl">
-
-            <!-- Show Ussd Creator widget -->
-            <showUssdCreatorsWidget :ussdCreatorUrl="activeUssdCreatorUrl" :ussdCreators="ussdCreators"
-                @changeUssdCreator="activeUssdCreatorUrl = $event" 
-                @goBack="fetchUssdCreators()">
-            </showUssdCreatorsWidget>
-
-        </Col>
-
-        <Col v-else :span="22" :offset="1">
+        <Col :span="22" :offset="1">
 
             <div class="pb-3 border-bottom">
-                <h2>Ussd Creators</h2>
+                <h2>Creators</h2>
             </div>
 
             <Row :gutter="20">
 
-                <!-- Loading ussd creators -->
-                <Col v-if="isLoadingUssdCreators" :span="8">
+                <!-- Loading creators -->
+                <Col v-if="isLoadingCreators" :span="8">
                 
                     <!-- Show loader -->
                     <Loader :loading="true" type="text" class="mt-5 text-left" theme="white">Loading creators...</Loader>
 
                 </Col>
 
-                <!-- Wants to create a new ussd creator  -->
-                <template v-if="wantsToCreateUssdCreator && createUssdCreatorUrl">
+                <!-- Wants to create a creator  -->
+                <template v-if="wantsToCreateCreator && createCreatorUrl">
 
                     <Col :span="8" class="pt-5">
 
-                        <!-- Show create ussd creator form -->
-                        Refer to the store/list/main.vue to get an idea of how to setup the
-                        creator form in order to create a new ussd creator. 
+                        <!-- Show create creator form -->
+                        <createCreatorForm 
+                            :postURL="createCreatorUrl"
+                            @createSuccess="handleCreateSuccess($event)">
+                        </createCreatorForm>
 
                     </Col>
 
@@ -43,43 +35,43 @@
 
                 <template v-else>
 
-                    <!-- Show list of ussd creators -->
-                    <Col v-if="(ussdCreators || {}).length && !isLoadingUssdCreators" :span="8">
+                    <!-- Show list of creators -->
+                    <Col v-if="(creators || {}).length && !isLoadingCreators" :span="8">
                     
                         <div class="mt-5 mb-3 pb-3 clearfix border-bottom">
                             <div class="mb-3">
                                 
-                                <Card v-for="(ussdCreator, key) in ussdCreators" :key="key" class="mb-2"
-                                    @click.native="activeUssdCreatorUrl = ((ussdCreator._links || {}).self || {}).href">
+                                <Card v-for="(creator, key) in creators" :key="key" class="mb-2"
+                                    @click.native="goToCreator(creator)">
 
-                                    <!-- Ussd creator name -->
-                                    <span>{{ ussdCreator.name }}</span>
+                                    <!-- Creator name -->
+                                    <span>{{ creator.name }}</span>
                                     <Icon type="md-arrow-forward" :size="15" class="float-right mt-1"/>
 
                                 </Card>
                             </div>
                         </div>
 
-                        <!-- Add Ussd Creator Button -->
-                        <basicButton @click.native="wantsToCreateUssdCreator = true" 
+                        <!-- Add Creator Button -->
+                        <basicButton @click.native="wantsToCreateCreator = true" 
                                      size="large" class="float-left mb-3 mr-1">
-                                     <span>+ Add Project</span>
+                                     <span>+ Add Creator</span>
                         </basicButton>
 
                     </Col>
 
                 </template>
 
-                <!-- Show when we don't have ussd creators -->
-                <Col v-if="!(ussdCreators || {}).length && !isLoadingUssdCreators" :span="8">
+                <!-- Show when we don't have creators -->
+                <Col v-if="!(creators || {}).length && !isLoadingCreators" :span="8">
                     <div class="mt-5 mb-2 pt-5 pb-3 clearfix border-bottom">
-                        <h1 class="mb-3">Add your Ussd Creator</h1>
-                        <p class="mb-3" style="font-size:14px;">Get started by creating your first Ussd Creator project to offer your products and services to consumers offline.</p>
+                        <h1 class="mb-3">Add your creator</h1>
+                        <p class="mb-3" style="font-size:14px;">Get started by creating your first Ussd Creator to display products, services, events, memberships and even process bill payments, subcriptions and instant messaging via SMS</p>
 
-                        <!-- Add Project Button -->
-                        <basicButton @click.native="createUssdCreator = !createUssdCreator" 
+                        <!-- Add Creator Button -->
+                        <basicButton @click.native="createCreator = !createCreator" 
                                      size="large" class="float-left mb-3 mr-1">
-                                     <span>+ Add Project</span>
+                                     <span>+ Add Creator</span>
                         </basicButton>
 
                     </div>
@@ -99,7 +91,10 @@
 
 <script>
     
-    import showUssdCreatorsWidget from './../show/main.vue';
+    import showCreatorWidget from './../show/main.vue';
+
+    /*  Create Creator Form  */
+    import createCreatorForm from './../../../components/_common/forms/create-creator/createCreator.vue';
 
     /*  Buttons  */
     import basicButton from './../../../components/_common/buttons/basicButton.vue';
@@ -109,41 +104,43 @@
 
     export default {
         components: {
-            showUssdCreatorsWidget, basicButton, Loader
+            showCreatorWidget, createCreatorForm, basicButton, Loader
         },
         data(){
             return {
-                ussdCreators: null,
+                creators: null,
                 user: auth.user,
-                createUssdCreatorUrl: null,
-                activeUssdCreatorUrl: null,
-                isLoadingUssdCreators: false,
-                wantsToCreateUssdCreator: false
+                createCreatorUrl: null,
+                isLoadingCreators: false,
+                wantsToCreateCreator: false
             }
         },
         methods: {
-            handleCreateSuccess(ussdCreator){
+            handleCreateSuccess(creator){
 
-                //  Close the create ussd creator form
-                this.wantsToCreateUssdCreator = false;
+                //  Close the create creator form
+                this.wantsToCreateCreator = false;
 
-                //  Set the active ussd creator url to the url of the ussd creator we just created
-                this.activeUssdCreatorUrl = ((ussdCreator._links || {}).self || {}).href;
+                //  Go to the creator
+                this.goToCreator(creator);
 
             },
-            fetchUssdCreators() {
+            goToCreator(creator){
+                
+                var url = ((creator._links || {}).self || {}).href;
+
+                this.$router.push({ name: 'show-ussd-creator', params: { url: encodeURIComponent(url) } });
+            },
+            fetchCreators() {
 
                 //  Hold constant reference to the vue instance
                 const self = this;
 
                 //  Start loader
-                self.isLoadingUssdCreators = true;
-
-                //  Make sure we are not displaying any ussd creator
-                self.activeUssdCreatorUrl = null;
+                self.isLoadingCreators = true;
 
                 //  Console log to acknowledge the start of api process
-                console.log('Start getting ussd creators...');
+                console.log('Start getting creators...');
 
                 //  Use the api call() function located in resources/js/api.js
                 api.call('get', this.user._links['oq:ussd_creators'].href)
@@ -153,19 +150,22 @@
                         console.log(data);
 
                         //  Stop loader
-                        self.isLoadingUssdCreators = false;
+                        self.isLoadingCreators = false;
 
-                        //  Store the list of ussd creators
-                        self.ussdCreators = ((data || {})._embedded || {}).ussd_interfaces || [];
+                        //  Creator the creators data
+                        self.creators = ((data || {})._embedded || {}).ussd_interfaces || [];
 
-                        //  Store the ussd creator url (This is the URL used to make a POST Request to when creating a ussd creator)
-                        self.createUssdCreatorUrl = (((data || {})._links || {}).self || {}).href;
+                        //  Creator the create creator url (This is the URL used to make a POST Request to when creating a creator)
+                        self.createCreatorUrl = (((data || {})._links || {}).self || {}).href;
 
                     })         
                     .catch(response => { 
 
                         //  Stop loader
-                        self.isLoadingUssdCreators = false;
+                        self.isLoadingCreators = false;
+
+                        //  Console log Error Location
+                        console.log('dashboard/creator/show/main.vue - Error getting creators...');
 
                         //  Log the responce
                         console.log(response);    
@@ -174,8 +174,8 @@
         },
         created(){
             
-            //  Fetch the ussd creators
-            this.fetchUssdCreators();
+            //  Fetch the creator
+            this.fetchCreators();
 
         }
     };

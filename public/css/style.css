@@ -126,10 +126,12 @@
     }
 
 
-    /*  STORE LAYOUT CSS */
+    /*  STORE & USSD CREATOR LAYOUT CSS */
 
     /*  Layout Header */
-    .store-layout-header {
+    .store-layout-header,
+    .ussd-creator-layout-header
+     {
         width: 100% !important;
         height:60px !important;
         z-index:1000 !important;
@@ -140,7 +142,9 @@
     }
 
     .store-layout-header > .ivu-row,
-    .store-layout-header > .ivu-row > .ivu-col {
+    .store-layout-header > .ivu-row > .ivu-col,
+    .ussd-creator-layout-header > .ivu-row,
+    .ussd-creator-layout-header > .ivu-row > .ivu-col {
         align-items: center !important;
         height: -webkit-fill-available !important;
     }
@@ -325,10 +329,6 @@
 
     .intergration-card > .body{
         margin: 0 10px;
-    }
-
-    .ussd-content-container{
-        background:#014e9e !important;
     }
 
     /*  USSD Simulator Input */

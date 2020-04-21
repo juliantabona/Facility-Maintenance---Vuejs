@@ -1,265 +1,173 @@
-<style scoped>
-
-    .ussd-creator-menu {
-        height: 48px;
-        line-height: 30px;
-        background: transparent;
-    }
-
-    .ussd-creator-menu:after {
-        background: transparent;
-    }
-
-    .ussd-creator-menu li {
-        padding: 0 15px;
-        font-size: 12px !important;
-    }
-    
-    .ussd-creator-selector {
-        width: 250px;
-    }
-
-    .ussd-creator-selector >>> .ivu-select-selection .ivu-select-selected-value {
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        width: 220px;
-    }
-
-</style>
-
 <template>
 
-    <Row>
+  <!-- 
+    Layout used by authenticated users to access creator dashboard
+    Contains Header, SideMenu, Content and Footer
+  -->
+  <div class="layout">
 
-        <Col :span="24">
+      <Layout>
 
-            <Row v-if="!hideUssdCreatorMenu" class="border-bottom mb-3">
+          <!-- Dashboard Header -->
+          <creatorHeader>
 
-                <!-- Ussd creator header -->
-                <Col :span="10">
-
-                    <!-- Button to go back to ussd creators list -->
-                    <Button type="text" @click.native="$emit('goBack')">
-                        <Icon type="ios-arrow-back" />
-                        <span>Back</span>
-                    </Button>
-
-                    <!-- Change ussd creator selector -->
-                    <Select v-model="localUssdCreatorUrl" filterable class="ussd-creator-selector">
-                        
-                        <Option v-for="(ussdCreator, key) in ussdCreators" :key="key" class="mb-2"
-                                :value="((ussdCreator._links || {}).self || {}).href" :label="ussdCreator.name"
-                                @click.native="changeUssdCreator(ussdCreator)">
-                            
-                            <!-- Ussd Creator logo -->
-                            <Avatar src="https://logosvector.net/wp-content/uploads/2013/08/debonairs-pizza-vector-logo.png" slot="prefix" size="small" />
-
-                            <!-- Ussd Creator name -->
-                            <span>{{ ussdCreator.name }}</span>
-
-                        </Option>
-
-                    </Select>
-
-                </Col>
-
-                <Col :span="14">
-
-                    <Menu mode="horizontal" theme="light" :active-name="activeUssdCreatorTab" class="ussd-creator-menu"
-                          @on-select="changeActiveUssdCreatorTab($event)">
-                        <MenuItem name="creator">
-                            <Icon type="ios-stats-outline" :size="20" />
-                            Creator
-                        </MenuItem>
-                        <MenuItem name="sessions">
-                            <Icon type="ios-paper-outline" :size="20" />
-                            Sessions
-                        </MenuItem>
-                        <MenuItem name="settings">
-                            <Icon type="ios-settings-outline" :size="20" />
-                            Settings
-                        </MenuItem>
-                    </Menu>
-
-                </Col>
-
-            </Row>
-            
             <Row>
 
-                <!-- Loading ussd creator -->
-                <Col v-if="isLoadingUssdCreator" :span="12" :offset="6"> 
+                <!-- Creator header -->
+                <Col :span="22" :offset="2" class="d-flex">
 
-                    <!-- Show loader -->
-                    <Loader :loading="true" type="text" class="mt-5 text-left" theme="white">Loading creator...</Loader>
+                    <!-- Button to go back to creator list -->
+                    <Button size="large" type="text" class="text-white mr-2" ghost @click.native="goToCreators()">
+                        <Icon type="ios-arrow-back" />
+                        <span>Creators</span>
+                    </Button>
 
-                </Col>
+                    <h1 v-if="creator && !isLoadingCreator" class="text-light">{{ creator.name }}</h1>
 
-                <!-- Show when we have ussd creator -->
-                <Col v-if="ussdCreator && !isLoadingUssdCreator" :span="24">
-                
-                    <!-- Creator Widget -->
-                    <showCreatorwWidget v-if="activeUssdCreatorTab == 'creator'" :ussdCreator="ussdCreator"></showCreatorwWidget>
-                            
-                </Col>
-
-                <!-- Show when we don't have ussd creator -->
-                <Col v-if="!ussdCreator && !isLoadingUssdCreator" :span="20" :offset="2">
-                    <Row :gutter="20">
-                        <Col :span="8">
-                            <div class="mt-5 mb-2 pt-5 pb-3 clearfix border-bottom">
-                                <h1 class="mb-3">Couldn't Find Ussd Creator</h1>
-                                <p class="mb-3" style="font-sire:14px;">This ussd creator may have been deleted. Try reloading your browser incase we had connection issues trying to get the ussd creator.</p>
-                            </div>
-                            <span>Need help? <a href="#" class="font-weight-bold">Learn more <Icon type="ios-share-alt-outline" :size="20" style="margin-top: -9px;"/></a></span>
-                        </Col>
-                        <Col :span="16">
-                            <img style="width:100%;" class="mt-4" src="/images/backgrounds/mobile-ecommerce.png">
-                        </Col>
-                    </Row>
                 </Col>
 
             </Row>
 
-        </Col>
+          </creatorHeader>
 
-    </Row>
+          <Layout class="ivu-layout-has-sider">
+
+            <!-- Dashboard Aside -->
+            <creatorAside :url="localCreatorUrl"></creatorAside>
+
+            <Layout :style="{marginTop: '75px', padding: '20px'}">
+
+                <!-- Dashboard content -->
+                <Content :style="{ position: 'relative', minHeight: '2000px' }">
+                    
+                  <!-- Put Overview, Orders, Products e.t.c resource content here -->
+                  <!-- Only authenticated users can access this content -->
+
+                  <transition name="slide">
+                    
+                    <template v-if="creator">
+
+                        {{ creator }}
+
+                        <!-- Creator Home -->
+                        <home v-if="activeLink == 'home'" :ussdCreator="creator" @updatedCreator="handleUpdatedCreator($event)">></home>
+
+                        <!-- Creator Builder -->
+                        <builder v-if="activeLink == 'builder'" :ussdCreator="creator"></builder>
+
+                        <!-- Creator Billing -->
+                        <billing v-if="activeLink == 'billing'" :ussdCreator="creator"></billing>
+                        
+                        <!-- Creator Subcriptions -->
+                        <subcriptions v-if="activeLink == 'subcriptions'" :ussdCreator="creator"></subcriptions>
+                        
+                        <!-- Creator Customers -->
+                        <customers v-if="activeLink == 'customers'" :ussdCreator="creator"></customers>
+                        
+                        <!-- Creator Analytics -->
+                        <analytics v-if="activeLink == 'analytics'" :ussdCreator="creator"></analytics>
+                        
+                        <!-- Creator Settings -->
+                        <settings v-if="activeLink == 'settings'"></settings>
+
+                    </template>
+
+                  </transition>
+
+                </Content>
+
+            </Layout>
+
+          </Layout>
+
+      </Layout>
+  </div>
 
 </template>
 
 <script>
+    
+    import creatorHeader from './../../../layouts/header/creator-header.vue';
+    
+    import creatorAside from './../../../layouts/aside/creator-aside.vue';
 
-    /*  Loaders  */
-    import Loader from './../../../components/_common/loaders/Loader.vue'; 
-
-    /*  Widgets  */
-    import showCreatorwWidget from './creator/main.vue';
+    import subcriptions from './subcriptions/main.vue';
+    import customers from './customers/main.vue';
+    import analytics from './analytics/main.vue';
+    import settings from './settings/main.vue';
+    import billing from './billing/main.vue';
+    import builder from './builder/main.vue';
+    import home from './home/main.vue';
 
     export default {
-        props:{
-            ussdCreatorUrl: {
-                type: String,
-                default: null
-            },
-            ussdCreators: {
-                type: Array,
-                default: function(){
-                    return []
-                }
-            }
-        },
-        components: { 
-            Loader, showCreatorwWidget
-        },
+        components:{ creatorHeader, creatorAside, subcriptions, customers, analytics, settings, billing, builder, home },
         data(){
             return {
-
-                ussdCreator: null,
-                hideUssdCreatorMenu: false,
-                isLoadingUssdCreator: false,
-                localUssdCreatorUrl: this.ussdCreatorUrl
- 
-            }
-        },
-        watch: {
-
-            //  Watch for changes on the ussdCreatorUrl
-            ussdCreatorUrl: {
-                handler: function (val, oldVal) {
-
-                    //  If the updated ussd creator url is not the same as the current local ussd creator url
-                    if( this.localUssdCreatorUrl != val ){
-
-                        //  Update the local ussd creator url value
-                        this.localUssdCreatorUrl = val;
-
-                        //  Setup the ussd creator
-                        this.handleUssdCreatorSetup();
-
-                    }
-
-                },
-                deep: true
+                creator: null,
+                isLoadingCreator: false,
             }
         },
         computed: {
-            activeUssdCreatorTab(){
-                return this.$route.query.activeUssdCreatorTab || 'creator';
-            }
+            activeLink(){
+                return this.$route.query.menu || 'home';
+            },
+            localCreatorUrl(){
+                return decodeURIComponent(this.$route.params.url);
+            },
         },
         methods: {
-            handleUssdCreatorSetup(){
-
-                //  Fetch the ussd creator
-                this.fetchUssdCreator();
-
+            goToCreators(){
+                this.$router.push({ name: 'creators' });
             },
-            changeUssdCreator(ussdCreator){
-
-                this.$emit('changeUssdCreator', ((ussdCreator._links || {}).self || {}).href);
-
+            handleUpdatedCreator(updatedCreator){
+                this.creator = updatedCreator;
             },
-            changeActiveUssdCreatorTab(activeUssdCreatorTabName){
+            fetchCreator() {
 
-                //  Update the url query with the active tab name
-                this.$router.replace({name: 'ussd-creators', query: {
-                    
-                    //  Get all the current url queries
-                    ...this.$route.query, 
-
-                    //  Add / Update our query
-                    activeUssdCreatorTab: activeUssdCreatorTabName
-
-                }});
-
-            },
-            fetchUssdCreator() {
-
-                if(this.localUssdCreatorUrl){
+                if(this.localCreatorUrl){
 
                     //  Hold constant reference to the vue instance
                     const self = this;
 
                     //  Start loader
-                    self.isLoadingUssdCreator = true;
+                    self.isLoadingCreator = true;
 
                     //  Console log to acknowledge the start of api process
-                    console.log('Start getting ussd interface...');
+                    console.log('Start getting creator...');
                     
                     //  Use the api call() function located in resources/js/api.js
-                    return api.call('get', this.localUssdCreatorUrl)
+                    return api.call('get', this.localCreatorUrl)
                         .then(({data}) => {
                             
                             //  Console log the data returned
                             console.log(data);
 
                             //  Stop loader
-                            self.isLoadingUssdCreator = false;
+                            self.isLoadingCreator = false;
 
-                            //  Store the ussd creator data
-                            self.ussdCreator = data;
+                            //  Creator the creator data
+                            self.creator = data;
 
                         })         
                         .catch(response => { 
 
                             //  Stop loader
-                            self.isLoadingUssdCreator = false;
+                            self.isLoadingCreator = false;
+
+                            //  Console log Error Location
+                            console.log('dashboard/creator/show/main.vue - Error getting creator...');
 
                             //  Log the responce
                             console.log(response);    
                         });
                 }
 
-            },
-            handleSuccess(){
-                this.fetchUssdCreator();
             }
         },
         created(){
 
-            //  Setup the ussd creator
-            this.handleUssdCreatorSetup();
+            //  Fetch the creator
+            this.fetchCreator();
 
         }
     };
