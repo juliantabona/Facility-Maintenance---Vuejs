@@ -33,6 +33,7 @@ class UssdCreatorController extends Controller
     private $generated_variables;
     private $display_instructions;
     private $dynamic_data_storage;
+    private $incorrect_option_selected;
     private $last_recorded_log_microtime;
     private $forward_navigation_step_number;
     private $backward_navigation_step_number;
@@ -63,16 +64,13 @@ class UssdCreatorController extends Controller
         /*  Get the Service Code  */
         $this->service_code = $request->get('serviceCode');
 
-        if( $this->test_mode ){
-
+        if ($this->test_mode) {
             $creator_id = $request->get('creatorId');
 
             //  Get the Ussd Interface
             $this->ussdInterface = \App\UssdInterface::find($creator_id);
-
-        }else{
-
-            /** FIND A WAY TO GET THE USSD INTERFACE (I.E THE USSD CREATOR)
+        } else {
+            /* FIND A WAY TO GET THE USSD INTERFACE (I.E THE USSD CREATOR)
              *  FOR THE REAL ONLINE VERSION OF THIS REQUEST
              */
         }
@@ -89,7 +87,7 @@ class UssdCreatorController extends Controller
             'service_code' => $this->service_code,
             'phone_number' => $this->phone_number,
             'user_responses' => $this->getUserResponses(),
-            'user_response' => null
+            'user_response' => null,
         ];
 
         //  Store the ussd data using the given item reference name
@@ -123,7 +121,7 @@ class UssdCreatorController extends Controller
     {
         //  Set a log that the build process has started
         $this->logInfo('Building USSD Application');
-        
+
         //  Start building and displaying the ussd screens
         return $this->startBuildingUssdScreens();
     }
@@ -155,21 +153,16 @@ class UssdCreatorController extends Controller
 
         /** Check if the display data returned is greater than 160 characters.
          *  If it is set a warning log. Subtract out the first five characters
-         *  first to remove the "CON " and "END "
-         * 
-         */ 
+         *  first to remove the "CON " and "END ".
+         */
         $characters = (strlen($response) - 4);
 
-        if( $characters > 160 ){
-            
+        if ($characters > 160) {
             //  Set a warning log that the content received is too long
             $this->logWarning('The screen content exceeds the maximum allowed content length of 160 characters. Returned <span class="text-success">'.$characters.'</span> characters');
-
-        }else{
-                 
+        } else {
             //  Set an info log of the content character length
             $this->logInfo('Content Characters: <span class="text-success">'.$characters.'</span> characters');
-
         }
 
         return $response;
@@ -407,7 +400,6 @@ class UssdCreatorController extends Controller
 
         //  Incase the dynamic value is not a string, integer or float
         } else {
-            
             $dataType = ucwords(gettype($items));
 
             //  Set an info log that we are converting the dynamic property to its associated value
@@ -416,10 +408,9 @@ class UssdCreatorController extends Controller
 
         //  Check if the given options are of type Array
         if (is_array($items)) {
-            for ($x = 0; $x < count($items); $x++) {
+            for ($x = 0; $x < count($items); ++$x) {
                 //  Set an info log that we are converting the dynamic property to its associated value
                 $this->logInfo('<span class="text-success">'.$this->screen['name'].'</span> repeat instance <span class="text-success">['.($x + 1).']</span>');
-                
 
                 //  If the item reference name is provided
                 if (!empty($item_reference_name)) {
@@ -464,81 +455,74 @@ class UssdCreatorController extends Controller
 
                 //  If we must navigate forward then proceed to next iteration otherwise continue
                 if ($buildResponse == 'navigate-forward') {
-
-                    /** Use the forward navigation step number to decide which next iteration to target. For instance if 
-                     *  the number we receive equals 1 it means target the first next item. If the number we receive 
-                     *  equals 2 it means target the second next item. This is of course we assume the item in that 
-                     *  requested position exists. If it does not exist we work backwards to target the closest 
+                    /** Use the forward navigation step number to decide which next iteration to target. For instance if
+                     *  the number we receive equals 1 it means target the first next item. If the number we receive
+                     *  equals 2 it means target the second next item. This is of course we assume the item in that
+                     *  requested position exists. If it does not exist we work backwards to target the closest
                      *  available item. For instance lets assume we have items in position 1, 2, 3 and 4. We are
-                     *  currently in position 1. If the step number equals "1" we target item in position "2". 
-                     *  If the step number equals "2" we target item in position "3" and so on. Now lets 
-                     *  assume we have number equals "4", this means we target item in position "5" but 
-                     *  such an item does not exist. This means we work backwards to target item in 
+                     *  currently in position 1. If the step number equals "1" we target item in position "2".
+                     *  If the step number equals "2" we target item in position "3" and so on. Now lets
+                     *  assume we have number equals "4", this means we target item in position "5" but
+                     *  such an item does not exist. This means we work backwards to target item in
                      *  position "4" instead.
-                     * 
+                     *
                      *  $this->forward_navigation_step_number = 1, 2, 3 ... e.t.c
                      */
-
                     $step = $this->forward_navigation_step_number;
-                    
-                    /** Assume $step = 5, this means we want to skip to every 5th item. 
-                     *  
-                     *  If $y = 0 ; This means we are currently targeting [Item 1]
-                     *  
+
+                    /** Assume $step = 5, this means we want to skip to every 5th item.
+                     *
+                     *  If $y = 0 ; This means we are currently targeting [Item 1].
+                     *
                      *  If $step = 5; This means we want to target item of index number "5" [Item 6] (if it exists).
                      *  Note that item of index "5" is actually [Item 6]. A simple way to see this
                      *  is in this manner:
-                     * 
+                     *
                      *  [Item 1] + 5 steps = [Item 6]
-                     * 
+                     *
                      *  Visual example with $step = 5
                      *  --------------------------------------------------------
                      *  From    [1] 2  3  4  5  6  7  8  9  10  11  12 ...
                      *  To       1  2  3  4  5 [6] 7  8  9  10  11  12 ...
                      *  ...      1  2  3  4  5  6  7  8  9  10 [11] 12 ...
-                     *           .  .  .  .  .  .  .  .  .   .   .   . 
-                     *           .  .  .  .  .  .  .  .  .   .   .   . 
+                     *           .  .  .  .  .  .  .  .  .   .   .   .
+                     *           .  .  .  .  .  .  .  .  .   .   .   .
                      *  --------------------------------------------------------
                      *  Indexes: 0  1  2  3  4  5  6  7  8   9  10  11
                      *  --------------------------------------------------------
-                     *  
+                     *
                      *  Translated into index format:
-                     * 
+                     *
                      *  [Item Index 0] + 5 steps = [Item Index 5]
-                     * 
                      */
-                    
-                    for($y = $step; $y >= 1; --$y){
-                        
+                    for ($y = $step; $y >= 1; --$y) {
                         // Example: For $y = 5 ... 4 ... 3 ... 2 ... 1
 
                         /** Note $items[$x] targets the current item and $items[$x + $y] targets the next item.
                          *  If the item we want to target does not exist, then we attempt to target the item
                          *  before it. We repeat this until we can get an existing item to target.
-                         * 
-                         *  Example: If we wanted to target [item 6] but it does not exist, then we try to 
+                         *
+                         *  Example: If we wanted to target [item 6] but it does not exist, then we try to
                          *  target [item 5], then [item 4] and so on... If we reach a point where no items
                          *  after [item 1] can be found then we do not iterate anymore.
                          */
-
-                        if( isset( $items[$x + $y] ) ){
-                            
-                            $this->logInfo('Navigating to <span class="text-success">Item #' . ($x + $y + 1) . '</span>');
+                        if (isset($items[$x + $y])) {
+                            $this->logInfo('Navigating to <span class="text-success">Item #'.($x + $y + 1).'</span>');
 
                             /** If the item exists then we need to alter the parent for($x){ ... } method to target
                              *  the item we want.
-                             * 
+                             *
                              *  Lets assume [item 6] was found 5 steps after [item 1]. Since normally the for($x){ ... }
                              *  would increment the $x value by only (1), we need to alter its bahaviour to increment
                              *  based on the $y value we have. Basically to target the item we want we will use:
-                             * 
+                             *
                              *  $items[index] where index = ($x + $y)
-                             * 
+                             *
                              *  However on the next iteration the index value will be incremented by (1) and the result
                              *  will be:
-                             * 
+                             *
                              *  $items[index] where index = ($x + $y + 1)
-                             * 
+                             *
                              *  To counteract this result we must make sure that the index value is decremented by (1)
                              *  i.e index = ($x + $y - 1) so that on next iteration index = ($x + $y - 1 + 1) giving
                              *  us the final output of index = ($x + $y) to target the item we want
@@ -547,88 +531,78 @@ class UssdCreatorController extends Controller
 
                             //  Stop the current loop
                             break 1;
-
                         }
-
                     }
 
                     //  Do nothing else so that we iterate to the next specified item on the list
-
-                }else if ($buildResponse == 'navigate-backward') {
-
-                    /** Use the forward navigation step number to decide which next iteration to target. For instance if 
-                     *  the number we receive equals 1 it means target the first previous item. If the number we receive 
-                     *  equals 2 it means target the second previous item. This is of course we assume the item in that 
+                } elseif ($buildResponse == 'navigate-backward') {
+                    /** Use the forward navigation step number to decide which next iteration to target. For instance if
+                     *  the number we receive equals 1 it means target the first previous item. If the number we receive
+                     *  equals 2 it means target the second previous item. This is of course we assume the item in that
                      *  requested position exists. If it does not exist we work forward to target the closest available
                      *  item. For instance lets assume we have items in position 1, 2, 3 and 4. We are currently in
                      *  position 4. If the step number equals "1" we target item in position "3". If the step number
-                     *  equals "2" we target item in position "2" and so on. Now lets assume we have number equals "4", 
-                     *  this means we target item in position "0" but such an item does not exist. This means we work 
+                     *  equals "2" we target item in position "2" and so on. Now lets assume we have number equals "4",
+                     *  this means we target item in position "0" but such an item does not exist. This means we work
                      *  forward to target item in position "1" instead.
-                     * 
+                     *
                      *  $this->backward_navigation_step_number = 1, 2, 3 ... e.t.c
                      */
-
                     $step = $this->backward_navigation_step_number;
-                    
-                    /** Assume $step = 5, this means we want to skip to every previous 5th item. 
-                     *  
-                     *  If $y = 10 ; This means we are currently targeting [Item 11]
-                     *  
+
+                    /** Assume $step = 5, this means we want to skip to every previous 5th item.
+                     *
+                     *  If $y = 10 ; This means we are currently targeting [Item 11].
+                     *
                      *  If $step = 5; This means we want to target item of index number "5" [Item 6] (if it exists).
                      *  Note that item of index "5" is actually [Item 6]. A simple way to see this
                      *  is in this manner:
-                     * 
+                     *
                      *  [Item 11] - 5 steps = [Item 6]
-                     * 
+                     *
                      *  Visual example with $step = 5
                      *  --------------------------------------------------------
                      *  From     1  2  3  4  5  6  7  8  9  10 [11] 12 ...
                      *  To       1  2  3  4  5 [6] 7  8  9  10  11  12 ...
                      *  ...     [1] 2  3  4  5  6  7  8  9  10  11  12 ...
-                     *           .  .  .  .  .  .  .  .  .   .   .   . 
-                     *           .  .  .  .  .  .  .  .  .   .   .   . 
+                     *           .  .  .  .  .  .  .  .  .   .   .   .
+                     *           .  .  .  .  .  .  .  .  .   .   .   .
                      *  --------------------------------------------------------
                      *  Indexes: 0  1  2  3  4  5  6  7  8   9  10  11
                      *  --------------------------------------------------------
-                     *  
+                     *
                      *  Translated into index format:
-                     * 
+                     *
                      *  [Item Index 10] - 5 steps = [Item Index 5]
-                     * 
                      */
-                    
-                    for($y = $step; $y >= 0; --$y){
-                        
+                    for ($y = $step; $y >= 0; --$y) {
                         // Example: For $y = 5 ... 4 ... 3 ... 2 ... 1 ... 0
 
                         /** Note $items[$x] targets the current item and $items[$x - $y] targets the previous item.
                          *  If the item we want to target does not exist, then we attempt to target the item
                          *  after it. We repeat this until we can get an existing item to target.
-                         * 
-                         *  Example: If we wanted to target [item -1] but it does not exist, then we try to 
+                         *
+                         *  Example: If we wanted to target [item -1] but it does not exist, then we try to
                          *  target [item 0], then [item 1] and so on... If we reach a point where no items
                          *  after [item -1] can be found then we do not iterate anymore.
                          */
-
-                        if( isset( $items[$x - $y] ) ){
-                            
-                            $this->logInfo('Navigating to <span class="text-success">Item #' . ($x - $y + 1) . '</span>');
+                        if (isset($items[$x - $y])) {
+                            $this->logInfo('Navigating to <span class="text-success">Item #'.($x - $y + 1).'</span>');
 
                             /** If the item exists then we need to alter the parent for($x){ ... } method to target
                              *  the item we want.
-                             * 
+                             *
                              *  Lets assume [item 6] was found 5 steps before [item 11]. Since normally the for($x){ ... }
                              *  would increment the $x value by only (1), we need to alter its bahaviour to increment
                              *  based on the $y value we have. Basically to target the item we want we will use:
-                             * 
+                             *
                              *  $items[index] where index = ($x - $y)
-                             * 
+                             *
                              *  However on the next iteration the index value will be incremented by (1) and the result
                              *  will be:
-                             * 
+                             *
                              *  $items[index] where index = ($x - $y + 1)
-                             * 
+                             *
                              *  To counteract this result we must make sure that the index value is decremented by (1)
                              *  i.e index = ($x - $y - 1) so that on next iteration index = ($x - $y - 1 + 1) giving
                              *  us the final output of index = ($x - $y) to target the item we want
@@ -642,24 +616,20 @@ class UssdCreatorController extends Controller
 
                             //  Stop the current loop
                             break 1;
-
                         }
-
                     }
 
                     //  If we reached this area, then we could not find any
 
                     //  Do nothing else so that we iterate to the next specified item on the list
-
                 } else {
-
                     //  If we have a screen to show return the response otherwise continue
-                    if ($this->shouldDisplayScreen($buildResponse)) return $buildResponse;
-
+                    if ($this->shouldDisplayScreen($buildResponse)) {
+                        return $buildResponse;
+                    }
                 }
             }
         } else {
-            
             $dataType = ucwords(gettype($items));
 
             //  Set a warning log that the dynamic property is not an array
@@ -797,7 +767,12 @@ class UssdCreatorController extends Controller
             $this->getCurrentScreenUserResponse();
 
             //  Store the user response (Input provided by the user) as a named dynamic variable
-            $storeInputResponse = $this->storeCurrentScreenUserResponseAsDynamicVariable();
+            $storeInputResponse = $this->storeCurrentDisplayUserResponseAsDynamicVariable();
+
+            //  If we have a screen to show return the response otherwise continue
+            if ($this->shouldDisplayScreen($storeInputResponse)) {
+                return $storeInputResponse;
+            }
 
             //  Handle after display events
             $handleEventsResponse = $this->handleAfterResponseEvents();
@@ -811,36 +786,41 @@ class UssdCreatorController extends Controller
             $handleForwardNavigationResponse = $this->handleForwardNavigation();
 
             //  If we have any returned data return the response otherwise continue
-            if (!empty($handleForwardNavigationResponse)){
-
+            if (!empty($handleForwardNavigationResponse)) {
+                $this->resetIncorrectOptionSelected();
                 $this->resetPagination();
 
                 return $handleForwardNavigationResponse;
-
-            } 
+            }
 
             //  Handle backward navigation
             $handleBackwardNavigationResponse = $this->handleBackwardNavigation();
 
             //  If we have any returned data return the response otherwise continue
-            if (!empty($handleBackwardNavigationResponse)){
-
+            if (!empty($handleBackwardNavigationResponse)) {
+                $this->resetIncorrectOptionSelected();
                 $this->resetPagination();
 
                 return $handleBackwardNavigationResponse;
-
             }
 
             //  Handle linking display
             $handleLinkingDisplayResponse = $this->handleLinkingDisplay();
 
             //  If we have any returned data return the response otherwise continue
-            if (!empty($handleLinkingDisplayResponse)){
-
+            if (!empty($handleLinkingDisplayResponse)) {
                 return $handleLinkingDisplayResponse;
-
             }
 
+            if( !empty( $this->incorrect_option_selected ) ){
+
+                /** Get the "incorrect option selected message" and return display (with go back option) 
+                 *  to notify the user of the issue
+                 */
+                return $this->displayCustomGoBackPage( $this->incorrect_option_selected );
+
+            }
+            
         }
 
         return $builtDisplay;
@@ -899,19 +879,19 @@ class UssdCreatorController extends Controller
 
         //  Get the display instruction and action
         $this->display_content = $this->display_instructions.$this->display_actions;
-        
+
         //  Handle the display pagination
         $outputResponse = $this->handlePagination();
 
         //  If we have a screen to show return the response otherwise continue
-        if ($this->shouldDisplayScreen($outputResponse)) return $outputResponse;
+        if ($this->shouldDisplayScreen($outputResponse)) {
+            return $outputResponse;
+        }
 
         //  If the processed instructions and action are not empty
-        if (!empty( $this->display_content )) {
-            
+        if (!empty($this->display_content)) {
             //  Set an info log of the final result
             $this->logInfo('Final result: <br /><span class="text-success">'.$this->display_content.'</span>');
-
         }
 
         //  Return the display instruction and action
@@ -1041,7 +1021,7 @@ class UssdCreatorController extends Controller
             $collection = [];
 
             //  Foreach option
-            for ($x = 0; $x < count($options); $x++) {
+            for ($x = 0; $x < count($options); ++$x) {
                 //  Get the current option
                 $curr_option = $options[$x];
                 $curr_option_name = $options[$x]['name'];
@@ -1137,7 +1117,7 @@ class UssdCreatorController extends Controller
 
                 //  Set an info log of the option value
                 //  Use json_encode($option_value) to show $option_value data instead of gettype($option_value)
-            
+
                 $dataType = ucwords(gettype($option_value));
                 $this->logInfo('Option value: <span class="text-success">['.$dataType.']</span>');
 
@@ -1346,7 +1326,7 @@ class UssdCreatorController extends Controller
                 $collection = [];
 
                 //  Foreach option
-                for ($x = 0; $x < count($options); $x++) {
+                for ($x = 0; $x < count($options); ++$x) {
                     //  Generate the option number
                     $number = $x + 1;
 
@@ -1539,7 +1519,7 @@ class UssdCreatorController extends Controller
                     $collection = [];
 
                     //  Foreach option
-                    for ($x = 0; $x < count($options); $x++) {
+                    for ($x = 0; $x < count($options); ++$x) {
                         //  Get the current option
                         $option = $options[$x];
 
@@ -1656,7 +1636,7 @@ class UssdCreatorController extends Controller
         }
     }
 
-    /** storeCurrentScreenUserResponseAsDynamicVariable()
+    /** storeCurrentDisplayUserResponseAsDynamicVariable()
      *  This method gets the current screen action details to determine the type of action that the
      *  screen requested. We use the type of action e.g "Input a value" or "Select an option" to
      *  determine the approach we must use in order to get the value and reference name required
@@ -1675,7 +1655,7 @@ class UssdCreatorController extends Controller
      *  These dynamic data variables can then be reference by other displays using mustache tags
      *  e.g {{ first_name }} or {{ product.name }}
      */
-    public function storeCurrentScreenUserResponseAsDynamicVariable()
+    public function storeCurrentDisplayUserResponseAsDynamicVariable()
     {
         //  Get the current screen expected action type
         $screenActionType = $this->getDisplayActionType();
@@ -1850,15 +1830,31 @@ class UssdCreatorController extends Controller
 
         //  Get option matching user response
         $selectedOption = collect(array_filter($options, function ($option) {
-            
-            return $this->currentUserResponse == $option['input'];
 
+            //  Process dynamic content embedded within the expected option input
+            $outputResponse = $this->handleEmbeddedDynamicContentConversion(
+                //  Text containing embedded dynamic content that must be convert
+                $option['input'],
+                //  Is this text information generated using the PHP Code Editor
+                false
+            );
+
+            return $this->currentUserResponse == $outputResponse;
+            
         }))->first() ?? null;
+
+        $this->logError('Stage 1');
 
         //  If we have options to display
         if ($optionsExist) {
+
+            $this->logError('Stage 2.1');
+
             //  If the user selected an option that exists
             if (!empty($selectedOption)) {
+
+                $this->logError('Stage 3.1');
+
                 //  Get the selected option link (The display or screen we must link to after the user selects this option)
                 $link = $selectedOption['link'] ?? null;
 
@@ -1876,21 +1872,29 @@ class UssdCreatorController extends Controller
 
                 //  If the user did not select an option that exists
             } else {
+
+                $this->logError('Stage 3.2');
+
                 //  Display the custom "Incorrect option selected" otherwise use default
                 $message = ($incorrect_option_selected_message ?? 'You selected an incorrect option. Please try again')."\n";
 
-                //  Display a custom message (with go back option) to notify the user of the issue
-                return $this->displayCustomGoBackPage($message);
+                //  Get the "incorrect option selected" message
+                $this->incorrect_option_selected = $message;
             }
 
             //  If we don't have options to display
         } else {
+
+            $this->logError('Stage 2.2');
+
             //  Display the custom "No options available" otherwise use default
             $message = ($no_results_message ?? 'No options available')."\n";
 
-            //  Display a custom message (with go back option) to notify the user of the issue
-            return $this->displayCustomGoBackPage($message);
+            //  Log the custom "no options message" to notify the user of the issue
+            $this->logWarning($message);
+
         }
+
     }
 
     /*  storeSingleValueInputAsDynamicData()
@@ -2045,7 +2049,7 @@ class UssdCreatorController extends Controller
 
         //  Set an info log that the user has responded to the current screen and show the input value
         $this->logInfo('User has responded to <span class="text-primary">'.$this->screen['name'].'</span> with <span class="text-success">'.$this->currentUserResponse.'</span>');
-        
+
         //  Return the current screen user response
         return $this->currentUserResponse;
     }
@@ -2055,14 +2059,14 @@ class UssdCreatorController extends Controller
         $pagination = $this->display['content']['pagination'];
 
         //  If the pagination is active
-        if( $pagination['active'] == true ){
+        if ($pagination['active'] == true) {
 
             //  Set an info log that we are handling pagination
-            $this->logInfo('<span class="text-primary">'.$this->screen['name'].'</span>, handling pagination (<span class="text-success">'.$pagination['name'].'</span>)');
+            $this->logInfo('<span class="text-primary">'.$this->screen['name'].'</span>, handling pagination');
 
             //  Get the pagination content target
             $content_target = $pagination['content_target']['selected_type'];
-            
+
             //  Get the pagination separation type e.g separate by "words" or "characters"
             $separation_type = $pagination['slice']['separation_type'];
 
@@ -2084,85 +2088,113 @@ class UssdCreatorController extends Controller
             //  Get the trail for showing we have more content e.g "..."
             $trailing_characters = $pagination['trailing_end'];
 
+            //  Get the break line before trail
+            $break_line_before_trail = $pagination['break_line_before_trail'];
+
+            //  Get the break line after trail
+            $break_line_after_trail = $pagination['break_line_after_trail'];
+            
             //  Get the pagination show more visibility
-            $show_more_visible = $pagination['show_more']['visible'];
+            $show_scroll_down_text = $pagination['scroll_down']['visible'];
 
             //  Get the pagination show more text
-            $show_more_text = $pagination['show_more']['text'];
+            $scroll_down_text = $pagination['scroll_down']['text'];
             
+            //  Get the pagination show more visibility
+            $show_scroll_up_text = $pagination['scroll_up']['visible'];
+
+            //  Get the pagination show more text
+            $scroll_up_text = $pagination['scroll_up']['text'];
+
             //  Process dynamic content embedded within the start slice
             $outputResponse = $this->handleEmbeddedDynamicContentConversion($start_slice, false);
 
             //  If we have a screen to show return the response otherwise continue
-            if ($this->shouldDisplayScreen($outputResponse)) return $outputResponse;
+            if ($this->shouldDisplayScreen($outputResponse)) {
+                return $outputResponse;
+            }
 
             //  Get the processed value (Convert from [String] to [Number]) - Default to 0 if anything goes wrong
             $start_slice = (int) $outputResponse ?? 0;
 
             //  Make sure the start slice is no less than 0
-            $start_slice = ( $start_slice < 0 ) ? 0 : $start_slice;
+            $start_slice = ($start_slice < 0) ? 0 : $start_slice;
 
             //  Make sure the start slice is no greater than 150
-            $start_slice = ( $start_slice > 150 ) ? 150 : $start_slice;
-            
+            $start_slice = ($start_slice > 150) ? 150 : $start_slice;
+
             //  Process dynamic content embedded within the end slice
             $outputResponse = $this->handleEmbeddedDynamicContentConversion($end_slice, false);
 
             //  If we have a screen to show return the response otherwise continue
-            if ($this->shouldDisplayScreen($outputResponse)) return $outputResponse;
+            if ($this->shouldDisplayScreen($outputResponse)) {
+                return $outputResponse;
+            }
 
             //  Get the processed value (Convert from [String] to [Number]) - Default to 160 if anything goes wrong
             $end_slice = (int) $outputResponse ?? 160;
 
             //  Make sure the start slice is no less than 0
-            $end_slice = ( $end_slice < 0 ) ? 0 : $end_slice;
+            $end_slice = ($end_slice < 0) ? 0 : $end_slice;
 
             //  Make sure the start slice is no greater than 160
-            $end_slice = ( $end_slice > 160 ) ? 160 : $end_slice;
+            $end_slice = ($end_slice > 160) ? 160 : $end_slice;
 
             //  Make sure the end slice is greater than the start slice
-            $end_slice = ( $end_slice < $start_slice ) ? 160 : $end_slice;
+            $end_slice = ($end_slice < $start_slice) ? 160 : $end_slice;
 
             //  Process dynamic content embedded within the scroll down input
             $outputResponse = $this->handleEmbeddedDynamicContentConversion($scroll_down_input, false);
 
             //  If we have a screen to show return the response otherwise continue
-            if ($this->shouldDisplayScreen($outputResponse)) return $outputResponse;
-            
-            $scroll_down_input = trim( $outputResponse );
+            if ($this->shouldDisplayScreen($outputResponse)) {
+                return $outputResponse;
+            }
+
+            $scroll_down_input = trim($outputResponse);
 
             //  Process dynamic content embedded within the scroll up input
             $outputResponse = $this->handleEmbeddedDynamicContentConversion($scroll_up_input, false);
 
             //  If we have a screen to show return the response otherwise continue
-            if ($this->shouldDisplayScreen($outputResponse)) return $outputResponse;
-            
-            $scroll_up_input = trim( $outputResponse );
-
-            if( $show_more_visible ){
-            
-                //  Process dynamic content embedded within the show more text
-                $outputResponse = $this->handleEmbeddedDynamicContentConversion($show_more_text, false);
-    
-                //  If we have a screen to show return the response otherwise continue
-                if ($this->shouldDisplayScreen($outputResponse)) return $outputResponse;
-                
-                $show_more_text = $outputResponse;
-
+            if ($this->shouldDisplayScreen($outputResponse)) {
+                return $outputResponse;
             }
 
-            if( $content_target == 'instruction' ){
+            $scroll_up_input = trim($outputResponse);
 
+            if ($show_scroll_down_text) {
+
+                //  Process dynamic content embedded within the scroll down text
+                $outputResponse = $this->handleEmbeddedDynamicContentConversion($scroll_down_text, false);
+
+                //  If we have a screen to show return the response otherwise continue
+                if ($this->shouldDisplayScreen($outputResponse)) {
+                    return $outputResponse;
+                }
+
+                $scroll_down_text = $outputResponse;
+            }
+
+            if ($show_scroll_up_text) {
+
+                //  Process dynamic content embedded within the scroll up text
+                $outputResponse = $this->handleEmbeddedDynamicContentConversion($scroll_up_text, false);
+
+                //  If we have a screen to show return the response otherwise continue
+                if ($this->shouldDisplayScreen($outputResponse)) {
+                    return $outputResponse;
+                }
+
+                $scroll_up_text = $outputResponse;
+            }
+
+            if ($content_target == 'instruction') {
                 $content = $this->display_instructions ?? '';
-
-            }elseif( $content_target == 'action' ){
-
+            } elseif ($content_target == 'action') {
                 $content = $this->display_actions ?? '';
-
-            }elseif( $content_target == 'both' ){
-
+            } elseif ($content_target == 'both') {
                 $content = $this->display_content ?? '';
-
             }
 
             //  Get the content that must always be at the top
@@ -2171,24 +2203,40 @@ class UssdCreatorController extends Controller
             //  Get the rest of the content as the content to paginate
             $pagination_content = substr($content, $start_slice);
 
-            //  If the show more text is set to be visible and its not empty
-            if( $show_more_visible == true && !empty($show_more_text) ){
-                
-                //  Combine the trail and the show more text e.g "..." and "99.More"
-                $trailing_characters .= "\n".$show_more_text;
-
+            //  If the break line before trail is set
+            if ($break_line_before_trail) {
+                //  Add a break line before the trailing characters
+                $trailing_characters = "\n".$trailing_characters;
             }
 
-            /** Pagination by line breaks works a best as possible to avoid cutting words
+            //  If the break line after trail is set
+            if ($break_line_after_trail) {
+                //  Add a break line after the trailing characters
+                $trailing_characters = $trailing_characters."\n";
+            }
+
+            //  If the show scroll down text is set to be visible and its not empty
+            if ($show_scroll_down_text == true && !empty($scroll_down_text)) {
+                //  Combine the trail and the scroll down text e.g "..." and "99.More"
+                $trailing_characters .= "\n".$scroll_down_text;
+            }
+
+            //  If the show more text is set to be visible and its not empty
+            if ($show_scroll_up_text == true && !empty($scroll_up_text)) {
+                //  Combine the trail and the scroll up text e.g "..." and "99.More"
+                $trailing_characters .= "\n".$scroll_up_text;
+            }
+
+            /* Pagination by line breaks works a best as possible to avoid cutting words
              *  of select options of paragraphs of content separated by line breaks
-             *  e.g If we have: 
+             *  e.g If we have:
              *  ---------------------------------------
              *  Hello guys i want to make sure that we can always hang out no matter what.
              *  1. Send Message
              *  2. Edit Message
              *  3. Cancel Message
              *  ---------------------------------------
-             *  
+             *
              *  This will slice the content without cutting the select options or any line break.
              *  Note that the character limit in this example is 40 characters
              *
@@ -2197,7 +2245,7 @@ class UssdCreatorController extends Controller
              *  Hello guys i want to make sure that      = 39 characters (including line-break and trailing characters)
              *  ...
              *  ---------------------------------------
-             *  
+             *
              *  Slice 2:
              *  ---------------------------------------
              *  we can always hang out no matter         = 36 characters (including line-break and trailing characters)
@@ -2217,32 +2265,29 @@ class UssdCreatorController extends Controller
              *  3. Cancel Message                        = 17 characters (including line-break and trailing characters)
              *  ---------------------------------------
              */
-            if( $paginate_by_line_breaks ){
-
+            if ($paginate_by_line_breaks) {
                 /** Separate the pagination content into individual paragraphs using the line break.
                  *  This helps separate the instruction content and each select option to stand alone.
-                 *  
                  */
                 $pagination_content_paragraphs = explode("\n", $pagination_content);
 
                 /*  Remove empty paragraphs  */
                 $pagination_content_paragraphs = array_filter($pagination_content_paragraphs, function ($pagination_content_paragraph) {
-                    return !empty( trim( $pagination_content_paragraph ) );
+                    return !empty(trim($pagination_content_paragraph));
                 });
-                
+
                 $content_groups = [];
 
-                foreach($pagination_content_paragraphs as $index => $pagination_content_paragraph){
-
+                foreach ($pagination_content_paragraphs as $index => $pagination_content_paragraph) {
                     //  If we have another paragraph after the current one, add the trailing characters to the current paragraph
-                    if( isset( $pagination_content_paragraphs[ $index + 1 ] ) ){
+                    if (isset($pagination_content_paragraphs[$index + 1])) {
                         $pagination_content_paragraph .= $trailing_characters;
                     }
 
                     //  Get the content slices
                     $slices = $this->getPaginationContentSlices($pagination_content_paragraph, $trailing_characters, $start_slice, $end_slice, $separation_type);
 
-                    array_push( $content_groups, $slices );
+                    array_push($content_groups, $slices);
                 }
 
                 $content_slices = [];
@@ -2250,126 +2295,97 @@ class UssdCreatorController extends Controller
                 //  Get the trail character length e.g "..." = 3 while "... 99.More" = 11
                 $trail_length = strlen($trailing_characters);
 
-                foreach( $content_groups as $grouped_slices ){
-
-                    foreach( $grouped_slices as $slice ){
-
-                        $curr_slice_length = strlen( $slice );
+                foreach ($content_groups as $grouped_slices) {
+                    foreach ($grouped_slices as $slice) {
+                        $curr_slice_length = strlen($slice);
 
                         //  If we don't have any content slices yet
-                        if( empty( $content_slices ) ){
-
+                        if (empty($content_slices)) {
                             //  Add the first slice
                             array_push($content_slices, $slice);
 
                         //  If we already have content slices
-                        }else{
-
+                        } else {
                             //  Get the total number of slices we have
-                            $total_slices = count( $content_slices );
+                            $total_slices = count($content_slices);
 
-                            $last_slice = $content_slices[ $total_slices - 1 ];
+                            $last_slice = $content_slices[$total_slices - 1];
 
-                            $last_slice_length = strlen( $last_slice );
+                            $last_slice_length = strlen($last_slice);
 
                             /** Check if its possible to get the last slice, remove the trailing characters
-                             *  and add the current slice with a line break (character = 1) without exceeding 
+                             *  and add the current slice with a line break (character = 1) without exceeding
                              *  the allowed character limit ($end_slice - $start_slice).
                              */
-                            if( $last_slice_length - $trail_length + $curr_slice_length + 1 <= ($end_slice - $start_slice) ){
-
+                            if ($last_slice_length - $trail_length + $curr_slice_length + 1 <= ($end_slice - $start_slice)) {
                                 //  Remove the trailing characters from the last slice
                                 $last_slice_without_trail = substr($last_slice, 0, ($last_slice_length - $trail_length));
 
                                 //  Combine the last slice without the trail with the current slice
-                                $last_slice_with_current_slice = $last_slice_without_trail ."\n". $slice;
+                                $last_slice_with_current_slice = $last_slice_without_trail."\n".$slice;
 
                                 //  Update the stored last slice
-                                $content_slices[ $total_slices - 1 ] = $last_slice_with_current_slice;
-
-                            }else{
-
-                                /** Add the current slice as a new slice. This slice cannot be combined with 
-                                 *  the previous inserted slice without exceeeding the limit), therefore it 
+                                $content_slices[$total_slices - 1] = $last_slice_with_current_slice;
+                            } else {
+                                /* Add the current slice as a new slice. This slice cannot be combined with
+                                 *  the previous inserted slice without exceeeding the limit), therefore it
                                  *  must be added alone.
                                  */
                                 array_push($content_slices, $slice);
-    
-
                             }
-
                         }
-    
                     }
-
                 }
-
-            }else{
-
+            } else {
                 //  Get the content slices
                 $content_slices = $this->getPaginationContentSlices($pagination_content, $trailing_characters, $start_slice, $end_slice, $separation_type);
-
             }
 
             //  If we have the input
-            if ( !empty($scroll_down_input) || !empty($scroll_up_input) ) {
-
+            if (!empty($scroll_down_input) || !empty($scroll_up_input)) {
                 //  Start slicing the content
-                while ( $this->completedLevel( $this->level ) ) {
-                
+                while ($this->completedLevel($this->level)) {
                     $userResponse = $this->getResponseFromLevel($this->level) ?? '';   //  99
 
                     //  If the user response matches the pagination scroll up or scroll down input
-                    if ( $userResponse == $scroll_down_input || $userResponse == $scroll_up_input) {
-                      
-                        if( $userResponse == $scroll_up_input ){
-
+                    if ($userResponse == $scroll_down_input || $userResponse == $scroll_up_input) {
+                        if ($userResponse == $scroll_up_input) {
                             //  Set an info log that we are scrolling on the content
-                            $this->logInfo('<span class="text-primary">'.$this->screen['name'].'</span> scrolling up'));
-    
-                            if( $this->pagination_index > 0 ){
+                            $this->logInfo('<span class="text-primary">'.$this->screen['name'].'</span> scrolling up');
 
+                            if ($this->pagination_index > 0) {
                                 //  Decrement the pagination index so that we target the previous pagination content slice
                                 --$this->pagination_index;
-
                             }
-
-                        }else if( $userResponse == $scroll_down_input ){
-
+                        } elseif ($userResponse == $scroll_down_input) {
                             //  Set an info log that we are scrolling on the content
-                            $this->logInfo('<span class="text-primary">'.$this->screen['name'].'</span> scrolling down'));
+                            $this->logInfo('<span class="text-primary">'.$this->screen['name'].'</span> scrolling down');
 
                             //  Increment the pagination index so that next time we target the next pagination content slice
                             ++$this->pagination_index;
-
                         }
 
                         // Increment the current level so that we target the next display response
                         ++$this->level;
-
-                    }else{
-                        
+                    } else {
                         //  Stop the loop
                         break 1;
-
                     }
                 }
             }
 
             //  Get the pagination content
-            $paginated_content_slice = isset( $content_slices[ $this->pagination_index ] ) ? $content_slices[ $this->pagination_index ] : '';
+            $paginated_content_slice = isset($content_slices[$this->pagination_index]) ? $content_slices[$this->pagination_index] : '';
 
             //  Set the current paginated content as the display content
-            $this->display_content = $fixed_content . $paginated_content_slice;
-
+            $this->display_content = $fixed_content.$paginated_content_slice;
         }
-        
     }
 
     public function getPaginationContentSlices($pagination_content = '', $trailing_characters = '...', $start_slice = 0, $end_slice = 160, $separation_type = 'words')
     {
         /** To stop any potential forever loops, lets limit the cycles to 100 loops
-         *  This means we can only loop 100 times and also means that if we have 
+         *  This means we can only loop 100 times and also means that if we have
          *  long content we can only return 100 content slices. If each content
          *  slice is 160 characters then the maximum characters to return will
          *  be (100 cycles * 160 characters) = 16,000 characters. For now this
@@ -2382,13 +2398,10 @@ class UssdCreatorController extends Controller
         $content_slices = [];
 
         //  Start slicing the content
-        while ( !empty( $pagination_content ) && ($cycles <= 100) ) {
-
-            if( $cycles == 100 ){
-                
+        while (!empty($pagination_content) && ($cycles <= 100)) {
+            if ($cycles == 100) {
                 //  Log a warning that its possible we have a forever loop (since its rare to reach 100 cycles)
                 $this->logWarning('Possible forever loop detected while handling pagination.');
-
             }
 
             //  Increment the cycle
@@ -2397,171 +2410,148 @@ class UssdCreatorController extends Controller
             //  Get the trail character length e.g "..." = 3 while "... 99.More" = 11
             $trail_length = strlen($trailing_characters);
 
-            /** If we are separating based on characters then this means we can cut the
+            /* If we are separating based on characters then this means we can cut the
                 *  content at any point since the user does not mind word characters being
                 *  separated
                 */
-            if( $separation_type == 'characters' ){
-
-                /** If we slice the content and don't have any left overs (Remaining characters)
+            if ($separation_type == 'characters') {
+                /* If we slice the content and don't have any left overs (Remaining characters)
                     *  This takes care of the last paginated content. On the last paginated content
                     *  We don't add any trailing content or the show more text.
                     */
-                if( empty( substr($pagination_content, $end_slice) ) ){
-                
+                if (empty(substr($pagination_content, $end_slice))) {
                     //  Get the content slice without the trail
                     $content_slice = substr($pagination_content, 0, $end_slice);
 
                     //  Update the pagination content left after slicing
                     $pagination_content = substr($pagination_content, $end_slice);
 
-                /** If we slice the content and we have left overs (Remaining characters)
-                    *  This takes care of the first paginated content and any other content 
-                    *  after that except the last paginated content. We add any trailing 
+                /* If we slice the content and we have left overs (Remaining characters)
+                    *  This takes care of the first paginated content and any other content
+                    *  after that except the last paginated content. We add any trailing
                     *  content and the show more text if its provided.
                     */
-                }else{
-
+                } else {
                     //  Get the content slice with the trail
-                    $content_slice = substr($pagination_content, 0, $end_slice - $trail_length) . $trailing_characters;
+                    $content_slice = substr($pagination_content, 0, $end_slice - $trail_length).$trailing_characters;
 
                     //  Update the pagination content left after slicing
                     $pagination_content = substr($pagination_content, $end_slice - $trail_length);
-
                 }
 
-            /** If we are separating based on words then this means we cannot cut the
-                *  content at any point since the user does mind word characters being
-                *  separated
-                */
-            }elseif( $separation_type == 'words' ){
-
+                /* If we are separating based on words then this means we cannot cut the
+                    *  content at any point since the user does mind word characters being
+                    *  separated
+                    */
+            } elseif ($separation_type == 'words') {
                 //  If the character length of the content is less than or exactly the allowed maximum limit set
-                if( strlen( $pagination_content ) <= ($end_slice - $start_slice)){
-                    
+                if (strlen($pagination_content) <= ($end_slice - $start_slice)) {
                     //  Get the pagination content as the current slice
                     $content_slice = $pagination_content;
 
                     //  Set the paginated content to nothing
                     $pagination_content = '';
-
-                }else{
-
+                } else {
                     $content_slice = '';
-                    $words = explode(' ', $pagination_content );    // string to array
-                    
-                    foreach( $words as $key => $word ){
+                    $words = explode(' ', $pagination_content);    // string to array
 
+                    foreach ($words as $key => $word) {
                         /** If the current content and the current word and the trailing characters and the extra
-                            *  joining space " " of string length = 1 can be added without exceeding the limit then add 
-                            *  the word. Note that the string length for the empty space " " does not apply for the first
-                            *  word added. However every other word will have the " " character when appending to the content
-                            *  
-                            *  This means we can add this current word now, then on the next iteration if we can't add that
-                            *  following word we can finish off by adding the trailing characters since we had made room for
-                            *  them on the last word that was inserted. By adding the trailing characters we indicate the 
-                            *  end of the maximum content  we could get for the current content slice.
-                            */
+                         *  joining space " " of string length = 1 can be added without exceeding the limit then add
+                         *  the word. Note that the string length for the empty space " " does not apply for the first
+                         *  word added. However every other word will have the " " character when appending to the content.
+                         *
+                         *  This means we can add this current word now, then on the next iteration if we can't add that
+                         *  following word we can finish off by adding the trailing characters since we had made room for
+                         *  them on the last word that was inserted. By adding the trailing characters we indicate the
+                         *  end of the maximum content  we could get for the current content slice.
+                         */
 
-                        /** If this is the first word then we dont have an empty space to add so use 0 as the string length. 
-                            *  However if this is not the first word then we have an empty space to add so use 1 as the string
-                            *  length
-                            */
+                        /** If this is the first word then we dont have an empty space to add so use 0 as the string length.
+                         *  However if this is not the first word then we have an empty space to add so use 1 as the string
+                         *  length.
+                         */
                         $empty_space_length = ($key == 0) ? 0 : 1;
 
-                        /** We need to first make sure that the given word is not longer than the allowed character limit e.g
+                        /* We need to first make sure that the given word is not longer than the allowed character limit e.g
                             *  if the word is 200 characters long but the allowed character limit is 160 then we need to figure
                             *  out how to handle this
                             */
-                        if( !( strlen( $word ) <=  ($end_slice - $start_slice) ) ){
-                            
+                        if (!(strlen($word) <= ($end_slice - $start_slice))) {
                             /** Slice the word in this way:
-                                *  
-                                *  Get the character limit allowed by calculating:
-                                *
-                                *  $limit = ($end_slice - $start_slice)
-                                *
-                                *  After that we need to count the content we already have using strlen( $content_slice )
-                                *  We need to subtract that from the character limit since the content slice already has
-                                *  content occupying space.
-                                *  
-                                *  $limit = ($end_slice - $start_slice) - strlen( $content_slice )
-                                *  
-                                *  Now we need to add the trailing information. This means we need to subtract that from
-                                *  the character limit so that we can fit the trailing information content
-                                *  
-                                *  $limit = ($end_slice - $start_slice) - strlen( $content_slice ) - $trail_length
-                                */ 
-
-                            $existing_content_length = strlen( $content_slice );
+                             *
+                             *  Get the character limit allowed by calculating:.
+                             *
+                             *  $limit = ($end_slice - $start_slice)
+                             *
+                             *  After that we need to count the content we already have using strlen( $content_slice )
+                             *  We need to subtract that from the character limit since the content slice already has
+                             *  content occupying space.
+                             *
+                             *  $limit = ($end_slice - $start_slice) - strlen( $content_slice )
+                             *
+                             *  Now we need to add the trailing information. This means we need to subtract that from
+                             *  the character limit so that we can fit the trailing information content
+                             *
+                             *  $limit = ($end_slice - $start_slice) - strlen( $content_slice ) - $trail_length
+                             */
+                            $existing_content_length = strlen($content_slice);
 
                             $limit = ($end_slice - $start_slice) - $existing_content_length - $trail_length;
-                            
-                            /** If this is the first word don't add the empty space but 
+
+                            /* If this is the first word don't add the empty space but
                                 *  if this is not the first word then add the empty space.
                                 */
-                                if($key != 0){
-                                    
+                            if ($key != 0) {
                                 $word = ' '.$word;
-
                             }
 
                             //  Trim the word and add it result to the content slice
-                            $content_slice .= substr($word, 0,  $limit);
+                            $content_slice .= substr($word, 0, $limit);
 
                             //  Add the trailing characters at the end of the result
                             $content_slice .= $trailing_characters;
 
-                            /** Stop getting content (We will continue again on the next While Loop Iteration)
+                            /* Stop getting content (We will continue again on the next While Loop Iteration)
                                 *  That is when we will continue reducing the extremely long word if its still
                                 *  too long
                                 */
                             break 1;
-
-                        }elseif( (strlen( $content_slice ) + strlen( $word ) + $trail_length + $empty_space_length) <= ($end_slice - $start_slice) ){    
-
-                            /** If this is the first word don't add the empty space but trim the word for left and right spaces. 
+                        } elseif ((strlen($content_slice) + strlen($word) + $trail_length + $empty_space_length) <= ($end_slice - $start_slice)) {
+                            /* If this is the first word don't add the empty space but trim the word for left and right spaces.
                                 *  If this is not the first word then add the empty space.
                                 */
-                            if($key == 0){
-                                    
+                            if ($key == 0) {
                                 $content_slice .= $word;
-
-                            }else{
-                                    
+                            } else {
                                 $content_slice .= ' '.$word;
-
                             }
-
-                        }else{
-
+                        } else {
                             //  Add the trailing characters after the last inserted word
                             $content_slice .= $trailing_characters;
-                            
+
                             //  Stop adding content
                             break 1;
-
                         }
-
                     }
 
                     //  Update the pagination content left after slicing
-                    $pagination_content = trim( substr($pagination_content, strlen($content_slice) - $trail_length) );
-
+                    $pagination_content = trim(substr($pagination_content, strlen($content_slice) - $trail_length));
                 }
-
             }
 
             //  Add the slice to the content slices
             array_push($content_slices, $content_slice);
-
         }
 
         //  Return the content slices
         return $content_slices;
-
     }
 
+    public function resetIncorrectOptionSelected()
+    {
+        $this->incorrect_option_selected = null;
+    }
     public function resetPagination()
     {
         $this->pagination_index = 0;
@@ -2571,14 +2561,12 @@ class UssdCreatorController extends Controller
     {
         //  If the screen is set to repeat
         if ($this->screen['type']['selected_type'] == 'repeat') {
-
             //  Set an info log that we are checking if the display can navigate forward
             $this->logInfo('<span class="text-primary">'.$this->screen['name'].'</span>, checking if the display can navigate forward');
 
             $forward_navigation = $this->display['content']['screen_repeat_navigation']['forward_navigation'];
 
-            foreach( $forward_navigation as $navigation ){
-    
+            foreach ($forward_navigation as $navigation) {
                 //  Get the navigation step settings
                 $step = $navigation['custom']['step'];
 
@@ -2587,83 +2575,78 @@ class UssdCreatorController extends Controller
 
                 //  If the step uses the PHP Code Editor
                 if ($uses_code_editor_mode == true) {
-
                     //  Get the step code otherwise default to a return statement that returns 1
                     $step_text = $step['code_editor_text'] ?? "return '1';";
 
                 //  If the step does not use the PHP Code Editor
                 } else {
-                    
                     //  Get the step text otherwise default to a string of 1
                     $step_text = $step['text'] ?? '1';
-
                 }
 
                 //  Process dynamic content embedded within the step text
                 $outputResponse = $this->handleEmbeddedDynamicContentConversion($step_text, $uses_code_editor_mode);
 
                 //  If we have a screen to show return the response otherwise continue
-                if ($this->shouldDisplayScreen($outputResponse)) return $outputResponse;
+                if ($this->shouldDisplayScreen($outputResponse)) {
+                    return $outputResponse;
+                }
 
                 //  Get the processed step value (Convert from [String] to [Number]) - Default to 1 if anything goes wrong
                 $step_number = (int) $outputResponse ?? 1;
 
                 //  If the processed forward navigation step number is not an integer or a number greater than 1
-                if( !is_integer( $step_number ) || !( $step_number >= 1 ) ){
-
+                if (!is_integer($step_number) || !($step_number >= 1)) {
                     $dataType = ucwords(gettype($step_number));
 
                     //  Set an warning log that the step number must be of type array.
-                    if( !is_integer( $step_number ) ) $this->logWarning('The given forward navigation step number must be of type <span class="text-success">[Integer]</span>. Value received <span class="text-success">['.$step_number.']</span> is of type <span class="text-success">['.$dataType.']</span>');
+                    if (!is_integer($step_number)) {
+                        $this->logWarning('The given forward navigation step number must be of type <span class="text-success">[Integer]</span>. Value received <span class="text-success">['.$step_number.']</span> is of type <span class="text-success">['.$dataType.']</span>');
+                    }
 
-                    if( !( $step_number >= 1 ) ) $this->logWarning('The given forward navigation step number equals [<span class="text-success">'.$step_number.'</span>]. The expected value must equal [<span class="text-success">1</span>] or an integer greater than [<span class="text-success">1</span>].For this reason we will use the default value of [<span class="text-success">1</span>]');
+                    if (!($step_number >= 1)) {
+                        $this->logWarning('The given forward navigation step number equals [<span class="text-success">'.$step_number.'</span>]. The expected value must equal [<span class="text-success">1</span>] or an integer greater than [<span class="text-success">1</span>].For this reason we will use the default value of [<span class="text-success">1</span>]');
+                    }
 
                     //  Default the forward navigation step number to 1
                     $this->forward_navigation_step_number = 1;
-
-                }else{
-
+                } else {
                     $this->forward_navigation_step_number = $step_number;
-
                 }
 
                 if ($navigation['selected_type'] == 'custom') {
-
                     //  Set an info log that we are checking if the display can navigate forward
                     $this->logInfo('<span class="text-primary">'.$this->screen['name'].'</span> supports custom forward navigation');
-    
+
                     //  Get the custom inputs e.g "1, 2, 3"
                     $inputs = $navigation['custom']['inputs'];
 
                     //  If we have inputs
                     if (!empty($inputs)) {
-
                         //  Seprate the inputs by comma ","
                         $valid_inputs = explode(',', $inputs);
-    
+
                         foreach ($valid_inputs as $key => $input) {
                             //  Make sure each input has no left and right spaces
                             $valid_inputs[$key] = trim($input);
                         }
-    
+
                         //  If the user response matches any valid navigation input
                         if (in_array($this->currentUserResponse, $valid_inputs)) {
-                            
                             //  Set an info log that user response has been allowed for forward navigation
                             $this->logInfo('<span class="text-primary">'.$this->screen['name'].'</span> user response allowed for forward navigation');
-                
-                            /** Increment the current level so that we target the next repeat display
+
+                            /* Increment the current level so that we target the next repeat display
                              *  (This means we are targeting the same display but different instance)
                              */
                             ++$this->level;
-            
+
                             /* Return an indication that we want to navigate forward (i.e Go to the next iteration)
                                 *
                                 *  Refer to: handleRepeatScreenOnItems() and handleRepeatScreenOnNumber()
                                 *
                                 */
                             return 'navigate-forward';
-
                         }
                     }
                 }
@@ -2675,14 +2658,12 @@ class UssdCreatorController extends Controller
     {
         //  If the screen is set to repeat
         if ($this->screen['type']['selected_type'] == 'repeat') {
-
             //  Set an info log that we are checking if the display can navigate forward
             $this->logInfo('<span class="text-primary">'.$this->screen['name'].'</span>, checking if the display can navigate backward');
 
             $backward_navigation = $this->display['content']['screen_repeat_navigation']['backward_navigation'];
 
-            foreach( $backward_navigation as $navigation ){
-    
+            foreach ($backward_navigation as $navigation) {
                 //  Get the navigation step settings
                 $step = $navigation['custom']['step'];
 
@@ -2691,81 +2672,76 @@ class UssdCreatorController extends Controller
 
                 //  If the step uses the PHP Code Editor
                 if ($uses_code_editor_mode == true) {
-
                     //  Get the step code otherwise default to a return statement that returns 1
                     $step_text = $step['code_editor_text'] ?? "return '1';";
 
                 //  If the step does not use the PHP Code Editor
                 } else {
-                    
                     //  Get the step text otherwise default to a string of 1
                     $step_text = $step['text'] ?? '1';
-
                 }
 
                 //  Process dynamic content embedded within the step text
                 $outputResponse = $this->handleEmbeddedDynamicContentConversion($step_text, $uses_code_editor_mode);
 
                 //  If we have a screen to show return the response otherwise continue
-                if ($this->shouldDisplayScreen($outputResponse)) return $outputResponse;
+                if ($this->shouldDisplayScreen($outputResponse)) {
+                    return $outputResponse;
+                }
 
                 //  Get the processed step value (Convert from [String] to [Number]) - Default to 1 if anything goes wrong
                 $step_number = (int) $outputResponse ?? 1;
 
                 //  If the processed backward navigation step number is not an integer or a number greater than 1
-                if( !is_integer( $step_number ) || !( $step_number >= 1 ) ){
-
+                if (!is_integer($step_number) || !($step_number >= 1)) {
                     //  Set an warning log that the step number must be of type array.
-                    if( !is_integer( $step_number ) ) $this->logWarning('The given backward navigation step number must be of type [<span class="text-success">Integer</span>]. Value received [<span class="text-success">'.$step_number.'</span>] is of type [<span class="text-success">'.gettype($output).'</span>]');
+                    if (!is_integer($step_number)) {
+                        $this->logWarning('The given backward navigation step number must be of type [<span class="text-success">Integer</span>]. Value received [<span class="text-success">'.$step_number.'</span>] is of type [<span class="text-success">'.gettype($output).'</span>]');
+                    }
 
-                    if( !( $step_number >= 1 ) ) $this->logWarning('The given backward navigation step number equals [<span class="text-success">'.$step_number.'</span>]. The expected value must equal [<span class="text-success">1</span>] or an integer greater than [<span class="text-success">1</span>].For this reason we will use the default value of [<span class="text-success">1</span>]');
+                    if (!($step_number >= 1)) {
+                        $this->logWarning('The given backward navigation step number equals [<span class="text-success">'.$step_number.'</span>]. The expected value must equal [<span class="text-success">1</span>] or an integer greater than [<span class="text-success">1</span>].For this reason we will use the default value of [<span class="text-success">1</span>]');
+                    }
 
                     //  Default the backward navigation step number to 1
                     $this->backward_navigation_step_number = 1;
-
-                }else{
-
+                } else {
                     $this->backward_navigation_step_number = $step_number;
-
                 }
 
                 if ($navigation['selected_type'] == 'custom') {
-
                     //  Set an info log that we are checking if the display can navigate backward
                     $this->logInfo('<span class="text-primary">'.$this->screen['name'].'</span> supports custom backward navigation');
-    
+
                     //  Get the custom inputs e.g "1, 2, 3"
                     $inputs = $navigation['custom']['inputs'];
 
                     //  If we have inputs
                     if (!empty($inputs)) {
-
                         //  Seprate the inputs by comma ","
                         $valid_inputs = explode(',', $inputs);
-    
+
                         foreach ($valid_inputs as $key => $input) {
                             //  Make sure each input has no left and right spaces
                             $valid_inputs[$key] = trim($input);
                         }
-    
+
                         //  If the user response matches any valid navigation input
                         if (in_array($this->currentUserResponse, $valid_inputs)) {
-                            
                             //  Set an info log that user response has been allowed for backward navigation
                             $this->logInfo('<span class="text-primary">'.$this->screen['name'].'</span> user response allowed for backward navigation');
-                
-                            /** Increment the current level so that we target the next repeat display
+
+                            /* Increment the current level so that we target the next repeat display
                              *  (This means we are targeting the same display but different instance)
                              */
                             ++$this->level;
-            
-                            /** Return an indication that we want to navigate forward (i.e Go to the next iteration)
+
+                            /* Return an indication that we want to navigate forward (i.e Go to the next iteration)
                              *
                              *  Refer to: handleRepeatScreenOnItems() and handleRepeatScreenOnNumber()
                              *
                              */
                             return 'navigate-backward';
-
                         }
                     }
                 }
@@ -2777,18 +2753,18 @@ class UssdCreatorController extends Controller
     {
         //  Check if the current display must link to another display or screen
         if ($this->checkIfDisplayMustLink()) {
-
             //  Increment the current level so that we target the next screen (This means we are targeting the linked screen)
             ++$this->level;
 
             //  If we have a display we can link to
             if (!empty($this->linkedDisplay)) {
-
                 //  Set the current display as the linked display
                 $this->display = $this->linkedDisplay;
 
                 //  Reset the linked display to nothing
                 $this->linkedDisplay = null;
+
+                $this->resetIncorrectOptionSelected();
 
                 $this->resetPagination();
 
@@ -2797,7 +2773,6 @@ class UssdCreatorController extends Controller
 
             //  If we have a screen we can link to
             } elseif (!empty($this->linkedScreen)) {
-
                 //  Set the current screen as the linked screen
                 $this->screen = $this->linkedScreen;
 
@@ -2808,7 +2783,6 @@ class UssdCreatorController extends Controller
 
                 //  Handle the current screen (This means we are handling the linked screen)
                 return $this->handleCurrentScreen();
-                
             }
         }
     }
@@ -2988,7 +2962,9 @@ class UssdCreatorController extends Controller
         $url = $this->get_CRUD_Api_URL();
 
         //  If we have a screen to show return the response otherwise continue
-        if ($this->shouldDisplayScreen($url)) return $url;
+        if ($this->shouldDisplayScreen($url)) {
+            return $url;
+        }
 
         $method = $this->get_CRUD_Api_Method();
         $headers = $this->get_CRUD_Api_Headers();
@@ -3122,8 +3098,7 @@ class UssdCreatorController extends Controller
     {
         $url = $this->event['event_data']['url'] ?? null;
 
-        if( $url ){
-
+        if ($url) {
             //  Process dynamic content embedded within the url
             $buildResponse = $this->handleEmbeddedDynamicContentConversion(
                 //  Text containing embedded dynamic content that must be convert
@@ -3138,7 +3113,7 @@ class UssdCreatorController extends Controller
             }
 
             //  Get the built option name
-            $url = $buildResponse; 
+            $url = $buildResponse;
         }
 
         return $url;
@@ -3480,25 +3455,73 @@ class UssdCreatorController extends Controller
         return false;
     }
 
-    /*  validateCurrentScreenUserResponse()
-     *  This method gets all the validation rules of the current screen. We then use these
-     *  validation rules to validate the users response for the current screen.
+    /******************************************
+     *  VALIDATION EVENT METHODS              *
+     *****************************************/
+
+    /*  handle_Validation_Event()
+     *  This method gets all the validation rules of the current display. We then use these
+     *  validation rules to validate the target input.
      */
-    public function validateCurrentScreenUserResponse()
+    public function handle_Validation_Event()
     {
-        //  Get the validation rules
-        $validationRules = $this->screenContent['validation']['rules'] ?? [];
+        if ($this->event) {
 
-        //  Validate the user response (Input provided by the user)
-        $failedValidationResponse = $this->handleValidationRules($validationRules);
+            //  Get the validation rules
+            $validation_rules = $this->event['event_data']['rules'] ?? [];
 
-        //  If the current user response failed the validation return the failed response otherwise continue
-        if ($this->shouldDisplayScreen($failedValidationResponse)) {
-            return $failedValidationResponse;
+            //  Get the target input
+            $target_input = $this->event['event_data']['target'];
+
+            //  If the target input is provided
+            if (!empty($target_input)) {
+
+                //  If the provided target input is a valid mustache tag
+                if ($this->isValidMustacheTag($target_input, false)) {
+
+                    $mustache_tag = $target_input;
+
+                    // Convert the mustache tag into dynamic data
+                    $outputResponse = $this->convertMustacheTagIntoDynamicData($mustache_tag);
+
+                    //  If we have a screen to show return the response otherwise continue
+                    if ($this->shouldDisplayScreen($outputResponse)) {
+                        return $outputResponse;
+                    }
+
+                    //  Get the mustache tag dynamic data and use it as the target input
+                    $target_input = $outputResponse;
+
+                //  If the provided value is not a valid mustache tag
+                } else {
+
+                    //  Process dynamic content embedded within the target input
+                    $buildResponse = $this->handleEmbeddedDynamicContentConversion(
+                        //  Text containing embedded dynamic content that must be convert
+                        $target_input,
+                        //  Is this text information generated using the PHP Code Editor
+                        false
+                    );
+
+                    //  If we have a screen to show return the response otherwise continue
+                    if ($this->shouldDisplayScreen($buildResponse)) {
+                        return $buildResponse;
+                    }
+
+                    //  Get the built option value
+                    $target_input = $buildResponse;
+                }
+
+                //  Validate the target input
+                $failedValidationResponse = $this->handleValidationRules($target_input, $validation_rules);
+        
+                //  If the current user response failed the validation return the failed response otherwise continue
+                if ($this->shouldDisplayScreen($failedValidationResponse)) {
+                    return $failedValidationResponse;
+                }
+            }
+
         }
-
-        //  Return null if validation passes
-        return null;
     }
 
     /*  validateCurrentScreenUserResponse()
@@ -3506,31 +3529,31 @@ class UssdCreatorController extends Controller
      *  If the validation rule must be used then we determine which rule we are given and which
      *  validation method must be used for each given case.
      */
-    public function handleValidationRules($validationRules = [])
+    public function handleValidationRules($target_input, $validation_rules = [])
     {
         //  If we have validation rules
-        if (!empty($validationRules)) {
-            //  For each validation rulle
-            foreach ($validationRules as $validationRule) {
+        if (!empty($validation_rules)) {
+            //  For each validation rule
+            foreach ($validation_rules as $validation_rule) {
                 //  If the current validation rule is active (Must be used)
-                if ($validationRule['active'] == true) {
+                if ($validation_rule['active'] == true) {
                     //  Get the type of validation rule e.g "only_letters" or "only_numbers"
-                    $validationType = $validationRule['type'];
+                    $validationType = $validation_rule['type'];
 
                     //  Use the switch statement to determine which validation method to use
                     switch ($validationType) {
                         case 'only_letters':
 
-                            return $this->applyValidationRule($validationRule, 'validateOnlyLetters'); break;
+                            return $this->applyValidationRule($target_input, $validation_rule, 'validateOnlyLetters'); break;
 
                         /*
                         case 'only_numbers':
 
-                            return $this->applyValidationRule($validationRule, 'validateOnlyNumbers'); break;
+                            return $this->applyValidationRule($validation_rule, 'validateOnlyNumbers'); break;
 
                         case 'only_numbers_and_letters':
 
-                            return $this->applyValidationRule($validationRule, 'validateOnlyNumbersAndLetters'); break;
+                            return $this->applyValidationRule($validation_rule, 'validateOnlyNumbersAndLetters'); break;
                         */
                     }
                 }
@@ -3542,59 +3565,66 @@ class UssdCreatorController extends Controller
     }
 
     /*  validateOnlyLetters()
-     *  This method validates to make sure the current screen user's response
+     *  This method validates to make sure the target input
      *  is only letters and numbers
      */
-    public function validateOnlyLetters($validationRule)
+    public function validateOnlyLetters($target_input, $validation_rule)
     {
+
         //  Regex pattern to allow letters and spaces only
         $pattern = "/[a-zA-Z\s]+/";
 
         //  If the pattern was not matched exactly i.e validation failed
-        if (!preg_match($pattern, $this->currentUserResponse)) {
+        if (!preg_match($pattern, $target_input)) {
+
             //  Handle the failed validation
-            return $this->handleFailedValidation($validationRule);
+            return $this->handleFailedValidation($validation_rule);
+
         }
+
     }
 
     /*  applyValidationRule()
      *  This method gets the validation rule and callback. The callback represents the name of
-     *  the validation function that we must run to validate the current users response. Since
+     *  the validation function that we must run to validate the current input target. Since
      *  we allow custom Regex patterns for custom validation support, we must perform this under
      *  a try/catch incase the provided custom Regex pattern is invalid. This will allow us to
      *  catch any emerging error and be able to use the handleFailedValidation() in order to
      *  display the fatal error message and additional debugging details.
      */
-    public function applyValidationRule($validationRule, $callback)
+    public function applyValidationRule($target_input, $validation_rule, $callback)
     {
-        $initialUserResponse = $this->currentUserResponse;
-
         try {
-            /* Perform the validation method here e.g "validateOnlyLetters()" within the try/catch
-             *  method and pass the validation rule e.g "validateOnlyLetters( $validationRule )"
+            /** Perform the validation method here e.g "validateOnlyLetters()" within the try/catch
+             *  method and pass the validation rule e.g "validateOnlyLetters($target_input, $validation_rule )"
              */
-            $callback($validationRule);
+            $callback($target_input, $validation_rule);
+
         } catch (\Throwable $e) {
+
             //  Handle failed validation
-            $this->handleFailedValidation($validationRule);
+            $this->handleFailedValidation($validation_rule);
 
             //  Handle try catch error
             return $this->handleTryCatchError($e);
+
         } catch (Exception $e) {
+
             //  Handle failed validation
-            $this->handleFailedValidation($validationRule);
+            $this->handleFailedValidation($validation_rule);
 
             //  Handle try catch error
             return $this->handleTryCatchError($e);
+
         }
     }
 
     /*  handleFailedValidation()
      *  This method logs a warning with details about the failed validation rule
      */
-    public function handleFailedValidation($validationRule)
+    public function handleFailedValidation($validation_rule)
     {
-        $this->logWarning('Validation failed using ('.$validationRule['name'].'): <span class="text-error">' + $validationRule['error_msg'].'</span>');
+        $this->logWarning('Validation failed using ('.$validation_rule['name'].'): <span class="text-error">' + $validation_rule['error_msg'].'</span>');
     }
 
     /*  formatCurrentScreenUserResponse()
@@ -3794,7 +3824,6 @@ class UssdCreatorController extends Controller
 
                     //  Incase the dynamic value is not a string, integer or float
                     if (!is_string($output) && !is_integer($output) && !is_float($output)) {
-                        
                         $dataType = ucwords(gettype($output));
 
                         //  Get the result type e.g Object, Array, Boolean e.t.c and wrap in square brackets
@@ -4000,7 +4029,6 @@ class UssdCreatorController extends Controller
 
                     //  Set an info log for the created variable and its dynamic data value
                     if ($log_dynamic_data) {
-                        
                         $dataType = ucwords(gettype($value));
 
                         //  Use json_encode($output) to show $value data instead of gettype($value)
@@ -4036,15 +4064,13 @@ class UssdCreatorController extends Controller
                 if ($log_status) {
                     $this->logWarning('Found existing data already stored within the reference name <span class="text-success">'.$name.'</span>, overiding the information.');
                 }
-                        
+
                 $dataType = ucwords(gettype($this->dynamic_data_storage[$name]));
 
                 //  Set an info log of the old data stored
                 if ($log_status) {
-
                     //  Use json_encode($option_value) to show $option_value data instead of gettype($option_value)
                     $this->logInfo('Old Data: <span class="text-success">['.$dataType.']</span>');
-                    
                 }
 
                 //  Add the value as additional dynamic data to our dynamic data storage
@@ -4335,10 +4361,10 @@ class UssdCreatorController extends Controller
             /*  Get all the user reponses.  */
             $user_responses = $this->getUserResponses();
 
-            /** We want to say if we have levelNumber = 1 we should get the landing page data
+            /* We want to say if we have levelNumber = 1 we should get the landing page data
              *  (since thats level 1) but technically $user_responses[0] = landing page response.
              *  This means to get the response for the level we want we must decrement by one unit.
-             *  
+             *
              *  Use urldecode() to convert all encoded values to their
              *  decoded counterparts e.g
              *
@@ -4445,8 +4471,8 @@ class UssdCreatorController extends Controller
 
         $updated_responses = $responses;
 
-        for ($x = 0; $x < $count; $x++) {
-            for ($y = 0; $y < count($updated_responses); $y++) {
+        for ($x = 0; $x < $count; ++$x) {
+            for ($y = 0; $y < count($updated_responses); ++$y) {
                 if ($updated_responses[$y] == '0') {
                     unset($updated_responses[$y]);
 

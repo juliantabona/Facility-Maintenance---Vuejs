@@ -220,9 +220,13 @@
                         },
                         scroll_down_input: '99',
                         scroll_up_input: '88',
-                        show_more: {
+                        scroll_down: {
                             visible: true,
-                            text: '99. More'
+                            text: '99. Next'
+                        },
+                        scroll_up: {
+                            visible: true,
+                            text: '88. Prev'
                         },
                         trailing_end: '...',
                         break_line_before_trail: false,

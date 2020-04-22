@@ -113,7 +113,7 @@
             </Col>
 
             <!-- Trail -->
-            <Col :span="24" class="mb-3">
+            <Col :span="24" class="mb-2">
             
                 <Input v-model="localPagination.trailing_end" class="w-100 mb-2 pb-2"
                     type="text" placeholder="More content trail">
@@ -138,19 +138,42 @@
             
             </Col>
 
+        </Row>
+
+        <Row :gutter="12" class="bg-grey-light border pt-3 pb-2 px-2">
+
             <!-- Show Text -->
-            <Col :span="24" class="mb-2">
+            <Col :span="12" class="mb-2">
 
                 <!-- Enable / Disable Show Option -->
-                <Checkbox v-model="localPagination.show_more.visible">Show Text</Checkbox>
+                <Checkbox v-model="localPagination.scroll_down.visible">Show scroll down text</Checkbox>
                 
                 <div class="d-flex">
 
                     <span class="text-dark font-weight-bold mr-1 mt-2">Text: </span>
 
                     <customEditor size="small" class="w-100" classes="px-1"
-                        :useCodeEditor="false" :content="localPagination.show_more.text"
-                        @contentChange="localPagination.show_more.text = $event">
+                        :useCodeEditor="false" :content="localPagination.scroll_down.text"
+                        @contentChange="localPagination.scroll_down.text = $event">
+                    </customEditor>
+
+                </div>
+            
+            </Col>
+
+            <!-- Show Text -->
+            <Col :span="12" class="mb-2">
+
+                <!-- Enable / Disable Show Option -->
+                <Checkbox v-model="localPagination.scroll_up.visible">Show scroll up text</Checkbox>
+                
+                <div class="d-flex">
+
+                    <span class="text-dark font-weight-bold mr-1 mt-2">Text: </span>
+
+                    <customEditor size="small" class="w-100" classes="px-1"
+                        :useCodeEditor="false" :content="localPagination.scroll_up.text"
+                        @contentChange="localPagination.scroll_up.text = $event">
                     </customEditor>
 
                 </div>

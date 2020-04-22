@@ -103,7 +103,7 @@
                         error_msg: 'Please enter numbers and letters only'
                     },
                     {
-                        min: 2,
+                        min: '2',
                         active: true,
                         rule: '/[a-zA-Z0-9]+/',
                         name: 'Minimum Characters',
@@ -111,36 +111,36 @@
                         error_msg: 'Please enter 2 or more characters'
                     },
                     {
-                        max: 5,
+                        max: '5',
                         active: true,
                         rule: '/[a-zA-Z0-9]+/',
                         name: 'Maximum Characters',
                         type: 'maximum_characters',
-                        error_msg: 'Please enter no more than 2 characters'
+                        error_msg: 'Please enter no more than 5 characters'
                     },
                     {
                         active: true,
                         rule: '//',
                         name: 'Validate Email',
                         type: 'valiate_email',
-                        error_msg: 'Please provide a valid email address'
+                        error_msg: 'Please provide a valid email address e.g example@gmail.com'
                     },
                     {
                         active: true,
                         rule: '//',
                         name: 'Validate Phone Number',
                         type: 'valiate_phone_number',
-                        error_msg: 'Please provide a valid phone number'
+                        error_msg: 'Please provide a valid phone number e.g 71234567'
                     },
                     {
                         active: true,
                         rule: '/[0-9]{2}\/[0-9]{2}\/[0-9]{2}/',
-                        name: 'Validate Date Format - DD/MM/YYYY',
+                        name: 'Validate Date Format (DD/MM/YYYY)',
                         type: 'valiate_date_format',
                         error_msg: 'Please enter a valid date (DD/MM/YYYY) e.g 02/08/2020'
                     },
                     {
-                        value: 3,
+                        value: '3',
                         active: true,
                         rule: '//',
                         name: 'Equal To (=)',
@@ -148,7 +148,7 @@
                         error_msg: 'Please enter the number 3'
                     },
                     {
-                        value: 3,
+                        value: '3',
                         active: true,
                         rule: '//',
                         name: 'Not Equal To',
@@ -156,7 +156,7 @@
                         error_msg: 'Please enter any number except 3'
                     },
                     {
-                        value: 3,
+                        value: '3',
                         active: true,
                         rule: '//',
                         name: 'Less Than (<)',
@@ -164,12 +164,46 @@
                         error_msg: 'Please enter numbers less than 3'
                     },
                     {
-                        value: 3,
+                        value: '3',
+                        active: true,
+                        rule: '//',
+                        name: 'Less Than Or Equal (<=)',
+                        type: 'less_than_or_equal',
+                        error_msg: 'Please enter numbers less than or equal to 3'
+                    },
+                    {
+                        value: '3',
                         active: true,
                         rule: '//',
                         name: 'Greater Than (>)',
                         type: 'greater_than',
                         error_msg: 'Please enter numbers greater than 3'
+                    },
+                    {
+                        value: '3',
+                        active: true,
+                        rule: '//',
+                        name: 'Greater Than Or Equal (>=)',
+                        type: 'greater_than_or_equal',
+                        error_msg: 'Please enter numbers greater than or equal to 3'
+                    },
+                    {
+                        min: '1',
+                        max: '10',
+                        active: true,
+                        rule: '//',
+                        name: 'In Between (Including Inputs)',
+                        type: 'in_between_including',
+                        error_msg: 'Please enter numbers between 1 and 10 (including 1 and 10)'
+                    },
+                    {
+                        min: '1',
+                        max: '10',
+                        active: true,
+                        rule: '//',
+                        name: 'In Between (Excluding Inputs)',
+                        type: 'in_between_excluding',
+                        error_msg: 'Please enter numbers between 1 and 10 (excluding 1 and 10)'
                     },
                     {
                         active: true,
