@@ -22,7 +22,7 @@ class StoreController extends Controller
         if ($this->user->can('viewAll', Store::class)) {
 
             //  Get the stores
-            $stores = Store::paginate();
+            $stores = Store::paginate(20);
 
             //  Check if the stores exist
             if ($stores) {

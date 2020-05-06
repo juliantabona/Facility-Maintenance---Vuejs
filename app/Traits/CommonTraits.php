@@ -9,7 +9,7 @@ trait CommonTraits
      */
     public function getQueryStartDatetime()
     {
-        //  Get the start date provided by the request payload otherwise use todays datetime
+        //  Get the start date provided by the request payload otherwise use last months datetime 
         $start_time = request()->input('start_date') ?? (\Carbon\Carbon::now())->subMonth()->format('Y-m-d H:i:s');
 
         return new \Carbon\Carbon($start_time);

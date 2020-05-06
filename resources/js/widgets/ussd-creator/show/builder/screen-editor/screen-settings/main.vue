@@ -17,7 +17,7 @@
         <advancedScreenSettings v-show="activeNavTab == 'Advanced'" :screen="localScreen"></advancedScreenSettings>
 
         <!-- Repeat Settings -->
-        <repeatScreenSettings v-show="activeNavTab == 'Repeat Settings'" :screen="localScreen"></repeatScreenSettings>
+        <repeatScreenSettings v-show="activeNavTab == 'Repeat Settings'" :screen="localScreen" :screens="screens"></repeatScreenSettings>
 
         <!-- Repeat Events -->
         <repeatScreenEvents v-show="activeNavTab == 'Repeat Events'" :screen="localScreen"></repeatScreenEvents>

@@ -2,7 +2,7 @@
 
     <div :class="layout == 'inline' ? 'd-flex' : 'd-block'">
 
-        <div :class="layout == 'inline' ? '' : 'ml-2'">
+        <div v-if="display" :class="layout == 'inline' ? '' : 'ml-2'">
 
             <!-- 
                 Link to screen checkbox
@@ -20,7 +20,7 @@
                 Link to screen display checkbox
                 Disable only if we have one display
              -->
-            <Checkbox 
+            <Checkbox
                 :class="layout == 'inline' ? 'mt-2 mb-0' : ''"
                 :disabled="disableLinkToDisplayCheckbox"
                 @on-change="handleSelection('display')"

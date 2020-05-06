@@ -103,9 +103,66 @@ function ussd_creator_select_options_action_sample_code()
 ?>`
 };
 
+function ussd_creator_local_storage_sample_code()
+{
+
+    return `<?php
+
+    /** Use this editor to write custom php code to store  static and dynamic
+     *  data on Local Storage. Remember that you can reference dynamic content 
+     *  using mustache tags such as {{ user.name }} or by using PHP variables 
+     *  $user->name. Always use the return statement when you want to output 
+     *  your information.
+     */
+
+    /** ARRAY STORAGE 
+     * 
+     *  If you are using the Code Editor with the Local Storage "Mode" set to 
+     *  "Array Replace", "Array Append" or "Array Prepend" then you must 
+     *  always return an array for proper storage. Below is an example: 
+     */
+
+    $first_name = 'John';
+    $last_name = 'Doe';
+    $age = '24';
+
+    /** Example 1:
+     * 
+     *  We want to store the data provided by the user into an array as values
+     */
+    return [$first_name, $last_name, $age]; //  or [{{ first_name }}, {{ last_name }}, {{ age }}];
+
+
+    /** Example 2:
+     *
+     *  We want to store the data provided by the user into an array as key/values
+     */
+    return [
+        'first_name' => $first_name, 
+        'last_name' => $last_name, 
+        'age' => $age
+    ]; 
+
+    /** STRING STORAGE 
+     * 
+     *  If you are using the Code Editor with the Local Storage Mode set to
+     *  "String Replace" or "String Join (Concatenate)" then you must always
+     *  return a string for proper storage. A good use of Local Storage using
+     *  strings is creating templated information. Below is an example: 
+     */
+
+    /** Example 1:
+     * 
+     *  We want to store the data provided by the user into an array as values
+     */
+     return 'Hello, ' .$first_name. ' welcome back;
+
+?>`
+};
 export default {
     'ussd_creator_instructions_sample_code': ussd_creator_instructions_sample_code(),
     'ussd_creator_custom_formatting_sample_code': ussd_creator_custom_formatting_sample_code(),
-    'ussd_creator_select_options_action_sample_code': ussd_creator_select_options_action_sample_code()
+    'ussd_creator_select_options_action_sample_code': ussd_creator_select_options_action_sample_code(),
+    'ussd_creator_local_storage_sample_code': ussd_creator_local_storage_sample_code(),
 }
 

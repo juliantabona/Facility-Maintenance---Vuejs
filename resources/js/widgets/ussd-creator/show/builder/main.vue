@@ -59,7 +59,7 @@
 
     //  Loaders
     import Loader from './../../../../components/_common/loaders/Loader.vue';  
-    
+
     //  Get the side menu
     import creatorSideMenu from './side-menu/main.vue';
 
@@ -235,18 +235,48 @@
                         repeat: {
                             selected_type: 'repeat_on_number',  //  repeat_on_number, repeat_on_items, custom_repeat
                             repeat_on_number: {
-                                value: '3'
+                                value: '3',
+                                loop_index_reference_name: 'loop_index',
+                                loop_number_reference_name: 'loop_number',
+                                is_first_loop_reference_name: 'is_first_loop',
+                                is_last_loop_reference_name: 'is_last_loop',
+                                on_no_loop: {
+                                    selected_type: 'do_nothing',            //  do_nothing, link
+                                    link:{
+                                        type: 'screen',                     //  screen, display  
+                                        name: ''
+                                    }
+                                },
+                                after_last_loop: {
+                                    selected_type: 'do_nothing',            //  do_nothing, link
+                                    link:{
+                                        type: 'screen',                     //  screen, display  
+                                        name: ''
+                                    }
+                                }
                             },
                             repeat_on_items: {
                                 group_reference: '{{ items }}', 
                                 item_reference_name: 'item',
-                                total_items_reference_name: 'total_items',
-                                item_index_reference_name: 'item_index',
-                                item_number_reference_name: 'item_number',
-                                is_first_item_reference_name: 'is_first_item',
-                                is_last_item_reference_name: 'is_last_item',
-                                no_results_message: 'No items found',
-                                next_screen: null
+                                total_loops_reference_name: 'total_items',
+                                loop_index_reference_name: 'item_index',
+                                loop_number_reference_name: 'item_number',
+                                is_first_loop_reference_name: 'is_first_item',
+                                is_last_loop_reference_name: 'is_last_item',
+                                on_no_loop: {
+                                    selected_type: 'do_nothing',            //  do_nothing, link
+                                    link:{
+                                        type: 'screen',                     //  screen, display  
+                                        name: ''
+                                    }
+                                },
+                                after_last_loop: {
+                                    selected_type: 'do_nothing',            //  do_nothing, link
+                                    link:{
+                                        type: 'screen',                     //  screen, display  
+                                        name: ''
+                                    }
+                                }
                             },
                             events: {
                                 before_repeat: [],

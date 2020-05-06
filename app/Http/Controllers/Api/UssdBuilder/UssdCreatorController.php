@@ -111,7 +111,7 @@ class UssdCreatorController extends Controller
         $response = $this->startBuildingUssd();
 
         if ($this->test_mode) {
-            return response(['response' => $response, 'logs' => $this->log])->header('Content-Type', 'text/plain');
+            return response(['response' => $response, 'logs' => $this->log /* [] */])->header('Content-Type', 'text/plain');
         } else {
             return response($response)->header('Content-Type', 'text/plain');
         }
@@ -337,297 +337,384 @@ class UssdCreatorController extends Controller
             $this->logInfo('<span class="text-primary">'.$this->screen['name'].'</span> repeats on a given number');
 
             //  Handle repeat screen on number
-            return $this->handleRepeatScreenOnNumber();
+            return $this->startRepeatScreen('repeat_on_number');
         } elseif ($repeatType == 'repeat_on_items') {
             //  Set an info log that the current screen repeats on a set of items
             $this->logInfo('<span class="text-primary">'.$this->screen['name'].'</span> repeats on a group of items');
 
             //  Handle repeat screen on items
-            return $this->handleRepeatScreenOnItems();
+            return $this->startRepeatScreen('repeat_on_items');
         }
     }
 
-    public function handleRepeatScreenOnNumber()
+    public function startRepeatScreen($type)
     {
-    }
+        if ($type == 'repeat_on_items') {
+            $repeat_data = $this->screen['type']['repeat']['repeat_on_items'];
 
-    public function handleRepeatScreenOnItems()
-    {
-        $repeat_data = $this->screen['type']['repeat']['repeat_on_items'];
+            //  Get the group reference value (Usually in mustache tag format) e.g "{{ products }}"
+            $mustache_tag = $repeat_data['group_reference'];
 
-        //  Get the group reference value (Usually in mustache tag format) e.g "{{ products }}"
-        $mustache_tag = $repeat_data['group_reference'];
+            //  Get the current item reference name e.g "product"
+            $item_reference_name = $repeat_data['item_reference_name'];
 
-        //  Get the current item reference name e.g "product"
-        $item_reference_name = $repeat_data['item_reference_name'];
+            //  Get the total options reference name e.g "total_products"
+            $total_loops_reference_name = $repeat_data['total_loops_reference_name'];
 
-        //  Get the total options reference name e.g "total_products"
-        $total_items_reference_name = $repeat_data['total_items_reference_name'];
+            //  Convert "{{ products }}" into "$products"
+            $variable = $this->convertMustacheTagIntoPHPVariable($mustache_tag, true);
 
-        //  Get the current item index reference name e.g "product_index"
-        $item_index_reference_name = $repeat_data['item_index_reference_name'];
+            //  Convert the dynamic property into its dynamic value e.g "$products" into "[ ['name' => 'Product 1', ...], ... ]"
+            $outputResponse = $this->processPHPCode("return $variable;");
 
-        //  Get the current item number reference name e.g "product_number"
-        $item_number_reference_name = $repeat_data['item_number_reference_name'];
+            //  If we have a screen to show return the response otherwise continue
+            if ($this->shouldDisplayScreen($outputResponse)) {
+                return $outputResponse;
+            }
+
+            //  Get the generated output e.g "A list of products"
+            $items = $outputResponse;
+
+            //  If the dynamic value is a string, integer or float
+            if (is_string($items) || is_integer($items) || is_float($items)) {
+                //  Set an info log that we are converting the dynamic property to its associated value
+                $this->logInfo('Converting <span class="text-success">'.$mustache_tag.'</span> to <span class="text-success">'.$items.'</span>');
+
+            //  Incase the dynamic value is not a string, integer or float
+            } else {
+                $dataType = ucwords(gettype($items));
+
+                //  Set an info log that we are converting the dynamic property to its associated value
+                $this->logInfo('Converting <span class="text-success">'.$mustache_tag.'</span> to <span class="text-success">['.$dataType.']</span>');
+            }
+        } elseif ($type == 'repeat_on_number') {
+            $repeat_data = $this->screen['type']['repeat']['repeat_on_number'];
+
+            $repeat_number = $repeat_data['value'];
+
+            //  If the provided repeat number is a valid mustache tag
+            if ($this->isValidMustacheTag($repeat_number, false)) {
+                $mustache_tag = $repeat_number;
+
+                // Convert the mustache tag into dynamic data
+                $outputResponse = $this->convertMustacheTagIntoDynamicData($mustache_tag);
+
+                //  If we have a screen to show return the response otherwise continue
+                if ($this->shouldDisplayScreen($outputResponse)) {
+                    return $outputResponse;
+                }
+
+                $variable = (int) $outputResponse;
+            } else {
+                $variable = (int) $repeat_number;
+            }
+
+            //  If the dynamic value is a number equal to zero
+            if ($variable == 0) {
+                //  Set an info log that we are converting the dynamic property to its associated value
+                $this->logInfo('The repeat number has a value = <span class="text-success">0</span>, therefore we won\'t be able to loop and repeat the screen');
+            }
+
+            /** Fill the $items with an array of values starting with Index = 0. Add items equal to the $variable number
+             *  example results:.
+             *
+             *  array_fill(0, 5, 'item') = ['item', 'item', 'item', 'item', 'item'];
+             */
+            $items = array_fill(0, $variable, 'item');
+        }
+
+        //  Get the current loop index reference name e.g "product_index"
+        $loop_index_reference_name = $repeat_data['loop_index_reference_name'];
+
+        //  Get the current loop number reference name e.g "product_number"
+        $loop_number_reference_name = $repeat_data['loop_number_reference_name'];
 
         //  Get the reference name for confirming if the current item is the first item e.g "is_first_product"
-        $is_first_item_reference_name = $repeat_data['is_first_item_reference_name'];
+        $is_first_loop_reference_name = $repeat_data['is_first_loop_reference_name'];
 
         //  Get the reference name for confirming if the current item is the last item e.g "is_last_product"
-        $is_last_item_reference_name = $repeat_data['is_last_item_reference_name'];
-
-        //  Get the no results message
-        $no_results_message = $repeat_data['no_results_message'];
-
-        //  Convert "{{ products }}" into "$products"
-        $variable = $this->convertMustacheTagIntoPHPVariable($mustache_tag, true);
-
-        //  Convert the dynamic property into its dynamic value e.g "$products" into "[ ['name' => 'Product 1', ...], ... ]"
-        $outputResponse = $this->processPHPCode("return $variable;");
-
-        //  If we have a screen to show return the response otherwise continue
-        if ($this->shouldDisplayScreen($outputResponse)) {
-            return $outputResponse;
-        }
-
-        //  Get the generated output e.g "A list of products"
-        $items = $outputResponse;
-
-        //  If the dynamic value is a string, integer or float
-        if (is_string($items) || is_integer($items) || is_float($items)) {
-            //  Set an info log that we are converting the dynamic property to its associated value
-            $this->logInfo('Converting <span class="text-success">'.$mustache_tag.'</span> to <span class="text-success">'.$items.'</span>');
-
-        //  Incase the dynamic value is not a string, integer or float
-        } else {
-            $dataType = ucwords(gettype($items));
-
-            //  Set an info log that we are converting the dynamic property to its associated value
-            $this->logInfo('Converting <span class="text-success">'.$mustache_tag.'</span> to <span class="text-success">['.$dataType.']</span>');
-        }
+        $is_last_loop_reference_name = $repeat_data['is_last_loop_reference_name'];
 
         //  Check if the given options are of type Array
         if (is_array($items)) {
-            for ($x = 0; $x < count($items); ++$x) {
-                //  Set an info log that we are converting the dynamic property to its associated value
-                $this->logInfo('<span class="text-success">'.$this->screen['name'].'</span> repeat instance <span class="text-success">['.($x + 1).']</span>');
+            if (count($items) > 0) {
+                for ($x = 0; $x < count($items); ++$x) {
+                    //  Set an info log that we are converting the dynamic property to its associated value
+                    $this->logInfo('<span class="text-success">'.$this->screen['name'].'</span> repeat instance <span class="text-success">['.($x + 1).']</span>');
 
-                //  If the item reference name is provided
-                if (!empty($item_reference_name)) {
-                    //  Store the current item using the given item reference name
-                    $this->storeDynamicData($item_reference_name, $items[$x]);
-                }
+                    if ($type == 'repeat_on_items') {
+                        //  If the item reference name is provided
+                        if (!empty($item_reference_name)) {
+                            //  Store the current item using the given item reference name
+                            $this->storeDynamicData($item_reference_name, $items[$x]);
+                        }
 
-                //  If the total options reference name is provided
-                if (!empty($total_items_reference_name)) {
-                    //  Store the current total options using the given reference name
-                    $this->storeDynamicData($total_items_reference_name, count($items));
-                }
-
-                //  If the item index reference name is provided
-                if (!empty($item_index_reference_name)) {
-                    $this->logInfo('Index <span class="text-success">['.$x.']</span>');
-                    //  Store the current item index using the given item reference name
-                    $this->storeDynamicData($item_index_reference_name, $x);
-                }
-
-                //  If the item number reference name is provided
-                if (!empty($item_number_reference_name)) {
-                    $this->logInfo('Number <span class="text-success">['.($x + 1).']</span>');
-                    //  Store the current item number using the given item reference name
-                    $this->storeDynamicData($item_number_reference_name, ($x + 1));
-                }
-
-                //  If the first item reference name is provided
-                if (!empty($is_first_item_reference_name)) {
-                    //  Store the true/false result for first item using the given item reference name
-                    $this->storeDynamicData($is_first_item_reference_name, ($x == 0));
-                }
-
-                //  If the last item reference name is provided
-                if (!empty($is_last_item_reference_name)) {
-                    //  Store the true/false result for last item using the given item reference name
-                    $this->storeDynamicData($is_last_item_reference_name, (($x + 1) == count($items)));
-                }
-
-                //  Start building the current screen displays
-                $buildResponse = $this->startBuildingDisplays();
-
-                //  If we must navigate forward then proceed to next iteration otherwise continue
-                if ($buildResponse == 'navigate-forward') {
-                    /** Use the forward navigation step number to decide which next iteration to target. For instance if
-                     *  the number we receive equals 1 it means target the first next item. If the number we receive
-                     *  equals 2 it means target the second next item. This is of course we assume the item in that
-                     *  requested position exists. If it does not exist we work backwards to target the closest
-                     *  available item. For instance lets assume we have items in position 1, 2, 3 and 4. We are
-                     *  currently in position 1. If the step number equals "1" we target item in position "2".
-                     *  If the step number equals "2" we target item in position "3" and so on. Now lets
-                     *  assume we have number equals "4", this means we target item in position "5" but
-                     *  such an item does not exist. This means we work backwards to target item in
-                     *  position "4" instead.
-                     *
-                     *  $this->forward_navigation_step_number = 1, 2, 3 ... e.t.c
-                     */
-                    $step = $this->forward_navigation_step_number;
-
-                    /** Assume $step = 5, this means we want to skip to every 5th item.
-                     *
-                     *  If $y = 0 ; This means we are currently targeting [Item 1].
-                     *
-                     *  If $step = 5; This means we want to target item of index number "5" [Item 6] (if it exists).
-                     *  Note that item of index "5" is actually [Item 6]. A simple way to see this
-                     *  is in this manner:
-                     *
-                     *  [Item 1] + 5 steps = [Item 6]
-                     *
-                     *  Visual example with $step = 5
-                     *  --------------------------------------------------------
-                     *  From    [1] 2  3  4  5  6  7  8  9  10  11  12 ...
-                     *  To       1  2  3  4  5 [6] 7  8  9  10  11  12 ...
-                     *  ...      1  2  3  4  5  6  7  8  9  10 [11] 12 ...
-                     *           .  .  .  .  .  .  .  .  .   .   .   .
-                     *           .  .  .  .  .  .  .  .  .   .   .   .
-                     *  --------------------------------------------------------
-                     *  Indexes: 0  1  2  3  4  5  6  7  8   9  10  11
-                     *  --------------------------------------------------------
-                     *
-                     *  Translated into index format:
-                     *
-                     *  [Item Index 0] + 5 steps = [Item Index 5]
-                     */
-                    for ($y = $step; $y >= 1; --$y) {
-                        // Example: For $y = 5 ... 4 ... 3 ... 2 ... 1
-
-                        /** Note $items[$x] targets the current item and $items[$x + $y] targets the next item.
-                         *  If the item we want to target does not exist, then we attempt to target the item
-                         *  before it. We repeat this until we can get an existing item to target.
-                         *
-                         *  Example: If we wanted to target [item 6] but it does not exist, then we try to
-                         *  target [item 5], then [item 4] and so on... If we reach a point where no items
-                         *  after [item 1] can be found then we do not iterate anymore.
-                         */
-                        if (isset($items[$x + $y])) {
-                            $this->logInfo('Navigating to <span class="text-success">Item #'.($x + $y + 1).'</span>');
-
-                            /** If the item exists then we need to alter the parent for($x){ ... } method to target
-                             *  the item we want.
-                             *
-                             *  Lets assume [item 6] was found 5 steps after [item 1]. Since normally the for($x){ ... }
-                             *  would increment the $x value by only (1), we need to alter its bahaviour to increment
-                             *  based on the $y value we have. Basically to target the item we want we will use:
-                             *
-                             *  $items[index] where index = ($x + $y)
-                             *
-                             *  However on the next iteration the index value will be incremented by (1) and the result
-                             *  will be:
-                             *
-                             *  $items[index] where index = ($x + $y + 1)
-                             *
-                             *  To counteract this result we must make sure that the index value is decremented by (1)
-                             *  i.e index = ($x + $y - 1) so that on next iteration index = ($x + $y - 1 + 1) giving
-                             *  us the final output of index = ($x + $y) to target the item we want
-                             */
-                            $x = ($x + $y - 1);
-
-                            //  Stop the current loop
-                            break 1;
+                        //  If the total options reference name is provided
+                        if (!empty($total_loops_reference_name)) {
+                            //  Store the current total options using the given reference name
+                            $this->storeDynamicData($total_loops_reference_name, count($items));
                         }
                     }
 
-                    //  Do nothing else so that we iterate to the next specified item on the list
-                } elseif ($buildResponse == 'navigate-backward') {
-                    /** Use the forward navigation step number to decide which next iteration to target. For instance if
-                     *  the number we receive equals 1 it means target the first previous item. If the number we receive
-                     *  equals 2 it means target the second previous item. This is of course we assume the item in that
-                     *  requested position exists. If it does not exist we work forward to target the closest available
-                     *  item. For instance lets assume we have items in position 1, 2, 3 and 4. We are currently in
-                     *  position 4. If the step number equals "1" we target item in position "3". If the step number
-                     *  equals "2" we target item in position "2" and so on. Now lets assume we have number equals "4",
-                     *  this means we target item in position "0" but such an item does not exist. This means we work
-                     *  forward to target item in position "1" instead.
-                     *
-                     *  $this->backward_navigation_step_number = 1, 2, 3 ... e.t.c
-                     */
-                    $step = $this->backward_navigation_step_number;
-
-                    /** Assume $step = 5, this means we want to skip to every previous 5th item.
-                     *
-                     *  If $y = 10 ; This means we are currently targeting [Item 11].
-                     *
-                     *  If $step = 5; This means we want to target item of index number "5" [Item 6] (if it exists).
-                     *  Note that item of index "5" is actually [Item 6]. A simple way to see this
-                     *  is in this manner:
-                     *
-                     *  [Item 11] - 5 steps = [Item 6]
-                     *
-                     *  Visual example with $step = 5
-                     *  --------------------------------------------------------
-                     *  From     1  2  3  4  5  6  7  8  9  10 [11] 12 ...
-                     *  To       1  2  3  4  5 [6] 7  8  9  10  11  12 ...
-                     *  ...     [1] 2  3  4  5  6  7  8  9  10  11  12 ...
-                     *           .  .  .  .  .  .  .  .  .   .   .   .
-                     *           .  .  .  .  .  .  .  .  .   .   .   .
-                     *  --------------------------------------------------------
-                     *  Indexes: 0  1  2  3  4  5  6  7  8   9  10  11
-                     *  --------------------------------------------------------
-                     *
-                     *  Translated into index format:
-                     *
-                     *  [Item Index 10] - 5 steps = [Item Index 5]
-                     */
-                    for ($y = $step; $y >= 0; --$y) {
-                        // Example: For $y = 5 ... 4 ... 3 ... 2 ... 1 ... 0
-
-                        /** Note $items[$x] targets the current item and $items[$x - $y] targets the previous item.
-                         *  If the item we want to target does not exist, then we attempt to target the item
-                         *  after it. We repeat this until we can get an existing item to target.
-                         *
-                         *  Example: If we wanted to target [item -1] but it does not exist, then we try to
-                         *  target [item 0], then [item 1] and so on... If we reach a point where no items
-                         *  after [item -1] can be found then we do not iterate anymore.
-                         */
-                        if (isset($items[$x - $y])) {
-                            $this->logInfo('Navigating to <span class="text-success">Item #'.($x - $y + 1).'</span>');
-
-                            /** If the item exists then we need to alter the parent for($x){ ... } method to target
-                             *  the item we want.
-                             *
-                             *  Lets assume [item 6] was found 5 steps before [item 11]. Since normally the for($x){ ... }
-                             *  would increment the $x value by only (1), we need to alter its bahaviour to increment
-                             *  based on the $y value we have. Basically to target the item we want we will use:
-                             *
-                             *  $items[index] where index = ($x - $y)
-                             *
-                             *  However on the next iteration the index value will be incremented by (1) and the result
-                             *  will be:
-                             *
-                             *  $items[index] where index = ($x - $y + 1)
-                             *
-                             *  To counteract this result we must make sure that the index value is decremented by (1)
-                             *  i.e index = ($x - $y - 1) so that on next iteration index = ($x - $y - 1 + 1) giving
-                             *  us the final output of index = ($x - $y) to target the item we want
-                             */
-
-                            //return 'CON $x = '.$x.' $y = '.$y;
-
-                            $x = ($x - $y - 1);
-
-                            //return 'CON Final $x = '.$x;
-
-                            //  Stop the current loop
-                            break 1;
-                        }
+                    //  If the item index reference name is provided
+                    if (!empty($loop_index_reference_name)) {
+                        $this->logInfo('Index <span class="text-success">['.$x.']</span>');
+                        //  Store the current item index using the given item reference name
+                        $this->storeDynamicData($loop_index_reference_name, $x);
                     }
 
-                    //  If we reached this area, then we could not find any
+                    //  If the item number reference name is provided
+                    if (!empty($loop_number_reference_name)) {
+                        $this->logInfo('Number <span class="text-success">['.($x + 1).']</span>');
+                        //  Store the current item number using the given item reference name
+                        $this->storeDynamicData($loop_number_reference_name, ($x + 1));
+                    }
 
-                    //  Do nothing else so that we iterate to the next specified item on the list
-                } else {
-                    //  If we have a screen to show return the response otherwise continue
-                    if ($this->shouldDisplayScreen($buildResponse)) {
+                    //  If the first item reference name is provided
+                    if (!empty($is_first_loop_reference_name)) {
+                        //  Store the true/false result for first item using the given item reference name
+                        $this->storeDynamicData($is_first_loop_reference_name, ($x == 0));
+                    }
+
+                    //  If the last item reference name is provided
+                    if (!empty($is_last_loop_reference_name)) {
+                        //  Store the true/false result for last item using the given item reference name
+                        $this->storeDynamicData($is_last_loop_reference_name, (($x + 1) == count($items)));
+                    }
+
+                    //  Start building the current screen displays
+                    $buildResponse = $this->startBuildingDisplays();
+
+                    //  If we must navigate forward then proceed to next iteration otherwise continue
+                    if ($buildResponse == 'navigate-forward') {
+                        //  If this is not the last item then we can navigate forward
+                        if (($x + 1) != count($items)) {
+                            /** Use the forward navigation step number to decide which next iteration to target. For instance if
+                             *  the number we receive equals 1 it means target the first next item. If the number we receive
+                             *  equals 2 it means target the second next item. This is of course we assume the item in that
+                             *  requested position exists. If it does not exist we work backwards to target the closest
+                             *  available item. For instance lets assume we have items in position 1, 2, 3 and 4. We are
+                             *  currently in position 1. If the step number equals "1" we target item in position "2".
+                             *  If the step number equals "2" we target item in position "3" and so on. Now lets
+                             *  assume we have number equals "4", this means we target item in position "5" but
+                             *  such an item does not exist. This means we work backwards to target item in
+                             *  position "4" instead.
+                             *
+                             *  $this->forward_navigation_step_number = 1, 2, 3 ... e.t.c
+                             */
+                            $step = $this->forward_navigation_step_number;
+
+                            /** Assume $step = 5, this means we want to skip to every 5th item.
+                             *
+                             *  If $y = 0 ; This means we are currently targeting [Item 1].
+                             *
+                             *  If $step = 5; This means we want to target item of index number "5" [Item 6] (if it exists).
+                             *  Note that item of index "5" is actually [Item 6]. A simple way to see this
+                             *  is in this manner:
+                             *
+                             *  [Item 1] + 5 steps = [Item 6]
+                             *
+                             *  Visual example with $step = 5
+                             *  --------------------------------------------------------
+                             *  From    [1] 2  3  4  5  6  7  8  9  10  11  12 ...
+                             *  To       1  2  3  4  5 [6] 7  8  9  10  11  12 ...
+                             *  ...      1  2  3  4  5  6  7  8  9  10 [11] 12 ...
+                             *           .  .  .  .  .  .  .  .  .   .   .   .
+                             *           .  .  .  .  .  .  .  .  .   .   .   .
+                             *  --------------------------------------------------------
+                             *  Indexes: 0  1  2  3  4  5  6  7  8   9  10  11
+                             *  --------------------------------------------------------
+                             *
+                             *  Translated into index format:
+                             *
+                             *  [Item Index 0] + 5 steps = [Item Index 5]
+                             */
+                            for ($y = $step; $y >= 1; --$y) {
+                                // Example: For $y = 5 ... 4 ... 3 ... 2 ... 1
+
+                                /** Note $items[$x] targets the current item and $items[$x + $y] targets the next item.
+                                 *  If the item we want to target does not exist, then we attempt to target the item
+                                 *  before it. We repeat this until we can get an existing item to target.
+                                 *
+                                 *  Example: If we wanted to target [item 6] but it does not exist, then we try to
+                                 *  target [item 5], then [item 4] and so on... If we reach a point where no items
+                                 *  after [item 1] can be found then we do not iterate anymore.
+                                 */
+                                if (isset($items[$x + $y])) {
+                                    $this->logInfo('Navigating to <span class="text-success">Item #'.($x + $y + 1).'</span>');
+
+                                    /** If the item exists then we need to alter the parent for($x){ ... } method to target
+                                     *  the item we want.
+                                     *
+                                     *  Lets assume [item 6] was found 5 steps after [item 1]. Since normally the for($x){ ... }
+                                     *  would increment the $x value by only (1), we need to alter its bahaviour to increment
+                                     *  based on the $y value we have. Basically to target the item we want we will use:
+                                     *
+                                     *  $items[index] where index = ($x + $y)
+                                     *
+                                     *  However on the next iteration the index value will be incremented by (1) and the result
+                                     *  will be:
+                                     *
+                                     *  $items[index] where index = ($x + $y + 1)
+                                     *
+                                     *  To counteract this result we must make sure that the index value is decremented by (1)
+                                     *  i.e index = ($x + $y - 1) so that on next iteration index = ($x + $y - 1 + 1) giving
+                                     *  us the final output of index = ($x + $y) to target the item we want
+                                     */
+                                    $x = ($x + $y - 1);
+
+                                    //  Stop the current loop
+                                    break 1;
+                                }
+                            }
+                        } else {
+                            $this->logInfo('<span class="text-success">'.$this->screen['name'].'</span> has reached the last loop');
+
+                            //  Get the "After Last Loop Behaviour Type" e.g "do_nothing", "link"
+                            $after_last_loop = $repeat_data['after_last_loop']['selected_type'];
+
+                            if ($after_last_loop == 'do_nothing') {
+                                $this->logInfo('<span class="text-success">'.$this->screen['name'].'</span> is defaulting to showing the last loop display');
+
+                            //  Do nothing else
+                            } elseif ($after_last_loop == 'link') {
+                                $this->logInfo('<span class="text-success">'.$this->screen['name'].'</span> is attempting to link to another screen');
+
+                                //  Get the provided link (The display or screen we must link to after the last loop of this screen)
+                                $link = $repeat_data['after_last_loop']['link'] ?? null;
+
+                                //  If the screen link name was provided
+                                if ($link['name']) {
+                                    $this->logInfo('<span class="text-success">'.$this->screen['name'].'</span> is linking to <span class="text-success">'.$link['name'].'</span>');
+
+                                    //  Get the screen matching the given link name and set it as the current screen
+                                    $this->screen = $this->getScreenByName($link['name']);
+
+                                    //  Start building the current screen displays
+                                    return $this->startBuildingDisplays();
+                                }
+                            }
+                        }
+
+                        //  Do nothing else so that we iterate to the next specified item on the list
+                    } elseif ($buildResponse == 'navigate-backward') {
+                        /** Use the forward navigation step number to decide which next iteration to target. For instance if
+                         *  the number we receive equals 1 it means target the first previous item. If the number we receive
+                         *  equals 2 it means target the second previous item. This is of course we assume the item in that
+                         *  requested position exists. If it does not exist we work forward to target the closest available
+                         *  item. For instance lets assume we have items in position 1, 2, 3 and 4. We are currently in
+                         *  position 4. If the step number equals "1" we target item in position "3". If the step number
+                         *  equals "2" we target item in position "2" and so on. Now lets assume we have number equals "4",
+                         *  this means we target item in position "0" but such an item does not exist. This means we work
+                         *  forward to target item in position "1" instead.
+                         *
+                         *  $this->backward_navigation_step_number = 1, 2, 3 ... e.t.c
+                         */
+                        $step = $this->backward_navigation_step_number;
+
+                        /** Assume $step = 5, this means we want to skip to every previous 5th item.
+                         *
+                         *  If $y = 10 ; This means we are currently targeting [Item 11].
+                         *
+                         *  If $step = 5; This means we want to target item of index number "5" [Item 6] (if it exists).
+                         *  Note that item of index "5" is actually [Item 6]. A simple way to see this
+                         *  is in this manner:
+                         *
+                         *  [Item 11] - 5 steps = [Item 6]
+                         *
+                         *  Visual example with $step = 5
+                         *  --------------------------------------------------------
+                         *  From     1  2  3  4  5  6  7  8  9  10 [11] 12 ...
+                         *  To       1  2  3  4  5 [6] 7  8  9  10  11  12 ...
+                         *  ...     [1] 2  3  4  5  6  7  8  9  10  11  12 ...
+                         *           .  .  .  .  .  .  .  .  .   .   .   .
+                         *           .  .  .  .  .  .  .  .  .   .   .   .
+                         *  --------------------------------------------------------
+                         *  Indexes: 0  1  2  3  4  5  6  7  8   9  10  11
+                         *  --------------------------------------------------------
+                         *
+                         *  Translated into index format:
+                         *
+                         *  [Item Index 10] - 5 steps = [Item Index 5]
+                         */
+                        for ($y = $step; $y >= 0; --$y) {
+                            // Example: For $y = 5 ... 4 ... 3 ... 2 ... 1 ... 0
+
+                            /** Note $items[$x] targets the current item and $items[$x - $y] targets the previous item.
+                             *  If the item we want to target does not exist, then we attempt to target the item
+                             *  after it. We repeat this until we can get an existing item to target.
+                             *
+                             *  Example: If we wanted to target [item -1] but it does not exist, then we try to
+                             *  target [item 0], then [item 1] and so on... If we reach a point where no items
+                             *  after [item -1] can be found then we do not iterate anymore.
+                             */
+                            if (isset($items[$x - $y])) {
+                                $this->logInfo('Navigating to <span class="text-success">Item #'.($x - $y + 1).'</span>');
+
+                                /** If the item exists then we need to alter the parent for($x){ ... } method to target
+                                 *  the item we want.
+                                 *
+                                 *  Lets assume [item 6] was found 5 steps before [item 11]. Since normally the for($x){ ... }
+                                 *  would increment the $x value by only (1), we need to alter its bahaviour to increment
+                                 *  based on the $y value we have. Basically to target the item we want we will use:
+                                 *
+                                 *  $items[index] where index = ($x - $y)
+                                 *
+                                 *  However on the next iteration the index value will be incremented by (1) and the result
+                                 *  will be:
+                                 *
+                                 *  $items[index] where index = ($x - $y + 1)
+                                 *
+                                 *  To counteract this result we must make sure that the index value is decremented by (1)
+                                 *  i.e index = ($x - $y - 1) so that on next iteration index = ($x - $y - 1 + 1) giving
+                                 *  us the final output of index = ($x - $y) to target the item we want
+                                 */
+
+                                //return 'CON $x = '.$x.' $y = '.$y;
+
+                                $x = ($x - $y - 1);
+
+                                //return 'CON Final $x = '.$x;
+
+                                //  Stop the current loop
+                                break 1;
+                            }
+                        }
+
+                        //  If we reached this area, then we could not find any
+
+                        //  Do nothing else so that we iterate to the next specified item on the list
+                    } else {
                         return $buildResponse;
                     }
                 }
+            } else {
+                $this->logWarning('<span class="text-success">'.$this->screen['name'].'</span> has <span class="text-success">0</span> loops. For this reason we cannot repeat over the screen displays');
+
+                //  Get the "No Loop Behaviour Type" e.g "do_nothing", "link"
+                $on_no_loop_type = $repeat_data['on_no_loop']['selected_type'];
+
+                if ($on_no_loop_type == 'do_nothing') {
+                    $this->logInfo('<span class="text-success">'.$this->screen['name'].'</span> is defaulting to building and showing its first display');
+
+                //  Do nothing else
+                } elseif ($on_no_loop_type == 'link') {
+                    $this->logInfo('<span class="text-success">'.$this->screen['name'].'</span> is attempting to link to another screen');
+
+                    //  Get the provided link (The display or screen we must link to if we don't have loops for this screen)
+                    $link = $repeat_data['on_no_loop']['link'] ?? null;
+
+                    //  If the screen link name was provided
+                    if ($link['name']) {
+                        $this->logInfo('<span class="text-success">'.$this->screen['name'].'</span> is linking to <span class="text-success">'.$link['name'].'</span>');
+
+                        //  Get the screen matching the given link name and set it as the current screen
+                        $this->screen = $this->getScreenByName($link['name']);
+                    }
+                }
+
+                //  Start building the current screen displays
+                return $this->startBuildingDisplays();
             }
         } else {
             $dataType = ucwords(gettype($items));
@@ -762,7 +849,6 @@ class UssdCreatorController extends Controller
 
         //  Check if the user has already responded to the current display screen
         if ($this->completedLevel($this->level)) {
-
             //  Get the user response (Input provided by the user) for the current display screen
             $this->getCurrentScreenUserResponse();
 
@@ -812,15 +898,12 @@ class UssdCreatorController extends Controller
                 return $handleLinkingDisplayResponse;
             }
 
-            if( !empty( $this->incorrect_option_selected ) ){
-
-                /** Get the "incorrect option selected message" and return display (with go back option) 
+            if (!empty($this->incorrect_option_selected)) {
+                /* Get the "incorrect option selected message" and return display (with go back option)
                  *  to notify the user of the issue
                  */
-                return $this->displayCustomGoBackPage( $this->incorrect_option_selected );
-
+                return $this->displayCustomGoBackPage($this->incorrect_option_selected);
             }
-            
         }
 
         return $builtDisplay;
@@ -960,13 +1043,23 @@ class UssdCreatorController extends Controller
     }
 
     /*  getDisplaySelectOptionType()
-     *  This method gets the type of "Select Option" requested by the current screen
+     *  This method gets the type of "Select Option" requested by the current display
      *
      */
     public function getDisplaySelectOptionType()
     {
         //  Available type: "static_options", "dynamic_options" and "code_editor_options"
         return $this->display['content']['action']['select_option']['selected_type'] ?? '';
+    }
+
+    /*  getDisplayInputType()
+     *  This method gets the type of "Input" requested by the current display
+     *
+     */
+    public function getDisplayInputType()
+    {
+        //  Available type: "single_value_input" and "multi_value_input"
+        return $this->display['content']['action']['input_value']['selected_type'] ?? '';
     }
 
     /*  getStaticSelectOptions()
@@ -1533,7 +1626,7 @@ class UssdCreatorController extends Controller
                             $dataType = ucwords(gettype($option['name']));
 
                             //  Set an warning log that the option name must be of type [String].
-                            $this->logWarning('The given <span class="text-success">Option Name</span> must return data of type <span class="text-success">[String]</span> or <span class="text-success">[Interger]</span> however we received a value of type <span class="text-success">['.$dataType.']</span>');
+                            $this->logWarning('The given <span class="text-success">Option Name</span> must return data of type <span class="text-success">[String]</span> or <span class="text-success">[Integer]</span> however we received a value of type <span class="text-success">['.$dataType.']</span>');
 
                         //  If the option input was not provided
                         } elseif (!isset($option['input']) || empty($option['input'])) {
@@ -1545,7 +1638,7 @@ class UssdCreatorController extends Controller
                             $dataType = ucwords(gettype($option['name']));
 
                             //  Set an warning log that the option input must be of type [String].
-                            $this->logWarning('The given <span class="text-success">Option Input</span> must return data of type <span class="text-success">[String]</span> or <span class="text-success">[Interger]</span> however we received a value of type <span class="text-success">['.$dataType.']</span>');
+                            $this->logWarning('The given <span class="text-success">Option Input</span> must return data of type <span class="text-success">[String]</span> or <span class="text-success">[Integer]</span> however we received a value of type <span class="text-success">['.$dataType.']</span>');
 
                         //  If the option link was set but is not of type [Array]
                         } elseif (isset($option['link']) && !is_array($option['link'])) {
@@ -1681,7 +1774,7 @@ class UssdCreatorController extends Controller
             //  If the action is to input a value e.g John
         } elseif ($screenActionType == 'input_value') {
             //  Get the current screen expected input action type e.g input_value
-            $screenInputType = $this->getCurrentScreenInputType();
+            $screenInputType = $this->getDisplayInputType();
 
             /* If the input is a single value input e.g
              *  Q: Enter your first name
@@ -1830,7 +1923,6 @@ class UssdCreatorController extends Controller
 
         //  Get option matching user response
         $selectedOption = collect(array_filter($options, function ($option) {
-
             //  Process dynamic content embedded within the expected option input
             $outputResponse = $this->handleEmbeddedDynamicContentConversion(
                 //  Text containing embedded dynamic content that must be convert
@@ -1840,21 +1932,12 @@ class UssdCreatorController extends Controller
             );
 
             return $this->currentUserResponse == $outputResponse;
-            
         }))->first() ?? null;
-
-        $this->logError('Stage 1');
 
         //  If we have options to display
         if ($optionsExist) {
-
-            $this->logError('Stage 2.1');
-
             //  If the user selected an option that exists
             if (!empty($selectedOption)) {
-
-                $this->logError('Stage 3.1');
-
                 //  Get the selected option link (The display or screen we must link to after the user selects this option)
                 $link = $selectedOption['link'] ?? null;
 
@@ -1872,9 +1955,6 @@ class UssdCreatorController extends Controller
 
                 //  If the user did not select an option that exists
             } else {
-
-                $this->logError('Stage 3.2');
-
                 //  Display the custom "Incorrect option selected" otherwise use default
                 $message = ($incorrect_option_selected_message ?? 'You selected an incorrect option. Please try again')."\n";
 
@@ -1884,17 +1964,12 @@ class UssdCreatorController extends Controller
 
             //  If we don't have options to display
         } else {
-
-            $this->logError('Stage 2.2');
-
             //  Display the custom "No options available" otherwise use default
             $message = ($no_results_message ?? 'No options available')."\n";
 
             //  Log the custom "no options message" to notify the user of the issue
             $this->logWarning($message);
-
         }
-
     }
 
     /*  storeSingleValueInputAsDynamicData()
@@ -2060,7 +2135,6 @@ class UssdCreatorController extends Controller
 
         //  If the pagination is active
         if ($pagination['active'] == true) {
-
             //  Set an info log that we are handling pagination
             $this->logInfo('<span class="text-primary">'.$this->screen['name'].'</span>, handling pagination');
 
@@ -2093,13 +2167,13 @@ class UssdCreatorController extends Controller
 
             //  Get the break line after trail
             $break_line_after_trail = $pagination['break_line_after_trail'];
-            
+
             //  Get the pagination show more visibility
             $show_scroll_down_text = $pagination['scroll_down']['visible'];
 
             //  Get the pagination show more text
             $scroll_down_text = $pagination['scroll_down']['text'];
-            
+
             //  Get the pagination show more visibility
             $show_scroll_up_text = $pagination['scroll_up']['visible'];
 
@@ -2164,7 +2238,6 @@ class UssdCreatorController extends Controller
             $scroll_up_input = trim($outputResponse);
 
             if ($show_scroll_down_text) {
-
                 //  Process dynamic content embedded within the scroll down text
                 $outputResponse = $this->handleEmbeddedDynamicContentConversion($scroll_down_text, false);
 
@@ -2177,7 +2250,6 @@ class UssdCreatorController extends Controller
             }
 
             if ($show_scroll_up_text) {
-
                 //  Process dynamic content embedded within the scroll up text
                 $outputResponse = $this->handleEmbeddedDynamicContentConversion($scroll_up_text, false);
 
@@ -2552,6 +2624,7 @@ class UssdCreatorController extends Controller
     {
         $this->incorrect_option_selected = null;
     }
+
     public function resetPagination()
     {
         $this->pagination_index = 0;
@@ -2643,7 +2716,7 @@ class UssdCreatorController extends Controller
 
                             /* Return an indication that we want to navigate forward (i.e Go to the next iteration)
                                 *
-                                *  Refer to: handleRepeatScreenOnItems() and handleRepeatScreenOnNumber()
+                                *  Refer to: startRepeatScreen()
                                 *
                                 */
                             return 'navigate-forward';
@@ -2738,7 +2811,7 @@ class UssdCreatorController extends Controller
 
                             /* Return an indication that we want to navigate forward (i.e Go to the next iteration)
                              *
-                             *  Refer to: handleRepeatScreenOnItems() and handleRepeatScreenOnNumber()
+                             *  Refer to: startRepeatScreen()
                              *
                              */
                             return 'navigate-backward';
@@ -3010,6 +3083,9 @@ class UssdCreatorController extends Controller
 
         //  If we have the headers
         if (!empty($headers) && is_array($headers)) {
+            //  Add the form data to the form_params attribute of our API options
+            array_push($request_options, ['headers' => $headers]);
+
             foreach ($headers as $key => $value) {
                 //  Set an info log of the CRUD API header attribute
                 $this->logInfo('Headers: <span class="text-success">'.$key.'</span> = <span class="text-success">'.$value.'</span>');
@@ -3459,6 +3535,434 @@ class UssdCreatorController extends Controller
      *  VALIDATION EVENT METHODS              *
      *****************************************/
 
+    /*  handle_Local_Storage_Event()
+     *  This method gets all the local storage of the current display.
+     *  We then use these to store datasets and make them accessible
+     *  to the current display and other linked displays.
+     */
+    public function handle_Local_Storage_Event()
+    {
+        if ($this->event) {
+            //  Get the local storage reference name
+            $reference_name = $this->event['event_data']['reference_name'];
+
+            //  Get the local storage type e.g "string", "array"
+            $storage_type = $this->event['event_data']['storage']['selected_type'];
+
+            //  If the reference name is provided
+            if (!empty($reference_name)) {
+                //  If the storage type is of type "Array"
+                if ($storage_type == 'array') {
+                    //  Get the local storage type e.g "string", "array"
+                    $dataset_type = $this->event['event_data']['storage']['array']['dataset']['selected_type'];
+
+                    if ($dataset_type == 'values') {
+                        //  Get the dataset
+                        $array_values = $this->event['event_data']['storage']['array']['dataset']['values'];
+
+                        //  If the dataset was provided
+                        if (!empty($array_values)) {
+                            return $this->handleArrayValuesLocalStorage();
+                        }
+                    } elseif ($dataset_type == 'key_values') {
+                        //  Get the dataset
+                        $array_key_values = $this->event['event_data']['storage']['array']['dataset']['key_values'];
+
+                        //  If the dataset was provided
+                        if (!empty($array_key_values)) {
+                            return $this->handleArrayKeyValuesLocalStorage();
+                        }
+                    }
+
+                    //  If the storage type is of type "String"
+                } elseif ($storage_type == 'string') {
+                    //  If the storage type is of type "Code"
+                } elseif ($storage_type == 'code') {
+                    //  Get the dataset
+                    $code = $this->event['event_data']['storage']['code']['dataset']['value'];
+
+                    //  If the dataset was provided
+                    if (!empty($code)) {
+                        return $this->handleCodeLocalStorage();
+                    }
+                }
+            } else {
+                $this->logWarning('The provided Local Storage <span class="text-success">'.$this->event['name'].'</span> does not have a reference name');
+            }
+        }
+    }
+
+    public function handleArrayValuesLocalStorage()
+    {
+        //  Get the local storage reference name
+        $reference_name = $this->event['event_data']['reference_name'];
+
+        //  Get the dataset mode e.g "replace", "append", "prepend"
+        $mode = $this->event['event_data']['storage']['array']['mode']['selected_type'];
+
+        //  Get the dataset
+        $array_values = $this->event['event_data']['storage']['array']['dataset']['values'];
+
+        $processed_values = [];
+
+        //  Foreach dataset value
+        foreach ($array_values as $array_value) {
+            //  Convert the dynamic content (if any) embedded within the value
+            $outputResponse = $this->convertMustacheTagOrEmbeddedDynamicContentIntoDynamicData(
+                //  Text containing embedded dynamic content that must be convert
+                $array_value['value'],
+                //  Is this text information generated using the PHP Code Editor
+                false
+            );
+
+            //  If we counld't get the data from the array value
+            if ($this->shouldDisplayScreen($outputResponse)) {
+                $outputResponse = $this->handleLocalStorageEmptyValue($reference_name, $array_value);
+
+                //  If we have a screen to show return the response otherwise continue
+                if ($this->shouldDisplayScreen($outputResponse)) {
+                    return $outputResponse;
+                }
+
+                //  Set the storage value to the received array value
+                $storage_value = $outputResponse;
+            } else {
+                //  Set the storage value to the processed array value
+                $storage_value = $outputResponse;
+            }
+
+            //  Add current processed value to the the processed values array
+            array_push($processed_values, $storage_value);
+        }
+
+        //  Store the processed values
+        $this->handleProcessedValueStorage($reference_name, $processed_values, $mode);
+    }
+
+    public function handleArrayKeyValuesLocalStorage()
+    {
+        //  Get the local storage reference name
+        $reference_name = $this->event['event_data']['reference_name'];
+
+        //  Get the dataset mode e.g "replace", "append", "prepend"
+        $mode = $this->event['event_data']['storage']['array']['mode']['selected_type'];
+
+        //  Get the dataset
+        $array_key_values = $this->event['event_data']['storage']['array']['dataset']['key_values'];
+
+        $processed_values = [];
+
+        //  Foreach dataset value
+        foreach ($array_key_values as $key => $array_key_value) {
+            //  Convert the dynamic content (if any) embedded within the value
+            $outputResponse = $this->convertMustacheTagOrEmbeddedDynamicContentIntoDynamicData(
+                //  Text containing embedded dynamic content that must be convert
+                $array_key_value['value'],
+                //  Is this text information generated using the PHP Code Editor
+                false
+            );
+
+            //  If we counld't get the data from the array value
+            if ($this->shouldDisplayScreen($outputResponse)) {
+                $outputResponse = $this->handleLocalStorageEmptyValue($reference_name, $array_value);
+
+                //  If we have a screen to show return the response otherwise continue
+                if ($this->shouldDisplayScreen($outputResponse)) {
+                    return $outputResponse;
+                }
+
+                //  Set the storage value to the received array value
+                $storage_value = $outputResponse;
+            } else {
+                //  Set the storage value to the processed array value
+                $storage_value = $outputResponse;
+            }
+
+            //  Add current processed value to the the processed values array
+            $processed_values[$array_key_value['key']] = $storage_value;
+        }
+
+        //  Store the processed values
+        $this->handleProcessedValueStorage($reference_name, $processed_values, $mode);
+    }
+
+    public function handleCodeLocalStorage()
+    {
+        //  Get the local storage reference name
+        $reference_name = $this->event['event_data']['reference_name'];
+
+        //  Get the dataset mode e.g "concatenate", "replace", "append", "prepend"
+        $mode = $this->event['event_data']['storage']['code']['mode']['selected_type'];
+
+        //  Get the dataset code
+        $join = $this->event['event_data']['storage']['code']['mode']['concatenate']['value'];
+
+        //  Get the dataset code
+        $code = $this->event['event_data']['storage']['code']['dataset']['value'];
+
+        //  Remove the PHP tags from the PHP Code
+        $code = $this->removePHPTags($code);
+
+        //  Process the PHP Code
+        $outputResponse = $this->processPHPCode("$code");
+
+        //  If we have a screen to show return the response otherwise continue
+        if ($this->shouldDisplayScreen($outputResponse)) {
+            return $outputResponse;
+        }
+
+        $processed_values = $outputResponse;
+
+        //  Store the processed values
+        $this->handleProcessedValueStorage($reference_name, $processed_values, $mode, $join);
+    }
+
+    public function handleLocalStorageEmptyValue($name, $value)
+    {
+        $this->logWarning('Could not get the value for <span class="text-success">'.$name.'</span> from the Local Storage.');
+
+        //  Get selected response for handling value without data e.g "default", "nullable"
+        $handle_type = $value['on_empty_value']['selected_type'];
+
+        //  If we must display a default value
+        if ($handle_type == 'default') {
+            $this->logInfo('Using default value for <span class="text-success">'.$name.'</span> from the Local Storage.');
+
+            //  Get selected default type e.g "text_input", "number_input", "true", "false", "null", 'empty_array'
+            $default_type = $value['on_empty_value']['default']['selected_type'];
+
+            if ($default_type == 'text_input') {
+                //  Get the default text input
+                $text_input = $value['on_empty_value']['default']['text_input'];
+
+                //  Convert the dynamic content (if any) embedded within the text input
+                $outputResponse = $this->convertMustacheTagOrEmbeddedDynamicContentIntoDynamicData(
+                    //  Text containing embedded dynamic content that must be convert
+                    $text_input,
+                    //  Is this text information generated using the PHP Code Editor
+                    false
+                );
+
+                //  If we have a screen to show return the response otherwise continue
+                if ($this->shouldDisplayScreen($outputResponse)) {
+                    return $outputResponse;
+                }
+
+                //  Set the storage value to the processed text input
+                $storage_value = $outputResponse;
+
+                $dataType = ucwords(gettype($storage_value));
+
+                //  Get the result type e.g Object, Array, Boolean e.t.c and wrap in square brackets
+                $output = '['.$dataType.']';
+
+                $this->logInfo('Setting value of <span class="text-success">'.$name.'</span> to <span class="text-success">'.$output.'</span>');
+            } elseif ($default_type == 'number_input') {
+                //  Get the default text input
+                $number_input = $value['on_empty_value']['default']['number_input'];
+
+                //  Convert the dynamic content (if any) embedded within the number input
+                $outputResponse = $this->convertMustacheTagOrEmbeddedDynamicContentIntoDynamicData(
+                    //  Text containing embedded dynamic content that must be convert
+                    $number_input,
+                    //  Is this text information generated using the PHP Code Editor
+                    false
+                );
+
+                //  If we have a screen to show return the response otherwise continue
+                if ($this->shouldDisplayScreen($outputResponse)) {
+                    return $outputResponse;
+                }
+
+                //  Set the storage value to the processed number input (Make sure its set to be an integer)
+                $storage_value = (int) $outputResponse;
+
+                $dataType = ucwords(gettype($storage_value));
+
+                //  Get the result type e.g Object, Array, Boolean e.t.c and wrap in square brackets
+                $output = '['.$dataType.']';
+
+                $this->logInfo('Setting value of <span class="text-success">'.$name.'</span> to <span class="text-success">'.$output.'</span>');
+            } elseif ($default_type == 'true') {
+                $this->logInfo('Setting value of <span class="text-success">'.$name.'</span> to <span class="text-success">[TRUE]</span>');
+
+                //  Set the storage value to "True"
+                $storage_value = true;
+            } elseif ($default_type == 'false') {
+                $this->logInfo('Setting value of <span class="text-success">'.$name.'</span> to <span class="text-success">[FALSE]</span>');
+
+                //  Set the storage value to "False"
+                $storage_value = false;
+            } elseif ($default_type == 'null') {
+                $this->logInfo('Setting value of <span class="text-success">'.$name.'</span> to <span class="text-success">[NULL]</span>');
+
+                //  Set the storage value to "Null"
+                $storage_value = null;
+            } elseif ($default_type == 'empty_array') {
+                $this->logInfo('Setting value of <span class="text-success">'.$name.'</span> to <span class="text-success">[Empty Array]</span>');
+
+                //  Set the storage value to an "Empty Array"
+                $storage_value = [];
+            }
+
+            //  If we must set the value to null
+        } elseif ($handle_type == 'nullable') {
+            $this->logInfo('Setting value of <span class="text-success">'.$name.'</span> to <span class="text-success">[NULL]</span>');
+
+            //  Set the storage value to NULL
+            $storage_value = null;
+        }
+
+        return $storage_value;
+    }
+
+    public function handleProcessedValueStorage($reference_name, $processed_values, $mode, $join = ' ')
+    {
+        //  Check if the given mode matches any array modes
+        $matches_array_modes = count(array_filter(['replace', 'append', 'prepend'], function ($value) use ($mode) {
+            return $mode == $value;
+        })) ? true : false;
+
+        //  Check if the given mode matches any string modes
+        $matches_string_modes = count(array_filter(['concatenate'], function ($value) use ($mode) {
+            return $mode == $value;
+        })) ? true : false;
+
+        //  If the processed value(s) matches the array modes
+        if ($matches_array_modes) {
+            //  If the processed value(s) is an array
+            if (is_array($processed_values)) {
+                //  If the mode is set to "replace"
+                if ($mode == 'replace') {
+                    //  Store the array value(s) as dynamic data (Replace existing data)
+                    $this->storeDynamicData($reference_name, $processed_values);
+
+                //  If the mode is set to "append"
+                } else {
+                    /** If we have only one value e.g
+                     *  $processed_values = ["Francistown"] or $processed_values = ["Gaborone"].
+                     */
+                    if (count($processed_values) == 1) {
+                        /** Ungroup the result by removing the braces [] e.g
+                         *
+                         *  Allow for this:.
+                         *
+                         *  $this->dynamic_data_storage[locations] = ["Francistown", "Gaborone" ]
+                         *
+                         *  Instead of this:
+                         *
+                         *  $this->dynamic_data_storage[locations] = [ ["Francistown"], ["Gaborone"] ]
+                         *
+                         *  If we have more than one value then we do not need to do this othrwise we get:
+                         *
+                         *  $this->dynamic_data_storage[locations] = ["1", "Francistown", "2", "Gaborone" ]
+                         *
+                         *  Instead of this:
+                         *
+                         *  $this->dynamic_data_storage[locations] = [ ["1", "Francistown"], ["2", "Gaborone"] ]
+                         */
+                        if( isset( $processed_values[0] ) ){
+
+                            $processed_values = $processed_values[0];
+
+                        }
+                    }
+
+                    if ($mode == 'append') {
+                        if (isset($this->dynamic_data_storage[$reference_name]) && is_array($this->dynamic_data_storage[$reference_name])) {
+                            $exising_array_data = $this->dynamic_data_storage[$reference_name];
+
+                            //  Add after existing datasets
+                            array_push($exising_array_data, $processed_values);
+
+                            //  Store the array value(s) as dynamic data
+                            $this->storeDynamicData($reference_name, $exising_array_data);
+                        } else {
+                            //  Store the array value(s) as dynamic data
+                            $this->storeDynamicData($reference_name, [$processed_values]);
+                        }
+
+                        //  If the mode is set to "prepend"
+                    } elseif ($mode == 'prepend') {
+                        if (isset($this->dynamic_data_storage[$reference_name]) && is_array($this->dynamic_data_storage[$reference_name])) {
+                            $exising_array_data = $this->dynamic_data_storage[$reference_name];
+
+                            //  Add before existing datasets
+                            array_unshift($exising_array_data, $processed_values);
+
+                            //  Store the array value(s) as dynamic data
+                            $this->storeDynamicData($reference_name, $exising_array_data);
+                        } else {
+                            //  Store the array value(s) as dynamic data
+                            $this->storeDynamicData($reference_name, [$processed_values]);
+                        }
+                    }
+                }
+
+            } else {
+                $dataType = ucwords(gettype($processed_values));
+
+                $mode = ucwords($mode);
+
+                $this->logInfo('Local storage using the Mode = <span class="text-success">['.$mode.']</span> requires the data to be of type <span class="text-success">[Array]</span>, however we received data of type <span class="text-success">['.$dataType.']</span>');
+            }
+
+            //  If the storage value is a string and the given mode matches the string modes
+        } elseif ($matches_string_modes) {
+            if (is_string($processed_values)) {
+                //  If the mode is set to "replace"
+                if ($mode == 'concatenate') {
+                    if (isset($this->dynamic_data_storage[$reference_name]) && is_string($this->dynamic_data_storage[$reference_name])) {
+                        $exising_array_data = $this->dynamic_data_storage[$reference_name];
+
+                        //  Concatenate the dataset
+                        $exising_array_data .= $join.$processed_values;
+
+                        //  Store the string value as dynamic data
+                        $this->storeDynamicData($reference_name, $exising_array_data);
+                    } else {
+                        //  Store the array value(s) as dynamic data
+                        $this->storeDynamicData($reference_name, $processed_values);
+                    }
+                }
+            } else {
+                $dataType = ucwords(gettype($processed_values));
+
+                $mode = ucwords($mode);
+
+                $this->logInfo('Local storage using the Mode = <span class="text-success">['.$mode.']</span> requires the data to be of type <span class="text-success">[String]</span>, however we received data of type <span class="text-success">['.$dataType.']</span>');
+            }
+        }
+    }
+
+    public function convertMustacheTagOrEmbeddedDynamicContentIntoDynamicData($text = '', $uses_code_editor_mode = false)
+    {
+        //  If the provided text is a valid mustache tag
+        if ($uses_code_editor_mode == false && $this->isValidMustacheTag($text, false)) {
+            $mustache_tag = $text;
+
+            // Convert the mustache tag into dynamic data
+            $outputResponse = $this->convertMustacheTagIntoDynamicData($mustache_tag);
+
+        //  If the provided value is not a valid mustache tag
+        } else {
+            //  Process dynamic content embedded within the target input
+            $outputResponse = $this->handleEmbeddedDynamicContentConversion(
+                //  Text containing embedded dynamic content that must be convert
+                $text,
+                //  Is this text information generated using the PHP Code Editor
+                $uses_code_editor_mode
+            );
+        }
+
+        //  Return the build response
+        return $outputResponse;
+    }
+
+    /******************************************
+     *  VALIDATION EVENT METHODS              *
+     *****************************************/
+
     /*  handle_Validation_Event()
      *  This method gets all the validation rules of the current display. We then use these
      *  validation rules to validate the target input.
@@ -3466,7 +3970,6 @@ class UssdCreatorController extends Controller
     public function handle_Validation_Event()
     {
         if ($this->event) {
-
             //  Get the validation rules
             $validation_rules = $this->event['event_data']['rules'] ?? [];
 
@@ -3475,10 +3978,8 @@ class UssdCreatorController extends Controller
 
             //  If the target input is provided
             if (!empty($target_input)) {
-
                 //  If the provided target input is a valid mustache tag
                 if ($this->isValidMustacheTag($target_input, false)) {
-
                     $mustache_tag = $target_input;
 
                     // Convert the mustache tag into dynamic data
@@ -3494,7 +3995,6 @@ class UssdCreatorController extends Controller
 
                 //  If the provided value is not a valid mustache tag
                 } else {
-
                     //  Process dynamic content embedded within the target input
                     $buildResponse = $this->handleEmbeddedDynamicContentConversion(
                         //  Text containing embedded dynamic content that must be convert
@@ -3514,13 +4014,12 @@ class UssdCreatorController extends Controller
 
                 //  Validate the target input
                 $failedValidationResponse = $this->handleValidationRules($target_input, $validation_rules);
-        
+
                 //  If the current user response failed the validation return the failed response otherwise continue
                 if ($this->shouldDisplayScreen($failedValidationResponse)) {
                     return $failedValidationResponse;
                 }
             }
-
         }
     }
 
@@ -3546,15 +4045,73 @@ class UssdCreatorController extends Controller
 
                             return $this->applyValidationRule($target_input, $validation_rule, 'validateOnlyLetters'); break;
 
-                        /*
                         case 'only_numbers':
 
-                            return $this->applyValidationRule($validation_rule, 'validateOnlyNumbers'); break;
+                            return $this->applyValidationRule($target_input, $validation_rule, 'validateOnlyNumbers'); break;
 
-                        case 'only_numbers_and_letters':
+                        case 'only_letters_and_numbers':
 
-                            return $this->applyValidationRule($validation_rule, 'validateOnlyNumbersAndLetters'); break;
-                        */
+                            return $this->applyValidationRule($target_input, $validation_rule, 'validateOnlyLettersAndNumbers'); break;
+
+                        case 'minimum_characters':
+
+                            return $this->applyValidationRule($target_input, $validation_rule, 'validateMinimumCharacters'); break;
+
+                        case 'maximum_characters':
+
+                            return $this->applyValidationRule($target_input, $validation_rule, 'validateMaximumCharacters'); break;
+
+                        case 'validate_email':
+
+                            return $this->applyValidationRule($target_input, $validation_rule, 'validateEmail'); break;
+
+                        //case 'validate_mobile_number':
+
+                            //return $this->applyValidationRule($target_input, $validation_rule, 'validateMobileNumber'); break;
+
+                        case 'valiate_date_format':
+
+                            return $this->applyValidationRule($target_input, $validation_rule, 'validateDateFormat'); break;
+
+                        case 'equal_to':
+
+                            return $this->applyValidationRule($target_input, $validation_rule, 'validateEqualTo'); break;
+
+                        case 'not_equal_to':
+
+                            return $this->applyValidationRule($target_input, $validation_rule, 'validateNotEqualTo'); break;
+
+                        case 'less_than':
+
+                            return $this->applyValidationRule($target_input, $validation_rule, 'validateLessThan'); break;
+
+                        case 'less_than_or_equal':
+
+                            return $this->applyValidationRule($target_input, $validation_rule, 'validateLessThanOrEqualTo'); break;
+
+                        case 'greater_than':
+
+                            return $this->applyValidationRule($target_input, $validation_rule, 'validateGreaterThan'); break;
+
+                        case 'greater_than_or_equal':
+
+                            return $this->applyValidationRule($target_input, $validation_rule, 'validateGreaterThanOrEqualTo'); break;
+
+                        case 'in_between_including':
+
+                            return $this->applyValidationRule($target_input, $validation_rule, 'validateInBetweenIncluding'); break;
+
+                        case 'in_between_excluding':
+
+                            return $this->applyValidationRule($target_input, $validation_rule, 'validateInBetweenExcluding'); break;
+
+                        case 'no_spaces':
+
+                            return $this->applyValidationRule($target_input, $validation_rule, 'validateNoSpaces'); break;
+
+                        case 'custom_regex':
+
+                            return $this->applyValidationRule($target_input, $validation_rule, 'validateCustomRegex'); break;
                     }
                 }
             }
@@ -3566,22 +4123,315 @@ class UssdCreatorController extends Controller
 
     /*  validateOnlyLetters()
      *  This method validates to make sure the target input
-     *  is only letters and numbers
+     *  is only letters with or without spaces
      */
     public function validateOnlyLetters($target_input, $validation_rule)
     {
-
-        //  Regex pattern to allow letters and spaces only
-        $pattern = "/[a-zA-Z\s]+/";
+        //  Regex pattern
+        $pattern = '/^[a-zA-Z\s]+$/';
 
         //  If the pattern was not matched exactly i.e validation failed
         if (!preg_match($pattern, $target_input)) {
-
             //  Handle the failed validation
             return $this->handleFailedValidation($validation_rule);
-
         }
+    }
 
+    /*  validateOnlyNumbers()
+     *  This method validates to make sure the target input
+     *  is only numbers with or without spaces
+     */
+    public function validateOnlyNumbers($target_input, $validation_rule)
+    {
+        //  Regex pattern
+        $pattern = '/^[0-9\s]+$/';
+
+        //  If the pattern was not matched exactly i.e validation failed
+        if (!preg_match($pattern, $target_input)) {
+            //  Handle the failed validation
+            return $this->handleFailedValidation($validation_rule);
+        }
+    }
+
+    /*  validateOnlyLettersAndNumbers()
+     *  This method validates to make sure the target input
+     *  is only letters and numbers with or without spaces
+     */
+    public function validateOnlyLettersAndNumbers($target_input, $validation_rule)
+    {
+        //  Regex pattern
+        $pattern = '/^[a-zA-Z0-9\s]+$/';
+
+        //  If the pattern was not matched exactly i.e validation failed
+        if (!preg_match($pattern, $target_input)) {
+            //  Handle the failed validation
+            return $this->handleFailedValidation($validation_rule);
+        }
+    }
+
+    /*  validateMinimumCharacters()
+     *  This method validates to make sure the target input
+     *  has characters the length of the minimum characters
+     *  allowed of more
+     */
+    public function validateMinimumCharacters($target_input, $validation_rule)
+    {
+        $minimum_characters = $validation_rule['min'];
+
+        //  If the pattern was not matched exactly i.e validation failed
+        if (!(strlen($target_input) >= $minimum_characters)) {
+            //  Handle the failed validation
+            return $this->handleFailedValidation($validation_rule);
+        }
+    }
+
+    /*  validateMaximumCharacters()
+     *  This method validates to make sure the target input
+     *  has characters the length of the minimum characters
+     *  allowed of more
+     */
+    public function validateMaximumCharacters($target_input, $validation_rule)
+    {
+        $maximum_characters = $validation_rule['max'];
+
+        //  If the pattern was not matched exactly i.e validation failed
+        if (!(strlen($target_input) <= $maximum_characters)) {
+            //  Handle the failed validation
+            return $this->handleFailedValidation($validation_rule);
+        }
+    }
+
+    /*  validateEmail()
+     *  This method validates to make sure the target input
+     *  is a valid email e.g example@gmail.com
+     */
+    public function validateEmail($target_input, $validation_rule)
+    {
+        //  Regex pattern
+        $pattern = '/^(?!(?:(?:\x22?\x5C[\x00-\x7E]\x22?)|(?:\x22?[^\x5C\x22]\x22?)){255,})(?!(?:(?:\x22?\x5C[\x00-\x7E]\x22?)|(?:\x22?[^\x5C\x22]\x22?)){65,}@)(?:(?:[\x21\x23-\x27\x2A\x2B\x2D\x2F-\x39\x3D\x3F\x5E-\x7E]+)|(?:\x22(?:[\x01-\x08\x0B\x0C\x0E-\x1F\x21\x23-\x5B\x5D-\x7F]|(?:\x5C[\x00-\x7F]))*\x22))(?:\.(?:(?:[\x21\x23-\x27\x2A\x2B\x2D\x2F-\x39\x3D\x3F\x5E-\x7E]+)|(?:\x22(?:[\x01-\x08\x0B\x0C\x0E-\x1F\x21\x23-\x5B\x5D-\x7F]|(?:\x5C[\x00-\x7F]))*\x22)))*@(?:(?:(?!.*[^.]{64,})(?:(?:(?:xn--)?[a-z0-9]+(?:-[a-z0-9]+)*\.){1,126}){1,}(?:(?:[a-z][a-z0-9]*)|(?:(?:xn--)[a-z0-9]+))(?:-[a-z0-9]+)*)|(?:\[(?:(?:IPv6:(?:(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){7})|(?:(?!(?:.*[a-f0-9][:\]]){7,})(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){0,5})?::(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){0,5})?)))|(?:(?:IPv6:(?:(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){5}:)|(?:(?!(?:.*[a-f0-9]:){5,})(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){0,3})?::(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){0,3}:)?)))?(?:(?:25[0-5])|(?:2[0-4][0-9])|(?:1[0-9]{2})|(?:[1-9]?[0-9]))(?:\.(?:(?:25[0-5])|(?:2[0-4][0-9])|(?:1[0-9]{2})|(?:[1-9]?[0-9]))){3}))\]))$/iD';
+
+        //  If the pattern was not matched exactly i.e validation failed
+        if (!preg_match($pattern, $target_input)) {
+            //  Handle the failed validation
+            return $this->handleFailedValidation($validation_rule);
+        }
+    }
+
+    /*  validateMobileNumber()
+     *  This method validates to make sure the target input
+     *  is a valid mobile number (Botswana Mobile Numbers)
+     *  e.g 71234567
+     */
+    public function validateMobileNumber($target_input, $validation_rule)
+    {
+        //  Regex pattern
+        $pattern = '/^[7]{1}[1234567]{1}[0-9]{6}$/';
+
+        //  If the pattern was not matched exactly i.e validation failed
+        if (!preg_match($pattern, $target_input)) {
+            //  Handle the failed validation
+            return $this->handleFailedValidation($validation_rule);
+        }
+    }
+
+    /*  validateDateFormat()
+     *  This method validates to make sure the target input
+     *  is a valid date format e.g DD/MM/YYYY
+     */
+    public function validateDateFormat($target_input, $validation_rule)
+    {
+        //  Regex pattern
+        $pattern = '/[0-9]{2}\/[0-9]{2}\/[0-9]{4}/';
+
+        //  If the pattern was not matched exactly i.e validation failed
+        if (!preg_match($pattern, $target_input)) {
+            //  Handle the failed validation
+            return $this->handleFailedValidation($validation_rule);
+        }
+    }
+
+    /*  validateEqualTo()
+     *  This method validates to make sure the target input
+     *  has characters equal to a given value
+     */
+    public function validateEqualTo($target_input, $validation_rule)
+    {
+        $value = $validation_rule['value'];
+
+        //  If the pattern was not matched exactly i.e validation failed
+        if (!($target_input == $value)) {
+            //  Handle the failed validation
+            return $this->handleFailedValidation($validation_rule);
+        }
+    }
+
+    /*  validateNotEqualTo()
+     *  This method validates to make sure the target input
+     *  has characters not equal to a given value
+     */
+    public function validateNotEqualTo($target_input, $validation_rule)
+    {
+        $value = $validation_rule['value'];
+
+        //  If the pattern was not matched exactly i.e validation failed
+        if (!($target_input != $value)) {
+            //  Handle the failed validation
+            return $this->handleFailedValidation($validation_rule);
+        }
+    }
+
+    /*  validateLessThan()
+     *  This method validates to make sure the target input
+     *  has characters less than a given value
+     */
+    public function validateLessThan($target_input, $validation_rule)
+    {
+        //  Convert the target input into a number
+        $target_input = (int) $target_input;
+
+        //  Convert the given value into a number
+        $value = (int) $validation_rule['value'];
+
+        //  If the pattern was not matched exactly i.e validation failed
+        if (!($target_input < $value)) {
+            //  Handle the failed validation
+            return $this->handleFailedValidation($validation_rule);
+        }
+    }
+
+    /*  validateLessThanOrEqualTo()
+     *  This method validates to make sure the target input
+     *  has characters less than or equal to a given value
+     */
+    public function validateLessThanOrEqualTo($target_input, $validation_rule)
+    {
+        //  Convert the target input into a number
+        $target_input = (int) $target_input;
+
+        //  Convert the given value into a number
+        $value = (int) $validation_rule['value'];
+
+        //  If the pattern was not matched exactly i.e validation failed
+        if (!($target_input <= $value)) {
+            //  Handle the failed validation
+            return $this->handleFailedValidation($validation_rule);
+        }
+    }
+
+    /*  validateGreaterThan()
+     *  This method validates to make sure the target input
+     *  has characters grater than a given value
+     */
+    public function validateGreaterThan($target_input, $validation_rule)
+    {
+        //  Convert the target input into a number
+        $target_input = (int) $target_input;
+
+        //  Convert the given value into a number
+        $value = (int) $validation_rule['value'];
+
+        //  If the pattern was not matched exactly i.e validation failed
+        if (!($target_input > $value)) {
+            //  Handle the failed validation
+            return $this->handleFailedValidation($validation_rule);
+        }
+    }
+
+    /*  validateGreaterThanOrEqualTo()
+     *  This method validates to make sure the target input
+     *  has characters grater than a given value
+     */
+    public function validateGreaterThanOrEqualTo($target_input, $validation_rule)
+    {
+        //  Convert the target input into a number
+        $target_input = (int) $target_input;
+
+        //  Convert the given value into a number
+        $value = (int) $validation_rule['value'];
+
+        //  If the pattern was not matched exactly i.e validation failed
+        if (!($target_input >= $value)) {
+            //  Handle the failed validation
+            return $this->handleFailedValidation($validation_rule);
+        }
+    }
+
+    /*  validateInBetweenIncluding()
+     *  This method validates to make sure the target input
+     *  has characters inbetween the given min and max values
+     *  (Including the Min and Max values)
+     */
+    public function validateInBetweenIncluding($target_input, $validation_rule)
+    {
+        //  Convert the target input into a number
+        $target_input = (int) $target_input;
+
+        //  Convert the given value into a number
+        $min = (int) $validation_rule['min'];
+
+        //  Convert the given value into a number
+        $max = (int) $validation_rule['max'];
+
+        //  If the pattern was not matched exactly i.e validation failed
+        if (!(($min <= $target_input) && ($target_input <= $max))) {
+            //  Handle the failed validation
+            return $this->handleFailedValidation($validation_rule);
+        }
+    }
+
+    /*  validateInBetweenExcluding()
+     *  This method validates to make sure the target input
+     *  has characters inbetween the given min and max values
+     *  (Excluding the Min and Max values)
+     */
+    public function validateInBetweenExcluding($target_input, $validation_rule)
+    {
+        //  Convert the target input into a number
+        $target_input = (int) $target_input;
+
+        //  Convert the given value into a number
+        $min = (int) $validation_rule['min'];
+
+        //  Convert the given value into a number
+        $max = (int) $validation_rule['max'];
+
+        //  If the pattern was not matched exactly i.e validation failed
+        if (!(($min < $target_input) && ($target_input < $max))) {
+            //  Handle the failed validation
+            return $this->handleFailedValidation($validation_rule);
+        }
+    }
+
+    /*  validateNoSpaces()
+     *  This method validates to make sure the target input
+     *  has no characters that are spaces
+     */
+    public function validateNoSpaces($target_input, $validation_rule)
+    {
+        //  Regex pattern
+        $pattern = '/[\s]/';
+
+        //  If we found spaces i.e validation failed
+        if (preg_match($pattern, $target_input)) {
+            //  Handle the failed validation
+            return $this->handleFailedValidation($validation_rule);
+        }
+    }
+
+    /*  validateCustomRegex()
+     *  This method validates to make sure the target input
+     *  matches the given custom regex rule
+     */
+    public function validateCustomRegex($target_input, $validation_rule)
+    {
+        //  Regex pattern
+        $pattern = $validation_rule['rule'];
+
+        //  If we found spaces i.e validation failed
+        if (preg_match($pattern, $target_input)) {
+            //  Handle the failed validation
+            return $this->handleFailedValidation($validation_rule);
+        }
     }
 
     /*  applyValidationRule()
@@ -3595,27 +4445,23 @@ class UssdCreatorController extends Controller
     public function applyValidationRule($target_input, $validation_rule, $callback)
     {
         try {
-            /** Perform the validation method here e.g "validateOnlyLetters()" within the try/catch
-             *  method and pass the validation rule e.g "validateOnlyLetters($target_input, $validation_rule )"
+            /* Perform the validation method here e.g "validateOnlyLetters()" within the try/catch
+             *  method and pass the validation rule e.g "$this->validateOnlyLetters($target_input, $validation_rule )"
              */
-            $callback($target_input, $validation_rule);
 
+            return call_user_func_array(array($this, $callback), [$target_input, $validation_rule]);
         } catch (\Throwable $e) {
-
             //  Handle failed validation
             $this->handleFailedValidation($validation_rule);
 
             //  Handle try catch error
             return $this->handleTryCatchError($e);
-
         } catch (Exception $e) {
-
             //  Handle failed validation
             $this->handleFailedValidation($validation_rule);
 
             //  Handle try catch error
             return $this->handleTryCatchError($e);
-
         }
     }
 
@@ -3624,7 +4470,29 @@ class UssdCreatorController extends Controller
      */
     public function handleFailedValidation($validation_rule)
     {
-        $this->logWarning('Validation failed using ('.$validation_rule['name'].'): <span class="text-error">' + $validation_rule['error_msg'].'</span>');
+        $error_message = $validation_rule['error_msg'];
+
+        //  Process dynamic content embedded within the expected option input
+        $outputResponse = $this->handleEmbeddedDynamicContentConversion(
+            //  Text containing embedded dynamic content that must be convert
+            $error_message,
+            //  Is this text information generated using the PHP Code Editor
+            false
+        );
+
+        //  If we have a screen to show return the response otherwise continue
+        if ($this->shouldDisplayScreen($outputResponse)) {
+            $this->logWarning('Validation failed using ('.$validation_rule['name'].')');
+
+            return $outputResponse;
+        }
+
+        $error_message = $outputResponse;
+
+        $this->logWarning('Validation failed using ('.$validation_rule['name'].'): <span class="text-error">'.$error_message.'</span>');
+
+        //  Return the processed custom validation error message display
+        return $this->displayCustomGoBackPage($error_message."\n");
     }
 
     /*  formatCurrentScreenUserResponse()
@@ -3737,16 +4605,6 @@ class UssdCreatorController extends Controller
     {
         //  Handle failed formatting
         $this->logWarning('Formatting failed using ('.$formattingRule['name'].') for <span class="text-success">'.$formattingRule.'</span>');
-    }
-
-    /*  getDisplaySelectOptionType()
-     *  This method gets the type of "Input" requested by the current screen
-     *
-     */
-    public function getCurrentScreenInputType()
-    {
-        //  Available type: "single_value_input" and "multi_value_input"
-        return $this->screenContent['action']['input_value']['selected_type'] ?? '';
     }
 
     /*  checkIfDisplayMustLink()
@@ -4025,6 +4883,7 @@ class UssdCreatorController extends Controller
                      *  $company->details->contacts->phone;
                      *
                      */
+
                     ${$key} = $this->convertToJsonObject($value);
 
                     //  Set an info log for the created variable and its dynamic data value
@@ -4074,9 +4933,7 @@ class UssdCreatorController extends Controller
                 }
 
                 //  Add the value as additional dynamic data to our dynamic data storage
-                if ($log_status) {
-                    $this->dynamic_data_storage[$name] = $value;
-                }
+                $this->dynamic_data_storage[$name] = $value;
 
                 //  Set an info log of the new data stored
                 if ($log_status) {
@@ -4106,14 +4963,17 @@ class UssdCreatorController extends Controller
 
     public function convertToJsonObject($data = null)
     {
-        //  If we have the data to convert
-        if (!empty($data)) {
-            //  Convert the data into a JSON Object and return
-            return json_decode(json_encode($data));
+        // If the data is of type [Array]
+        if (is_array($data)) {
+            // If the [Array] has data
+            if (!empty($data)) {
+                //  Convert the data into a JSON Object and return
+                return json_decode(json_encode($data));
+            }
         }
 
-        //  Return null if we don't have any data to convert
-        return null;
+        //  Return the data as is
+        return $data;
     }
 
     public function isValidMustacheTag($text = null, $log_warning = true)
@@ -4293,11 +5153,15 @@ class UssdCreatorController extends Controller
      *  to still continue the session. We therefore display the custom error
      *  message but also display the option to go back.
      */
-    public function displayCustomGoBackPage($message = '', $options = null)
+    public function displayCustomGoBackPage($message = '', $options = [])
     {
-        $response = $this->displayCustomPage($message, $options ?? [
+        $default_options = [
             'show_go_back' => true,
-        ]);
+        ];
+
+        $options = array_merge($default_options, $options);
+
+        $response = $this->displayCustomPage($message, $options);
 
         return $response;
     }
@@ -4306,11 +5170,15 @@ class UssdCreatorController extends Controller
      *  This is the page displayed when a problem was encountered and we want
      *  to end the session with a custom error message.
      */
-    public function displayCustomErrorPage($error_message = '', $options = null)
+    public function displayCustomErrorPage($error_message = '', $options = [])
     {
-        $response = $this->displayCustomPage($error_message, $options ?? [
+        $default_options = [
             'continue' => false,
-        ]);
+        ];
+
+        $options = array_merge($default_options, $options);
+
+        $response = $this->displayCustomPage($error_message, $options);
 
         return $response;
     }

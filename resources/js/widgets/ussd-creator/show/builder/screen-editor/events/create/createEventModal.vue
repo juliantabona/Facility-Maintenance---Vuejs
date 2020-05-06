@@ -378,6 +378,44 @@
                     type: eventType,
                     name: 'Store Data',
                     active: true,
+                    event_data: {
+                        reference_name: '',                     //  e.g "product_name"
+                        storage: {
+                            selected_type: 'array',             //  string, array, code
+                            array: {
+                                mode: {
+                                    selected_type: 'append',    //  replace, append, prepend
+                                },
+                                dataset: {
+                                    selected_type: 'values',     //  values, key_values=
+                                    key_values: [],
+                                    values: []
+                                },
+                            },
+                            string: {
+                                mode: {
+                                    selected_type: 'replace',    //  replace, concatenate
+                                    concatenate: {
+                                        value: ','               
+                                    }
+                                },
+                                dataset: {
+                                    value: ''
+                                }
+                            },
+                            code: {
+                                mode: {
+                                    selected_type: 'replace',    //  replace, append, prepend, concatenate
+                                    concatenate: {
+                                        value: ','               
+                                    }
+                                },
+                                dataset: {
+                                    value: ''
+                                }
+                            },
+                        }
+                    }
                 }
 
             },

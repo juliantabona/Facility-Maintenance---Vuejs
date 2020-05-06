@@ -19,6 +19,9 @@
                 <!-- Edit Validation Event --> 
                 <editValidationEvent v-else-if="localEvent.type == 'Validation'" :event="localEvent"></editValidationEvent>
 
+                <!-- Edit Local Storage Event --> 
+                <editLocalStorageEvent v-else-if="localEvent.type == 'Local Storage'" :event="localEvent"></editLocalStorageEvent>
+
             </template>
             
         </mainModal>    
@@ -35,6 +38,9 @@
     //  Get the Validation Event component used to edit
     import editValidationEvent from './validation/main.vue';
 
+    //  Get the Validation Event component used to edit
+    import editLocalStorageEvent from './local-storage/main.vue';
+
     export default {
         props:{
             event: {
@@ -42,7 +48,7 @@
                 default: null
             }
         },
-        components: { mainModal, editCrudApiEvent, editValidationEvent },
+        components: { mainModal, editCrudApiEvent, editValidationEvent, editLocalStorageEvent },
         data(){
             return{
                 hideModal: false,

@@ -83,29 +83,28 @@
                 validation_rules:[
                     {
                         active: true,
-                        rule: '/[a-zA-Z]+/',
+                        rule: '/^[a-zA-Z\s]+$/',
                         name: 'Only Letters',
                         type: 'only_letters',
-                        error_msg: 'Please enter letters only'
+                        error_msg: 'Please enter letters only (spaces allowed)'
                     },
                     {
                         active: true,
-                        rule: '/[0-9]+/',
+                        rule: '/^[0-9\s]+$/',
                         name: 'Only Numbers',
                         type: 'only_numbers',
-                        error_msg: 'Please enter numbers only'
+                        error_msg: 'Please enter numbers only (spaces allowed)'
                     },
                     {
                         active: true,
-                        rule: '/[a-zA-Z0-9]+/',
-                        name: 'Only Numbers & Letters',
-                        type: 'only_numbers_and_letters',
-                        error_msg: 'Please enter numbers and letters only'
+                        rule: '/^[a-zA-Z0-9\s]+$/',
+                        name: 'Only Letters And Numbers (No Spaces)',
+                        type: 'only_letters_and_numbers',
+                        error_msg: 'Please enter letters and numbers only (spaces allowed)'
                     },
                     {
                         min: '2',
                         active: true,
-                        rule: '/[a-zA-Z0-9]+/',
                         name: 'Minimum Characters',
                         type: 'minimum_characters',
                         error_msg: 'Please enter 2 or more characters'
@@ -113,7 +112,6 @@
                     {
                         max: '5',
                         active: true,
-                        rule: '/[a-zA-Z0-9]+/',
                         name: 'Maximum Characters',
                         type: 'maximum_characters',
                         error_msg: 'Please enter no more than 5 characters'
@@ -122,15 +120,20 @@
                         active: true,
                         rule: '//',
                         name: 'Validate Email',
-                        type: 'valiate_email',
+                        type: 'validate_email',
                         error_msg: 'Please provide a valid email address e.g example@gmail.com'
                     },
+                    /** ^ - start with a number
+                     *  [0-9] - use only digits (you can also use \d)
+                     *  {8} - use 8 digits
+                     *  $ - End here. Don't add anything after 8 digits.
+                     */
                     {
                         active: true,
-                        rule: '//',
-                        name: 'Validate Phone Number',
-                        type: 'valiate_phone_number',
-                        error_msg: 'Please provide a valid phone number e.g 71234567'
+                        rule: '/^[0-9]{8}$/',
+                        name: 'Validate Mobile Number',
+                        type: 'validate_mobile_number',
+                        error_msg: 'Please provide a valid Botswana phone number e.g 71234567'
                     },
                     {
                         active: true,
@@ -145,7 +148,7 @@
                         rule: '//',
                         name: 'Equal To (=)',
                         type: 'equal_to',
-                        error_msg: 'Please enter the number 3'
+                        error_msg: 'Please enter the character 3'
                     },
                     {
                         value: '3',
@@ -153,7 +156,7 @@
                         rule: '//',
                         name: 'Not Equal To',
                         type: 'not_equal_to',
-                        error_msg: 'Please enter any number except 3'
+                        error_msg: 'Please enter any character except 3'
                     },
                     {
                         value: '3',
@@ -211,13 +214,6 @@
                         name: 'No Spaces',
                         type: 'no_spaces',
                         error_msg: 'Do not use spaces'
-                    },
-                    {
-                        active: true,
-                        rule: '//',
-                        name: 'No Special Characters e.g ($ % & *)',
-                        type: 'no_special_characters',
-                        error_msg: 'Do not use special characters e.g ($ % & *)'
                     },
                     {
                         active: true,
