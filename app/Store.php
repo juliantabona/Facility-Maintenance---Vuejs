@@ -38,7 +38,7 @@ class Store extends Model
     protected $appends = [
         'logo', 'is_verified', 'is_email_verified', 'is_mobile_verified',
         'default_mobile', 'default_email', 'default_address',
-        'team_access_code', 'customer_access_code',
+        //  'team_access_code', 'customer_access_code',
         'resource_type'
 
         //  'phone_list', 'average_rating', 'is_approved', 'statistics',
@@ -80,7 +80,7 @@ class Store extends Model
      */
     public function scopeSupportUssd($query, $code = null)
     {
-        return $query->whereHas('ussdInterface', function (Builder $query) use($code) {
+        return $query->whereHas('mobileStore', function (Builder $query) use($code) {
                 $query->where('live_mode', 1)
                     ->when($code, function ($query, $code) {
                         return $query->where('code', $code);
@@ -94,7 +94,7 @@ class Store extends Model
      */
     public function scopeDontSupportUssd($query)
     {
-        return $query->whereHas('ussdInterface', function (Builder $query) {
+        return $query->whereHas('mobileStore', function (Builder $query) {
             $query->where('live_mode', 0);
         });
     }
@@ -325,9 +325,9 @@ class Store extends Model
     /*
      *  Returns the USSD Interface owned by this store
      */
-    public function ussdInterface()
+    public function mobileStore()
     {
-        return $this->morphOne('App\UssdInterface', 'owner');
+        return $this->morphOne('App\MobileStore', 'owner');
     }
 
     /*
@@ -1624,20 +1624,18 @@ class Store extends Model
     }
 
     /*
-     *  Returns the resource type
-     */
     public function getCustomerAccessCodeAttribute()
     {
-        return $this->ussdInterface->customer_access_code ?? null;
+        return $this->mobileStore->serviceCode->shared_code ?? $this->mobileStore->serviceCode->dedicated_code;
     }
+    */
 
     /*
-     *  Returns the resource type
-     */
     public function getTeamAccessCodeAttribute()
     {
-        return $this->ussdInterface->team_access_code ?? null;
+        return $this->mobileStore->serviceCode->shared_code ?? $this->mobileStore->serviceCode->dedicated_code;
     }
+    */
 
     /*
      *  Returns the store phones separated with commas

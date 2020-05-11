@@ -126,11 +126,11 @@
     }
 
 
-    /*  STORE & USSD CREATOR LAYOUT CSS */
+    /*  STORE & USSD SERVICE LAYOUT CSS */
 
     /*  Layout Header */
     .store-layout-header,
-    .ussd-creator-layout-header
+    .ussd-service-layout-header
      {
         width: 100% !important;
         height:60px !important;
@@ -143,8 +143,8 @@
 
     .store-layout-header > .ivu-row,
     .store-layout-header > .ivu-row > .ivu-col,
-    .ussd-creator-layout-header > .ivu-row,
-    .ussd-creator-layout-header > .ivu-row > .ivu-col {
+    .ussd-service-layout-header > .ivu-row,
+    .ussd-service-layout-header > .ivu-row > .ivu-col {
         align-items: center !important;
         height: -webkit-fill-available !important;
     }
@@ -350,4 +350,15 @@
     
     .ussd-content-container .ussd_reply_container .ussd_btn:active {
         opacity: 0.8;
+    }
+
+    /*  USSD Builder CSS */
+    /*  USSD Builder CSS */
+    /*  USSD Builder CSS */
+    
+    .ussd-builder-screen-menus{
+        width: 297px;
+        padding: 0 10px 20px 0;
+        max-height: 250px;
+        overflow-y: auto;
     }

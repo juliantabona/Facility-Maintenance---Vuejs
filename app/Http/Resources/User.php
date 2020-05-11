@@ -168,12 +168,12 @@ class user extends JsonResource
                 ],
 
                 //  Link to the users accounts
-                'oq:ussd_creators' => [
+                'oq:ussd_services' => [
                     'href' => ($this->id == auth('api')->user()->id)
-                                ? route('my-ussd-creators')
-                                    : route('ussd-creators', ['user_id' => $this->id]),
-                    'title' => 'Ussd creators that this user has created or been added to as admin, staff, e.t.c',
-                    'total' => $this->ussdCreators()->count(),
+                                ? route('my-ussd-services')
+                                    : route('user-ussd-services', ['user_id' => $this->id]),
+                    'title' => 'Ussd services that this user has created or been added to as admin, staff, e.t.c',
+                    'total' => $this->ussdServices()->count(),
                 ],
                 
                 //  Link to the users recent activities

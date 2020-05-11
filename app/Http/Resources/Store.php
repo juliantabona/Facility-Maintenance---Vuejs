@@ -204,10 +204,10 @@ class Store extends JsonResource
                     'total' => $this->staff()->count(),
                 ],
 
-                //  Link to store USSD Interface
-                'oq:ussd_interface' => [
-                    'href' => route('store-ussd-interface', ['store_id' => $this->id]),
-                    'title' => 'The store USSD Interface',
+                //  Link to store USSD Mobile Store
+                'oq:mobile_store' => [
+                    'href' => route('store-mobile-store', ['store_id' => $this->id]),
+                    'title' => 'The store USSD Mobile Store',
                 ],
 
                 //  Link to store taxes

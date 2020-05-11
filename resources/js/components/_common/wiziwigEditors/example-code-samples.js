@@ -1,4 +1,4 @@
-function ussd_creator_instructions_sample_code()
+function ussd_service_instructions_sample_code()
 {
 
     return `<?php
@@ -15,7 +15,7 @@ function ussd_creator_instructions_sample_code()
 
 };
 
-function ussd_creator_custom_formatting_sample_code()
+function ussd_service_custom_formatting_sample_code()
 {
 
     return `<?php
@@ -32,7 +32,7 @@ function ussd_creator_custom_formatting_sample_code()
 ?>`
 };
 
-function ussd_creator_select_options_action_sample_code()
+function ussd_service_select_options_action_sample_code()
 {
 
     return `<?php
@@ -103,12 +103,12 @@ function ussd_creator_select_options_action_sample_code()
 ?>`
 };
 
-function ussd_creator_local_storage_sample_code()
+function ussd_service_local_storage_sample_code()
 {
 
     return `<?php
 
-    /** Use this editor to write custom php code to store  static and dynamic
+    /** Use this editor to write custom php code to store static and dynamic
      *  data on Local Storage. Remember that you can reference dynamic content 
      *  using mustache tags such as {{ user.name }} or by using PHP variables 
      *  $user->name. Always use the return statement when you want to output 
@@ -159,10 +159,48 @@ function ussd_creator_local_storage_sample_code()
 
 ?>`
 };
+
+function ussd_service_revisit_sample_code()
+{
+
+    return `<?php
+
+    /** Use this editor to write custom php code to add additional responses
+     *  that should be run immediately after revisiting a particular screen.
+     *  This can be helpful to automate certain behaviour on behalf of the
+     *  end user. 
+     * 
+     *  Remember that you can reference dynamic content using mustache tags 
+     *  such as {{ user.name }} or by using PHP variables $user->name. 
+     *  Return the responses in order, separated with the * symbol.
+     *  
+     */
+
+    /** Example 1 (without dynamic content):
+     * 
+     *  The following example means that after we get to the desired screen,
+     *  we should enter "1", then "2" and then finally "3".
+     */
+    return '1*2*3';
+
+    /** Example 2 (with dynamic content):
+     * 
+     *  The following example means that after we get to the desired screen,
+     *  we should enter "1", then "{{order.number}}" and then "3" and finally
+     *  "{{order.amount}}". Notice that {{order.number}} and {{order.amount}}
+     *  are dynamic properties that will convert into their appropriate values
+     *  e.g {{order.number}} = 00223 and {{order.amount}} = 450.00
+     */
+    return '1*{{order.number}}*3*{{order.amount}}';
+
+?>`
+};
+
 export default {
-    'ussd_creator_instructions_sample_code': ussd_creator_instructions_sample_code(),
-    'ussd_creator_custom_formatting_sample_code': ussd_creator_custom_formatting_sample_code(),
-    'ussd_creator_select_options_action_sample_code': ussd_creator_select_options_action_sample_code(),
-    'ussd_creator_local_storage_sample_code': ussd_creator_local_storage_sample_code(),
+    'ussd_service_instructions_sample_code': ussd_service_instructions_sample_code(),
+    'ussd_service_custom_formatting_sample_code': ussd_service_custom_formatting_sample_code(),
+    'ussd_service_select_options_action_sample_code': ussd_service_select_options_action_sample_code(),
+    'ussd_service_local_storage_sample_code': ussd_service_local_storage_sample_code(),
+    'ussd_service_revisit_sample_code': ussd_service_revisit_sample_code()
 }
 

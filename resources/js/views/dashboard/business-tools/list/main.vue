@@ -166,13 +166,13 @@
                 </Col>
                 <Col :span="8" class="mt-2 mb-0 pl-0">
                     <Card class="business-tool-card"
-                        @click.native="$router.push({name:'ussd-creators'})">
+                        @click.native="$router.push({name:'ussd-services'})">
                         <div class="image-box sky-blue-bg d-block float-left">
                             <img src="/images/assets/icons/checklist.svg" class="tool-image">
                         </div>
                         <div>
-                            <span class="d-block font-weight-bold mt-2 heading" style=" font-size: 18px; ">USSD Creator</span>
-                            <span class="d-block mt-2 body" style="font-size:12px;">Create custom user journeys for your customers using our USSD creator</span>
+                            <span class="d-block font-weight-bold mt-2 heading" style=" font-size: 18px; ">Ussd Services</span>
+                            <span class="d-block mt-2 body" style="font-size:12px;">Create custom user journeys for your customers using our USSD Services</span>
                         </div>
                     </Card>
                 </Col>

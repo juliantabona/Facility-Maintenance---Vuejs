@@ -26,17 +26,17 @@ let routes = [
         meta: { layout: 'Dashboard', middlewareAuth: true },
         component: require('./views/dashboard/overview/main.vue')
     },
-    //  Ussd Creator
+    //  Ussd Services
     {
-        path: '/ussd-creators', name: 'ussd-creators',
+        path: '/ussd-services', name: 'ussd-services',
         meta: { layout: 'Dashboard', middlewareAuth: true },
-        component: require('./views/dashboard/ussd-creator/list/main.vue')
+        component: require('./views/dashboard/ussd-service/list/main.vue')
     },
+    //  Single Ussd Servive
     {
-        //  Stores
-        path: '/ussd-creators/:url', name: 'show-ussd-creator',
+        path: '/ussd-services/:url', name: 'show-ussd-service',
         meta: { middlewareAuth: true },
-        component: require('./views/dashboard/ussd-creator/show/main.vue')
+        component: require('./views/dashboard/ussd-service/show/main.vue')
     },
     /**************************************
     *  INVOICES

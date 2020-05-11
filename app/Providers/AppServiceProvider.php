@@ -54,8 +54,9 @@ class AppServiceProvider extends ServiceProvider
             'tracking_detail' => 'App\TrackingDetail',
             'transaction' => 'App\Transaction',
             'user' => 'App\User',
-            'ussd_interface' => 'App\UssdInterface',
             'ussd_session' => 'App\UssdSession',
+            'ussd_service' => 'App\UssdService',
+            'ussd_service_code' => 'App\UssdServiceCode',
             'variable' => 'App\Variable',
             'verification' => 'App\Verification'
         ]);

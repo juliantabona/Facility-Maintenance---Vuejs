@@ -122,7 +122,7 @@
                 this.wantsToCreateStore = false;
 
                 //  Go to the store
-                this.goToCreator(store);
+                this.goToStore(store);
 
             },
             goToStore(store){

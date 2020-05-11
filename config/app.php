@@ -15,6 +15,7 @@ return [
     'AWS_URL' => env('AWS_URL', 'http://oq-bucket.s3.amazonaws.com/'),
     'MERCHANT_USSD_CODE' => env('MERCHANT_USSD_CODE'),
     'CUSTOMER_USSD_CODE' => env('CUSTOMER_USSD_CODE'),
+    'USSD_SERVICE_CODE' => env('USSD_SERVICE_CODE'),
 
     /*
     |--------------------------------------------------------------------------

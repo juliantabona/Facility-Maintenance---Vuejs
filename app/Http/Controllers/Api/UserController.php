@@ -434,7 +434,7 @@ class UserController extends Controller
         }
     }
 
-    public function getUserUssdCreators(Request $request)
+    public function getUserUssdServices(Request $request)
     {
         //  Get the specified users id or use the authenticated users id
         $user_id = $request->route('user_id') ?? auth('api')->user()->id;
@@ -442,17 +442,17 @@ class UserController extends Controller
         //  Get the user
         $user = User::findOrFail($user_id);
 
-        //  Get the user ussd creators (i.e ussd interfaces)
-        $ussdCreators = $user->ussdCreators()->paginate() ?? null;
+        //  Get the user ussd services
+        $ussdServices = $user->ussdServices()->paginate() ?? null;
         
-        //  Check if the ussd creators (i.e ussd interfaces) exists
-        if ($ussdCreators) {
+        //  Check if the ussd services exists
+        if ($ussdServices) {
 
-            //  Check if the user is authourized to view the user ussd creators (i.e ussd interfaces)
+            //  Check if the user is authourized to view the user ussd services
             if ($this->user->can('view', $user)) {
 
-                //  Return an API Readable Format of the ussdCreators Instance
-                return ( new \App\UssdInterface() )->convertToApiFormat($ussdCreators);
+                //  Return an API Readable Format of the ussdServices Instance
+                return ( new \App\UssdService() )->convertToApiFormat($ussdServices);
                 
             } else {
 
@@ -468,28 +468,28 @@ class UserController extends Controller
         }
     }
 
-    public function getUserUssdCreator(Request $request)
+    public function getUserUssdService(Request $request)
     {
         //  Get the specified users id or use the authenticated users id
         $user_id = $request->route('user_id') ?? auth('api')->user()->id;
 
-        //  Get the ussd creator id (i.e ussd interface id)
-        $ussd_interface_id = $request->route('store_id');
+        //  Get the ussd service id
+        $ussd_service_id = $request->route('ussd_service_id');
 
         //  Get the user
         $user = User::findOrFail($user_id);
 
         //  Get the user store
-        $ussdCreator = $user->ussdCreators()->where('ussd_interface.id', $ussd_interface_id)->first() ?? null;
+        $ussdService = $user->ussdServices()->where('ussd_service.id', $ussd_service_id)->first() ?? null;
 
-        //  Check if the ussd creator (i.e ussd interface) exists
-        if ($ussdCreator) {
+        //  Check if the ussd service exists
+        if ($ussdService) {
 
             //  Check if the user is authourized to view the user store
             if ($this->user->can('view', $user)) {
 
                 //  Return an API Readable Format of the Store Instance
-                return $ussdCreator->convertToApiFormat();
+                return $ussdService->convertToApiFormat();
 
             } else {
 

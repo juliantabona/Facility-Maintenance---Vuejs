@@ -86,7 +86,7 @@
         <div class="screen">
 
             <!-- Homescreen info goes here -->
-            <div v-if="!showUssdContentModal" class="homescreen-content">
+            <div v-show="!showUssdContentModal" class="homescreen-content">
                 
                 <Row :gutter="12" class="pt-5">
 
@@ -94,13 +94,13 @@
 
                         <Card>
 
-                            <span class="font-weight-bold d-block">Access My Mobile Store</span>
+                            <span class="font-weight-bold d-block">Access My {{ applicationName }}</span>
 
                         </Card>
 
                     </Col>
 
-                    <Col v-if="showCreatorSimulator" :span="24" class="pr-2 pl-2 pb-2">
+                    <Col :span="24" class="pr-2 pl-2 pb-2">
 
                         <Card>
                             
@@ -109,8 +109,10 @@
                             <p class="mt-2">
                                 <span class="d-block">
                                     Inform your customers to Dial 
-                                    <span class="font-weight-bold text-primary">{{ localUssdInterface.customer_access_code}}</span> 
-                                     to visit your Ussd Appllication on their mobile phones. Click <span class="font-weight-bold text-primary">Launch Simulator</span> 
+                                    <span v-if="dedicated_code" class="font-weight-bold text-primary">{{ dedicated_code }}</span> 
+                                    <span v-if="dedicated_code && shared_code"> or </span> 
+                                    <span v-if="shared_code" class="font-weight-bold text-primary">{{ shared_code }}</span> 
+                                     to visit your {{ applicationName }} on their mobile phones. Click <span class="font-weight-bold text-primary">Launch Simulator</span> 
                                      to see how your customers view your store.
                                 </span>
                             </p>
@@ -123,68 +125,7 @@
                                         placement="top-end"
                                         word-wrap width="250" 
                                         content="Launch Simulator to have a glimpse of what your customers see when visiting your store">
-                                    <Button type="success" size="small" @click.native="launchCreatorUssdSimulator()">Launch Simulator</Button>
-                                </Poptip>
-                            </div>
-
-                        </Card>
-
-                    </Col>
-
-                    <Col v-if="showCustomerSimulator" :span="24" class="pr-2 pl-2 pb-2">
-
-                        <Card>
-                            
-                            <span class="font-weight-bold d-block">Customer Simulator</span>
-
-                            <p class="mt-2">
-                                <span class="d-block">
-                                    Inform your customers to Dial 
-                                    <span class="font-weight-bold text-primary">{{ localUssdInterface.customer_access_code}}</span> 
-                                     to visit your store on their mobile phones. Click <span class="font-weight-bold text-primary">Launch Simulator</span> 
-                                     to see how your customers view your store.
-                                </span>
-                            </p>
-
-                            <!-- Launch Simulator button -->
-                            <div class="clearfix mt-2">
-
-                                <Poptip trigger="hover" 
-                                        class="float-right"
-                                        placement="top-end"
-                                        word-wrap width="250" 
-                                        content="Launch Simulator to have a glimpse of what your customers see when visiting your store">
-                                    <Button type="success" size="small" @click.native="launchCustomerUssdSimulator()">Launch Simulator</Button>
-                                </Poptip>
-                            </div>
-
-                        </Card>
-
-                    </Col>
-
-                    <Col v-if="showStaffSimulator" :span="24" class="pr-2 pl-2 pb-2">
-
-                        <Card @click.native="showUssdContentModal = true">
-                            
-                            <span class="font-weight-bold d-block">Staff Simulator</span>
-                            
-                            <p class="mt-2">
-                                <span class="d-block">
-                                    Inform your team to Dial 
-                                    <span class="font-weight-bold text-primary">{{ localUssdInterface.team_access_code }}</span> 
-                                     to manage your store on their mobile phones. Click <span class="font-weight-bold text-primary">Launch Simulator</span> 
-                                     to see how your team view your store.
-                                </span>
-                            </p>
-
-                            <!-- Launch Simulator button -->
-                            <div class="clearfix mt-2">
-                                <Poptip trigger="hover" 
-                                        class="float-right"
-                                        placement="top-end"
-                                        word-wrap width="250"
-                                        content="Launch Simulator to have a glimpse of what your team members see when visiting your store">
-                                    <Button type="success" size="small" @click.native="launchStaffUssdSimulator()">Launch Simulator</Button>
+                                    <Button type="success" size="small" @click.native="launchUssdServiceSimulator()">Launch Simulator</Button>
                                 </Poptip>
                             </div>
 
@@ -201,8 +142,8 @@
                     
                 <Poptip trigger="hover" :content="liveModeStatusMsg" word-wrap width="300">
                         
-                    <span :class="'ussd-heading' + (localUssdInterface.live_mode ? ' online' : ' offline')">
-                        <span>Your store is {{ (localUssdInterface.live_mode ? 'Online' : 'Offline') }}</span>
+                    <span :class="'ussd-heading' + (localUssdService.live_mode ? ' online' : ' offline')">
+                        <span>Your {{ applicationName }} is {{ (localUssdService.live_mode ? 'Online' : 'Offline') }}</span>
                     </span>
 
                 </Poptip>
@@ -219,9 +160,9 @@
                         <!-- Ussd reply button -->
                         <el-input 
                             ref="reply_input"
-                            type="text" v-model="ussd_reply" size="small" 
+                            type="text" v-model="ussd.msg" size="small" 
                             class="ussd_input w-100 mt-2" placeholder=""
-                            @keyup.enter.native="handleUssdReply()"
+                            @keyup.enter.native="callUssdEndpoint()"
                             @keyup.escape.native="closeUssdSimulator()">
                         </el-input>
 
@@ -238,12 +179,16 @@
                             <span class="ussd_btn font-weight-bold ml-4 text-primary" @click="closeUssdSimulator()">Cancel</span>
                         </Poptip>
                         
-                        <span class="text-grey-light">|</span>
+                        <template v-if="ussd.requestType == 2">
                         
-                        <Poptip trigger="hover" content="Press ESC on keyboard" class="float-right mr-2" 
-                                :placement="isSendingUssdResponse ? 'bottom-end' : 'bottom'" word-wrap width="200">
-                            <span class="ussd_btn font-weight-bold mr-4 text-primary" @click="handleUssdReply()">Send</span>
-                        </Poptip>
+                            <span class="text-grey-light">|</span>
+
+                            <Poptip trigger="hover" content="Press ESC on keyboard" class="float-right mr-2" 
+                                    :placement="isSendingUssdResponse ? 'bottom-end' : 'bottom'" word-wrap width="200">
+                                <span class="ussd_btn font-weight-bold mr-4 text-primary" @click="callUssdEndpoint()">Send</span>
+                            </Poptip>
+
+                        </template>
 
                     </div>
 
@@ -272,11 +217,7 @@
     export default {
         components: { Loader, basicButton },
         props: {
-            postURL:{
-                type: String,
-                default: '/api/ussd/customer'
-            },
-            ussdInterface:{
+            ussdService:{
                 type: Object,
                 default: null
             },
@@ -284,42 +225,39 @@
                 type: String,
                 default: 'USSD Code running'
             },
-            default_ussd_reply:{
+            defaultUssdReply:{
                 type: String,
                 default: ''
             },
-            showCreatorSimulator:{
-                type: Boolean,
-                default: false
-            },
-            showCustomerSimulator:{
-                type: Boolean,
-                default: false
-            },
-            showStaffSimulator:{
-                type: Boolean,
-                default: false
+            applicationName:{
+                type: String,
+                default: 'Application'
             }
         },
         data(){
             return {
-                ussd_text: '',
-                ussd_reply: this.default_ussd_reply,
+                ussd: {
+                    serviceCode: null,
+                    msg: this.defaultUssdReply,
+                    requestType: 1,
+                    sessionId: null,
+                    msisdn: null
+                },
+
                 ussdResponse: '',
-                localUssdInterface: null,
-                //  phoneNumber: '+26700000000',
+                localUssdService: null,
                 showUssdContentModal: false,
                 isSendingUssdResponse: false,
+                //  phoneNumber: '+26700000000',
             }
         },
         watch: {
-            /*  Keep track of changes on the ussdInterface.  */
-            ussdInterface: {
+            /*  Keep track of changes on the ussdService.  */
+            ussdService: {
 
                 handler: function (val, oldVal) {
 
-                    /*  Check if the the localProducts has changed  */
-                    this.localUssdInterface = val;
+                    this.localUssdService = val;
 
                 },
                 deep: true
@@ -328,15 +266,33 @@
         },
         computed: {
             liveModeStatusMsg(){
-                if( this.localUssdInterface.live_mode == true ){
-                    return 'This means that your Mobile Store is Online and can be accessed by your customers using their mobile phones.';
+                if( this.localUssdService.live_mode == true ){
+                    return 'This means that your '+this.applicationName+' is Online and can be accessed by your customers using their mobile phones.';
                 }else{
-                    return 'This means that your Mobile Store is Offline and can\'t be accessed by your customers. Turn on Live Mode to allow '+
-                           'your customers to start paying for your goods/services';
+                    return 'This means that your '+this.applicationName+' is Offline and can\'t be accessed by your customers. Turn on Live Mode to allow access for your customers.';
                 }
-            }  
+            },
+            shared_code(){
+                return this.ussdService._embedded.service_code.shared_code;
+            },
+            dedicated_code(){
+                return this.ussdService._embedded.service_code.dedicated_code;
+            }
         },
         methods: {
+            updateServiceCode(){
+
+                //  If we have the shared code then use it as the service code
+                if( this.shared_code ){
+                    this.ussd.serviceCode = this.shared_code;
+                }
+
+                //  If we have the dedicated code then use it as the service code
+                if( this.dedicated_code ){
+                    this.ussd.serviceCode = this.dedicated_code;
+                }
+
+            },
             showUssdPopup(){
                 this.showUssdContentModal = true;
                 this.focusOnReplyInput();
@@ -344,26 +300,35 @@
             hideUssdPopup(){
                 this.showUssdContentModal = false;
             },
-            launchCreatorUssdSimulator(){
+            launchUssdServiceSimulator(){
                 this.resetUssdSimulator();
-                this.handleUssdReply();
-                this.showUssdPopup();
-            },
-            launchCustomerUssdSimulator(){
-                this.resetUssdSimulator();
-                this.ussd_reply = '1*'+this.localUssdInterface.code;
-                this.handleUssdReply();
-                this.showUssdPopup();
-            },
-            launchStaffUssdSimulator(){
-                this.resetUssdSimulator();
-                this.ussd_reply = '1*'+this.localUssdInterface.code;
-                this.handleUssdReply();
+                this.callUssdEndpoint();
                 this.showUssdPopup();
             },
             closeUssdSimulator(){
                 this.resetUssdSimulator();
                 this.hideUssdPopup();
+            },
+            resetUssdSimulator(){
+                this.ussd.sessionId = null;
+                this.ussd.requestType = 1;
+                this.updateServiceCode();
+                this.emptyInput();
+            },
+            redirectUssdSimulator( serviceCode ){
+
+                //  Reset the Ussd Simulator
+                this.resetUssdSimulator();
+
+                //  Update the service code with the redirect service code
+                this.ussd.serviceCode = serviceCode;
+
+                //  Recall the Ussd end point
+                this.callUssdEndpoint();
+                
+            },
+            emptyInput(){
+                this.ussd.msg = '';
             },
             focusOnReplyInput(){
 
@@ -378,49 +343,26 @@
 
 
             },
-            resetUssdSimulator(){
-                this.ussd_reply = '';
-                this.ussd_text = '';
-            },
-            handleUssdReply() {
-                /** If the the USSD Text (ussd_text) is empty, it means the user has not 
-                 *  responded before, therefore this reply will be the first response. If  
-                 *  this is infact the first response we will not append the asterix symbol
-                 *  '*' which is used when separating multiple responses provided by the user.
-                 *  
-                 *  If the the USSD Text (ussd_text) is not empty, it means the user has 
-                 *  responded before, therefore this reply will not be the first response. 
-                 *  If this is infact the case, then we will append the asterix symbol '*'
-                 *  which is used to separate our current responses from all other responses
-                 *  provided by the user.
-                 *  
-                 *  Also check if the user has provided a reply using the reply input field.
-                 *  If ther user input field is empty '' then the user is not actually sending
-                 *  a response, but is only requesting that we refresh the current information
-                 *  on screen. This makes sense since we don't actually change the (ussd_text),
-                 *  We only resend our previous responses.
-                 *   
-                 */
-                if( this.ussd_text == '' ){
-                    this.ussd_text += this.ussd_reply;
-                }else{
-                    this.ussd_text += ( this.ussd_reply != '' ? '*'+this.ussd_reply : '');
-                }
-
-                this.ussd_reply = '';
-                this.callUssdEndpoint();
-            },
             callUssdEndpoint() {  
 
                 var self = this;
 
+                //  If this is the first request then embbed the service code within the message
+                if( this.ussd.requestType == 1 ){
+
+                    this.ussd.msg = this.ussd.serviceCode;
+
+                }
+
                 //  Store data
                 let ussdData = {
-                    text: this.ussd_text,
-                    //  phoneNumber: this.phoneNumber,
+                    
                     testMode: true,
-                    //  Include the Creator ID for the USSD Creator
-                    creatorId: this.ussdInterface.id
+                    msg: this.ussd.msg,
+                    msisdn: this.ussd.msisdn,
+                    sessionId: this.ussd.sessionId,
+                    requestType: this.ussd.requestType,
+                    
                 };
 
                 self.$emit('loading', true);
@@ -429,24 +371,45 @@
                 self.isSendingUssdResponse = true;
 
                 //  Use the api call() function located in resources/js/api.js
-                return api.call('post', self.postURL, ussdData)
+                return api.call('post', self.ussdService._links['oq:ussd_service_builder'].href, ussdData)
                     .then(({data}) => {
 
                         //  Stop loader
                         self.isSendingUssdResponse = false;
 
-                        self.ussdResponse = (data || {}).response.substr(4);
+                        //  Update Ussd Response Message
+                        self.ussdResponse = (data || {}).msg;
+                        
+                        //  Update Ussd Response Type
+                        self.ussd.requestType = (data || {}).request_type;
+                        
+                        //  Update Ussd Session Id
+                        self.ussd.sessionId = (data || {}).session_id;
+
+                        //  Update Ussd Service Code
+                        self.ussd.serviceCode = (data || {}).service_code;
+
+                        self.emptyInput();
 
                         self.$emit('response', data);
 
                         self.$emit('loading', false);
 
-                        /*  If the first 3 characters equal the text "END"  */
-                        if( (data || {}).response.substr(0,3) == 'CON' ){
+                        //  If the requestType = 2 it means we want to continue the current session 
+                        if( self.ussd.requestType == 2 ){
 
+                            //  Focus on the reply input
                             self.focusOnReplyInput();
 
-                        }else{ 
+
+                        //  If the requestType = 5 it means we want to redirect 
+                        }else if( self.ussd.requestType == 5 ){
+
+                            //  Note: self.ussdResponse contains the new "Ussd Service Code" that we must redirect to
+                            self.redirectUssdSimulator( self.ussdResponse );
+
+                            //  Focus on the reply input
+                            self.focusOnReplyInput();
 
                         }
                         
@@ -466,7 +429,9 @@
 
         },
         created() {
-            this.localUssdInterface = this.ussdInterface;
+            //  Get and assign the ussd code
+            this.updateServiceCode();
+            this.localUssdService = this.ussdService;
         },
 
     }

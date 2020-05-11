@@ -138,7 +138,7 @@
                         :showStaffSimulator="true"
                         :showCustomerSimulator="true"
                         :ussdInterface="ussdInterface" 
-                        :default_ussd_reply="default_ussd_reply">
+                        :defaultUssdReply="defaultUssdReply">
                     </ussdSimulator>
 
                 </Col>
@@ -193,7 +193,7 @@
             }
         },
         computed:{
-            default_ussd_reply(){
+            defaultUssdReply(){
 
                 return '1*' + (this.localUssdInterface || {}).code;
 

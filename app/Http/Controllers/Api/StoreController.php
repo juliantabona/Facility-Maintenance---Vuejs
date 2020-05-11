@@ -736,25 +736,25 @@ class StoreController extends Controller
     }
 
     /****************************************
-     *  USSD INTERFACE RELATED RESOURCES    *
+     *  MOBILE STORE RELATED RESOURCES    *
     ****************************************/
 
-    public function getStoreUssdInterface($store_id)
+    public function getStoreMobileStore($store_id)
     {
         //  Get the store
         $store = Store::findOrFail($store_id);
 
-        //  Get the store Ussd Interface
-        $ussdInterface = $store->ussdInterface ?? null;
+        //  Get the store Mobile Store
+        $mobileStore = $store->mobileStore ?? null;
 
-        //  Check if the Ussd Interface exists
-        if ($ussdInterface) {
+        //  Check if the Mobile Store exists
+        if ($mobileStore) {
 
-            //  Check if the user is authourized to view the store ussdInterface
+            //  Check if the user is authourized to view the store Mobile Store
             if ($this->user->can('view', $store)) {
 
                 //  Return an API Readable Format of the Contact Instance
-                return $ussdInterface->convertToApiFormat();
+                return $mobileStore->convertToApiFormat();
 
             } else {
 

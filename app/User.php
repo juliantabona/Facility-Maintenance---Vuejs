@@ -348,12 +348,12 @@ class User extends Authenticatable
     }
 
     /*
-     *  Returns all the Ussd Interfaces the user has been allocated to. Any allocation will 
-     *  pass as a valid Ussd Interface to retrieve on this instance.
+     *  Returns all the Ussd Services the user has been allocated to. Any allocation will 
+     *  pass as a valid Ussd Services to retrieve on this instance.
      */
-    public function ussdCreators()
+    public function ussdServices()
     {
-        return $this->morphedByMany('App\UssdInterface', 'owner', 'user_allocations')->withTimestamps();
+        return $this->morphedByMany('App\UssdService', 'owner', 'user_allocations')->withTimestamps();
     }
 
     /*

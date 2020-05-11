@@ -17,9 +17,12 @@ class CreateUssdSessionsTable extends Migration
             /*  Session Details  */
             $table->string('session_id')->nullable();
             $table->string('service_code')->nullable();
-            $table->string('phone_number')->nullable();
-            $table->string('status')->nullable();
+            $table->string('msisdn')->nullable();
+            $table->string('request_type')->default(1);
             $table->string('text')->nullable();
+            $table->string('status')->nullable();
+            $table->boolean('allow_timeout')->nullable()->default(0);
+            $table->timestampTz('timeout_at')->nullable();
 
             /*  Meta Data  */
             $table->json('metadata')->nullable();

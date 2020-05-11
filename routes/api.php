@@ -83,9 +83,9 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
         Route::get('/stores', 'Api\UserController@getUserStores')->name('stores');
         Route::get('/stores/{store_id}', 'Api\UserController@getUserStore')->name('store')->where('store_id', '[0-9]+');
 
-        //  USSD Creator related resources
-        Route::get('/ussd-creators', 'Api\UserController@getUserUssdCreators')->name('ussd-creators');
-        Route::get('/ussd-creators/{ussd_creator_id}', 'Api\UserController@getUserUssdCreator')->name('ussd-creator')->where('ussd_creator_id', '[0-9]+');
+        //  USSD Service related resources
+        Route::get('/ussd-services', 'Api\UserController@getUserUssdServices')->name('ussd-services');
+        Route::get('/ussd-services/{ussd_service_id}', 'Api\UserController@getUserUssdService')->name('ussd-service')->where('ussd_service_id', '[0-9]+');
     });
 
     /*********************************
@@ -128,9 +128,9 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             Route::get('/stores', 'Api\UserController@getUserStores')->name('stores');
             Route::get('/stores/{store_id}', 'Api\UserController@getUserStore')->name('store')->where('store_id', '[0-9]+');
 
-            //  USSD Creator related resources
-            Route::get('/ussd-creators', 'Api\UserController@getUserUssdCreators')->name('ussd-creators');
-            Route::get('/ussd-creators/{ussd_creator_id}', 'Api\UserController@getUserUssdCreator')->name('ussd-creator')->where('ussd_creator_id', '[0-9]+');
+            //  USSD Service related resources
+            Route::get('/ussd-services', 'Api\UserController@getUserUssdServices')->name('ussd-services');
+            Route::get('/ussd-services/{ussd_service_id}', 'Api\UserController@getUserUssdService')->name('ussd-service')->where('ussd_service_id', '[0-9]+');
         });
     });
 
@@ -265,8 +265,8 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
             Route::get('/users/staff', 'Api\StoreController@getStoreStaff')->name('staff');
             Route::get('/users/{user_id}', 'Api\StoreController@getStoreUser')->name('user')->where('user_id', '[0-9]+');
 
-            //  USSD Interface related resources
-            Route::get('/ussd-interface', 'Api\StoreController@getStoreUssdInterface')->name('ussd-interface');
+            //  Mobile Store related resources
+            Route::get('/mobile-store', 'Api\StoreController@getStoreMobileStore')->name('mobile-store');
 
             //  Product related resources
             Route::get('/products', 'Api\StoreController@getStoreProducts')->name('products');
@@ -310,23 +310,41 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     /*************************************
     *************************************/
 
-    Route::prefix('ussd-interfaces')->group(function () {
-        //  Single interface
-        Route::get('/{ussd_interface_id}', 'Api\UssdInterfaceController@getUssdInterface')->name('ussd-interface')->where('ussd_interface_id', '[0-9]+');
-        Route::put('/{ussd_interface_id}', 'Api\UssdInterfaceController@updateUssdInterface')->name('ussd-interface-update')->where('ussd_interface_id', '[0-9]+');
+    Route::prefix('mobile-stores')->group(function () {
 
-        //  Single interface resources
-        Route::prefix('{ussd_interface_id}')->name('ussd-interface-')->group(function ($group) {
-            //  Allow only intergers for ussd_interface_id on all group routes
+        //  Single mobile store
+        Route::get('/{mobile_store_id}', 'Api\MobileStoreController@getMobileStore')->name('mobile-store')->where('mobile_store_id', '[0-9]+');
+        Route::put('/{mobile_store_id}', 'Api\MobileStoreController@updateMobileStore')->name('mobile-store-update')->where('mobile_store_id', '[0-9]+');
+
+        //  Single mobile store resources
+        Route::prefix('{mobile_store_id}')->name('mobile-store-')->group(function ($group) {
+
+            //  Allow only intergers for mobile_store_id on all group routes
             foreach ($group->getRoutes() as $route) {
-                $route->where('ussd_interface_id', '[0-9]+');
+                $route->where('mobile_store_id', '[0-9]+');
             }
 
             //  Product related resources
-            Route::get('/products', 'Api\UssdInterfaceController@getUssdInterfaceProducts')->name('products');
-            Route::post('/products', 'Api\UssdInterfaceController@updateUssdInterfaceProducts')->name('products-update');
-            Route::get('/products/{product_id}', 'Api\UssdInterfaceController@getUssdInterfaceProduct')->name('product')->where('product_id', '[0-9]+');
+            Route::get('/products', 'Api\MobileStoreController@getMobileStoreProducts')->name('products');
+            Route::post('/products', 'Api\MobileStoreController@updateMobileStoreProducts')->name('products-update');
+            Route::get('/products/{product_id}', 'Api\MobileStoreController@getMobileStoreProduct')->name('product')->where('product_id', '[0-9]+');
+        
         });
+
+    });
+
+    /*************************************
+    /*************************************
+     *  USSD INTERFACE RESOURCE ROUTES   *
+    /*************************************
+    *************************************/
+
+    Route::prefix('ussd-services')->group(function () {
+        
+        //  Single ussd service
+        Route::get('/{ussd_service_id}', 'Api\UssdServiceController@getUssdService')->name('ussd-service')->where('ussd_service_id', '[0-9]+');
+        Route::put('/{ussd_service_id}', 'Api\UssdServiceController@updateUssdService')->name('ussd-service-update')->where('ussd_service_id', '[0-9]+');
+
     });
 
     /*********************************
@@ -750,7 +768,7 @@ Route::group(['middleware' => ['auth:api', 'throttle:60,1']], function () {
     *********************************/
 
     Route::prefix('ussd')->group(function () {
-        Route::post('/creator', 'Api\UssdBuilder\UssdCreatorController@home')->name('ussd-creator-home');
+        Route::post('/builder', 'Api\UssdBuilder\UssdServiceController@home')->name('ussd-service-builder');
         Route::post('/customer', 'Api\UssdController@home')->name('ussd-customer-home');
         Route::post('/merchant', 'Api\UssdMerchantController@merchantHome')->name('ussd-merchant-home');
         Route::post('/customer/online', 'Api\UssdController@redirectToOnline')->name('ussd-customer-home-online');
