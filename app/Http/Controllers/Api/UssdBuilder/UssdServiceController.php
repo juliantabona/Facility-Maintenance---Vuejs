@@ -5698,8 +5698,12 @@ class UssdServiceController extends Controller
             $text = $outputResponse;
         }
 
-        //  Remove any HTML or PHP tags
-        $text = strip_tags($text);
+        if( is_string($text) ){
+
+            //  Remove any HTML or PHP tags
+            $text = strip_tags($text);
+
+        }
 
         //  Return the converted text
         return $text;
@@ -5761,8 +5765,12 @@ class UssdServiceController extends Controller
             //  Remove the (\u00a0) special character which represents a no-break space in HTML
             $text = $this->remove_HTML_No_Break_Space($text);
 
-            //  Remove any HTML Tags
-            $text = strip_tags($text);
+            if( is_string($text) ){
+
+                //  Remove any HTML or PHP tags
+                $text = strip_tags($text);
+    
+            }
 
             //  Replace all curly braces and spaces with nothing e.g convert "{{ company.name }}" into "company.name"
             $text = preg_replace("/[{}\s]*/", '', $text);
