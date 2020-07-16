@@ -18,7 +18,7 @@
         "html2canvas": "^1.0.0-alpha.12",
         "jquery": "^3.2",
         "laravel-mix": "^2.0",
-        "lodash": "^4.17.5",
+        "lodash": "^4.17.19",
         "popper.js": "^1.14.7",
         "vue": "^2.5.17"
     },
