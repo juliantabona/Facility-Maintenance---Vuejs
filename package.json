@@ -46,7 +46,7 @@
         "vue-froala-wysiwyg": "^2.9.1",
         "vue-full-calendar": "^2.7.0",
         "vue-lodash": "^2.0.0",
-        "vue-moment": "^4.0.0",
+        "vue-moment": "^4.1.0",
         "vue-phone-number-input": "^1.0.3",
         "vue-router": "^3.0.2",
         "vue-scrollto": "^2.13.0",
