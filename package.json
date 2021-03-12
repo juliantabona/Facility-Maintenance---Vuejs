@@ -30,7 +30,7 @@
         "element-ui": "^2.4.11",
         "enjoyhint": "^1.0.1",
         "iview": "^3.1.5",
-        "jspdf": "^1.5.3",
+        "jspdf": "^2.3.1",
         "kinetic": "^5.2.0",
         "laravel-echo": "^1.4.1",
         "nprogress": "^0.2.0",
