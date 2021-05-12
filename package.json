@@ -25,7 +25,7 @@
     "dependencies": {
         "@intera/vue-zoom-on-hover": "git+https://github.com/Intera/vue-zoom-on-hover.git",
         "@tinymce/tinymce-vue": "^1.1.0",
-        "chart.js": "^2.9.3",
+        "chart.js": "^2.9.4",
         "css-loader": "^3.0.0",
         "element-ui": "^2.4.11",
         "enjoyhint": "^1.0.1",
